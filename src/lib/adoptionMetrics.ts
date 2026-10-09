@@ -12,6 +12,11 @@ export interface AdoptionSummary {
   newAccounts30d: number;
   newAccountsActivated30d: number;
   accountsWithResultEver: number;
+  /** Cookie choices saved by accounts active in the last 30 days (absent before 20261013120000). */
+  consentGranted30d?: number;
+  consentDenied30d?: number;
+  /** Accounts with any active time recorded in the last 30 days. */
+  timedAccounts30d?: number;
 }
 
 export interface AdoptionWeek {
@@ -28,6 +33,9 @@ export interface AdoptionToolStat {
   engaged30d: number;
   actions30d: number;
   engagedEver: number;
+  /** Active time from accounts that accepted analytics, and how many of them. */
+  seconds30d?: number;
+  timedAccounts30d?: number;
 }
 
 /** One sidebar section; its totals also count section pages that are no tool, such as Messages. */
@@ -57,6 +65,25 @@ export interface AdoptionMetrics {
 export function share(part: number | null | undefined, whole: number | null | undefined): string {
   if (part == null || !whole) return 'n/a';
   return `${part} of ${whole} (${Math.round((part / whole) * 100)}%)`;
+}
+
+/** "45 m", "2 h 5 m", "<1 m", or a dash when nothing was recorded. */
+export function formatDuration(seconds: number | null | undefined): string {
+  if (!seconds || seconds <= 0) return '–';
+  if (seconds < 60) return '<1 m';
+  const minutes = Math.round(seconds / 60);
+  if (minutes < 60) return `${minutes} m`;
+  const hours = Math.floor(minutes / 60);
+  return minutes % 60 ? `${hours} h ${minutes % 60} m` : `${hours} h`;
+}
+
+/** Time spent and, when more than one account contributed, the average per account. */
+export function timeSpent(stat: Pick<AdoptionToolStat, 'seconds30d' | 'timedAccounts30d'>): { total: string; perAccount: string | null } {
+  const accounts = stat.timedAccounts30d ?? 0;
+  return {
+    total: formatDuration(stat.seconds30d),
+    perAccount: accounts > 1 && stat.seconds30d ? formatDuration(stat.seconds30d / accounts) : null,
+  };
 }
 
 /** The section most accounts engaged with in the last 30 days, or null when none did. */

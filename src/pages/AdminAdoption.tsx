@@ -8,7 +8,7 @@ import TractionLogbookWallpaper, { TractionLogbookChart } from '@/components/wal
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { supabase } from '@/integrations/supabase/client';
-import { cohortTotals, share, topSection, type AdoptionMetrics } from '@/lib/adoptionMetrics';
+import { cohortTotals, share, timeSpent, topSection, type AdoptionMetrics } from '@/lib/adoptionMetrics';
 import { cn } from '@/lib/utils';
 
 const WEEKS = 12;
@@ -26,11 +26,20 @@ function Stat({ label, value, hint }: { label: string; value: string | number; h
   </Card>;
 }
 
+function TimeCell({ stat, strong }: { stat: Parameters<typeof timeSpent>[0]; strong?: boolean }) {
+  const { total, perAccount } = timeSpent(stat);
+  return <TableCell className={cn('text-right', strong && 'font-semibold')}>
+    {total}
+    {perAccount && <span className="block text-xs font-normal text-muted-foreground">avg {perAccount}</span>}
+  </TableCell>;
+}
+
 /**
  * Product adoption for admins: which sidebar sections (and their tools) people
  * use and act in, and whether new accounts come back. Reads admin_adoption_metrics(),
  * which checks the admin role itself and uses first-party data only, so it
- * covers every account regardless of cookie choices. Internal accounts excluded.
+ * covers every account regardless of cookie choices, except time spent, which
+ * only comes from accounts that accepted analytics. Internal accounts excluded.
  */
 export default function AdminAdoption() {
   const metrics = useQuery({
@@ -56,6 +65,13 @@ export default function AdminAdoption() {
     return next;
   });
   const allOpen = Boolean(data && open.size === data.sections.length);
+  // Time spent and cookie choices need the 20261013120000 migration.
+  const consent = data && data.summary.consentGranted30d !== undefined ? {
+    granted: data.summary.consentGranted30d ?? 0,
+    denied: data.summary.consentDenied30d ?? 0,
+    unknown: Math.max(0, data.summary.activeAccounts30d - (data.summary.consentGranted30d ?? 0) - (data.summary.consentDenied30d ?? 0)),
+    timed: data.summary.timedAccounts30d ?? 0,
+  } : null;
 
   return <>
     <SEO title="Adoption | Admin" description="Product adoption metrics" url="/admin/adoption" noindex />
@@ -63,7 +79,7 @@ export default function AdminAdoption() {
     <ToolPageShell
       title="Product adoption"
       purpose="Which sections of the platform people use and act in, tool by tool, and whether new accounts come back."
-      context={<>Every account, whatever its cookie choice. Internal accounts excluded.{data ? ` Updated ${new Date(data.generatedAt).toLocaleString('en-GB')}.` : ''}</>}
+      context={<>Every account, whatever its cookie choice, except time spent. Internal accounts excluded.{data ? ` Updated ${new Date(data.generatedAt).toLocaleString('en-GB')}.` : ''}</>}
       theme="traction"
       wallpaper={<TractionLogbookWallpaper />}
       headerArt={<TractionLogbookChart />}
@@ -94,6 +110,11 @@ export default function AdminAdoption() {
                 Last 30 days, in accounts, in sidebar order. Visited: opened any page of the section. Engaged: did something there, such as a saved result, message, booking, post or completed task (in Content, read on two or more days). Open a section to see its tools.
                 {leader ? <> Most engaged section: <span className="font-medium text-foreground">{leader.section}</span>.</> : null}
               </CardDescription>
+              {consent ? <p className="text-sm text-muted-foreground">
+                Time spent: active time from accounts that accepted analytics.{' '}
+                <span className="font-medium text-foreground">{share(consent.granted, data.summary.activeAccounts30d)}</span> active accounts accepted,{' '}
+                {consent.denied} rejected and {consent.unknown} have no choice saved yet; {consent.timed} {consent.timed === 1 ? 'has' : 'have'} time recorded.
+              </p> : <p className="text-sm text-muted-foreground">Time spent needs the 20261013120000_consent_and_section_time migration.</p>}
             </div>
             <button type="button" onClick={() => setOpen(allOpen ? new Set() : new Set(data.sections.map((section) => section.section)))}
               className="shrink-0 text-sm font-medium text-primary underline-offset-4 hover:underline">
@@ -107,6 +128,7 @@ export default function AdminAdoption() {
                 <TableHead className="text-right">Visited</TableHead>
                 <TableHead className="text-right">Engaged</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
+                {consent && <TableHead className="text-right">Time spent</TableHead>}
                 <TableHead className="text-right">Engaged, ever</TableHead>
               </TableRow></TableHeader>
               <TableBody>
@@ -124,6 +146,7 @@ export default function AdminAdoption() {
                       <TableCell className="text-right font-semibold">{section.visited30d}</TableCell>
                       <TableCell className="text-right font-semibold">{section.engaged30d}</TableCell>
                       <TableCell className="text-right font-semibold">{section.actions30d}</TableCell>
+                      {consent && <TimeCell stat={section} strong />}
                       <TableCell className="text-right font-semibold">{section.engagedEver}</TableCell>
                     </TableRow>
                     {expanded && section.tools.map((tool) => <TableRow key={`${section.section}-${tool.tool}`} className="text-muted-foreground">
@@ -131,6 +154,7 @@ export default function AdminAdoption() {
                       <TableCell className="text-right">{tool.visited30d}</TableCell>
                       <TableCell className="text-right">{tool.engaged30d}</TableCell>
                       <TableCell className="text-right">{tool.actions30d}</TableCell>
+                      {consent && <TimeCell stat={tool} />}
                       <TableCell className="text-right">{tool.engagedEver}</TableCell>
                     </TableRow>)}
                   </Fragment>;
@@ -208,6 +232,7 @@ export default function AdminAdoption() {
           <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
           Section visits are recorded from 9 October 2026 (tool visits from 4 September), so visits before then are undercounted; actions count from the start.
           Section totals include pages that are no sidebar tool, such as Messages, so they can exceed the sum of their tools.
+          Time spent counts from October 2026, only for accounts that accepted analytics, and only while the tab is visible with input in the last minute; read it against how many accounts it covers.
           At these volumes, read the numbers as direction rather than statistics.
         </p>
       </div>}

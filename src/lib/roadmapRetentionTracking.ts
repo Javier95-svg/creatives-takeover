@@ -1,6 +1,8 @@
 import { supabase } from '@/integrations/supabase/client';
 import { canonicalTool, toolForPath } from '../../supabase/functions/_shared/roadmap-retention.ts';
 import { sectionForPath } from './workspaceSections.ts';
+import { getAnalyticsConsent, getConsentDecision, hasAnalyticsConsent } from './consent.ts';
+import type { SectionTimeTarget } from './sectionTime.ts';
 
 // Essential first party product state, independent of third party analytics delivery.
 export async function recordRoadmapActivity(input: { tool?: string; status?: 'opened' | 'progress' | 'completed'; projectId?: string | null; step?: string | null } = {}) {
@@ -33,6 +35,37 @@ export async function recordSectionVisit(path: string) {
   if (!match) return;
   const { error } = await supabase.rpc('record_section_visit' as never, { p_section: match.section, p_tool: match.tool ?? '' } as never);
   if (error) console.warn('Section visit could not be recorded', error.code);
+}
+
+/**
+ * Active seconds in a section, from the consent-gated timer in sectionTime.ts.
+ * The server also refuses it unless the account's latest choice is Accept.
+ */
+export async function recordSectionTime(target: SectionTimeTarget, seconds: number) {
+  if (!hasAnalyticsConsent()) return;
+  const { error } = await supabase.rpc('record_section_time' as never, { p_section: target.section, p_tool: target.tool, p_seconds: seconds } as never);
+  if (error) console.warn('Section time could not be recorded', error.code);
+}
+
+let syncedConsent: string | null = null;
+
+/**
+ * Saves the account's cookie choice, so the adoption report can show how many
+ * active accounts its time figures cover. Called on sign-in and on every change.
+ */
+export async function syncConsentToAccount(userId: string) {
+  const decision = getAnalyticsConsent() === 'unknown' ? null : getConsentDecision();
+  if (!decision) return;
+  const key = `${userId}:${decision.status}:${decision.decidedAt}`;
+  if (key === syncedConsent) return;
+  syncedConsent = key;
+  const { error } = await supabase.rpc('record_analytics_consent' as never, {
+    p_status: decision.status, p_version: decision.version, p_decided_at: decision.decidedAt,
+  } as never);
+  if (error) {
+    syncedConsent = null;
+    console.warn('Cookie choice could not be saved to the account', error.code);
+  }
 }
 
 export function recordRoadmapAnalyticsEvent(name: string, props: Record<string, unknown> = {}) {

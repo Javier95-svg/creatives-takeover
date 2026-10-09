@@ -7,6 +7,8 @@ import { ADOPTION_SECTIONS, sectionForPath, WORKSPACE_SECTION_TOOLS } from '../s
 
 const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8');
 const sectionMigration = read('../supabase/migrations/20261012120000_adoption_by_section.sql');
+// The latest definition of admin_adoption_metrics().
+const timeMigration = read('../supabase/migrations/20261013120000_consent_and_section_time.sql');
 
 test('adoption helpers format shares, find the leading section and only total finished cohorts', () => {
   assert.equal(share(2, 6), '2 of 6 (33%)');
@@ -33,7 +35,7 @@ test('the report uses exactly the sidebar sections and tools, in sidebar order',
   const sidebar = read('../src/components/workspace/WorkspaceSidebar.tsx');
   assert.match(sidebar, /const NAV_TOOLS: Record<string, string\[\]> = WORKSPACE_SECTION_TOOLS;/);
 
-  const values = sectionMigration.slice(sectionMigration.indexOf('section_tools (section, section_order, tool, tool_order) AS ('), sectionMigration.indexOf('legacy_tools (tool_key'));
+  const values = timeMigration.slice(timeMigration.indexOf('section_tools (section, section_order, tool, tool_order) AS ('), timeMigration.indexOf('legacy_tools (tool_key'));
   const rows = [...values.matchAll(/\('([A-Za-z]+)', (\d+), '([^']+)', (\d+)\)/g)]
     .map(([, section, sectionOrder, tool, toolOrder]) => ({ section, sectionOrder: Number(sectionOrder), tool, toolOrder: Number(toolOrder) }));
   const fromSql: Record<string, string[]> = {};
@@ -42,7 +44,40 @@ test('the report uses exactly the sidebar sections and tools, in sidebar order',
   }
   assert.deepEqual(Object.keys(fromSql), [...ADOPTION_SECTIONS]);
   assert.deepEqual(fromSql, WORKSPACE_SECTION_TOOLS);
-  assert.ok(!/Email Templates|email_templates/.test(sectionMigration), 'Email Templates is out of scope');
+  assert.ok(!/Email Templates|email_templates/.test(timeMigration), 'Email Templates is out of scope');
+});
+
+test('time spent is formatted for the report', async () => {
+  const { formatDuration, timeSpent } = await import('../src/lib/adoptionMetrics.ts');
+  assert.equal(formatDuration(0), '–');
+  assert.equal(formatDuration(undefined), '–');
+  assert.equal(formatDuration(30), '<1 m');
+  assert.equal(formatDuration(45 * 60), '45 m');
+  assert.equal(formatDuration(2 * 3600), '2 h');
+  assert.equal(formatDuration(2 * 3600 + 5 * 60), '2 h 5 m');
+  assert.deepEqual(timeSpent({ seconds30d: 3600, timedAccounts30d: 4 }), { total: '1 h', perAccount: '15 m' });
+  assert.deepEqual(timeSpent({ seconds30d: 600, timedAccounts30d: 1 }), { total: '10 m', perAccount: null });
+});
+
+test('time spent is consent-gated on the server, capped, and private; cookie choices are private', () => {
+  assert.match(timeMigration, /ALTER TABLE public\.analytics_consents ENABLE ROW LEVEL SECURITY;/);
+  assert.match(timeMigration, /REVOKE ALL ON public\.analytics_consents FROM PUBLIC, anon, authenticated;/);
+  assert.match(timeMigration, /REVOKE ALL ON FUNCTION public\.record_analytics_consent\(text, integer, timestamptz\) FROM PUBLIC, anon;/);
+  // The latest decision wins across devices.
+  assert.match(timeMigration, /WHERE EXCLUDED\.decided_at >= public\.analytics_consents\.decided_at;/);
+
+  const recordTime = timeMigration.slice(timeMigration.indexOf('FUNCTION public.record_section_time'), timeMigration.indexOf('FUNCTION public.admin_adoption_metrics'));
+  assert.match(recordTime, /IF v_user IS NULL OR v_seconds = 0 THEN RETURN; END IF;/);
+  assert.match(recordTime, /LEAST\(GREATEST\(COALESCE\(p_seconds, 0\), 0\), 300\)/);
+  assert.match(recordTime, /IF NOT EXISTS \(SELECT 1 FROM public\.analytics_consents c WHERE c\.user_id = v_user AND c\.status = 'granted'\) THEN RETURN; END IF;/);
+  assert.match(recordTime, /LEAST\(public\.section_activity_days\.engaged_seconds \+ v_seconds, 86400\)/);
+  assert.match(timeMigration, /REVOKE ALL ON FUNCTION public\.record_section_time\(text, text, integer\) FROM PUBLIC, anon;/);
+
+  // The report keeps its admin check and team exclusion.
+  assert.match(timeMigration, /IF NOT public\.is_admin_user\(\) THEN\s*RAISE EXCEPTION/);
+  assert.match(timeMigration, /REVOKE ALL ON FUNCTION public\.admin_adoption_metrics\(integer\) FROM PUBLIC, anon;/);
+  assert.match(timeMigration, /email NOT ILIKE '%@creatives-takeover\.com'/);
+  assert.match(timeMigration, /FROM public\.mentor_saves WHERE source = 'manual'/);
 });
 
 test('every workspace page maps to its section; non-tool pages count for the section only', async () => {
