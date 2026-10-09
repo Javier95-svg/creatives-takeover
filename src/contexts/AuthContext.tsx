@@ -20,6 +20,7 @@ import {
   setInternalUser,
   clearInternalDevice,
   trackSignupCompleted,
+  captureEvent,
   type SignupMethod,
 } from '@/lib/analytics';
 import { isAdminEmail } from '@/lib/admin';
@@ -27,6 +28,7 @@ import { resolveIdentityDisplayName } from '@/lib/identityProfile';
 import { triggerEmailSequenceEvent } from '@/lib/emailSequences';
 import { clearAccountScopedStorage } from '@/lib/accountScopedStorage';
 import {
+  getSignupMetadata,
   persistAttributionAfterAuth,
   type AttributionRpcClient,
 } from '@/lib/attribution';
@@ -201,6 +203,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       // never be mislabeled as their original signup source.
       if (!isInternalEmail(email) && isRecentSignup(signedInUser.created_at)) {
         void persistAttributionAfterAuth(supabase as unknown as AttributionRpcClient);
+        // The same first touch in PostHog, so sign-ups can be broken down by
+        // channel next to traffic. The database stays the record of truth.
+        const touch = getSignupMetadata();
+        let referrerDomain = '';
+        try { referrerDomain = touch.signup_referrer ? new URL(touch.signup_referrer).hostname : ''; } catch { /* malformed referrer */ }
+        captureEvent('signup_attributed', {
+          utm_source: touch.utm_source ?? null,
+          utm_medium: touch.utm_medium ?? null,
+          utm_campaign: touch.utm_campaign ?? null,
+          referrer_domain: referrerDomain || null,
+          landing_page: touch.landing_page ?? null,
+          first_touch_source: touch.utm_source || referrerDomain || 'direct',
+        });
       }
 
       const { data: refreshedProfile, error: refreshedProfileError } = await supabase

@@ -34,3 +34,11 @@ test('analytics go through the managed reverse proxy, not posthog.com', () => {
   assert.match(csp, /script-src [^;]*https:\/\/e\.creatives-takeover\.com/);
   assert.match(csp, /connect-src [^;]*https:\/\/e\.creatives-takeover\.com/);
 });
+
+test('new accounts send their first touch to PostHog for sign-ups by channel', () => {
+  const auth = read('../src/contexts/AuthContext.tsx');
+  const block = auth.slice(auth.indexOf('if (!isInternalEmail(email) && isRecentSignup'), auth.indexOf('const { data: refreshedProfile'));
+  assert.match(block, /persistAttributionAfterAuth\(/);
+  assert.match(block, /captureEvent\('signup_attributed', \{/);
+  assert.match(block, /first_touch_source: touch\.utm_source \|\| referrerDomain \|\| 'direct'/);
+});
