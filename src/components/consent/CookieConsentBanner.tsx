@@ -62,18 +62,14 @@ export function CookieConsentBanner() {
       className="fixed inset-x-0 bottom-0 z-[70] border-t border-border bg-background/95 px-4 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] backdrop-blur-md shadow-[0_-12px_32px_-24px_rgba(15,23,42,0.45)] animate-in fade-in slide-in-from-bottom-4 duration-300"
     >
       <div className="mx-auto flex max-w-5xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:pr-8">
-        <div className="space-y-1 pr-8 text-sm leading-relaxed text-muted-foreground sm:pr-0">
-          {askingAgain && <p className="font-medium text-foreground">We have updated how we use analytics, so we are asking again.</p>}
-          {settingsOpen && status !== 'unknown' && (
-            <p className="font-medium text-foreground">
-              Your current choice: {status === 'granted' ? 'analytics allowed' : 'analytics rejected'}.
-            </p>
-          )}
+        <div className="pr-8 text-sm leading-relaxed text-muted-foreground sm:pr-0">
           <p>
-            We count visits anonymously, without cookies. With your permission, we also use analytics
-            cookies to understand how you use the platform over time, including how long you spend in
-            each section, so we can improve what founders actually use. You can change this any time in
-            Cookie settings.{' '}
+            {askingAgain && <span className="font-medium text-foreground">Our cookie policy has changed. </span>}
+            {settingsOpen && status !== 'unknown' && (
+              <span className="font-medium text-foreground">Current choice: {status === 'granted' ? 'accepted' : 'rejected'}. </span>
+            )}
+            Analytics cookies show us which features you use, so we can improve them. Change this anytime
+            in Cookie settings.{' '}
             <Link
               to="/privacy-policy"
               className="font-medium text-foreground underline underline-offset-2 hover:text-primary"
