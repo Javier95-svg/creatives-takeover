@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Loader2 } from 'lucide-react';
+import { ArrowLeft, Loader2, Plus } from 'lucide-react';
 
 import SEO, { createBreadcrumbSchema } from '@/components/SEO';
 import Navigation from '@/components/Navigation';
@@ -8,6 +8,9 @@ import Footer from '@/components/Footer';
 import { PreviewModeWrapper } from '@/components/ui/PreviewModeWrapper';
 import { BlurredToolPreview } from '@/components/ui/BlurredToolPreview';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { DashboardDisclosure } from '@/components/dashboard/DashboardDisclosure';
 import { ToolPageShell } from '@/components/tool-shell/ToolPageShell';
 import { ToolProjectContext } from '@/components/tool-shell/ToolProjectContext';
@@ -38,6 +41,7 @@ import { getPublicTabConfig } from '@/config/publicTabVisibility';
 import { captureEvent, trackToolOpened } from '@/lib/analytics';
 import { supabase } from '@/integrations/supabase/client';
 import { ensurePrebuildContext, getPrebuildContext, listPrebuildContexts, type PrebuildValidationContext } from '@/lib/prebuildContext';
+import { evidenceCaseLabels } from '@/lib/evidenceCaseLabels';
 import { findJourneyHandoff, trackPrebuildLineageEvent } from '@/lib/journeyOutcomes';
 import { isPMFPathwayEnvironmentEnabled, PMF_PATHWAY_FEATURE_FLAG } from '@/lib/pmfPathwayRollout';
 import { countPmfSignals, formatPmfDecision, getPmfDecision, PMF_SIGNAL_THRESHOLDS } from '@/lib/pmfConfidence';
@@ -104,14 +108,23 @@ export default function PMFLabPage() {
     setSearchParams(next, { replace: true });
   };
 
-  const startNewCase = () => {
-    if (!user) return;
-    void ensurePrebuildContext({ userId: user.id, explicitlyUnscoped: true, sourceTool: 'pmf_lab' })
+  // A new case is only ever made once at a time: opening the page and a
+  // re-render, or a double click, must not leave empty duplicates behind.
+  const creatingCaseRef = useRef(false);
+  const startNewCase = (label?: string | null) => {
+    if (!user || creatingCaseRef.current) return;
+    creatingCaseRef.current = true;
+    void ensurePrebuildContext({ userId: user.id, explicitlyUnscoped: true, label: label ?? null, sourceTool: 'pmf_lab' })
       .then((context) => {
         setContexts((items) => [context, ...(items ?? [])]);
         selectContext(context);
-      });
+      })
+      .finally(() => { creatingCaseRef.current = false; });
   };
+  // Starting another idea separates its evidence from the current one, so it
+  // is a deliberate, named step rather than a dropdown option that acts at once.
+  const [newIdeaOpen, setNewIdeaOpen] = useState(false);
+  const [newIdeaName, setNewIdeaName] = useState('');
 
   useEffect(() => {
     if (!user) return;
@@ -149,7 +162,7 @@ export default function PMFLabPage() {
       return;
     }
     if (contexts.length > 0) selectContext(contexts[0]);
-    else startNewCase();
+    else startNewCase(projectContext.project?.title ?? null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [contexts, hasAccess, icpParam, user, validationContextId, projectContext.projectId, projectContext.isLoading, projectIcpId]);
 
@@ -395,28 +408,69 @@ export default function PMFLabPage() {
     </span>
   );
 
+  const caseLabels = contexts ? evidenceCaseLabels(contexts) : new Map<string, string>();
+  const openNewIdea = () => { setNewIdeaName(''); setNewIdeaOpen(true); };
+  // One idea needs no picker: just the way to start another. The picker
+  // appears once there is a second idea to switch to.
   const caseSelector = user && hasAccess && contexts && contexts.length > 0 ? (
-    <label className="flex items-center gap-2 text-sm text-muted-foreground">
-      Idea
-      <select
-        value={validationContextId ?? ''}
-        onChange={(event) => {
-          if (event.target.value === '__new') {
-            startNewCase();
-            return;
-          }
-          const context = contexts.find((item) => item.id === event.target.value);
-          if (context) selectContext(context);
-        }}
-        className="h-9 max-w-56 rounded-md border border-input bg-background px-2 text-sm text-foreground"
-      >
-        {contexts.map((context) => (
-          <option key={context.id} value={context.id}>{context.label || 'Untitled idea'}</option>
-        ))}
-        <option value="__new">Start a new idea</option>
-      </select>
-    </label>
+    <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+      {contexts.length > 1 && <label className="flex items-center gap-2">
+        Idea
+        <select
+          value={validationContextId ?? ''}
+          onChange={(event) => {
+            if (event.target.value === '__new') {
+              openNewIdea();
+              return;
+            }
+            const context = contexts.find((item) => item.id === event.target.value);
+            if (context) selectContext(context);
+          }}
+          className="h-9 max-w-56 rounded-md border border-input bg-background px-2 text-sm text-foreground"
+        >
+          {contexts.map((context) => (
+            <option key={context.id} value={context.id}>{caseLabels.get(context.id)}</option>
+          ))}
+          <option value="__new">Start a new idea…</option>
+        </select>
+      </label>}
+      {contexts.length === 1 && <Button type="button" variant="ghost" size="sm" className="gap-1.5" onClick={openNewIdea}>
+        <Plus className="h-4 w-4" aria-hidden="true" />Start a new idea
+      </Button>}
+    </div>
   ) : null;
+
+  const currentCaseName = validationContextId ? caseLabels.get(validationContextId) : null;
+  const newIdeaDialog = (
+    <Dialog open={newIdeaOpen} onOpenChange={setNewIdeaOpen}>
+      <DialogContent className="sm:max-w-md">
+        <form onSubmit={(event) => {
+          event.preventDefault();
+          if (!newIdeaName.trim()) return;
+          startNewCase(newIdeaName.trim());
+          setNewIdeaOpen(false);
+        }}>
+          <DialogHeader>
+            <DialogTitle>Start a new idea</DialogTitle>
+            <DialogDescription>
+              Only for testing a different idea. Each idea keeps its own conversations, survey and verdict,
+              {currentCaseName ? <> so everything you logged stays with <span className="font-medium text-foreground">{currentCaseName}</span>.</> : ' so nothing you logged is moved.'}
+              {' '}To add a conversation to the current idea, close this and use Talk to customers.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="mt-4 space-y-2">
+            <Label htmlFor="pmf-new-idea-name">Name of the new idea</Label>
+            <Input id="pmf-new-idea-name" autoFocus maxLength={80} value={newIdeaName}
+              onChange={(event) => setNewIdeaName(event.target.value)} placeholder="e.g. Guides for hotel concierges" />
+          </div>
+          <DialogFooter className="mt-6">
+            <Button type="button" variant="outline" onClick={() => setNewIdeaOpen(false)}>Cancel</Button>
+            <Button type="submit" disabled={!newIdeaName.trim()}>Start this idea</Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
 
   const renderSignedIn = () => {
     if (!validationContextId) {
@@ -592,7 +646,7 @@ export default function PMFLabPage() {
           wallpaper={<PMFLabWallpaper />}
           headerArt={<PMFLabChart />}
           context={user && hasAccess ? (projectContext.project ? <ToolProjectContext context={projectContext} /> : validationContextId ? contextLine : undefined) : undefined}
-          actions={caseSelector}
+          actions={caseSelector ? <>{caseSelector}{newIdeaDialog}</> : null}
         >
           {!user ? (
             publicTab && (

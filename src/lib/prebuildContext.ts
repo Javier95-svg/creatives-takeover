@@ -38,7 +38,8 @@ export async function ensurePrebuildContext(input: {
     .insert({
       user_id: input.userId,
       icp_analysis_id: icpAnalysisId,
-      label: input.label?.trim() || (input.explicitlyUnscoped ? 'Unscoped evidence case' : null),
+      // Unnamed cases are shown by their start date (see evidenceCaseLabels).
+      label: input.label?.trim() || null,
       is_explicitly_unscoped: Boolean(input.explicitlyUnscoped),
     } as any)
     .select('*')
