@@ -200,25 +200,24 @@ test('a guest answers every screen without touching the server, then is asked to
   }finally{close(dom);}
 });
 
-test('a guest from the homepage box starts on screen 2 and can go back to change the type',async()=>{
+test('a guest from the homepage box confirms the pre-selected type on screen 1, and can change it',async()=>{
   const now=Date.now();
   const dom=await mount({
     ct_tool_handoff:JSON.stringify({mode:'idea',tool:'icp_builder',seed:'Freelance designers lose hours chasing unpaid invoices.',savedAt:now}),
     ct_intended_account_type:JSON.stringify({type:'builder',savedAt:now}),
-  },{session:guestSession,formProps:{skipSituation:true,guest:{onPlanReady:()=>{},onReviewedChoice:()=>{}}}});try{
-    assert.ok(text(dom).includes('2 of 6'));
-    assert.ok(text(dom).includes('What problem or area would you like to explore?'));
-    assert.ok(text(dom).includes('Not a builder? Use Back to change it.'));
-    assert.equal(dom.window.document.querySelector('textarea').value,'Freelance designers lose hours chasing unpaid invoices.');
-    await click(dom,'Back');
-    assert.ok(text(dom).includes('What brings you here today?'));
+  },{session:guestSession,formProps:{guest:{onPlanReady:()=>{},onReviewedChoice:()=>{}}}});try{
+    // The Idea box pre-selects Builder; the visitor still sees and confirms it.
     assert.ok(text(dom).includes('1 of 6'));
-  }finally{close(dom);}
-});
-
-test('without a homepage choice, screen 1 is still asked',async()=>{
-  const dom=await mount({},{session:guestSession,formProps:{skipSituation:true,guest:{onPlanReady:()=>{},onReviewedChoice:()=>{}}}});try{
     assert.ok(text(dom).includes('What brings you here today?'));
+    assert.ok(text(dom).includes('We selected this from your choice on the homepage'));
+    const builder=[...dom.window.document.querySelectorAll('button')].find(b=>b.textContent.includes('I am starting from scratch'));
+    assert.equal(builder.getAttribute('aria-pressed'),'true');
+    // A founder who typed into the Idea box switches here.
+    await choose(dom,'Founder');
+    assert.ok(text(dom).includes('What are you building, and who is it for?'));
+    assert.equal(dom.window.document.querySelector('textarea').value,'Freelance designers lose hours chasing unpaid invoices.');
+    const changed=dom.window.events.find(e=>e.name==='onboarding_account_type_changed');
+    assert.equal(JSON.stringify(changed?.data),JSON.stringify({from_type:'builder',to_type:'founder'}));
   }finally{close(dom);}
 });
 

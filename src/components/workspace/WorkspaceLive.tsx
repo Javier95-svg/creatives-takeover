@@ -15,6 +15,7 @@ import { platformUpdates, PLATFORM_UPDATE_TYPES } from '@/lib/workspacePolicy';
 import { useWorkspaceHeaderCounts } from '@/hooks/useWorkspaceHeaderCounts';
 import ProjectSwitcher from '@/components/workspace/ProjectSwitcher';
 import { ProjectSetupGate } from '@/components/workspace/ProjectSetupGate';
+import { SegmentCheckGate } from '@/components/workspace/SegmentCheckGate';
 import { AccountReviewBanner } from '@/components/workspace/AccountReviewBanner';
 import { FinishSetupPrompt } from '@/components/onboarding/FinishSetupPrompt';
 import { useAccountContext } from '@/hooks/useAccountContext';
@@ -115,6 +116,8 @@ export default function WorkspaceLive({ children, home }: { children: ReactNode;
     {/* Founders and builders without a project are asked for one here,
         because the shell is the one thing every workspace route renders. */}
     <ProjectSetupGate />
+    {/* Founders and builders whose label was inferred are asked which they are. */}
+    <SegmentCheckGate />
     {/* A reviewed account waiting on a decision is told so once, here, rather
         than left to wonder why its category features are empty. */}
     <AccountReviewBanner />

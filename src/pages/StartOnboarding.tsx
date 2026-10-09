@@ -111,10 +111,9 @@ export default function StartOnboarding() {
         <div className="mx-auto w-full max-w-4xl animate-fade-in-up">
           <AdaptiveOnboardingForm
             session={session}
+            // Arriving from the homepage box, screen 1 shows the Idea/Product
+            // choice pre-selected for them to confirm.
             guest={{ onPlanReady: handlePlanReady, onReviewedChoice: handleReviewedChoice }}
-            // Arriving from the homepage box: Idea/Product already answers
-            // screen 1, so start on screen 2.
-            skipSituation={Boolean(toolPath)}
           />
         </div>
       </div>
