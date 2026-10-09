@@ -65,6 +65,16 @@ test('first-touch attribution is gated before it writes', () => {
   assert.doesNotMatch(unconsented, /safeGet|safeSet|localStorage|readLegacyPosthogUtms/);
 });
 
+test('the CSP allows only the analytics we actually load', () => {
+  const vercel = read('../vercel.json');
+  // The Privacy Policy names PostHog, Amplitude and Vercel; anything else would be undeclared.
+  assert.match(read('../src/pages/PrivacyPolicy.tsx'), /PostHog and Amplitude store an identifier[\s\S]*?Vercel Web Analytics/);
+  for (const host of ['googletagmanager', 'google-analytics', 'analytics.google', 'doubleclick', 'contentsquare', 'umami', 'cdn.amplitude', 'eu.posthog', 'app.posthog', 'api.posthog']) {
+    assert.ok(!vercel.includes(host), `${host} is not loaded and should not be allowed`);
+  }
+  assert.match(vercel, /connect-src[^;]*https:\/\/e\.creatives-takeover\.com/);
+});
+
 test('Vercel Analytics only mounts once consent is granted', () => {
   const source = read('../src/App.tsx');
   assert.match(source, /analyticsConsent === 'granted' && \(\s*<Suspense fallback=\{null\}>\s*<Analytics \/>/);

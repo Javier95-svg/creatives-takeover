@@ -167,7 +167,7 @@ const PrivacyPolicy = () => {
                 </ul>
                 <h3 className="text-lg font-medium text-primary">Only if you choose &ldquo;Accept All&rdquo;</h3>
                 <ul className="list-disc list-inside space-y-2 pl-4">
-                  <li><strong>Analytics cookies:</strong> PostHog stores an identifier in your browser so your visits can be linked over time and, when you are signed in, to your account. We use this to understand journeys and fix usability problems, and we may record sessions for that purpose.</li>
+                  <li><strong>Analytics cookies:</strong> PostHog and Amplitude store an identifier in your browser so your visits can be linked over time and, when you are signed in, to your account, and Vercel Web Analytics measures page visits and performance. We use this to understand journeys and fix usability problems, and we may record sessions for that purpose.</li>
                   <li><strong>Time spent in each section:</strong> when you are signed in, we measure how long you actively use each section and tool, so we can tell which parts of the platform are genuinely useful.</li>
                 </ul>
                 <p>If you choose &ldquo;Reject All&rdquo;, none of the optional items above run; the always-on items continue. You can change your choice at any time from <strong>Cookie settings</strong> in the site footer or in your account settings. We ask again when this policy changes in a way that affects your choice, and at least every 12 months.</p>
