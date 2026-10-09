@@ -19,7 +19,11 @@ const exact = ['/pricing', '/files', '/tasks', '/routine', '/weekly-mission', '/
   '/bizmap-ai/icp-builder', '/bizmap-ai/pmf-lab', '/bizmap-ai/tech-stack',
   '/insighta/vc-search', '/insighta/accelerator-hunt', '/insighta/email-templates',
   '/insighta/traction-engine', '/insighta/pitch-deck-analyzer', '/insighta/test'];
+// Admin pages keep the legacy layout, except the adoption report, which reads
+// like the workspace tools it measures and is used alongside them.
+const WORKSPACE_ADMIN_PAGES = ['/admin/adoption'];
 export function isWorkspaceRoute(path: string) {
+  if (WORKSPACE_ADMIN_PAGES.includes(path)) return true;
   if (/(^|\/)(admin|public|embed|share)(\/|$)/.test(path) || path === '/demo-studio/try' || path === '/newspaper/rss.xml') return false;
   return path === '/' || exact.includes(path) || roots.some(root => path === root || path.startsWith(`${root}/`));
 }

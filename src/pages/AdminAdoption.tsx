@@ -1,8 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
 import { Info, Loader2 } from 'lucide-react';
 
-import Navigation from '@/components/Navigation';
 import SEO from '@/components/SEO';
+import { ToolPageShell } from '@/components/tool-shell/ToolPageShell';
+import TractionLogbookWallpaper, { TractionLogbookChart } from '@/components/wallpapers/TractionLogbookWallpaper';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { supabase } from '@/integrations/supabase/client';
@@ -45,15 +46,15 @@ export default function AdminAdoption() {
 
   return <>
     <SEO title="Adoption | Admin" description="Product adoption metrics" url="/admin/adoption" noindex />
-    <Navigation />
-    <main className="container mx-auto max-w-6xl px-4 pb-16 pt-header-offset">
-      <header className="mb-6">
-        <h1 className="font-space-grotesk text-3xl font-semibold">Product adoption</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Every account, whatever its cookie choice. Internal accounts excluded.
-          {data ? ` Updated ${new Date(data.generatedAt).toLocaleString('en-GB')}.` : ''}
-        </p>
-      </header>
+    {/* Inside the workspace frame (sidebar and top bar), like the tools it measures. */}
+    <ToolPageShell
+      title="Product adoption"
+      purpose="Who uses the product, which tools give people a result, and whether new accounts come back."
+      context={<>Every account, whatever its cookie choice. Internal accounts excluded.{data ? ` Updated ${new Date(data.generatedAt).toLocaleString('en-GB')}.` : ''}</>}
+      theme="traction"
+      wallpaper={<TractionLogbookWallpaper />}
+      headerArt={<TractionLogbookChart />}
+    >
 
       {metrics.isPending && <p role="status" className="flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />Loading adoption metrics…</p>}
       {metrics.isError && <p role="alert" className="text-sm text-destructive">
@@ -169,6 +170,6 @@ export default function AdminAdoption() {
           At these volumes, read the numbers as direction rather than statistics.
         </p>
       </div>}
-    </main>
+    </ToolPageShell>
   </>;
 }

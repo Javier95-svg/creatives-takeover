@@ -39,3 +39,14 @@ test('adoption metrics are admin only in the database, exclude the team, and hav
   const app = read('../src/App.tsx');
   assert.match(app, /path="\/admin\/adoption" element=\{<AdminRoute><AdminAdoption \/><\/AdminRoute>\}/);
 });
+
+test('the adoption report opens inside the workspace frame; other admin pages keep their layout', async () => {
+  const { isWorkspaceRoute } = await import('../src/lib/workspacePolicy.ts');
+  assert.equal(isWorkspaceRoute('/admin/adoption'), true);
+  for (const path of ['/admin/analytics', '/admin/account-requests', '/newspaper/admin', '/admin/adoption/extra']) {
+    assert.equal(isWorkspaceRoute(path), false, path);
+  }
+  const page = read('../src/pages/AdminAdoption.tsx');
+  assert.match(page, /<ToolPageShell/);
+  assert.doesNotMatch(page, /<Navigation \/>/);
+});
