@@ -54,7 +54,8 @@ test('PMF refuses implicit latest-record mixing and persists interview CRUD by c
   const store = read('src/hooks/usePMFInterviews.ts');
   // Every piece of evidence belongs to one case. The page opens the most recent
   // case or starts an empty one, and a header selector switches or starts cases.
-  assert.match(page, /if \(contexts\.length > 0\) selectContext\(contexts\[0\]\);\s*else startNewCase\(\);/);
+  // A started case is named after the workspace project when there is one.
+  assert.match(page, /if \(contexts\.length > 0\) selectContext\(contexts\[0\]\);\s*else startNewCase\(projectContext\.project\?\.title \?\? null\);/);
   assert.match(page, /explicitlyUnscoped: true/);
   assert.match(page, /Start a new idea/);
   assert.match(page, /usePMFInterviews\(user\?\.id, validationContextId/);
