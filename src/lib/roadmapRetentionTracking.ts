@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { canonicalTool, toolForPath } from '../../supabase/functions/_shared/roadmap-retention.ts';
+import { sectionForPath } from './workspaceSections.ts';
 
 // Essential first party product state, independent of third party analytics delivery.
 export async function recordRoadmapActivity(input: { tool?: string; status?: 'opened' | 'progress' | 'completed'; projectId?: string | null; step?: string | null } = {}) {
@@ -20,6 +21,18 @@ export async function recordRoadmapActivity(input: { tool?: string; status?: 'op
     p_email_id: emailId && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(emailId) ? emailId : null,
   } as never);
   if (error) console.warn('Roadmap activity could not be recorded', error.code);
+}
+
+/**
+ * One row per account, section and day (visits counted), for the admin adoption
+ * report. First-party and independent of cookie consent, like the tool activity
+ * above, and it covers sections with no tool events: Network, Community, Content.
+ */
+export async function recordSectionVisit(path: string) {
+  const match = sectionForPath(path);
+  if (!match) return;
+  const { error } = await supabase.rpc('record_section_visit' as never, { p_section: match.section, p_tool: match.tool ?? '' } as never);
+  if (error) console.warn('Section visit could not be recorded', error.code);
 }
 
 export function recordRoadmapAnalyticsEvent(name: string, props: Record<string, unknown> = {}) {

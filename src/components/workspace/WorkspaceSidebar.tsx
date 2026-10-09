@@ -17,6 +17,7 @@ import ctLogo from "@/assets/ct-logo-polished-borders.webp";
 import { cn } from "@/lib/utils";
 import { enterWorkspaceRoute, WORKSPACE_ROUTES } from "@/lib/workspaceNavigation";
 import { navSectionsForType, navToolsForType } from "@/lib/workspaceNavForType";
+import { WORKSPACE_SECTION_TOOLS } from "@/lib/workspaceSections";
 import type { UserType } from "@/lib/accountTypes";
 
 
@@ -42,15 +43,8 @@ const NAV_ITEMS: Array<{ label: string; icon: Icon }> = [
 
 const NAV_ITEM_LABELS = NAV_ITEMS.map(item => item.label);
 
-const NAV_TOOLS: Record<string, string[]> = {
-  Dashboard: ["Overview", "Tasks", "Routine", "Files", "Referrals"],
-  BizMap: ["ICP Builder", "Demo Studio", "PMF Lab", "MVP Builder", "GTM Strategist", "Directories"],
-  Network: ["Find a Mentor", "Find a Co-Founder", "Find your Angel", "Marketplace"],
-  Insighta: ["Traction Engine", "VC Search", "Pitch Deck Analyzer", "Insighta Test"],
-  Community: ["Rooms", "Launchpad"],
-  Content: ["Newspaper", "Podcast"],
-  Bonus: ["Accelerator Hunt", "Tech Stack Builder"],
-};
+// Shared with the admin adoption report, which counts use by these sections.
+const NAV_TOOLS: Record<string, string[]> = WORKSPACE_SECTION_TOOLS;
 
 // The lockup goes through navigateTo like every other link. It used to call
 // enterWorkspaceRoute directly, which meant a caller that intercepts navigation

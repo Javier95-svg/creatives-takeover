@@ -1,4 +1,4 @@
-import { FOUNDER_TOOL_CATALOG } from '../config/founderToolCatalog';
+import { FOUNDER_TOOL_CATALOG } from '../config/founderToolCatalog.ts';
 
 export const WORKSPACE_PREVIEW_KEY = 'ct-workspace-preview';
 export const WORKSPACE_ROUTES: Record<string, string> = {

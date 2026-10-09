@@ -1,9 +1,9 @@
-import { FOUNDER_TOOL_CATALOG } from '../config/founderToolCatalog.ts';
-
 /**
  * Shapes and helpers for the admin Adoption page. The numbers come from
- * admin_adoption_metrics(), which reads first-party data only: tool activity
- * recorded for signed-in users and the results each tool saves.
+ * admin_adoption_metrics(), which reports by the sidebar's sections (Dashboard,
+ * BizMap, Network, Insighta, Community, Content, Bonus) and their tools, from
+ * first-party data only: section visits, tool activity and the actions each
+ * section's own tables record.
  */
 
 export interface AdoptionSummary {
@@ -21,13 +21,19 @@ export interface AdoptionWeek {
   accountsWithResult: number;
 }
 
-export interface AdoptionTool {
+/** One sidebar tool, last 30 days unless named "Ever". */
+export interface AdoptionToolStat {
   tool: string;
-  opened30d: number;
-  started30d: number;
-  withResult30d: number;
-  results30d: number;
-  withResultEver: number;
+  visited30d: number;
+  engaged30d: number;
+  actions30d: number;
+  engagedEver: number;
+}
+
+/** One sidebar section; its totals also count section pages that are no tool, such as Messages. */
+export interface AdoptionSectionStat extends Omit<AdoptionToolStat, 'tool'> {
+  section: string;
+  tools: AdoptionToolStat[];
 }
 
 export interface AdoptionCohort {
@@ -43,16 +49,8 @@ export interface AdoptionMetrics {
   generatedAt: string;
   summary: AdoptionSummary;
   weekly: AdoptionWeek[];
-  tools: AdoptionTool[];
+  sections: AdoptionSectionStat[];
   cohorts: AdoptionCohort[];
-}
-
-const EXTRA_TOOL_LABELS: Record<string, string> = {
-  insighta_research: 'Insighta saved research',
-};
-
-export function toolLabel(key: string): string {
-  return FOUNDER_TOOL_CATALOG.find((tool) => tool.key === key)?.name ?? EXTRA_TOOL_LABELS[key] ?? key.replace(/_/g, ' ');
 }
 
 /** "2 of 6 (33%)", or "n/a" when there is nothing to divide by. */
@@ -61,13 +59,10 @@ export function share(part: number | null | undefined, whole: number | null | un
   return `${part} of ${whole} (${Math.round((part / whole) * 100)}%)`;
 }
 
-/** Tools ordered by how many accounts got a result, then by reach. */
-export function rankTools(tools: AdoptionTool[]): AdoptionTool[] {
-  return [...tools].sort((a, b) =>
-    b.withResult30d - a.withResult30d
-    || b.opened30d - a.opened30d
-    || b.withResultEver - a.withResultEver
-    || toolLabel(a.tool).localeCompare(toolLabel(b.tool)));
+/** The section most accounts engaged with in the last 30 days, or null when none did. */
+export function topSection(sections: AdoptionSectionStat[]): AdoptionSectionStat | null {
+  const ranked = [...sections].sort((a, b) => b.engaged30d - a.engaged30d || b.visited30d - a.visited30d);
+  return ranked[0] && (ranked[0].engaged30d > 0 || ranked[0].visited30d > 0) ? ranked[0] : null;
 }
 
 /** Totals for a set of cohorts, counting only cohorts whose window has passed. */

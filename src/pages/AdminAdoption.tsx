@@ -1,5 +1,6 @@
+import { Fragment, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Info, Loader2 } from 'lucide-react';
+import { ChevronRight, Info, Loader2 } from 'lucide-react';
 
 import SEO from '@/components/SEO';
 import { ToolPageShell } from '@/components/tool-shell/ToolPageShell';
@@ -7,7 +8,8 @@ import TractionLogbookWallpaper, { TractionLogbookChart } from '@/components/wal
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { supabase } from '@/integrations/supabase/client';
-import { cohortTotals, rankTools, share, toolLabel, type AdoptionMetrics } from '@/lib/adoptionMetrics';
+import { cohortTotals, share, topSection, type AdoptionMetrics } from '@/lib/adoptionMetrics';
+import { cn } from '@/lib/utils';
 
 const WEEKS = 12;
 
@@ -25,8 +27,8 @@ function Stat({ label, value, hint }: { label: string; value: string | number; h
 }
 
 /**
- * Product adoption for admins: who uses the product, which tools give people a
- * result, and whether new accounts come back. Reads admin_adoption_metrics(),
+ * Product adoption for admins: which sidebar sections (and their tools) people
+ * use and act in, and whether new accounts come back. Reads admin_adoption_metrics(),
  * which checks the admin role itself and uses first-party data only, so it
  * covers every account regardless of cookie choices. Internal accounts excluded.
  */
@@ -43,13 +45,21 @@ export default function AdminAdoption() {
   const data = metrics.data;
   const totals = data ? cohortTotals(data.cohorts) : null;
   const maxActive = data ? Math.max(1, ...data.weekly.map((week) => week.activeAccounts)) : 1;
+  const leader = data ? topSection(data.sections) : null;
+  const [open, setOpen] = useState<Set<string>>(new Set());
+  const toggle = (section: string) => setOpen((current) => {
+    const next = new Set(current);
+    if (next.has(section)) next.delete(section); else next.add(section);
+    return next;
+  });
+  const allOpen = Boolean(data && open.size === data.sections.length);
 
   return <>
     <SEO title="Adoption | Admin" description="Product adoption metrics" url="/admin/adoption" noindex />
     {/* Inside the workspace frame (sidebar and top bar), like the tools it measures. */}
     <ToolPageShell
       title="Product adoption"
-      purpose="Who uses the product, which tools give people a result, and whether new accounts come back."
+      purpose="Which sections of the platform people use and act in, tool by tool, and whether new accounts come back."
       context={<>Every account, whatever its cookie choice. Internal accounts excluded.{data ? ` Updated ${new Date(data.generatedAt).toLocaleString('en-GB')}.` : ''}</>}
       theme="traction"
       wallpaper={<TractionLogbookWallpaper />}
@@ -67,34 +77,59 @@ export default function AdminAdoption() {
         <section aria-label="Summary" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Stat label="Active accounts, last 7 days" value={data.summary.activeAccounts7d} hint={`${data.summary.activeAccounts30d} in the last 30 days`} />
           <Stat label="New accounts, last 30 days" value={data.summary.newAccounts30d} hint="Sign-ups, from the database" />
-          <Stat label="Activated within 7 days" value={share(data.summary.newAccountsActivated30d, data.summary.newAccounts30d)} hint="New accounts that saved a result in any tool in their first week" />
+          <Stat label="Activated within 7 days" value={share(data.summary.newAccountsActivated30d, data.summary.newAccounts30d)} hint="New accounts that did something real in their first week: a result, message, booking, post or completed task" />
           <Stat label="Came back in week 2" value={share(totals.week1.value, totals.week1.accounts)} hint={`Active 7 to 13 days after signing up, last ${WEEKS} weeks of cohorts`} />
         </section>
 
         <Card>
-          <CardHeader>
-            <CardTitle>Tools</CardTitle>
-            <CardDescription>Last 30 days, in accounts. Opened, then started (first input), then got a result saved by the tool.</CardDescription>
+          <CardHeader className="flex-row items-start justify-between gap-4 space-y-0">
+            <div className="space-y-1.5">
+              <CardTitle>Sections</CardTitle>
+              <CardDescription>
+                Last 30 days, in accounts, in sidebar order. Visited: opened any page of the section. Engaged: did something there, such as a saved result, message, booking, post or completed task (in Content, read on two or more days). Open a section to see its tools.
+                {leader ? <> Most engaged section: <span className="font-medium text-foreground">{leader.section}</span>.</> : null}
+              </CardDescription>
+            </div>
+            <button type="button" onClick={() => setOpen(allOpen ? new Set() : new Set(data.sections.map((section) => section.section)))}
+              className="shrink-0 text-sm font-medium text-primary underline-offset-4 hover:underline">
+              {allOpen ? 'Collapse all' : 'Expand all'}
+            </button>
           </CardHeader>
           <CardContent>
             <Table>
               <TableHeader><TableRow>
-                <TableHead>Tool</TableHead>
-                <TableHead className="text-right">Opened</TableHead>
-                <TableHead className="text-right">Started</TableHead>
-                <TableHead className="text-right">Got a result</TableHead>
-                <TableHead className="text-right">Results saved</TableHead>
-                <TableHead className="text-right">Accounts with a result, ever</TableHead>
+                <TableHead>Section</TableHead>
+                <TableHead className="text-right">Visited</TableHead>
+                <TableHead className="text-right">Engaged</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+                <TableHead className="text-right">Engaged, ever</TableHead>
               </TableRow></TableHeader>
               <TableBody>
-                {rankTools(data.tools).map((tool) => <TableRow key={tool.tool}>
-                  <TableCell className="font-medium">{toolLabel(tool.tool)}</TableCell>
-                  <TableCell className="text-right">{tool.opened30d}</TableCell>
-                  <TableCell className="text-right">{tool.started30d}</TableCell>
-                  <TableCell className="text-right">{tool.withResult30d}</TableCell>
-                  <TableCell className="text-right">{tool.results30d}</TableCell>
-                  <TableCell className="text-right">{tool.withResultEver}</TableCell>
-                </TableRow>)}
+                {data.sections.map((section) => {
+                  const expanded = open.has(section.section);
+                  return <Fragment key={section.section}>
+                    <TableRow className="bg-muted/20">
+                      <TableCell className="font-semibold">
+                        <button type="button" onClick={() => toggle(section.section)} aria-expanded={expanded}
+                          className="inline-flex items-center gap-1.5 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                          <ChevronRight className={cn('h-4 w-4 text-muted-foreground transition-transform', expanded && 'rotate-90')} aria-hidden="true" />
+                          {section.section}
+                        </button>
+                      </TableCell>
+                      <TableCell className="text-right font-semibold">{section.visited30d}</TableCell>
+                      <TableCell className="text-right font-semibold">{section.engaged30d}</TableCell>
+                      <TableCell className="text-right font-semibold">{section.actions30d}</TableCell>
+                      <TableCell className="text-right font-semibold">{section.engagedEver}</TableCell>
+                    </TableRow>
+                    {expanded && section.tools.map((tool) => <TableRow key={`${section.section}-${tool.tool}`} className="text-muted-foreground">
+                      <TableCell className="pl-10">{tool.tool}</TableCell>
+                      <TableCell className="text-right">{tool.visited30d}</TableCell>
+                      <TableCell className="text-right">{tool.engaged30d}</TableCell>
+                      <TableCell className="text-right">{tool.actions30d}</TableCell>
+                      <TableCell className="text-right">{tool.engagedEver}</TableCell>
+                    </TableRow>)}
+                  </Fragment>;
+                })}
               </TableBody>
             </Table>
           </CardContent>
@@ -103,7 +138,7 @@ export default function AdminAdoption() {
         <Card>
           <CardHeader>
             <CardTitle>Weekly activity</CardTitle>
-            <CardDescription>Accounts active each week (any tool activity, saved result or tracked action), with new sign-ups and accounts that saved a result.</CardDescription>
+            <CardDescription>Accounts active each week (any section visit or action), with new sign-ups and accounts that did something real.</CardDescription>
           </CardHeader>
           <CardContent>
             <Table>
@@ -111,7 +146,7 @@ export default function AdminAdoption() {
                 <TableHead>Week of</TableHead>
                 <TableHead className="w-1/2">Active accounts</TableHead>
                 <TableHead className="text-right">New accounts</TableHead>
-                <TableHead className="text-right">Saved a result</TableHead>
+                <TableHead className="text-right">Did something</TableHead>
               </TableRow></TableHeader>
               <TableBody>
                 {data.weekly.map((week) => <TableRow key={week.week}>
@@ -133,7 +168,7 @@ export default function AdminAdoption() {
         <Card>
           <CardHeader>
             <CardTitle>New-account cohorts</CardTitle>
-            <CardDescription>Accounts by sign-up week: who saved a result in their first 7 days, and who was active again in week 2 (days 7 to 13) and week 5 (days 28 to 34). A dash means the window has not passed yet.</CardDescription>
+            <CardDescription>Accounts by sign-up week: who did something real in their first 7 days, and who was active again in week 2 (days 7 to 13) and week 5 (days 28 to 34). A dash means the window has not passed yet.</CardDescription>
           </CardHeader>
           <CardContent>
             <Table>
@@ -166,7 +201,8 @@ export default function AdminAdoption() {
 
         <p className="flex items-start gap-2 text-xs text-muted-foreground">
           <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-          Tool opens and starts have been recorded since 4 September 2026, so activity before then is undercounted; saved results count from the start.
+          Section visits are recorded from 9 October 2026 (tool visits from 4 September), so visits before then are undercounted; actions count from the start.
+          Section totals include pages that are no sidebar tool, such as Messages, so they can exceed the sum of their tools.
           At these volumes, read the numbers as direction rather than statistics.
         </p>
       </div>}

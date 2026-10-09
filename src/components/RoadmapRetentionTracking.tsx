@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { recordRoadmapActivity } from '@/lib/roadmapRetentionTracking';
+import { recordRoadmapActivity, recordSectionVisit } from '@/lib/roadmapRetentionTracking';
 
 export function RoadmapRetentionTracking() {
   const { user } = useAuth();
@@ -9,6 +9,7 @@ export function RoadmapRetentionTracking() {
   useEffect(() => {
     if (!user) return;
     void recordRoadmapActivity({ status: 'opened' }).catch(() => {});
+    void recordSectionVisit(location.pathname).catch(() => {});
     // Visible user interaction refreshes inactivity; an idle tab does not.
     let lastRecorded = Date.now();
     let hasInput = false;
