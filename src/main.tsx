@@ -15,6 +15,7 @@ function AnalyticsBootstrap() {
   useEffect(() => {
     if (isLikelyBot()) return;
 
+    // First-touch attribution writes to storage, so it waits for consent.
     const start = () => {
       captureFirstTouch();
       captureUtmSuperProperties();
@@ -22,6 +23,9 @@ function AnalyticsBootstrap() {
     };
 
     if (hasAnalyticsConsent()) start();
+    // Everyone else is still counted: PostHog runs cookieless until they
+    // accept (see applyPosthogConsent in analytics.ts).
+    else bootstrapPosthog();
 
     // Accepting from the banner must take effect immediately — without this the
     // visitor's whole first session would go unrecorded until they reloaded.

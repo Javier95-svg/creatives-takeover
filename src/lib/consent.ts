@@ -1,7 +1,10 @@
 import { getSafeLocalStorage, getSafeSessionStorage } from './safeStorage.ts';
 
 /**
- * Analytics consent, the single source of truth for whether any tracking may run.
+ * Analytics consent, the single source of truth for whether tracking that
+ * stores anything on the device may run. Without it, visits are only counted
+ * cookieless (PostHog's server-side hash), with nothing stored and no
+ * identity, recordings, interaction capture or other vendors.
  *
  * This module must NEVER import analytics.ts — the dependency is one-directional
  * (analytics depends on consent, not the reverse) so that importing the gate can

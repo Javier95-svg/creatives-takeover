@@ -392,17 +392,38 @@ const registerFirstTouchUtms = () => {
   }
 };
 
+/** Interaction capture that needs consent; visits and our own events do not. */
+const CONSENT_ONLY_EVENTS = new Set(['$autocapture', '$rageclick', '$dead_click', '$copy_autocapture']);
+
+/**
+ * Point PostHog at the visitor's decision. Accepted: full tracking with
+ * storage; opting in again would reset the visitor, so it only happens once.
+ * Undecided or rejected: cookieless, which in on_reject mode is what PostHog
+ * does once capture is opted out. That is applied on every load, even when
+ * already denied: it is what sends the first pageview of a cookieless page
+ * load (PostHog skips it otherwise) and restores the cookieless visitor marker
+ * after an identity reset. PostHog never sends that pageview twice.
+ */
+const applyPosthogConsent = (client: PostHogClient) => {
+  try {
+    if (hasAnalyticsConsent()) {
+      if (client.get_explicit_consent_status() !== 'granted') client.opt_in_capturing({ captureEventName: false });
+    } else {
+      client.opt_out_capturing();
+    }
+  } catch (error) {
+    logWarn('PostHog consent sync failed', error);
+  }
+};
+
 export const initPosthog = () => {
   if (typeof window === 'undefined' || !PH_KEY) {
     return Promise.resolve();
   }
 
-  // Hard backstop. PH_KEY falls back to a hardcoded production key, so the
-  // absence of env vars is not what keeps PostHog off — this is.
-  if (!hasAnalyticsConsent()) {
-    return Promise.resolve();
-  }
-
+  // PostHog loads for every visitor, but what it may do depends on consent:
+  // without it PostHog runs cookieless (see applyPosthogConsent), so visits
+  // are still counted while nothing is stored on the device.
   if (initialized) {
     return Promise.resolve();
   }
@@ -427,18 +448,27 @@ export const initPosthog = () => {
           capture_pageview: 'history_change',
           before_send: (captureResult) => {
             if (!captureResult) return null;
+            // Without consent only visits and our own funnel events are sent,
+            // never recorded clicks or page interactions.
+            if (!hasAnalyticsConsent() && CONSENT_ONLY_EVENTS.has(captureResult.event)) return null;
             return {
               ...captureResult,
               properties: sanitizeAnalyticsValue(captureResult.properties) as Record<string, unknown>,
             };
           },
           persistence: 'localStorage',
+          // Until the visitor accepts (and after they reject), PostHog runs
+          // cookieless: no cookies, localStorage or sessionStorage, and a
+          // privacy-preserving hash made on PostHog's servers stands in for
+          // the visitor id. Requires cookieless mode in the project settings.
+          cookieless_mode: 'on_reject',
           loaded: (client) => {
             posthogClient = client as PostHogClient;
             if (posthogResetPending) {
               posthogClient.reset();
               posthogResetPending = false;
             }
+            applyPosthogConsent(posthogClient);
             registerFirstTouchUtms();
             initialized = true;
             flushQueue();
@@ -449,6 +479,7 @@ export const initPosthog = () => {
 
         posthogClient = posthog;
         if (isPosthogReady(posthogClient)) {
+          applyPosthogConsent(posthogClient);
           registerFirstTouchUtms();
           initialized = true;
           flushQueue();
@@ -474,6 +505,7 @@ export const getPosthogClient = () => posthogClient;
  * PostHog never loads, so this never fires. Starts when the browser is idle.
  */
 export const recordGuestSession = () => {
+  if (!hasAnalyticsConsent()) return () => {};
   if (isPosthogReady(posthogClient)) {
     scheduleAuthenticatedSessionRecording(posthogClient);
     return () => {};
@@ -492,10 +524,9 @@ export const onPosthogReady = (listener: (client: PostHogClient) => void) => {
 };
 
 export const bootstrapPosthog = () => {
-  // Must stay the first statement: a visitor who has not consented must not
-  // rehydrate a previous session's queued events into memory below.
-  if (!hasAnalyticsConsent()) return;
-  restoreDurableEventOutbox();
+  // A visitor who has not consented must not rehydrate a previous session's
+  // queued events into memory; PostHog itself still loads, cookieless.
+  if (hasAnalyticsConsent()) restoreDurableEventOutbox();
   if (posthogBootstrapScheduled || initialized || initPromise) return;
   posthogBootstrapScheduled = true;
 
@@ -536,21 +567,21 @@ export const isInternalUser = () => internalUser;
  * stops work already in flight.
  */
 const teardownAnalyticsVendors = () => {
-  if (isPosthogReady(posthogClient)) {
-    try {
-      posthogClient.opt_out_capturing();
-    } catch (error) {
-      logWarn('PostHog opt-out failed', error);
-    }
-  }
   // Clears both queues and the durable outbox, resets Amplitude, and stops
-  // session recording.
+  // session recording. Must run before PostHog goes cookieless: a reset after
+  // it would replace the cookieless visitor id and the events would be dropped.
   resetAnalyticsIdentity();
+  if (isPosthogReady(posthogClient)) applyPosthogConsent(posthogClient);
 };
 
 if (typeof window !== 'undefined') {
   onConsentChange((status) => {
-    if (status !== 'granted') teardownAnalyticsVendors();
+    if (status !== 'granted') {
+      teardownAnalyticsVendors();
+      return;
+    }
+    // Accepting mid-visit switches PostHog from cookieless to full tracking.
+    if (isPosthogReady(posthogClient)) applyPosthogConsent(posthogClient);
   });
 }
 
@@ -590,9 +621,20 @@ export const captureEvent = (eventName: string, properties?: AnalyticsProperties
     return;
   }
 
-  // One gate covers every vendor: Amplitude, PostHog, the durable outbox write,
-  // and the bootstrapPosthog() fallback at the end of this function.
+  // Without consent the event goes to PostHog only, which is cookieless then:
+  // no Amplitude, and no durable outbox write to sessionStorage.
   if (!hasAnalyticsConsent()) {
+    const safe = sanitizeAnalyticsProperties(properties);
+    if (isPosthogReady(posthogClient)) {
+      try {
+        posthogClient.capture(eventName, safe);
+      } catch (error) {
+        logWarn('PostHog capture failed', error);
+      }
+      return;
+    }
+    queuedEvents.push({ eventName, properties: safe });
+    bootstrapPosthog();
     return;
   }
 

@@ -6,25 +6,34 @@ const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf
 
 // ─── Source-level: the gate is present at every entry point ──────────────────
 
-test('every analytics entry point is gated on consent', () => {
+test('without consent PostHog only counts visits cookieless; everything that stores or identifies stays gated', () => {
   const source = read('../src/lib/analytics.ts');
 
   assert.match(source, /import \{ hasAnalyticsConsent, onConsentChange \} from '@\/lib\/consent'/);
 
-  // initPosthog must refuse even though PH_KEY has a hardcoded production fallback.
+  // PostHog loads for everyone, cookieless until the visitor accepts.
   const initPosthog = source.slice(source.indexOf('export const initPosthog'), source.indexOf('export const bootstrapPosthog'));
-  assert.match(initPosthog, /!hasAnalyticsConsent\(\)/);
+  assert.match(initPosthog, /cookieless_mode: 'on_reject'/);
+  assert.match(initPosthog, /applyPosthogConsent\(posthogClient\);\s*registerFirstTouchUtms\(\)/);
+  // Recorded clicks and interactions are dropped without consent.
+  assert.match(initPosthog, /!hasAnalyticsConsent\(\) && CONSENT_ONLY_EVENTS\.has\(captureResult\.event\)/);
+  assert.match(source, /CONSENT_ONLY_EVENTS = new Set\(\['\$autocapture'/);
 
-  // The gate must precede restoreDurableEventOutbox(), or a rejecting visitor
-  // rehydrates a previous session's queued events.
+  // Undecided or rejected: opted out, which on_reject turns into cookieless.
+  const apply = source.slice(source.indexOf('const applyPosthogConsent'), source.indexOf('export const initPosthog'));
+  assert.match(apply, /if \(hasAnalyticsConsent\(\)\) \{\s*if \(client\.get_explicit_consent_status\(\) !== 'granted'\) client\.opt_in_capturing/);
+  // Re-applied on every load: it sends the first pageview of a cookieless page load.
+  assert.match(apply, /\} else \{\s*client\.opt_out_capturing\(\);/);
+
+  // A rejecting visitor never rehydrates a previous session's queued events.
   const bootstrap = source.slice(source.indexOf('export const bootstrapPosthog'), source.indexOf('export const bootstrapPosthog') + 400);
-  assert.ok(
-    bootstrap.indexOf('hasAnalyticsConsent') < bootstrap.indexOf('restoreDurableEventOutbox'),
-    'consent gate must come before restoreDurableEventOutbox()',
-  );
+  assert.match(bootstrap, /if \(hasAnalyticsConsent\(\)\) restoreDurableEventOutbox\(\)/);
 
+  // Without consent an event goes to PostHog only: no Amplitude, no durable outbox.
   const captureEvent = source.slice(source.indexOf('export const captureEvent'), source.indexOf('export const identify'));
-  assert.match(captureEvent, /!hasAnalyticsConsent\(\)/);
+  const unconsented = captureEvent.slice(captureEvent.indexOf('if (!hasAnalyticsConsent())'), captureEvent.indexOf('restoreDurableEventOutbox()'));
+  assert.ok(unconsented.length > 0);
+  assert.doesNotMatch(unconsented, /captureAmplitudeEvent|persistDurableEvent/);
 
   const identify = source.slice(source.indexOf('export const identify'), source.indexOf('export const captureAuthenticatedEvent'));
   assert.match(identify, /!hasAnalyticsConsent\(\)/);
@@ -32,9 +41,13 @@ test('every analytics entry point is gated on consent', () => {
   const amplitude = source.slice(source.indexOf('export const initAmplitudeWithUser'), source.indexOf('export const initAmplitudeWithUser') + 200);
   assert.match(amplitude, /!hasAnalyticsConsent\(\)/);
 
-  // Withdrawing consent mid-session must tear the vendors down.
+  const guestRecording = source.slice(source.indexOf('export const recordGuestSession'), source.indexOf('export const onPosthogReady'));
+  assert.match(guestRecording, /if \(!hasAnalyticsConsent\(\)\) return/);
+
+  // Withdrawing consent resets the identity first, then goes cookieless.
   assert.match(source, /onConsentChange\(\(status\) => \{[\s\S]*?teardownAnalyticsVendors\(\)/);
-  assert.match(source, /opt_out_capturing\(\)/);
+  const teardown = source.slice(source.indexOf('const teardownAnalyticsVendors'), source.indexOf('const teardownAnalyticsVendors') + 600);
+  assert.ok(teardown.indexOf('resetAnalyticsIdentity()') < teardown.indexOf('applyPosthogConsent'), 'reset must precede the cookieless switch');
 });
 
 test('first-touch attribution is gated before it writes', () => {
@@ -53,9 +66,11 @@ test('Vercel Analytics only mounts once consent is granted', () => {
   assert.match(source, /analyticsConsent === 'granted' && \(\s*<Suspense fallback=\{null\}>\s*<Analytics \/>/);
 });
 
-test('accepting takes effect without a reload', () => {
+test('accepting takes effect without a reload, and undecided visitors are still counted', () => {
   const source = read('../src/main.tsx');
   assert.match(source, /onConsentChange\(\(status\) => \{\s*if \(status === 'granted'\) start\(\)/);
+  // First-touch attribution writes storage, so only the consented path runs it.
+  assert.match(source, /if \(hasAnalyticsConsent\(\)\) start\(\);[\s\S]*?else bootstrapPosthog\(\);/);
 });
 
 test('banner is non-modal, links to the privacy policy, and only reports accepts', () => {
