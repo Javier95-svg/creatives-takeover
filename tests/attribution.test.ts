@@ -121,3 +121,32 @@ test("persists direct attribution and never rejects authentication", async () =>
     rpc: async () => { throw new Error("offline"); },
   }));
 });
+
+// Runs last: the in-memory visit touch lasts for the module's lifetime, as it
+// does for one page load in the browser.
+test("without consent, a sign-up is still credited to its channel and nothing is stored", async () => {
+  installBrowser({
+    href: "https://creatives-takeover.com/?utm_source=x&utm_medium=social",
+    referrer: "https://t.co/abc",
+  });
+  storage.removeItem("ct_cookie_consent_v1");
+
+  assert.equal(captureFirstTouch()?.utm_source, "x");
+  // The visitor browses on: the landing page stays the one they arrived on.
+  installBrowser({ href: "https://creatives-takeover.com/pricing" });
+  storage.removeItem("ct_cookie_consent_v1");
+  const metadata = getSignupMetadata();
+  assert.equal(metadata.utm_source, "x");
+  assert.equal(metadata.utm_medium, "social");
+  assert.equal(metadata.signup_referrer, "https://t.co/abc");
+  assert.equal(metadata.landing_page, "/?utm_source=x&utm_medium=social");
+
+  const calls: Array<Record<string, unknown>> = [];
+  const client: AttributionRpcClient = { rpc: async (_fn, args) => { calls.push(args); return { error: null }; } };
+  await persistAttributionAfterAuth(client);
+  assert.equal(calls[0]?.p_utm_source, "x");
+  assert.equal(calls[0]?.p_referrer, "https://t.co/abc");
+
+  // Nothing about the visit was written to the device.
+  assert.equal(storage.getItem(ATTRIBUTION_STORAGE_KEY), null);
+});

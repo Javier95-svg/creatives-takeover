@@ -23,9 +23,13 @@ function AnalyticsBootstrap() {
     };
 
     if (hasAnalyticsConsent()) start();
-    // Everyone else is still counted: PostHog runs cookieless until they
-    // accept (see applyPosthogConsent in analytics.ts).
-    else bootstrapPosthog();
+    else {
+      // Everyone else is still counted: PostHog runs cookieless until they
+      // accept (see applyPosthogConsent in analytics.ts), and the landing
+      // page's referrer and UTMs are held in memory for sign-up attribution.
+      captureFirstTouch();
+      bootstrapPosthog();
+    }
 
     // Accepting from the banner must take effect immediately — without this the
     // visitor's whole first session would go unrecorded until they reloaded.

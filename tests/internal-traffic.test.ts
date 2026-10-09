@@ -23,3 +23,14 @@ test("the team's own visits never reach PostHog, signed in or not", () => {
   const auth = read('../src/contexts/AuthContext.tsx');
   assert.match(auth, /setInternalUser\(isInternalEmail\(email\)\);[\s\S]{0,160}if \(!isInternalEmail\(email\)\) clearInternalDevice\(\);/);
 });
+
+test('analytics go through the managed reverse proxy, not posthog.com', () => {
+  const source = read('../src/lib/analytics.ts');
+  assert.match(source, /const PH_HOST = import\.meta\.env\.VITE_POSTHOG_PROXY_HOST \?\? 'https:\/\/e\.creatives-takeover\.com';/);
+  assert.match(source, /ui_host: PH_UI_HOST/);
+  // The proxy must be allowed by the CSP for both scripts and requests.
+  const vercel = read('../vercel.json');
+  const csp = vercel.match(/"Content-Security-Policy", "value": "([^"]+)"/)?.[1] ?? '';
+  assert.match(csp, /script-src [^;]*https:\/\/e\.creatives-takeover\.com/);
+  assert.match(csp, /connect-src [^;]*https:\/\/e\.creatives-takeover\.com/);
+});

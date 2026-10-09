@@ -54,11 +54,15 @@ test('first-touch attribution is gated before it writes', () => {
   const source = read('../src/lib/attribution.ts');
   assert.match(source, /from "\.\/consent\.ts"/);
 
-  const capture = source.slice(source.indexOf('export function captureFirstTouch'), source.indexOf('export function getSignupMetadata'));
+  const capture = source.slice(source.indexOf('export function captureFirstTouch'), source.indexOf('/** The stored first touch'));
   assert.ok(
     capture.indexOf('hasAnalyticsConsent') < capture.indexOf('safeGet()'),
     'consent gate must come before the first storage read/write',
   );
+  // Without consent the touch lives in memory only: no storage read or write.
+  const unconsented = capture.slice(capture.indexOf('if (!hasAnalyticsConsent())'), capture.indexOf('const existing = safeGet()'));
+  assert.match(unconsented, /visitTouch \?\?= touchFromPage/);
+  assert.doesNotMatch(unconsented, /safeGet|safeSet|localStorage|readLegacyPosthogUtms/);
 });
 
 test('Vercel Analytics only mounts once consent is granted', () => {
@@ -69,8 +73,8 @@ test('Vercel Analytics only mounts once consent is granted', () => {
 test('accepting takes effect without a reload, and undecided visitors are still counted', () => {
   const source = read('../src/main.tsx');
   assert.match(source, /onConsentChange\(\(status\) => \{\s*if \(status === 'granted'\) start\(\)/);
-  // First-touch attribution writes storage, so only the consented path runs it.
-  assert.match(source, /if \(hasAnalyticsConsent\(\)\) start\(\);[\s\S]*?else bootstrapPosthog\(\);/);
+  // Undecided visitors are counted, and their landing page is held in memory.
+  assert.match(source, /if \(hasAnalyticsConsent\(\)\) start\(\);\s*else \{[\s\S]*?captureFirstTouch\(\);\s*bootstrapPosthog\(\);/);
 });
 
 test('banner is non-modal, links to the privacy policy, and only reports accepts', () => {

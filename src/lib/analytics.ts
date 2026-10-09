@@ -95,10 +95,13 @@ const PH_KEY =
   import.meta.env.VITE_POSTHOG_API_KEY ??
   import.meta.env.VITE_POSTHOG_KEY ??
   'phc_KcKa7xY35m7VqBgjuIAW42UTTalocKV8RLgzI0JZpub';
-const PH_HOST =
-  import.meta.env.VITE_POSTHOG_API_HOST ??
-  import.meta.env.VITE_POSTHOG_HOST ??
-  'https://us.i.posthog.com';
+// Events go through PostHog's managed reverse proxy on our own domain, so ad
+// blockers that block posthog.com no longer hide visits. It forwards each
+// visitor's IP, which cookieless counting hashes. Deliberately not read from
+// the older VITE_POSTHOG_*HOST variables, which may still name posthog.com.
+const PH_HOST = import.meta.env.VITE_POSTHOG_PROXY_HOST ?? 'https://e.creatives-takeover.com';
+// Links into the PostHog app (toolbar, replays) must still point at PostHog.
+const PH_UI_HOST = 'https://us.posthog.com';
 const AMPLITUDE_API_KEY = import.meta.env.VITE_AMPLITUDE_API_KEY ?? '';
 
 // Internal/test accounts whose activity must not pollute product metrics. The admin
@@ -463,6 +466,7 @@ export const initPosthog = () => {
       await new Promise<void>((resolve) => {
         posthog.init(PH_KEY as string, {
           api_host: PH_HOST,
+          ui_host: PH_UI_HOST,
           autocapture: true,
           disable_session_recording: true,
           disable_surveys: true,
@@ -781,14 +785,21 @@ export const readAuthMethod = (): StoredAuthMethod | null => {
  * Mark that the current visitor just initiated a *signup* (not a login), so the
  * subsequent SIGNED_IN handler can emit `signup_completed` to PostHog reliably.
  *
- * Stored in localStorage (survives the OAuth redirect round-trip) with a timestamp
- * so stale markers are ignored. Replaces the old profile-existence heuristic, which
- * broke once the signup DB trigger began provisioning the profile before sign-in.
+ * Held in memory, and with analytics consent also stored in localStorage so it
+ * survives the OAuth redirect round-trip, with a timestamp so stale markers are
+ * ignored. Replaces the old profile-existence heuristic, which broke once the
+ * signup DB trigger began provisioning the profile before sign-in.
  */
+let memorySignupIntent: { method: SignupMethod; ts: number } | null = null;
+
 export const persistSignupIntent = (method: SignupMethod) => {
   if (typeof window === 'undefined') {
     return;
   }
+
+  memorySignupIntent = { method, ts: Date.now() };
+  // Nothing is stored on the device without consent.
+  if (!hasAnalyticsConsent()) return;
 
   try {
     getSafeLocalStorage().setItem(
@@ -806,10 +817,12 @@ export const consumeSignupIntent = (): SignupMethod | null => {
     return null;
   }
 
+  const remembered = memorySignupIntent;
+  memorySignupIntent = null;
   const storage = getSafeLocalStorage();
-  let raw: string | null = null;
+  let raw: string | null = remembered ? JSON.stringify(remembered) : null;
   try {
-    raw = storage.getItem(SIGNUP_INTENT_STORAGE_KEY);
+    raw ??= storage.getItem(SIGNUP_INTENT_STORAGE_KEY);
     storage.removeItem(SIGNUP_INTENT_STORAGE_KEY);
   } catch (error) {
     logWarn('Failed to read signup intent', error);

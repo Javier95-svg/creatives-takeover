@@ -123,17 +123,50 @@ const getSafeLandingPage = (params: URLSearchParams): string => {
   return `${window.location.pathname}${query ? `?${query}` : ""}`.slice(0, 500);
 };
 
+/**
+ * This visit's first touch, held in memory only. Every visitor gets one, so a
+ * sign-up from someone who declined cookies is still credited to the channel
+ * that brought them (the account record is ours to keep). Nothing about it is
+ * stored on the device; only consent turns it into a stored first touch that
+ * outlives the visit. Captured on the landing page, before any navigation.
+ */
+let visitTouch: FirstTouch | null = null;
+
+const touchFromPage = (params: URLSearchParams): FirstTouch => {
+  const touch: FirstTouch = {};
+  for (const key of UTM_KEYS) {
+    const value = truncate(params.get(key), 255);
+    if (value) touch[key] = value;
+  }
+  if (!touch.utm_source) {
+    const clickSource = CLICK_SOURCE_KEYS.find(([key]) => params.has(key));
+    if (clickSource) touch.utm_source = clickSource[1];
+  }
+  touch.referrer = getExternalReferrer();
+  touch.landing_page = getSafeLandingPage(params);
+  touch.captured_at = new Date().toISOString();
+  return touch;
+};
+
 export function captureFirstTouch(): FirstTouch | null {
   if (typeof window === "undefined" || typeof document === "undefined") return null;
 
-  // UTM and click-ID capture is marketing attribution, not an essential function.
-  // Gating here also covers getSignupMetadata() and persistAttributionAfterAuth(),
-  // which both fall back to this. Consequence: a visitor who rejects and then
-  // signs up is recorded as signup_channel "direct".
-  if (!hasAnalyticsConsent()) return null;
+  // Without consent: this visit's touch, in memory, never written or read from
+  // storage. A visitor who declines and signs up via Google still reads as
+  // direct: the OAuth redirect reloads the page and memory does not survive it.
+  if (!hasAnalyticsConsent()) {
+    visitTouch ??= touchFromPage(new URLSearchParams(window.location.search));
+    return visitTouch;
+  }
 
   const existing = safeGet();
   if (existing) return existing;
+
+  // Consent given mid-visit: keep the landing page they actually arrived on.
+  if (visitTouch) {
+    safeSet(visitTouch);
+    return visitTouch;
+  }
 
   const params = new URLSearchParams(window.location.search);
   // Preserve the UTM first touch already collected by the existing PostHog setup
@@ -159,8 +192,12 @@ export function captureFirstTouch(): FirstTouch | null {
   return touch;
 }
 
+/** The stored first touch with consent, otherwise this visit's in-memory one. */
+const currentTouch = (): FirstTouch | null =>
+  hasAnalyticsConsent() ? safeGet() ?? captureFirstTouch() : captureFirstTouch();
+
 export function getSignupMetadata(): Record<string, string> {
-  const touch = safeGet() ?? captureFirstTouch() ?? {};
+  const touch = currentTouch() ?? {};
   const data: Record<string, string> = {};
 
   for (const key of UTM_KEYS) {
@@ -172,7 +209,7 @@ export function getSignupMetadata(): Record<string, string> {
 }
 
 export async function persistAttributionAfterAuth(client: AttributionRpcClient): Promise<void> {
-  const touch = safeGet() ?? captureFirstTouch();
+  const touch = currentTouch();
   if (!touch) return;
 
   try {
