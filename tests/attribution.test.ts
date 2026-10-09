@@ -46,7 +46,7 @@ const installBrowser = ({
   // capture logic, so grant it; the gate itself is covered by cookie-consent.test.ts.
   storage.setItem(
     "ct_cookie_consent_v1",
-    JSON.stringify({ analytics: "granted", decided_at: new Date().toISOString(), version: 1 }),
+    JSON.stringify({ analytics: "granted", decided_at: new Date().toISOString(), version: 2 }),
   );
 };
 

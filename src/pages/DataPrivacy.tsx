@@ -20,7 +20,7 @@ const DataPrivacy = () => {
         <main className="container mx-auto px-6 py-24">
           <header className="mb-16 text-center">
             <p className="mb-4 text-sm font-semibold uppercase tracking-[0.2em] text-primary">
-              Last updated: May 25, 2026
+              Last updated: October 9, 2026
             </p>
             <h1 className="text-4xl md:text-6xl font-bold gradient-text creatives-font leading-tight pb-2 overflow-visible mb-6">
               Data Privacy Policy
@@ -211,16 +211,27 @@ const DataPrivacy = () => {
                     such as theme choices or product preferences.
                   </li>
                   <li>
-                    <strong className="text-primary">Analytics cookies:</strong> help us see which
-                    pages and features are useful, where users get stuck, and how to improve the
-                    experience.
+                    <strong className="text-primary">Anonymous visit counting (always on):</strong>
+                    we count visits without cookies. Nothing is stored in your browser, and the
+                    identifier PostHog derives on its servers changes daily and does not identify you.
+                  </li>
+                  <li>
+                    <strong className="text-primary">Product usage records (always on, signed in):</strong>
+                    our own database records which sections and tools you open and the actions you
+                    take, to run the service and learn which parts of the platform are useful. No
+                    cookies are used and it is not shared with analytics providers.
+                  </li>
+                  <li>
+                    <strong className="text-primary">Analytics cookies (only if you accept):</strong>
+                    link your visits over time and to your account, may record sessions to fix
+                    usability problems, and measure how long you actively spend in each section.
                   </li>
                 </ul>
                 <p>
-                  You can control cookies through your browser settings, device privacy settings,
-                  email unsubscribe links, and any consent tools we make available. Blocking
-                  essential cookies may prevent sign-in or core features from working. You can also
-                  contact us to ask about analytics opt-out options for your account.
+                  You can change your analytics choice at any time from Cookie settings in the site
+                  footer or in your account settings, and through your browser or device privacy
+                  settings. Blocking essential cookies may prevent sign-in or core features from
+                  working.
                 </p>
               </div>
             </section>

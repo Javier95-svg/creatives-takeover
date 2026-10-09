@@ -15,6 +15,15 @@ export type ConsentStatus = 'unknown' | 'granted' | 'denied';
 
 export const CONSENT_STORAGE_KEY = 'ct_cookie_consent_v1';
 
+/**
+ * Bump when the Privacy Policy changes what a choice covers, so everyone is
+ * asked again. 2: anonymous visit counting, product usage records and, with
+ * consent, time spent per section (9 Oct 2026).
+ */
+export const CONSENT_VERSION = 2;
+/** A decision older than this is asked again. */
+export const CONSENT_MAX_AGE_DAYS = 365;
+
 /** Written by attribution.ts; must not survive a rejection. */
 const ATTRIBUTION_KEYS = ['ct_first_touch_v1', 'ct_posthog_first_touch_utms'];
 
@@ -27,7 +36,14 @@ const POSTHOG_KEY_PREFIXES = ['ph_', '__ph_opt_in_out_'];
 interface ConsentRecord {
   analytics: 'granted' | 'denied';
   decided_at: string;
-  version: 1;
+  version: number;
+}
+
+/** The stored decision, for the settings view and the account record. */
+export interface ConsentDecision {
+  status: 'granted' | 'denied';
+  decidedAt: string;
+  version: number;
 }
 
 type ConsentListener = (status: ConsentStatus) => void;
@@ -44,6 +60,14 @@ let fallback: ConsentStatus | null = null;
 /** Memo so the hot path (every captureEvent) does not re-parse JSON. */
 let memoRaw: string | null = null;
 let memoStatus: ConsentStatus = 'unknown';
+let memoDecision: ConsentDecision | null = null;
+
+/** A decision made under an older policy version, or too long ago, is asked again. */
+function isCurrent(record: Partial<ConsentRecord>): boolean {
+  if (record.version !== CONSENT_VERSION) return false;
+  const decided = Date.parse(record.decided_at ?? '');
+  return Number.isFinite(decided) && Date.now() - decided < CONSENT_MAX_AGE_DAYS * 86_400_000;
+}
 
 export function getAnalyticsConsent(): ConsentStatus {
   if (typeof window === 'undefined') return fallback ?? 'unknown';
@@ -59,19 +83,29 @@ export function getAnalyticsConsent(): ConsentStatus {
   // storage refused the write. The in-memory fallback covers the second case.
   if (!raw) return fallback ?? 'unknown';
 
-  if (raw === memoRaw) return memoStatus;
-
-  try {
-    const parsed = JSON.parse(raw) as Partial<ConsentRecord>;
-    memoStatus =
-      parsed?.analytics === 'granted' ? 'granted' : parsed?.analytics === 'denied' ? 'denied' : 'unknown';
-  } catch {
-    // Corrupt record — treat as undecided and re-ask.
-    memoStatus = 'unknown';
+  if (raw !== memoRaw) {
+    memoRaw = raw;
+    memoDecision = null;
+    try {
+      const parsed = JSON.parse(raw) as Partial<ConsentRecord>;
+      if ((parsed?.analytics === 'granted' || parsed?.analytics === 'denied') && typeof parsed.decided_at === 'string') {
+        memoDecision = { status: parsed.analytics, decidedAt: parsed.decided_at, version: Number(parsed.version) || 1 };
+      }
+    } catch {
+      // Corrupt record — treat as undecided and re-ask.
+    }
   }
-  memoRaw = raw;
-
+  // Checked on every read, not memoised: a decision can expire while the tab is open.
+  memoStatus = memoDecision && isCurrent({ analytics: memoDecision.status, decided_at: memoDecision.decidedAt, version: memoDecision.version })
+    ? memoDecision.status
+    : 'unknown';
   return memoStatus;
+}
+
+/** The stored decision, even if it is out of date and about to be asked again. */
+export function getConsentDecision(): ConsentDecision | null {
+  getAnalyticsConsent();
+  return memoDecision ?? (fallback === 'granted' || fallback === 'denied' ? { status: fallback, decidedAt: new Date().toISOString(), version: CONSENT_VERSION } : null);
 }
 
 export function hasAnalyticsConsent(): boolean {
@@ -84,7 +118,7 @@ export function setAnalyticsConsent(status: 'granted' | 'denied'): void {
   const record: ConsentRecord = {
     analytics: status,
     decided_at: new Date().toISOString(),
-    version: 1,
+    version: CONSENT_VERSION,
   };
 
   try {
@@ -106,14 +140,12 @@ export function setAnalyticsConsent(status: 'granted' | 'denied'): void {
   }
 }
 
-/**
- * Clears the stored decision so the banner is shown again. Exported for a future
- * "change your cookie choice" control on the privacy page.
- */
+/** Clears the stored decision so the banner is shown again. */
 export function clearAnalyticsConsent(): void {
   fallback = null;
   memoRaw = null;
   memoStatus = 'unknown';
+  memoDecision = null;
   try {
     getSafeLocalStorage().removeItem(CONSENT_STORAGE_KEY);
   } catch {
@@ -126,6 +158,26 @@ export function clearAnalyticsConsent(): void {
       console.warn('Consent listener failed:', error);
     }
   }
+}
+
+const settingsListeners = new Set<() => void>();
+
+/** Reopen the consent choice (Cookie settings in the footer and account settings). */
+export function openCookieSettings(): void {
+  for (const listener of settingsListeners) {
+    try {
+      listener();
+    } catch (error) {
+      console.warn('Cookie settings listener failed:', error);
+    }
+  }
+}
+
+export function onCookieSettingsRequest(callback: () => void): () => void {
+  settingsListeners.add(callback);
+  return () => {
+    settingsListeners.delete(callback);
+  };
 }
 
 export function onConsentChange(callback: ConsentListener): () => void {

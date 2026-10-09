@@ -22,7 +22,7 @@ const PrivacyPolicy = () => {
             <h1 className="text-4xl md:text-6xl font-bold gradient-text creatives-font leading-tight pb-2 overflow-visible mb-6">
               Privacy Policy
             </h1>
-            <p className="text-sm text-muted-foreground">Last updated: September 2, 2026</p>
+            <p className="text-sm text-muted-foreground">Last updated: October 9, 2026</p>
           </header>
 
           <div className="max-w-4xl mx-auto space-y-8">
@@ -157,13 +157,20 @@ const PrivacyPolicy = () => {
             <section className="glass-card hover-lift">
               <h2 className="text-2xl font-semibold gradient-text mb-6">6. Cookies and Similar Technologies</h2>
               <div className="space-y-4 text-foreground/90">
-                <p>We use cookies and similar technologies to operate and improve the platform.</p>
+                <p>We use cookies and similar technologies (such as browser storage) to operate and improve the platform. Some always run because the service needs them; analytics that store anything in your browser only run if you allow them.</p>
+                <h3 className="text-lg font-medium text-primary">Always on</h3>
                 <ul className="list-disc list-inside space-y-2 pl-4">
                   <li><strong>Essential cookies:</strong> required for sign-in, session management, security, and core functionality.</li>
                   <li><strong>Functional cookies:</strong> used to remember preferences and improve usability.</li>
-                  <li><strong>Analytics technologies:</strong> used to understand feature adoption, performance, and navigation patterns.</li>
+                  <li><strong>Anonymous visit counting:</strong> we count visits with PostHog in cookieless mode. Nothing is stored in your browser; PostHog's servers derive a daily-changing identifier from your IP address and browser details and do not keep your IP address. This tells us how many people visit, which pages, and where they came from, without identifying you or linking your visits across days.</li>
+                  <li><strong>Product usage records (signed-in accounts):</strong> when you are signed in, our own database records which sections and tools of the platform you open each day and the actions you take in them, such as saving a result, sending a message, booking a call, or publishing a post. We use this to run the service, show your progress, and understand which parts of the platform are useful, under our legitimate interests. It uses no cookies and is not shared with analytics providers.</li>
                 </ul>
-                <p>Analytics technologies are only enabled after you choose &ldquo;Accept All&rdquo; on our cookie banner. If you choose &ldquo;Reject All&rdquo;, we do not load analytics providers and we do not record how you navigate the site; essential and functional cookies continue to operate so that sign-in and your preferences keep working. Your choice is stored locally in your browser, so clearing site data will prompt you again.</p>
+                <h3 className="text-lg font-medium text-primary">Only if you choose &ldquo;Accept All&rdquo;</h3>
+                <ul className="list-disc list-inside space-y-2 pl-4">
+                  <li><strong>Analytics cookies:</strong> PostHog stores an identifier in your browser so your visits can be linked over time and, when you are signed in, to your account. We use this to understand journeys and fix usability problems, and we may record sessions for that purpose.</li>
+                  <li><strong>Time spent in each section:</strong> when you are signed in, we measure how long you actively use each section and tool, so we can tell which parts of the platform are genuinely useful.</li>
+                </ul>
+                <p>If you choose &ldquo;Reject All&rdquo;, none of the optional items above run; the always-on items continue. You can change your choice at any time from <strong>Cookie settings</strong> in the site footer or in your account settings. We ask again when this policy changes in a way that affects your choice, and at least every 12 months.</p>
                 <p>You can also manage cookies through your browser settings, but disabling essential cookies may reduce or break parts of the service.</p>
               </div>
             </section>

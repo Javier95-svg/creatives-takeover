@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Mail, Linkedin, Instagram, Youtube } from "lucide-react";
 import { useWorkspaceFrame } from '@/contexts/WorkspaceFrameContext';
+import { openCookieSettings } from '@/lib/consent';
 
 const Footer = () => {
   const workspace = useWorkspaceFrame();
@@ -60,6 +61,11 @@ const Footer = () => {
                 <Link className="inline-flex items-center min-h-[40px] py-1.5 hover:underline underline-offset-4 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-sm transition-colors" to="/terms">
                   Terms of Service
                 </Link>
+              </li>
+              <li>
+                <button type="button" onClick={openCookieSettings} className="inline-flex items-center min-h-[40px] py-1.5 hover:underline underline-offset-4 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-sm transition-colors">
+                  Cookie settings
+                </button>
               </li>
             </ul>
           </nav>

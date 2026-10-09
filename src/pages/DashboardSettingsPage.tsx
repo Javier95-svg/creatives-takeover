@@ -1,12 +1,15 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, LockKeyhole, Settings, Trash2, UserRound } from 'lucide-react';
+import { ArrowRight, Cookie, LockKeyhole, Settings, Trash2, UserRound } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAnalyticsConsent } from '@/hooks/useAnalyticsConsent';
+import { openCookieSettings } from '@/lib/consent';
 
 const DashboardSettingsPage = () => {
   const { user } = useAuth();
+  const consent = useAnalyticsConsent();
 
   return (
     <div className="mx-auto max-w-4xl space-y-8">
@@ -17,7 +20,7 @@ const DashboardSettingsPage = () => {
           </div>
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
-            <p className="text-muted-foreground">Manage your profile and account security.</p>
+            <p className="text-muted-foreground">Manage your profile, account security and cookie choice.</p>
           </div>
         </div>
       </header>
@@ -61,7 +64,26 @@ const DashboardSettingsPage = () => {
           </CardContent>
         </Card>
 
-        <Card className="border-destructive/35 bg-destructive/5">
+        <Card className="border-border/60 bg-card/80 backdrop-blur-sm">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-xl">
+              <Cookie className="h-5 w-5 text-primary" aria-hidden="true" />
+              Cookie settings
+            </CardTitle>
+            <CardDescription>
+              Analytics cookies are {consent === 'granted' ? 'allowed' : consent === 'denied' ? 'rejected' : 'not chosen yet'}.
+              With them, we learn which sections help founders and how long they spend there.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button type="button" variant="outline" onClick={openCookieSettings} className="w-full justify-between">
+              Change cookie settings
+              <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card className="border-destructive/35 bg-destructive/5 md:col-span-2">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-xl text-destructive">
               <Trash2 className="h-5 w-5" aria-hidden="true" />

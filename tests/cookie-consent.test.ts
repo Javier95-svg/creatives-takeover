@@ -115,8 +115,10 @@ Object.defineProperty(globalThis, 'window', {
   value: { localStorage: local, sessionStorage: session },
 });
 
-const { getAnalyticsConsent, hasAnalyticsConsent, setAnalyticsConsent, clearAnalyticsConsent, onConsentChange, CONSENT_STORAGE_KEY } =
-  await import('../src/lib/consent.ts');
+const {
+  getAnalyticsConsent, getConsentDecision, hasAnalyticsConsent, setAnalyticsConsent, clearAnalyticsConsent, onConsentChange,
+  openCookieSettings, onCookieSettingsRequest, CONSENT_STORAGE_KEY, CONSENT_VERSION, CONSENT_MAX_AGE_DAYS,
+} = await import('../src/lib/consent.ts');
 
 beforeEach(() => {
   local.clear();
@@ -168,4 +170,45 @@ test('listeners are notified and can unsubscribe', () => {
 test('a corrupt record is treated as undecided rather than consented', () => {
   local.setItem(CONSENT_STORAGE_KEY, 'not json');
   assert.equal(getAnalyticsConsent(), 'unknown');
+});
+
+test('a decision under an older policy, or over 12 months old, is asked again but remembered', () => {
+  const daysAgo = (days: number) => new Date(Date.now() - days * 86_400_000).toISOString();
+
+  local.setItem(CONSENT_STORAGE_KEY, JSON.stringify({ analytics: 'granted', decided_at: daysAgo(1), version: 1 }));
+  assert.equal(getAnalyticsConsent(), 'unknown');
+  assert.equal(hasAnalyticsConsent(), false);
+  // The banner uses the old decision to say why it is asking again.
+  assert.equal(getConsentDecision()?.status, 'granted');
+
+  local.setItem(CONSENT_STORAGE_KEY, JSON.stringify({ analytics: 'granted', decided_at: daysAgo(CONSENT_MAX_AGE_DAYS + 1), version: CONSENT_VERSION }));
+  assert.equal(getAnalyticsConsent(), 'unknown');
+
+  local.setItem(CONSENT_STORAGE_KEY, JSON.stringify({ analytics: 'granted', decided_at: daysAgo(CONSENT_MAX_AGE_DAYS - 1), version: CONSENT_VERSION }));
+  assert.equal(getAnalyticsConsent(), 'granted');
+
+  setAnalyticsConsent('denied');
+  assert.match(local.getItem(CONSENT_STORAGE_KEY) as string, new RegExp(`"version":${CONSENT_VERSION}`));
+  clearAnalyticsConsent();
+  assert.equal(getConsentDecision(), null);
+});
+
+test('Cookie settings reopens the choice from the footer and account settings', () => {
+  let opened = 0;
+  const off = onCookieSettingsRequest(() => { opened += 1; });
+  openCookieSettings();
+  off();
+  openCookieSettings();
+  assert.equal(opened, 1);
+
+  const banner = read('../src/components/consent/CookieConsentBanner.tsx');
+  assert.match(banner, /onCookieSettingsRequest\(\(\) => setSettingsOpen\(true\)\)/);
+  // Both choices carry the same weight.
+  const buttons = [...banner.matchAll(/<Button\s+variant="(\w+)"\s+onClick=\{(accept|reject)\}\s+className="([^"]+)"/g)];
+  assert.equal(buttons.length, 2);
+  assert.equal(buttons[0][1], buttons[1][1]);
+  assert.equal(buttons[0][3], buttons[1][3]);
+
+  assert.match(read('../src/components/Footer.tsx'), /onClick=\{openCookieSettings\}[\s\S]*?Cookie settings/);
+  assert.match(read('../src/pages/DashboardSettingsPage.tsx'), /onClick=\{openCookieSettings\}/);
 });
