@@ -38,6 +38,17 @@ test('Resend opens, clicks, bounces and complaints map to the retention log', ()
   assert.equal(retentionEventColumn(null), null);
 });
 
+test('profiles.last_seen_at exists for the retention readers, without the old cron job', () => {
+  const migration = read('../supabase/migrations/20261015120000_profiles_last_seen_at.sql');
+  assert.match(migration, /ADD COLUMN IF NOT EXISTS last_seen_at timestamptz;/);
+  assert.match(migration, /SET last_seen_at = COALESCE\(last_seen_at, last_activity_at, last_active_at, updated_at\)/);
+  assert.match(migration, /CREATE TRIGGER sync_profiles_last_seen_at/);
+  assert.doesNotMatch(migration, /cron\.schedule|re_engagement_emails \(/);
+  // The two readers that failed without it.
+  assert.match(read('../supabase/functions/_shared/retention-project-facts.ts'), /last_seen_at,last_activity_at,last_active_at/);
+  assert.match(read('../supabase/functions/_shared/roadmap-retention-context.ts'), /last_seen_at,last_activity_at,last_active_at/);
+});
+
 test('the signed webhook Resend calls records retention events before the discovery-call filter', () => {
   const webhook = read('../supabase/functions/discovery-call-resend-webhook/index.ts');
   const verified = webhook.indexOf('if (!await verifySvixSignature(req, rawPayload))');
