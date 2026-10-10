@@ -390,6 +390,11 @@ export function deriveStageAnswersFromOnboarding(
   };
 }
 
+/** A builder who has not picked an idea yet ("Exploring problems and ideas"). */
+export function isExploringBuilder(answers: Pick<OnboardingAnswersV1, 'founderSegment' | 'builderStartingPoint'>) {
+  return answers.founderSegment === 'builder' && answers.builderStartingPoint === 'exploring';
+}
+
 export function recommendIntentFromAnswers(
   answers: OnboardingAnswersV1,
   assignedStage: FounderStageId,
@@ -399,6 +404,11 @@ export function recommendIntentFromAnswers(
   }
   if (answers.blocker === 'team' || answers.blocker === 'accountability') {
     return { intent: 'find_mentor', reasonCodes: ['human_support_needed'] };
+  }
+  // A builder still exploring has no idea to define a customer for yet;
+  // Decision Sprint compares the ideas they have and picks one to test.
+  if (isExploringBuilder(answers)) {
+    return { intent: 'start_validation', reasonCodes: ['builder_exploring'] };
   }
   if (answers.blocker === 'customer_clarity') {
     return { intent: 'run_icp', reasonCodes: ['customer_clarity_blocker'] };

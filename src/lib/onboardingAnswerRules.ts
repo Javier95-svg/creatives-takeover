@@ -25,6 +25,26 @@ export const ANSWER_OPTIONS = {
   builderStartingPoint: ['exploring', 'idea_chosen'],
 } as const;
 
+type BuilderField = 'evidenceState' | 'primaryGoal' | 'blocker';
+
+/**
+ * What a builder (starting from scratch) is offered. Paying customers,
+ * repeatable growth, launch channels and fundraising cannot be true for them
+ * yet, so those answers are not shown. The codes are the founder ones, so stage
+ * scoring and the server checks are unchanged.
+ */
+export const BUILDER_ANSWER_OPTIONS = {
+  evidenceState: ['none', 'prospects', 'replies', 'conversations', 'commitment'],
+  primaryGoal: ['validate_problem', 'build_product', 'win_first_customer'],
+  blocker: ['customer_clarity', 'prospect_access', 'product_delivery', 'accountability', 'team'],
+} as const satisfies { [K in BuilderField]: readonly (typeof ANSWER_OPTIONS)[K][number][] };
+
+/** Whether an answer is one this segment is offered, so a value kept from the other segment is asked again. */
+export function isOfferedAnswer(segment: string, field: BuilderField, value: string): boolean {
+  const options: readonly string[] = segment === 'builder' ? BUILDER_ANSWER_OPTIONS[field] : ANSWER_OPTIONS[field];
+  return options.includes(value);
+}
+
 export const WEEKLY_CAPACITY_OPTIONS = [2, 5, 10, 20] as const;
 export const MAX_SECTORS = 12;
 

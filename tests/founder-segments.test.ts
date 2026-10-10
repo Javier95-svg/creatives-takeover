@@ -44,6 +44,35 @@ test('the workspace asks once, never on top of the project prompt, and reuses th
   assert.match(read('../src/components/workspace/WorkspaceLive.tsx'), /<ProjectSetupGate \/>[\s\S]*?<SegmentCheckGate \/>/);
 });
 
+test('builders are only offered answers that can be true when starting from scratch', async () => {
+  const { ANSWER_OPTIONS, BUILDER_ANSWER_OPTIONS, isOfferedAnswer } = await import('../src/lib/onboardingAnswerRules.ts');
+  for (const field of ['evidenceState', 'primaryGoal', 'blocker'] as const) {
+    for (const code of BUILDER_ANSWER_OPTIONS[field]) assert.ok((ANSWER_OPTIONS[field] as readonly string[]).includes(code), `${field}: ${code}`);
+  }
+  for (const [field, value] of [['primaryGoal', 'raise'], ['primaryGoal', 'reach_three_customers'], ['evidenceState', 'payment'], ['blocker', 'fundraising'], ['blocker', 'sales_conversion']] as const) {
+    assert.equal(isOfferedAnswer('builder', field, value), false, `${field}: ${value}`);
+    assert.equal(isOfferedAnswer('founder', field, value), true, `${field}: ${value}`);
+  }
+  assert.equal(isOfferedAnswer('builder', 'primaryGoal', 'validate_problem'), true);
+});
+
+test('a builder still exploring starts by comparing ideas; one with an idea is unchanged', async () => {
+  const { EMPTY_ONBOARDING_ANSWERS_V1, recommendIntentFromAnswers } = await import('../src/lib/onboardingContext.ts');
+  const base = { ...EMPTY_ONBOARDING_ANSWERS_V1, founderSegment: 'builder' as const, primaryGoal: 'validate_problem' as const, blocker: 'customer_clarity' as const, evidenceState: 'none' as const };
+  assert.equal(recommendIntentFromAnswers({ ...base, builderStartingPoint: 'exploring' }, 1).intent, 'start_validation');
+  assert.equal(recommendIntentFromAnswers({ ...base, builderStartingPoint: 'idea_chosen' }, 1).intent, 'run_icp');
+  assert.equal(recommendIntentFromAnswers({ ...base, founderSegment: 'founder', builderStartingPoint: 'exploring' }, 1).intent, 'run_icp');
+  // A builder who needs a co-founder is still sent to people first.
+  assert.equal(recommendIntentFromAnswers({ ...base, builderStartingPoint: 'exploring', blocker: 'team' }, 1).intent, 'find_mentor');
+
+  const { recommendActivation } = await import('../src/lib/activationJourneyV2.ts');
+  const input = { assignedStage: 1 as const, blocker: 'customer_clarity' as const, productStatus: 'idea_only' as const };
+  assert.equal(recommendActivation({ ...input, builderExploring: true }).intent, 'start_validation');
+  assert.equal(recommendActivation({ ...input, builderExploring: false }).intent, 'run_icp');
+  // Without Decision Sprint on their plan, the usual rule applies.
+  assert.equal(recommendActivation({ ...input, builderExploring: true, availableIntents: ['run_icp', 'find_mentor'] }).intent, 'run_icp');
+});
+
 test('homepage visitors confirm Founder or Builder instead of skipping the question', () => {
   assert.doesNotMatch(read('../src/components/AdaptiveOnboardingForm.tsx'), /skipSituation|skippedSituation/);
   assert.doesNotMatch(read('../src/pages/StartOnboarding.tsx'), /skipSituation/);

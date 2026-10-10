@@ -36,6 +36,7 @@ import {
   deriveStageAnswersFromOnboarding,
   EMPTY_ONBOARDING_ANSWERS_V1,
   isAdaptiveOnboardingComplete,
+  isExploringBuilder,
   normalizeWorkingDays,
   requiresCofounderSituation,
   requiresCustomerCount,
@@ -66,7 +67,7 @@ import { onboardingSupportNeeds } from '@/lib/onboardingSupportNeeds';
 import { clearIntendedAccountType, readIntendedAccountType } from '@/lib/intendedAccountType';
 import { clearToolHandoff, readToolHandoff } from '@/lib/toolHandoff';
 import { clearGuestOnboarding } from '@/lib/guestOnboarding';
-import { MAX_SECTORS } from '@/lib/onboardingAnswerRules';
+import { BUILDER_ANSWER_OPTIONS, isOfferedAnswer, MAX_SECTORS } from '@/lib/onboardingAnswerRules';
 import { cn } from '@/lib/utils';
 import { trackOnboardingAccountTypeChanged, trackOnboardingPrefilled, trackOnboardingStepCompleted, trackOnboardingStepViewed } from '@/lib/analytics';
 
@@ -153,6 +154,53 @@ const BLOCKER_OPTIONS = [
   ['accountability', 'I need accountability and prioritization'],
   ['team', 'I need the right co-founder or team'],
 ] as const;
+
+type EvidenceAnswer = Exclude<OnboardingAnswersV1['evidenceState'], ''>;
+type GoalAnswer = Exclude<OnboardingAnswersV1['primaryGoal'], ''>;
+type BlockerAnswer = Exclude<OnboardingAnswersV1['blocker'], ''>;
+
+// Builders are starting from scratch, so they are offered the subset in
+// BUILDER_ANSWER_OPTIONS, in words that fit someone without customers yet.
+const BUILDER_LABELS: {
+  evidenceState: Record<(typeof BUILDER_ANSWER_OPTIONS.evidenceState)[number], string>;
+  primaryGoal: Record<(typeof BUILDER_ANSWER_OPTIONS.primaryGoal)[number], string>;
+  blocker: Record<(typeof BUILDER_ANSWER_OPTIONS.blocker)[number], string>;
+} = {
+  evidenceState: {
+    none: 'Nothing yet, it is still an idea',
+    prospects: 'I have named people I could ask',
+    replies: 'Some potential customers have replied',
+    conversations: 'I have had real conversations with potential customers',
+    commitment: 'Someone committed: a pilot, pre-order or deposit',
+  },
+  primaryGoal: {
+    validate_problem: 'Find a problem worth solving',
+    build_product: 'Decide what to build first',
+    win_first_customer: 'Get a first customer to commit',
+  },
+  blocker: {
+    customer_clarity: 'I am not sure which problem or customer to focus on',
+    prospect_access: 'I do not know how to reach potential customers',
+    product_delivery: 'I am not sure what to build, or how',
+    accountability: 'I need structure and accountability',
+    team: 'I need a co-founder or team',
+  },
+};
+
+const BUILDER_EVIDENCE_OPTIONS = BUILDER_ANSWER_OPTIONS.evidenceState.map((code) => [code, BUILDER_LABELS.evidenceState[code]] as const);
+const BUILDER_GOAL_OPTIONS = BUILDER_ANSWER_OPTIONS.primaryGoal.map((code) => [code, BUILDER_LABELS.primaryGoal[code]] as const);
+const BUILDER_BLOCKER_OPTIONS = BUILDER_ANSWER_OPTIONS.blocker.map((code) => [code, BUILDER_LABELS.blocker[code]] as const);
+
+/** The evidence, goal and blocker choices each segment is offered. */
+function answerOptionsFor(segment: string): {
+  evidence: readonly (readonly [EvidenceAnswer, string])[];
+  goals: readonly (readonly [GoalAnswer, string])[];
+  blockers: readonly (readonly [BlockerAnswer, string])[];
+} {
+  return segment === 'builder'
+    ? { evidence: BUILDER_EVIDENCE_OPTIONS, goals: BUILDER_GOAL_OPTIONS, blockers: BUILDER_BLOCKER_OPTIONS }
+    : { evidence: EVIDENCE_OPTIONS, goals: GOAL_OPTIONS, blockers: BLOCKER_OPTIONS };
+}
 
 const CAPACITY_OPTIONS = [
   [2, 'About 2 hours'],
@@ -545,6 +593,7 @@ export function AdaptiveOnboardingForm({ session, onComplete, guest, autoFinish 
     [answers],
   );
   const publishProofFirst = isPublishProofFirstEnabled(useFeatureFlagEnabled(PUBLISH_PROOF_FIRST_FLAG));
+  const builderExploring = isExploringBuilder(answers);
   const recommendation = useMemo(() => recommendActivation({
     assignedStage: draftContext.assignedStage,
     blocker: stageAnswers.blocker,
@@ -552,7 +601,8 @@ export function AdaptiveOnboardingForm({ session, onComplete, guest, autoFinish 
     userPreferences: existingPreferences,
     availableIntents,
     publishProofFirst,
-  }), [availableIntents, draftContext.assignedStage, existingPreferences, publishProofFirst, stageAnswers.blocker, stageAnswers.productStatus]);
+    builderExploring,
+  }), [availableIntents, builderExploring, draftContext.assignedStage, existingPreferences, publishProofFirst, stageAnswers.blocker, stageAnswers.productStatus]);
 
   useEffect(() => {
     if (explicitIntent || !recommendation) return;
@@ -618,14 +668,17 @@ export function AdaptiveOnboardingForm({ session, onComplete, guest, autoFinish 
     if (step === 1) {
       if (!answers.businessModel) return 'Choose the business model that fits best.';
       if (answers.founderSegment === 'founder' && !answers.productState) return 'Choose what exists today.';
-      if (!answers.evidenceState) return 'Choose the strongest evidence you have today.';
+      // An answer kept from the other segment's list (after Back) is asked again.
+      if (!answers.evidenceState || !isOfferedAnswer(answers.founderSegment, 'evidenceState', answers.evidenceState)) {
+        return answers.founderSegment === 'builder' ? 'Choose how far you have got with potential customers.' : 'Choose the strongest evidence you have today.';
+      }
       if (requiresCustomerCount(answers.evidenceState) && !answers.customerCountBand) {
         return 'Choose your current paying-customer range.';
       }
     }
     if (step === 2) {
-      if (!answers.primaryGoal) return 'Choose the most important 30-day outcome.';
-      if (!answers.blocker) return 'Choose the blocker most likely to stop that outcome.';
+      if (!answers.primaryGoal || !isOfferedAnswer(answers.founderSegment, 'primaryGoal', answers.primaryGoal)) return 'Choose the most important 30-day outcome.';
+      if (!answers.blocker || !isOfferedAnswer(answers.founderSegment, 'blocker', answers.blocker)) return 'Choose the blocker most likely to stop that outcome.';
       if (requiresCofounderSituation(answers.blocker) && !answers.cofounderSituation) {
         return 'Tell us whether you are actively looking for a co-founder.';
       }
@@ -1217,6 +1270,7 @@ export function AdaptiveOnboardingForm({ session, onComplete, guest, autoFinish 
     }
     if (currentStep === 1) {
       const isBuilder = answers.founderSegment === 'builder';
+      const { evidence } = answerOptionsFor(answers.founderSegment);
       return (
         <>
           <StepHeading
@@ -1241,17 +1295,19 @@ export function AdaptiveOnboardingForm({ session, onComplete, guest, autoFinish 
             <ChoiceGrid columns={2} options={PRODUCT_STATE_OPTIONS} value={answers.productState ?? ''} onSelect={(productState) => patchAnswers({ productState })} />
           </SubQuestion>}
           <SubQuestion
-            title="What is the strongest customer evidence you have?"
-            hint="Pick the furthest point real customers have reached. Work you did on your own does not count yet."
+            title={isBuilder ? 'Have you talked to potential customers yet?' : 'What is the strongest customer evidence you have?'}
+            hint={isBuilder
+              ? 'Pick the furthest point you have reached. “Nothing yet” is a normal place to start.'
+              : 'Pick the furthest point real customers have reached. Work you did on your own does not count yet.'}
           >
-          <ChoiceGrid options={EVIDENCE_OPTIONS} value={answers.evidenceState} onSelect={(evidenceState) => {
+          <ChoiceGrid options={evidence} value={answers.evidenceState} onSelect={(evidenceState) => {
             // Customer count and revenue only apply to paying evidence; drop
             // them when the answer moves below that so they are not saved stale.
             const keep = requiresCustomerCount(evidenceState);
             patchAnswers({ evidenceState, customerCountBand: keep ? answers.customerCountBand : '', revenueBand: keep ? answers.revenueBand : '' });
           }} />
           </SubQuestion>
-          {requiresCustomerCount(answers.evidenceState) ? (
+          {requiresCustomerCount(answers.evidenceState) && isOfferedAnswer(answers.founderSegment, 'evidenceState', answers.evidenceState) ? (
             <>
               <div className="mt-6">
                 <p className="mb-3 text-sm font-semibold">How many paying customers do you have?</p>
@@ -1268,17 +1324,18 @@ export function AdaptiveOnboardingForm({ session, onComplete, guest, autoFinish 
       );
     }
     if (currentStep === 2) {
+      const { goals, blockers } = answerOptionsFor(answers.founderSegment);
       return (
         <>
           <StepHeading title="Your next 30 days" description="What you want to achieve, and what is most likely to get in the way. Your Progress Tracker and first action are built from these." headingRef={headingRef} />
           <SubQuestion title="What outcome matters most in the next 30 days?">
-            <ChoiceGrid columns={2} options={GOAL_OPTIONS} value={answers.primaryGoal} onSelect={(primaryGoal) => patchAnswers({
+            <ChoiceGrid columns={2} options={goals} value={answers.primaryGoal} onSelect={(primaryGoal) => patchAnswers({
               primaryGoal,
               fundraisingStatus: requiresFundraisingStatus(primaryGoal, answers.blocker) ? answers.fundraisingStatus : '',
             })} />
           </SubQuestion>
           <SubQuestion title="What is most likely to stop that outcome?">
-            <ChoiceGrid columns={2} options={BLOCKER_OPTIONS} value={answers.blocker} onSelect={(blocker) => patchAnswers({
+            <ChoiceGrid columns={2} options={blockers} value={answers.blocker} onSelect={(blocker) => patchAnswers({
               blocker,
               cofounderSituation: requiresCofounderSituation(blocker) ? answers.cofounderSituation : '',
               fundraisingStatus: requiresFundraisingStatus(answers.primaryGoal, blocker) ? answers.fundraisingStatus : '',
@@ -1381,9 +1438,9 @@ export function AdaptiveOnboardingForm({ session, onComplete, guest, autoFinish 
             <Badge variant="outline">{labelOf(CAPACITY_OPTIONS, answers.weeklyCapacityHours) || `${answers.weeklyCapacityHours} hours`} a week</Badge>
           </div>
           <dl className="mt-5 grid gap-4 text-sm sm:grid-cols-3">
-            <div><dt className="text-muted-foreground">30-day goal</dt><dd className="mt-1 font-medium">{labelOf(GOAL_OPTIONS, answers.primaryGoal)}</dd></div>
+            <div><dt className="text-muted-foreground">30-day goal</dt><dd className="mt-1 font-medium">{labelOf(answerOptionsFor(answers.founderSegment).goals, answers.primaryGoal)}</dd></div>
             <div><dt className="text-muted-foreground">Daily routine</dt><dd className="mt-1 font-medium">{ROUTINE_LABEL[draftContext.routineGoal] ?? 'Your weekly routine'}</dd></div>
-            <div><dt className="text-muted-foreground">Main blocker</dt><dd className="mt-1 font-medium">{labelOf(BLOCKER_OPTIONS, answers.blocker)}</dd></div>
+            <div><dt className="text-muted-foreground">Main blocker</dt><dd className="mt-1 font-medium">{labelOf(answerOptionsFor(answers.founderSegment).blockers, answers.blocker)}</dd></div>
           </dl>
         </div>
         <div className="mt-5 rounded-xl border-2 border-accent-teal bg-background/80 p-5">

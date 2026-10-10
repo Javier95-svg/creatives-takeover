@@ -255,6 +255,26 @@ test('builder accepts no working title and offers uncertainty in business model'
   }finally{close(dom);}
 });
 
+test('builders get questions that fit starting from scratch',async()=>{
+  const dom=await mount();try{
+    await choose(dom,'Builder');await click(dom,'Exploring problems');
+    const area=dom.window.document.querySelector('textarea');
+    const setter=Object.getOwnPropertyDescriptor(dom.window.HTMLTextAreaElement.prototype,'value').set;
+    setter.call(area,'I want to explore tools for local small business owners.');area.dispatchEvent(new dom.window.Event('input',{bubbles:true}));await tick();
+    await click(dom,'Continue');
+    assert.ok(text(dom).includes('Have you talked to potential customers yet?'));
+    assert.ok(!text(dom).includes('A customer paid'));
+    assert.ok(!text(dom).includes('What exists today?'));
+    await click(dom,'Not sure yet');await click(dom,'Nothing yet, it is still an idea');await click(dom,'Continue');
+    assert.ok(text(dom).includes('Find a problem worth solving'));
+    for(const founderOnly of ['Reach three paying customers','Prepare for or actively raise funding','Fundraising preparation or investor access','Interest is not converting into commitments']){
+      assert.ok(!text(dom).includes(founderOnly),founderOnly);
+    }
+    await click(dom,'Find a problem worth solving');await click(dom,'I am not sure which problem or customer to focus on');await click(dom,'Continue');
+    assert.ok(text(dom).includes('5 of 6'));
+  }finally{close(dom);}
+});
+
 test('investor creates an approved account without a review step',async()=>{
   const dom=await mount();try{
     await choose(dom,'Investor');

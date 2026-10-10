@@ -114,6 +114,8 @@ export interface ActivationRecommendationInput {
    * `heroFunnelRules.ts` keeps its rules free of analytics imports.
    */
   publishProofFirst?: boolean;
+  /** A builder who has not picked an idea yet; they compare ideas first. */
+  builderExploring?: boolean;
   userPreferences?: Record<string, unknown> | null;
   availableIntents?: ActivationIntent[];
 }
@@ -143,6 +145,12 @@ export function recommendActivation(input: ActivationRecommendationInput): Activ
   }
   if (existingIntent && available.has(existingIntent) && prefs.activationSource && prefs.activationSource !== 'onboarding') {
     return { intent: existingIntent, source: 'signup', resumeUrl: ACTIVATION_CATALOG[existingIntent].route, reason: 'Continue the goal that brought you here.' };
+  }
+
+  // ICP Builder, a demo or an MVP all assume an idea. Decision Sprint scores
+  // the ideas an exploring builder has and picks one to test.
+  if (input.builderExploring && available.has('start_validation')) {
+    return { intent: 'start_validation', source: 'quiz', resumeUrl: ACTIVATION_CATALOG.start_validation.route, reason: 'Compare the ideas you are exploring and pick one to test.' };
   }
 
   const byBlocker = blockerIntent(input.blocker, input.productStatus, input.publishProofFirst);
