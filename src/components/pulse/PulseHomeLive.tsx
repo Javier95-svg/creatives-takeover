@@ -16,6 +16,7 @@ import { PulseHomeView } from './PulseHomeView';
 import { PulseAnswerFeedback } from './PulseAnswerFeedback';
 import { PulseCommitmentCheck } from './PulseCommitmentCheck';
 import { PulseInsights } from './PulseInsights';
+import { BuilderPath } from './BuilderPath';
 import { PulseMemoryChips } from './PulseMemoryChips';
 import { PulseMemoryPanel } from './PulseMemoryPanel';
 import { parseCommitmentCheck, parseMemorySuggestions } from '@/lib/pulseMemory';
@@ -175,7 +176,11 @@ function LiveConversation({ concept, scope }: { concept: PulseHomeConcept; scope
       {sessionId && <PulseAnswerFeedback sessionId={sessionId} turnId={turnId} surface="home" />}
     </>}
     headerExtras={founderHome ? <PulseMemoryPanel projectId={scope.projectId} /> : undefined}
-    homeExtras={founderHome && historyReady ? <PulseInsights projectId={scope.projectId} onAsk={text => { void send(text); }} navigate={enterWorkspaceRoute} /> : undefined}
+    homeExtras={founderHome && historyReady ? <>
+      {/* Builders see which three tools matter first, and the next one. */}
+      {userType === 'builder' && <BuilderPath navigate={enterWorkspaceRoute} />}
+      <PulseInsights projectId={scope.projectId} onAsk={text => { void send(text); }} navigate={enterWorkspaceRoute} />
+    </> : undefined}
     onInvestorClick={(action, rank) => trackPulseInvestorProfileClicked({ surface: 'home', investor_id: action.id, rank, is_pro: !action.locked })}
     onSend={text => { void send(text); }} onNew={() => { void newConversation(); }} onRetry={() => {
       if (retryAction.current === 'new') void newConversation();
