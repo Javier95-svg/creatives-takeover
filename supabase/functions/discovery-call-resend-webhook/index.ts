@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { env, json } from "../_shared/discovery-call-v2.ts";
+import { retentionEventColumn } from "../_shared/resend-retention-events.ts";
 
 const admin = createClient(env("SUPABASE_URL"), env("SUPABASE_SERVICE_ROLE_KEY"), {
   auth: { persistSession: false },
@@ -121,6 +122,19 @@ serve(async (req) => {
   const validOutboxId = outboxId && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(outboxId);
   const createdAtValue = asString(payload.created_at);
   const createdAt = createdAtValue ? new Date(createdAtValue) : null;
+
+  // Resend sends every account event here, so retention emails' opens, clicks,
+  // bounces and complaints are recorded on their log row (first one only).
+  const retentionColumn = retentionEventColumn(eventType);
+  if (retentionColumn && providerMessageId) {
+    const at = createdAt && !Number.isNaN(createdAt.getTime()) ? createdAt.toISOString() : new Date().toISOString();
+    const { error: retentionError } = await admin.from("retention_email_log")
+      .update({ [retentionColumn]: at })
+      .eq("resend_id", providerMessageId)
+      .is(retentionColumn, null);
+    if (retentionError) console.warn("discovery-call-resend-webhook: retention event not recorded", retentionError.message);
+  }
+
   if (category !== "discovery_call") {
     return json({ success: true, ignored: true }, 200, { "Cache-Control": "no-store" });
   }

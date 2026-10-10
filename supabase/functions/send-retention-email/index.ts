@@ -20,6 +20,7 @@ import {
 } from "../_shared/retention-sequence-copy.ts";
 import { type CopySource, parseAiCopyMode, shouldUseAi } from "../_shared/retention-personalizer.ts";
 import { generatePersonalizedCopy } from "../_shared/retention-personalizer-client.ts";
+import { isServiceRoleToken } from "../_shared/service-caller.ts";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -273,7 +274,7 @@ serve(async (req: Request): Promise<Response> => {
     if (isInactiveSequence(sequence)) {
       const authorization = req.headers.get("Authorization") || "";
       const callerToken = authorization.replace(/^Bearer\s+/i, "").trim();
-      if (callerToken !== supabaseServiceKey) {
+      if (!isServiceRoleToken(callerToken, supabaseServiceKey)) {
         const caller = callerToken ? await supabase.auth.getUser(callerToken) : null;
         if (!caller?.data.user || caller.data.user.id !== userId) {
           return json({ ok: false, error: "Forbidden" }, 403);
