@@ -2,13 +2,14 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { readFileSync } from 'node:fs';
 
-import { cohortTotals, share, topSection, type AdoptionCohort, type AdoptionSectionStat } from '../src/lib/adoptionMetrics.ts';
+import { cohortTotals, share, topSection, type AdoptionCohort, type AdoptionMetrics, type AdoptionSectionStat } from '../src/lib/adoptionMetrics.ts';
 import { ADOPTION_SECTIONS, sectionForPath, WORKSPACE_SECTION_TOOLS } from '../src/lib/workspaceSections.ts';
 
 const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8');
 const sectionMigration = read('../supabase/migrations/20261012120000_adoption_by_section.sql');
-// The latest definition of admin_adoption_metrics().
 const timeMigration = read('../supabase/migrations/20261013120000_consent_and_section_time.sql');
+// The latest definition of admin_adoption_metrics().
+const segmentMigration = read('../supabase/migrations/20261014130000_adoption_by_segment.sql');
 
 test('adoption helpers format shares, find the leading section and only total finished cohorts', () => {
   assert.equal(share(2, 6), '2 of 6 (33%)');
@@ -35,7 +36,7 @@ test('the report uses exactly the sidebar sections and tools, in sidebar order',
   const sidebar = read('../src/components/workspace/WorkspaceSidebar.tsx');
   assert.match(sidebar, /const NAV_TOOLS: Record<string, string\[\]> = WORKSPACE_SECTION_TOOLS;/);
 
-  const values = timeMigration.slice(timeMigration.indexOf('section_tools (section, section_order, tool, tool_order) AS ('), timeMigration.indexOf('legacy_tools (tool_key'));
+  const values = segmentMigration.slice(segmentMigration.indexOf('section_tools (section, section_order, tool, tool_order) AS ('), segmentMigration.indexOf('legacy_tools (tool_key'));
   const rows = [...values.matchAll(/\('([A-Za-z]+)', (\d+), '([^']+)', (\d+)\)/g)]
     .map(([, section, sectionOrder, tool, toolOrder]) => ({ section, sectionOrder: Number(sectionOrder), tool, toolOrder: Number(toolOrder) }));
   const fromSql: Record<string, string[]> = {};
@@ -44,7 +45,50 @@ test('the report uses exactly the sidebar sections and tools, in sidebar order',
   }
   assert.deepEqual(Object.keys(fromSql), [...ADOPTION_SECTIONS]);
   assert.deepEqual(fromSql, WORKSPACE_SECTION_TOOLS);
-  assert.ok(!/Email Templates|email_templates/.test(timeMigration), 'Email Templates is out of scope');
+  assert.ok(!/Email Templates|email_templates/.test(segmentMigration), 'Email Templates is out of scope');
+});
+
+test('the report filters to one segment and keeps its admin check, team exclusion and time figures', () => {
+  // The one-argument version is dropped so a call with p_weeks alone is not ambiguous.
+  assert.match(segmentMigration, /DROP FUNCTION IF EXISTS public\.admin_adoption_metrics\(integer\);/);
+  assert.match(segmentMigration, /v_segment text := CASE WHEN p_segment IN \('founder', 'builder'\) THEN p_segment END;/);
+  assert.match(segmentMigration, /AND \(v_segment IS NULL OR p\.user_type = v_segment\)/);
+  assert.match(segmentMigration, /IF NOT public\.is_admin_user\(\) THEN\s*RAISE EXCEPTION/);
+  assert.match(segmentMigration, /REVOKE ALL ON FUNCTION public\.admin_adoption_metrics\(integer, text\) FROM PUBLIC, anon;/);
+  assert.match(segmentMigration, /email NOT ILIKE '%@creatives-takeover\.com'/);
+  assert.match(segmentMigration, /FROM public\.mentor_saves WHERE source = 'manual'/);
+  assert.match(segmentMigration, /'seconds30d', \(SELECT COALESCE\(sum\(ts\.engaged_seconds\), 0\)/);
+  // Only a milestone move counts as a conversion, not a corrected label.
+  assert.match(segmentMigration, /activity_data->>'from' = 'builder'\s*AND l\.activity_data->>'to' = 'founder' AND l\.activity_data->>'source' = 'graduation'/);
+  assert.match(segmentMigration, /'statedAccounts', \(SELECT count\(\*\) FROM accounts WHERE segment_stated_at IS NOT NULL\)/);
+
+  // The all-accounts call omits the segment, so it still works before the migration.
+  const page = read('../src/pages/AdminAdoption.tsx');
+  assert.match(page, /const args = segment \? \{ p_weeks: WEEKS, p_segment: segment \} : \{ p_weeks: WEEKS \};/);
+  assert.match(page, /<CardTitle>Founders and Builders<\/CardTitle>/);
+});
+
+test('the segment comparison reads each segment report the same way', async () => {
+  const { formatHours, segmentComparison } = await import('../src/lib/adoptionMetrics.ts');
+  assert.equal(formatHours(0.25), '15 min');
+  assert.equal(formatHours(5.4), '5 h');
+  assert.equal(formatHours(72), '3 days');
+  assert.equal(formatHours(null), 'n/a');
+
+  const report = (accounts: number, stated: number, active: number, engaged: number): AdoptionMetrics => ({
+    generatedAt: '2026-10-09T00:00:00Z',
+    summary: { activeAccounts7d: 0, activeAccounts30d: active, newAccounts30d: 2, newAccountsActivated30d: 1, accountsWithResultEver: 3, accounts, statedAccounts: stated, medianHoursToFirstResult: 0.5 },
+    weekly: [],
+    sections: [{ section: 'BizMap', visited30d: 1, engaged30d: engaged, actions30d: engaged, engagedEver: engaged, tools: [] }],
+    cohorts: [{ week: '2026-08-03', accounts: 4, activated7d: 2, activeWeek1: 1, activeWeek4: 0 }],
+  });
+  const rows = segmentComparison(report(51, 3, 5, 1), report(159, 1, 1, 0));
+  const get = (label: string) => rows.find((row) => row.label === label);
+  assert.deepEqual([get('Accounts')?.founder, get('Accounts')?.builder], ['51 (3 chose)', '159 (1 chose)']);
+  assert.equal(get('Active, last 30 days')?.founder, '5 of 51 (10%)');
+  assert.equal(get('Came back in week 2')?.builder, '1 of 4 (25%)');
+  assert.equal(get('Time to first result')?.founder, '30 min');
+  assert.deepEqual([get('Most engaged section')?.founder, get('Most engaged section')?.builder], ['BizMap', 'BizMap']);
 });
 
 test('time spent is formatted for the report', async () => {

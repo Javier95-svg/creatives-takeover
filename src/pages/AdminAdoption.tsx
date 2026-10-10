@@ -8,7 +8,10 @@ import TractionLogbookWallpaper, { TractionLogbookChart } from '@/components/wal
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { supabase } from '@/integrations/supabase/client';
-import { cohortTotals, share, timeSpent, topSection, type AdoptionMetrics } from '@/lib/adoptionMetrics';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import {
+  cohortTotals, segmentComparison, share, timeSpent, topSection, type AdoptionMetrics, type AdoptionSegment,
+} from '@/lib/adoptionMetrics';
 import { cn } from '@/lib/utils';
 
 const WEEKS = 12;
@@ -41,15 +44,24 @@ function TimeCell({ stat, strong }: { stat: Parameters<typeof timeSpent>[0]; str
  * covers every account regardless of cookie choices, except time spent, which
  * only comes from accounts that accepted analytics. Internal accounts excluded.
  */
+const fetchReport = async (segment: AdoptionSegment | null) => {
+  // The all-accounts call omits the segment, so it also works before 20261014130000.
+  const args = segment ? { p_weeks: WEEKS, p_segment: segment } : { p_weeks: WEEKS };
+  const { data, error } = await supabase.rpc('admin_adoption_metrics' as never, args as never);
+  if (error) throw error;
+  return data as unknown as AdoptionMetrics;
+};
+
 export default function AdminAdoption() {
-  const metrics = useQuery({
-    queryKey: ['admin-adoption-metrics', WEEKS],
-    queryFn: async () => {
-      const { data, error } = await supabase.rpc('admin_adoption_metrics' as never, { p_weeks: WEEKS } as never);
-      if (error) throw error;
-      return data as unknown as AdoptionMetrics;
-    },
-  });
+  const [segment, setSegment] = useState<'all' | AdoptionSegment>('all');
+  const all = useQuery({ queryKey: ['admin-adoption-metrics', WEEKS, 'all'], queryFn: () => fetchReport(null) });
+  // Each segment is the whole report filtered to its accounts, so the
+  // comparison and the filtered tables share one definition of every figure.
+  const founders = useQuery({ queryKey: ['admin-adoption-metrics', WEEKS, 'founder'], queryFn: () => fetchReport('founder'), retry: false });
+  const builders = useQuery({ queryKey: ['admin-adoption-metrics', WEEKS, 'builder'], queryFn: () => fetchReport('builder'), retry: false });
+  const segmentsReady = Boolean(founders.data?.summary?.accounts !== undefined && builders.data?.summary?.accounts !== undefined);
+  const metrics = segment === 'founder' && segmentsReady ? founders : segment === 'builder' && segmentsReady ? builders : all;
+  const comparison = segmentsReady && founders.data && builders.data ? segmentComparison(founders.data, builders.data) : null;
 
   // The section report needs the 20261012120000 migration; until then the
   // function returns the older per-tool shape, which this page cannot show.
@@ -95,12 +107,54 @@ export default function AdminAdoption() {
       </p>}
 
       {data && totals && <div className="space-y-8">
+        {segmentsReady && <div className="flex flex-wrap items-center gap-3">
+          <span className="text-sm text-muted-foreground" id="adoption-segment-label">Show</span>
+          <ToggleGroup type="single" variant="outline" value={segment} aria-labelledby="adoption-segment-label"
+            onValueChange={(value) => { if (value) setSegment(value as typeof segment); }}>
+            <ToggleGroupItem value="all">All accounts</ToggleGroupItem>
+            <ToggleGroupItem value="founder">Founders</ToggleGroupItem>
+            <ToggleGroupItem value="builder">Builders</ToggleGroupItem>
+          </ToggleGroup>
+          {segment !== 'all' && <span className="text-sm text-muted-foreground">Every figure below covers {segment === 'founder' ? 'founder' : 'builder'} accounts only.</span>}
+        </div>}
+
         <section aria-label="Summary" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Stat label="Active accounts, last 7 days" value={data.summary.activeAccounts7d} hint={`${data.summary.activeAccounts30d} in the last 30 days`} />
           <Stat label="New accounts, last 30 days" value={data.summary.newAccounts30d} hint="Sign-ups, from the database" />
           <Stat label="Activated within 7 days" value={share(data.summary.newAccountsActivated30d, data.summary.newAccounts30d)} hint="New accounts that did something real in their first week: a result, message, booking, post or completed task" />
           <Stat label="Came back in week 2" value={share(totals.week1.value, totals.week1.accounts)} hint={`Active 7 to 13 days after signing up, last ${WEEKS} weeks of cohorts`} />
         </section>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Founders and Builders</CardTitle>
+            <CardDescription>
+              The two primary segments side by side, whatever the filter above. Founders already have a project; Builders are starting from scratch.
+              {comparison ? <> Builders who moved to Founder at a milestone: <span className="font-medium text-foreground">{founders.data?.summary.builderToFounder ?? 0}</span>.</> : null}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {comparison ? <Table>
+              <TableHeader><TableRow>
+                <TableHead>Measure</TableHead>
+                <TableHead className="text-right">Founders</TableHead>
+                <TableHead className="text-right">Builders</TableHead>
+              </TableRow></TableHeader>
+              <TableBody>
+                {comparison.map((row) => <TableRow key={row.label}>
+                  <TableCell>
+                    <span className="font-medium">{row.label}</span>
+                    <span className="block text-xs text-muted-foreground">{row.hint}</span>
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums">{row.founder}</TableCell>
+                  <TableCell className="text-right tabular-nums">{row.builder}</TableCell>
+                </TableRow>)}
+              </TableBody>
+            </Table> : founders.isPending || builders.isPending
+              ? <p role="status" className="text-sm text-muted-foreground">Loading the segment comparison…</p>
+              : <p className="text-sm text-muted-foreground">The comparison needs the 20261014130000_adoption_by_segment migration. Run it and reload.</p>}
+          </CardContent>
+        </Card>
 
         <Card>
           <CardHeader className="flex-row items-start justify-between gap-4 space-y-0">
@@ -232,6 +286,7 @@ export default function AdminAdoption() {
           <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
           Section visits are recorded from 9 October 2026 (tool visits from 4 September), so visits before then are undercounted; actions count from the start.
           Section totals include pages that are no sidebar tool, such as Messages, so they can exceed the sum of their tools.
+          Founder and Builder labels that were not chosen are inferred from older data until the account answers the workspace question, so read the comparison against how many chose.
           Time spent counts from October 2026, only for accounts that accepted analytics, and only while the tab is visible with input in the last minute; read it against how many accounts it covers.
           At these volumes, read the numbers as direction rather than statistics.
         </p>

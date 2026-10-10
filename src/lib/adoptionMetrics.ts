@@ -17,7 +17,16 @@ export interface AdoptionSummary {
   consentDenied30d?: number;
   /** Accounts with any active time recorded in the last 30 days. */
   timedAccounts30d?: number;
+  /** Accounts in the report, how many chose their segment, and builders who moved to Founder (absent before 20261014130000). */
+  accounts?: number;
+  statedAccounts?: number;
+  medianHoursToFirstResult?: number | null;
+  builderToFounder?: number;
 }
+
+/** The two primary segments the report can be filtered by. */
+export const ADOPTION_SEGMENTS = ['founder', 'builder'] as const;
+export type AdoptionSegment = typeof ADOPTION_SEGMENTS[number];
 
 export interface AdoptionWeek {
   week: string;
@@ -75,6 +84,30 @@ export function formatDuration(seconds: number | null | undefined): string {
   if (minutes < 60) return `${minutes} m`;
   const hours = Math.floor(minutes / 60);
   return minutes % 60 ? `${hours} h ${minutes % 60} m` : `${hours} h`;
+}
+
+/** "20 min", "5 h", "3 days", or "n/a". */
+export function formatHours(hours: number | null | undefined): string {
+  if (hours == null || !Number.isFinite(hours)) return 'n/a';
+  if (hours < 1) return `${Math.max(1, Math.round(hours * 60))} min`;
+  if (hours < 48) return `${Math.round(hours)} h`;
+  return `${Math.round(hours / 24)} days`;
+}
+
+/** One row of the Founders and Builders comparison, from each segment's report. */
+export function segmentComparison(founder: AdoptionMetrics, builder: AdoptionMetrics) {
+  const row = (label: string, hint: string, pick: (metrics: AdoptionMetrics) => string) =>
+    ({ label, hint, founder: pick(founder), builder: pick(builder) });
+  return [
+    row('Accounts', 'How many chose their segment; the rest are inferred from older data.',
+      (m) => `${m.summary.accounts ?? 0} (${m.summary.statedAccounts ?? 0} chose)`),
+    row('Active, last 30 days', 'Any section visit or action.', (m) => share(m.summary.activeAccounts30d, m.summary.accounts)),
+    row('Did something real, ever', 'A result, message, booking, post or completed task.', (m) => share(m.summary.accountsWithResultEver, m.summary.accounts)),
+    row('Activated within 7 days', 'New accounts in the last 30 days.', (m) => share(m.summary.newAccountsActivated30d, m.summary.newAccounts30d)),
+    row('Came back in week 2', 'Finished sign-up cohorts, last 12 weeks.', (m) => { const t = cohortTotals(m.cohorts).week1; return share(t.value, t.accounts); }),
+    row('Time to first result', 'Median, sign-ups in the last 12 weeks.', (m) => formatHours(m.summary.medianHoursToFirstResult)),
+    row('Most engaged section', 'Last 30 days.', (m) => topSection(m.sections)?.section ?? 'None yet'),
+  ];
 }
 
 /** Time spent and, when more than one account contributed, the average per account. */
