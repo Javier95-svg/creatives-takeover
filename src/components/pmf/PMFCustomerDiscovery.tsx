@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   Users, MessagesSquare, ExternalLink, Copy, Check, Search, RefreshCw, Compass,
-  Flame, UserPlus, Info, SlidersHorizontal, Globe, History, MonitorPlay, ChevronDown,
+  Flame, UserPlus, Info, SlidersHorizontal, Globe, History, MonitorPlay, ChevronDown, Loader2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,8 +19,9 @@ import { useFeatureFlagEnabled } from '@/hooks/usePosthogFeatureFlag';
 import { useProjects } from '@/hooks/useProjects';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { logDiscoveryLeadActivity, upsertExternalLead } from '@/lib/pmfDiscoveryLeads';
-import { firstRealName, outreachMessage, VALIDATION_STAGES } from '@/lib/pmfDiscoveryOutreach';
+import { useDiscoveryLeads } from '@/hooks/useDiscoveryLeads';
+import { upsertExternalLead } from '@/lib/pmfDiscoveryLeads';
+import { firstRealName, stageQuestion, VALIDATION_STAGES } from '@/lib/pmfDiscoveryOutreach';
 import PMFDiscoveryPipeline, { type PMFInterviewLeadSeed } from '@/components/pmf/PMFDiscoveryPipeline';
 import { PMFAskCommunity } from '@/components/pmf/PMFAskCommunity';
 
@@ -139,15 +140,19 @@ const PMFCustomerDiscovery: React.FC<PMFCustomerDiscoveryProps> = ({
   const [demos, setDemos] = useState<PublishedDemo[]>([]);
   const [selectedDemoId, setSelectedDemoId] = useState('');
   const [copiedAll, setCopiedAll] = useState(false);
-  const [copiedDm, setCopiedDm] = useState<string | null>(null);
   const [categoryFilter, setCategoryFilter] = useState<'all' | PMFThreadCategory>('all');
   const [timeRange, setTimeRange] = useState<'month' | 'year' | 'all'>('year');
   const [includeSubreddits, setIncludeSubreddits] = useState('');
   const [excludeSubreddits, setExcludeSubreddits] = useState('');
   const [savedMentions, setSavedMentions] = useState<Record<string, boolean>>({});
-  // Bumped when someone is added from outside the list (a Rooms reply), so it reloads.
-  const [leadsVersion, setLeadsVersion] = useState(0);
   const [savingMention, setSavingMention] = useState<string | null>(null);
+  // The list lives here so the page can follow it: someone with people to
+  // work through sees them first, and the search folds to one line.
+  const leadsApi = useDiscoveryLeads(pipelineEnabled);
+  const returning = leadsApi.leads.some((lead) => lead.status !== 'dismissed');
+  const [searchOpen, setSearchOpen] = useState<boolean | null>(null);
+  const showSearch = searchOpen ?? !returning;
+  const [toContactSignal, setToContactSignal] = useState(0);
 
   useEffect(() => {
     if (discovery) {
@@ -233,7 +238,14 @@ const PMFCustomerDiscovery: React.FC<PMFCustomerDiscoveryProps> = ({
         excludeSubreddits: splitSubreddits(excludeSubreddits).slice(0, 20),
       } : undefined,
     });
-    if (result) onCompleted?.();
+    if (result) {
+      onCompleted?.();
+      // The people found are already in the list: open it on To contact.
+      await leadsApi.reload();
+      setSearchOpen(false);
+      setToContactSignal((signal) => signal + 1);
+      window.setTimeout(() => document.getElementById('conversations-title')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 200);
+    }
   };
 
   const copy = async (text: string, onDone: () => void) => {
@@ -241,29 +253,14 @@ const PMFCustomerDiscovery: React.FC<PMFCustomerDiscoveryProps> = ({
     catch { toast.error('Could not copy. Select the text manually.'); }
   };
 
-  const copyDm = (person: PMFPerson) => copy(outreachMessage({
-    stage,
-    name: personDisplayName(person),
-    community: personCommunityLabel(person),
-    template: discovery?.dmTemplate,
-    demoUrl: selectedDemo?.url,
-  }), () => {
-    setCopiedDm(person.username);
-    setTimeout(() => setCopiedDm(null), 2000);
-    if (user && person.leadId) {
-      void logDiscoveryLeadActivity(user.id, person.leadId, 'outreach_copied').catch((error) => {
-        console.warn('Failed to log discovery outreach copy:', error);
-      });
-    }
-  });
-
   const saveMention = async (mention: PMFExternalMention) => {
     if (!user) return;
     setSavingMention(mention.url);
     try {
       await upsertExternalLead(user.id, mention);
       setSavedMentions((current) => ({ ...current, [mention.url]: true }));
-      toast.success('Added to your conversations list.');
+      toast.success('Added to Your conversations.');
+      void leadsApi.reload();
     } catch (error) {
       console.warn('Failed to save external mention:', error);
       toast.error('Could not save this person.');
@@ -272,9 +269,7 @@ const PMFCustomerDiscovery: React.FC<PMFCustomerDiscoveryProps> = ({
     }
   };
 
-  return (
-    <div className="max-w-3xl mx-auto space-y-6">
-      {/* Intro */}
+  const intro = (
       <div className="rounded-2xl border border-primary/15 bg-primary/5 p-5 flex items-start gap-3">
         <div className="mt-0.5 rounded-xl bg-primary/15 p-2 text-primary shrink-0">
           <Compass className="h-4 w-4" />
@@ -287,9 +282,17 @@ const PMFCustomerDiscovery: React.FC<PMFCustomerDiscoveryProps> = ({
           </p>
         </div>
       </div>
+  );
 
-      {/* Who to talk to */}
-      <div className="rounded-2xl border border-border/60 bg-background/70 p-5 space-y-5">
+  // Who to talk to, and the two ways to find them.
+  const searchSection = (
+      <div id="discovery-search" className="rounded-2xl border border-border/60 bg-background/70 p-5 space-y-5">
+        {returning && (
+          <div className="flex items-center justify-between gap-3">
+            <p className="font-semibold">Find more people</p>
+            <button type="button" className="text-xs text-muted-foreground hover:text-foreground hover:underline" onClick={() => setSearchOpen(false)}>Done</button>
+          </div>
+        )}
         <fieldset className="space-y-2">
           <legend className="text-sm font-semibold">What do you want to find out?</legend>
           <div className="flex flex-wrap gap-1.5">
@@ -374,7 +377,7 @@ const PMFCustomerDiscovery: React.FC<PMFCustomerDiscoveryProps> = ({
           <p className="text-sm font-semibold">Find people to talk to</p>
           <div className="grid gap-3 sm:grid-cols-2">
             <PMFAskCommunity validationContextId={validationContextId} stage={stage} audience={audience} problem={problem}
-              onLeadAdded={() => setLeadsVersion((version) => version + 1)} />
+              onLeadAdded={() => void leadsApi.reload()} />
             <div className="flex flex-col justify-between gap-3 rounded-xl border border-border/60 bg-background/70 p-4">
               <div>
                 <p className="flex items-center gap-2 text-sm font-semibold"><Search className="h-4 w-4 text-primary" aria-hidden="true" />Search Reddit, Hacker News and the web</p>
@@ -409,7 +412,30 @@ const PMFCustomerDiscovery: React.FC<PMFCustomerDiscoveryProps> = ({
           )}
         </div>
       </div>
+  );
 
+  // Folded search for someone with people to work through: one line, one button.
+  const searchSummary = (
+      <div className="rounded-2xl border border-border/60 bg-background/70 p-4 space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-xs text-muted-foreground">Looking for · {stageQuestion(stage)}</p>
+            <p className="truncate text-sm font-medium">{audience.trim() || 'Who has the problem is not set'}</p>
+            {problem.trim() && <p className="truncate text-xs text-muted-foreground">{problem}</p>}
+          </div>
+          <Button variant="outline" onClick={() => {
+            setSearchOpen(true);
+            window.setTimeout(() => document.getElementById('discovery-search')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+          }}>
+            <Search className="mr-2 h-4 w-4" aria-hidden="true" />Find more people
+          </Button>
+        </div>
+        <PMFAskCommunity compact validationContextId={validationContextId} stage={stage} audience={audience} problem={problem}
+          onExpand={() => setSearchOpen(true)} />
+      </div>
+  );
+
+  const resultsSection = (<>
       {discoveryError && (
         <div className="rounded-xl border border-warning/30 bg-warning-subtle p-4 flex items-start gap-2" role="alert">
           <Info className="h-4 w-4 text-warning shrink-0 mt-0.5" />
@@ -456,44 +482,15 @@ const PMFCustomerDiscovery: React.FC<PMFCustomerDiscoveryProps> = ({
             </div>
           )}
 
-          {/* People to talk to — the reason for the search, so first. */}
-          {discovery.people.length > 0 && (
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <UserPlus className="h-4 w-4 text-primary shrink-0" />
-                <h3 className="text-sm font-semibold">People to talk to ({discovery.people.length})</h3>
-              </div>
-              <p className="text-caption text-muted-foreground">
-                Real people who described this problem in public. Everyone here is in your conversations list below.
-                Read their post first, then ask to learn. Don't pitch.
-              </p>
-              <div className="grid gap-2.5 md:grid-cols-2">
-                {discovery.people.map((p, i) => (
-                  <div key={i} className="rounded-2xl border border-border/60 bg-background/70 p-4 space-y-2">
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="text-sm font-semibold text-foreground">{personDisplayName(p)}</p>
-                      {personCommunityLabel(p) && <Badge variant="outline" className="text-caption shrink-0">{personCommunityLabel(p)}</Badge>}
-                    </div>
-                    {p.painQuote && <p className="text-xs italic text-muted-foreground line-clamp-3">"{p.painQuote}"</p>}
-                    <div className="flex flex-wrap items-center gap-x-3 gap-y-2 pt-1">
-                      {p.permalink && (
-                        <a href={p.permalink} target="_blank" rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-xs text-primary hover:underline">
-                          <ExternalLink className="h-3 w-3" /> Read their post
-                        </a>
-                      )}
-                      <button type="button"
-                        className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
-                        onClick={() => copyDm(p)}>
-                        {copiedDm === p.username ? <Check className="h-3 w-3 text-success" /> : <Copy className="h-3 w-3" />}
-                        {copiedDm === p.username ? 'Copied' : 'Copy a message'}
-                      </button>
-                      {p.leadId && <span className="ml-auto inline-flex items-center gap-1 text-caption text-success"><Check className="h-3 w-3" /> In your list</span>}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+          {/* The people themselves live in Your conversations: one place to act. */}
+          {discovery.people.length > 0 && pipelineEnabled && (
+            <p className="flex items-start gap-2 text-xs leading-relaxed text-muted-foreground">
+              <UserPlus className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+              <span>
+                This search found {count(discovery.people.length, 'person', 'people')}. They are in Your conversations under To contact,
+                marked "From your latest search".
+              </span>
+            </p>
           )}
 
           {moreCount > 0 && (
@@ -672,18 +669,45 @@ const PMFCustomerDiscovery: React.FC<PMFCustomerDiscoveryProps> = ({
           )}
         </div>
       )}
-      {pipelineEnabled && (
-        <PMFDiscoveryPipeline
-          key={`${discovery?.id || 'pipeline'}:${leadsVersion}`}
-          onLogInterview={onLogInterview}
-          onOpenEvidence={onOpenEvidence}
-          interviewsLogged={interviewsLogged}
-          focusLeadId={focusLeadId}
-          stage={stage}
-          messageTemplate={discovery?.dmTemplate}
-          demoUrl={selectedDemo?.url}
-        />
-      )}
+  </>);
+
+  const conversations = pipelineEnabled && (
+    <PMFDiscoveryPipeline
+      api={leadsApi}
+      latestDiscoveryId={discovery?.id ?? null}
+      showToContactSignal={toContactSignal}
+      onLogInterview={onLogInterview}
+      onOpenEvidence={onOpenEvidence}
+      interviewsLogged={interviewsLogged}
+      focusLeadId={focusLeadId}
+      stage={stage}
+      messageTemplate={discovery?.dmTemplate}
+      demoUrl={selectedDemo?.url}
+    />
+  );
+
+  // Wait for the list before choosing a layout, so the page does not jump.
+  if (pipelineEnabled && !leadsApi.loaded) {
+    return (
+      <div className="max-w-3xl mx-auto flex justify-center py-16">
+        <Loader2 className="h-5 w-5 animate-spin text-primary" aria-label="Loading your conversations" />
+      </div>
+    );
+  }
+
+  // Someone with people to work through sees them first; the search folds to one line.
+  return returning ? (
+    <div className="max-w-3xl mx-auto space-y-6">
+      {conversations}
+      {showSearch ? searchSection : searchSummary}
+      {resultsSection}
+    </div>
+  ) : (
+    <div className="max-w-3xl mx-auto space-y-6">
+      {intro}
+      {searchSection}
+      {resultsSection}
+      {conversations}
     </div>
   );
 };

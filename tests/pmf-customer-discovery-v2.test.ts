@@ -233,7 +233,9 @@ test('the discovery page asks two questions, puts people first and no longer mat
   assert.match(discovery, /externalMentions/);
   assert.match(discovery, /Attach a demo to your outreach/);
   assert.match(discovery, /aria-label="Scan history"/);
-  assert.ok(discovery.indexOf('People to talk to (') < discovery.indexOf('More from this search'), 'people come before the rest');
+  // People found go straight into the list; the search only points there.
+  assert.doesNotMatch(discovery, /People to talk to \(/);
+  assert.match(discovery, /They are in Your conversations under To contact/);
   assert.doesNotMatch(discovery, /Search v\{|source requests|PMFCommunityMatches|Founders on the platform/);
   // The "validation network" matched a mentor as a founder with a score of 0; it is gone.
   for (const removed of ['src/components/pmf/PMFCommunityMatches.tsx', 'src/components/ValidationNetworkCard.tsx', 'src/lib/pmfValidationMatches.ts']) {

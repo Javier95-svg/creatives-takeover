@@ -15,6 +15,9 @@ export function useDiscoveryLeads(enabled = true) {
   const [leads, setLeads] = useState<PMFDiscoveryLead[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // False until the first load settles, so the page does not lay out for a
+  // first visit and then jump to a returning one.
+  const [loaded, setLoaded] = useState(false);
 
   const reload = useCallback(async () => {
     if (!user || !enabled) return;
@@ -27,6 +30,7 @@ export function useDiscoveryLeads(enabled = true) {
       setError('Could not load your conversations.');
     } finally {
       setLoading(false);
+      setLoaded(true);
     }
   }, [enabled, user]);
 
@@ -67,5 +71,5 @@ export function useDiscoveryLeads(enabled = true) {
     await reload();
   }, [reload, user]);
 
-  return { leads, loading, error, reload, setStatus, markContacted, setFollowUp, saveNotes };
+  return { leads, loading, loaded, error, reload, setStatus, markContacted, setFollowUp, saveNotes };
 }

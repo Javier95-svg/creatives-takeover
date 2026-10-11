@@ -65,8 +65,11 @@ const communityLabel = (lead: PMFDiscoveryLead) =>
  * are; everything else sits in the "⋯" menu.
  */
 export default function PMFDiscoveryPipeline({
-  onLogInterview, onOpenEvidence, interviewsLogged = 0, focusLeadId = null, stage = 'problem_discovery', messageTemplate, demoUrl,
+  api, onLogInterview, onOpenEvidence, interviewsLogged = 0, focusLeadId = null, stage = 'problem_discovery',
+  messageTemplate, demoUrl, latestDiscoveryId = null, showToContactSignal = 0,
 }: {
+  /** The list and its actions, owned by the page so the layout can follow it. */
+  api: ReturnType<typeof useDiscoveryLeads>;
   onLogInterview?: (seed: PMFInterviewLeadSeed) => void;
   onOpenEvidence?: () => void;
   interviewsLogged?: number;
@@ -74,13 +77,21 @@ export default function PMFDiscoveryPipeline({
   stage?: PMFValidationStage;
   messageTemplate?: string | null;
   demoUrl?: string | null;
+  /** People from this search are marked "From your latest search". */
+  latestDiscoveryId?: string | null;
+  /** Bumped after a search so the list opens on To contact. */
+  showToContactSignal?: number;
 }) {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { startConversation } = useMessaging({ autoLoad: false });
-  const { leads, loading, error, setStatus, markContacted, setFollowUp, saveNotes } = useDiscoveryLeads(true);
+  const { leads, loading, error, setStatus, markContacted, setFollowUp, saveNotes } = api;
   const [tab, setTab] = useState<ConversationTab>('to_contact');
   const [showDismissed, setShowDismissed] = useState(false);
+
+  useEffect(() => {
+    if (showToContactSignal) { setTab('to_contact'); setShowDismissed(false); }
+  }, [showToContactSignal]);
   const [query, setQuery] = useState('');
   const [sourceFilter, setSourceFilter] = useState<'all' | PMFDiscoveryLeadSource>('all');
   const [composing, setComposing] = useState<string | null>(null);
@@ -301,6 +312,9 @@ export default function PMFDiscoveryPipeline({
                     {scanned && lead.occurrence_count > 1 ? ` · seen ${lead.occurrence_count} times` : ''}
                     {showDismissed ? ` · ${STATUS_LABEL[lead.status]}` : ''}
                   </p>
+                  {latestDiscoveryId && lead.latest_discovery_id === latestDiscoveryId && tabFor(lead.status) === 'to_contact' && (
+                    <Badge variant="outline" className="mt-1.5 w-fit border-primary/30 bg-primary/5 text-caption text-primary">From your latest search</Badge>
+                  )}
                   {/* Under the name on phones, so the name keeps its room. */}
                   {reminder && <div className="mt-1.5 sm:hidden">{reminder}</div>}
                 </div>
@@ -348,7 +362,13 @@ export default function PMFDiscoveryPipeline({
 
               {composing === lead.id && (
                 <div className="space-y-2 rounded-lg border border-border/60 bg-muted/20 p-3">
-                  <label htmlFor={`message-${lead.id}`} className="text-xs font-medium">Your message (edit it to sound like you)</label>
+                  {(lead.latest_permalink || (lead.source !== 'platform' && lead.profile_url)) && (
+                    <a href={lead.latest_permalink || lead.profile_url || '#'} target="_blank" rel="noreferrer"
+                      className="inline-flex items-center gap-1 text-xs text-primary hover:underline">
+                      Read their post first <ExternalLink className="h-3 w-3" aria-hidden="true" />
+                    </a>
+                  )}
+                  <label htmlFor={`message-${lead.id}`} className="block text-xs font-medium">Your message (edit it to sound like you)</label>
                   <Textarea id={`message-${lead.id}`} rows={4} value={draftFor(lead)}
                     onChange={(event) => setDrafts((current) => ({ ...current, [lead.id]: event.target.value }))} />
                   <div className="flex flex-wrap items-center gap-2">

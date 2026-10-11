@@ -156,6 +156,20 @@ test('asking in Rooms keeps the founder on PMF Lab, links the post to the idea a
   assert.match(source('src/lib/pmfDiscoveryLeads.ts'), /platform: 'Rooms'/);
 });
 
+test('a returning founder sees their conversations first, with the search folded and new people marked', () => {
+  const discovery = source('src/components/pmf/PMFCustomerDiscovery.tsx');
+  assert.match(discovery, /const returning = leadsApi\.leads\.some\(\(lead\) => lead\.status !== 'dismissed'\);/);
+  const returningLayout = discovery.slice(discovery.indexOf('return returning ? ('));
+  assert.ok(returningLayout.indexOf('{conversations}') < returningLayout.indexOf('{showSearch ? searchSection : searchSummary}'));
+  assert.match(discovery, /Looking for · \{stageQuestion\(stage\)\}/);
+  // One list, shared with the pipeline, so a search or a Rooms reply shows up at once.
+  assert.match(discovery, /<PMFDiscoveryPipeline\s+api=\{leadsApi\}\s+latestDiscoveryId=\{discovery\?\.id \?\? null\}/);
+  assert.match(discovery, /onLeadAdded=\{\(\) => void leadsApi\.reload\(\)\}/);
+  const pipeline = source('src/components/pmf/PMFDiscoveryPipeline.tsx');
+  assert.match(pipeline, /From your latest search/);
+  assert.doesNotMatch(pipeline, /useDiscoveryLeads\(/, 'the pipeline uses the list it is given');
+});
+
 test('outreach messages fill the name, community and demo link', () => {
   const problem = outreachMessage({ stage: 'problem_discovery', name: 'u/ana', community: 'r/freelance' });
   assert.match(problem, /^Hi u\/ana, I saw your post in r\/freelance/);

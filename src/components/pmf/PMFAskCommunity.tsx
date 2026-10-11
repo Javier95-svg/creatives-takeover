@@ -21,12 +21,15 @@ import { upsertPlatformLead } from '@/lib/pmfDiscoveryLeads';
  * and what it is; the founder edits it and stays on PMF Lab. Replies show up
  * here, and anyone who answers can be added to Your conversations.
  */
-export function PMFAskCommunity({ validationContextId, stage, audience, problem, onLeadAdded }: {
+export function PMFAskCommunity({ validationContextId, stage, audience, problem, onLeadAdded, compact = false, onExpand }: {
   validationContextId: string | null;
   stage: PMFValidationStage;
   audience: string;
   problem: string;
   onLeadAdded?: () => void;
+  /** One line under the folded search: only shown once a question is posted. */
+  compact?: boolean;
+  onExpand?: () => void;
 }) {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -85,6 +88,20 @@ export function PMFAskCommunity({ validationContextId, stage, audience, problem,
       toast.success('Your question is live in Rooms. Replies will show up here.');
       void queryClient.invalidateQueries({ queryKey: ['pmf-discovery-ask', user?.id, validationContextId] });
     }} />;
+
+  if (compact) {
+    if (!post.data) return null;
+    const count = replies.data?.length ?? 0;
+    return <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border/50 pt-3 text-sm">
+      <span className="flex items-center gap-2"><Users className="h-4 w-4 text-primary" aria-hidden="true" />
+        Your question in Rooms
+        <span className="text-muted-foreground">· {replies.isPending ? '…' : `${count} ${count === 1 ? 'reply' : 'replies'}`}</span>
+      </span>
+      <button type="button" className="text-xs font-medium text-primary hover:underline" onClick={onExpand}>
+        {count ? 'See replies' : 'View'}
+      </button>
+    </div>;
+  }
 
   if (post.data) {
     const list = replies.data ?? [];

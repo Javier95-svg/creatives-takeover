@@ -37,6 +37,8 @@ export interface PMFDiscoveryLead {
   profile_url: string | null;
   latest_permalink: string | null;
   latest_pain_quote: string | null;
+  /** The search that last found this person, if a search found them. */
+  latest_discovery_id?: string | null;
   status: PMFDiscoveryLeadStatus;
   rank_score: number;
   intent_score: number;
