@@ -220,22 +220,28 @@ test('multi-source migration widens sources, adds opt-in, and scopes function gr
   assert.doesNotMatch(returnsTable, /last_active_at/, 'precise last_active_at must not be exposed to callers');
 });
 
-test('client surfaces stage selector, community matches, external mentions, and multi-source pipeline', () => {
+test('the discovery page asks two questions, puts people first and no longer matches "founders"', () => {
   const discovery = read('src/components/pmf/PMFCustomerDiscovery.tsx');
   const pipeline = read('src/components/pmf/PMFDiscoveryPipeline.tsx');
-  const matches = read('src/components/pmf/PMFCommunityMatches.tsx');
-  const account = read('src/pages/Account.tsx');
-  assert.match(discovery, /What are you validating right now\?/);
-  assert.match(discovery, /PMFCommunityMatches/);
+  assert.match(discovery, /What do you want to find out\?/);
+  assert.match(discovery, /VALIDATION_STAGES\.map/);
+  assert.match(discovery, /Who has this problem\?/);
+  assert.match(discovery, /What problem do they have\?/);
+  // Product, industry and search filters are optional and folded away.
+  assert.match(discovery, /More detail <span[^>]*>\(optional\)/);
+  assert.match(discovery, /disabled=\{isGenerating \|\| !ready\}/);
   assert.match(discovery, /externalMentions/);
   assert.match(discovery, /Attach a demo to your outreach/);
   assert.match(discovery, /aria-label="Scan history"/);
-  assert.match(pipeline, /All sources/);
+  assert.ok(discovery.indexOf('People to talk to (') < discovery.indexOf('More from this search'), 'people come before the rest');
+  assert.doesNotMatch(discovery, /Search v\{|source requests|PMFCommunityMatches|Founders on the platform/);
+  // The "validation network" matched a mentor as a founder with a score of 0; it is gone.
+  for (const removed of ['src/components/pmf/PMFCommunityMatches.tsx', 'src/components/ValidationNetworkCard.tsx', 'src/lib/pmfValidationMatches.ts']) {
+    assert.throws(() => read(removed), removed);
+  }
+  assert.doesNotMatch(read('src/pages/Account.tsx'), /ValidationNetworkCard/);
   assert.match(pipeline, /LEAD_SOURCE_LABEL/);
   assert.match(pipeline, /fetchLeadActivities/);
-  assert.match(matches, /match_validation_users|fetchValidationMatches/);
-  assert.match(matches, /startConversation/);
-  assert.match(account, /ValidationNetworkCard/);
 });
 
 test('client surfaces flags, filters, pipeline, export, and interview linkage', () => {

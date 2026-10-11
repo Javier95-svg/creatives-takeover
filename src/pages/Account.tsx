@@ -23,7 +23,6 @@ import { AccountWallpaper } from "@/components/AccountWallpaper";
 import { CreditActivityCard } from "@/components/CreditActivityCard";
 import { NotificationPreferencesCard } from "@/components/NotificationPreferencesCard";
 import { RoleProfileCard } from "@/components/workspace/RoleProfileCard";
-import { ValidationNetworkCard } from "@/components/ValidationNetworkCard";
 import { ProfileCompletionTracker } from "@/components/ProfileCompletionTracker";
 import { OnboardingChecklist } from "@/components/OnboardingChecklist";
 import { trackActivity } from "@/lib/activity";
@@ -643,10 +642,6 @@ const Account = () => {
 
             <div id="notification-preferences">
               <NotificationPreferencesCard />
-            </div>
-
-            <div id="validation-network">
-              <ValidationNetworkCard />
             </div>
 
             <form onSubmit={handleUpdateProfile} className="space-y-8">

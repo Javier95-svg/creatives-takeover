@@ -493,6 +493,9 @@ export default function PMFLabPage() {
             <ConceptRecruitment key={validationContextId} contextId={validationContextId} projectId={demoProjectId} audience={icpPersonaName} problem={icpProblem} />
           )}
           <PMFCustomerDiscovery
+            key={validationContextId}
+            validationContextId={validationContextId}
+            originatingHandoffId={originatingHandoffId}
             defaultProductName={waitlistProductName}
             defaultTargetAudience={icpPersonaName}
             defaultIndustry={icpIndustry}

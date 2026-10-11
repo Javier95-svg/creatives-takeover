@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   Users, MessagesSquare, ExternalLink, Copy, Check, Search, RefreshCw, Compass,
-  Flame, UserPlus, Info, SlidersHorizontal, Globe, History, MonitorPlay,
+  Flame, UserPlus, Info, SlidersHorizontal, Globe, History, MonitorPlay, ChevronDown,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,13 +16,17 @@ import {
   type PMFThreadCategory, type PMFValidationStage,
 } from '@/hooks/useCustomerDiscovery';
 import { useFeatureFlagEnabled } from '@/hooks/usePosthogFeatureFlag';
+import { useProjects } from '@/hooks/useProjects';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { logDiscoveryLeadActivity, upsertExternalLead } from '@/lib/pmfDiscoveryLeads';
-import PMFCommunityMatches from '@/components/pmf/PMFCommunityMatches';
+import { firstRealName, outreachMessage, VALIDATION_STAGES } from '@/lib/pmfDiscoveryOutreach';
 import PMFDiscoveryPipeline, { type PMFInterviewLeadSeed } from '@/components/pmf/PMFDiscoveryPipeline';
 
 interface PMFCustomerDiscoveryProps {
+  /** The PMF Lab idea the search belongs to; without it nothing can be searched or loaded. */
+  validationContextId: string | null;
+  originatingHandoffId?: string | null;
   defaultProductName?: string | null;
   defaultTargetAudience?: string | null;
   defaultIndustry?: string | null;
@@ -45,34 +49,10 @@ const CATEGORY_LABEL: Record<PMFThreadCategory, string> = {
   hot_discussion: 'Hot discussion',
 };
 
-const STAGE_OPTIONS: Array<{ value: PMFValidationStage; label: string; hint: string }> = [
-  {
-    value: 'problem_discovery',
-    label: 'Problem discovery',
-    hint: 'Find people feeling the pain so you can interview them — no pitch.',
-  },
-  {
-    value: 'solution_validation',
-    label: 'Solution validation',
-    hint: 'Find people actively looking for a fix so you can show your demo.',
-  },
-  {
-    value: 'pricing',
-    label: 'Pricing signals',
-    hint: 'Find people talking about costs and budgets to test willingness to pay.',
-  },
-];
-
-const STAGE_DEFAULT_DM: Record<PMFValidationStage, string> = {
-  problem_discovery:
-    "Hi {{name}}, I saw your post in {{community}} about this exact problem. I'm researching it and would love to hear more about your experience — no pitch, just trying to learn. Would you be open to a couple of questions?",
-  solution_validation:
-    "Hi {{name}}, I saw your post in {{community}} about this exact problem. I've built an early demo that tries to solve it and I'm looking for honest, critical feedback — would you be open to taking a quick look?{{demo}}",
-  pricing:
-    "Hi {{name}}, I saw your post in {{community}} about this problem. I'm researching how people handle it today — would you be open to sharing what solving it currently costs you (time or money)? No pitch.",
-};
-
 const fmt = (n?: number) => (typeof n === 'number' ? n.toLocaleString() : '0');
+
+/** "1 community", "3 communities", or nothing for zero. */
+const count = (n: number, one: string, many: string) => (n > 0 ? `${n} ${n === 1 ? one : many}` : '');
 
 const threadSourceLabel = (t: { source?: string; subreddit?: string }) =>
   t.source === 'hackernews' ? 'Hacker News' : t.subreddit ? `r/${t.subreddit}` : '';
@@ -127,14 +107,23 @@ const buildMarkdown = (d: PMFDiscovery): string => {
   return lines.join('\n');
 };
 
+/**
+ * Customer Discovery: say who has the problem and what it is, find real people
+ * who talk about it, and keep everyone in one list to work through. Two
+ * required answers; everything else is optional and folded away.
+ */
 const PMFCustomerDiscovery: React.FC<PMFCustomerDiscoveryProps> = ({
-  defaultProductName, defaultTargetAudience, defaultIndustry, defaultProblem, onCompleted, onLogInterview,
+  validationContextId, originatingHandoffId, defaultProductName, defaultTargetAudience, defaultIndustry, defaultProblem,
+  onCompleted, onLogInterview,
 }) => {
   const { user } = useAuth();
+  const { activeProject } = useProjects();
   // Default-on with a PostHog kill switch: only an explicit `false` flag disables.
   const searchV2Enabled = useFeatureFlagEnabled('pmf-discovery-search-v2') !== false;
   const pipelineEnabled = useFeatureFlagEnabled('pmf-discovery-pipeline-v1') !== false;
-  const { discovery, discoveryError, isGenerating, generateDiscovery, loadDiscovery, runs } = useCustomerDiscovery();
+  // Since 1 Aug 2026 the hook needs the idea; called without it, every search
+  // stopped at "Sign in to find customers to talk to."
+  const { discovery, discoveryError, isGenerating, generateDiscovery, loadDiscovery, runs } = useCustomerDiscovery(validationContextId, originatingHandoffId);
   const [product, setProduct] = useState('');
   const [audience, setAudience] = useState('');
   const [industry, setIndustry] = useState('');
@@ -148,13 +137,13 @@ const PMFCustomerDiscovery: React.FC<PMFCustomerDiscoveryProps> = ({
   const [timeRange, setTimeRange] = useState<'month' | 'year' | 'all'>('year');
   const [includeSubreddits, setIncludeSubreddits] = useState('');
   const [excludeSubreddits, setExcludeSubreddits] = useState('');
-  const [matchesKey, setMatchesKey] = useState(0);
   const [savedMentions, setSavedMentions] = useState<Record<string, boolean>>({});
   const [savingMention, setSavingMention] = useState<string | null>(null);
 
   useEffect(() => {
     if (discovery) {
-      setProduct((prev) => prev || discovery.productName);
+      // A placeholder idea name ("Unscoped evidence case") describes nothing.
+      setProduct((prev) => prev || firstRealName(discovery.productName));
       setAudience((prev) => prev || discovery.targetAudience);
       setProblem((prev) => prev || discovery.problem);
       const loadedStage = discovery.queryMeta?.validationStage;
@@ -163,13 +152,14 @@ const PMFCustomerDiscovery: React.FC<PMFCustomerDiscoveryProps> = ({
   }, [discovery]);
 
   useEffect(() => {
-    if (defaultProductName) setProduct((prev) => prev || defaultProductName);
+    const productName = firstRealName(defaultProductName, activeProject?.title);
+    if (productName) setProduct((prev) => prev || productName);
     if (defaultTargetAudience) setAudience((prev) => prev || defaultTargetAudience);
     if (defaultIndustry) setIndustry((prev) => prev || defaultIndustry);
     if (defaultProblem) setProblem((prev) => prev || defaultProblem);
-  }, [defaultProductName, defaultTargetAudience, defaultIndustry, defaultProblem]);
+  }, [defaultProductName, activeProject?.title, defaultTargetAudience, defaultIndustry, defaultProblem]);
 
-  // Published demos power the solution-validation outreach template.
+  // Published demos power the "Would they try my solution?" message.
   useEffect(() => {
     if (!user) return;
     let cancelled = false;
@@ -196,11 +186,16 @@ const PMFCustomerDiscovery: React.FC<PMFCustomerDiscoveryProps> = ({
   }, [user]);
 
   const selectedDemo = demos.find((demo) => demo.id === selectedDemoId) || null;
+  const missing = [!audience.trim() && 'who has the problem', !problem.trim() && 'what the problem is'].filter(Boolean) as string[];
+  const ready = missing.length === 0;
 
   const hasResults = Boolean(
     discovery && (discovery.painPoints.length || discovery.people.length || discovery.communities.length || discovery.threads.length),
   );
   const redditAvailable = discovery?.sourceMeta?.redditAvailable !== false;
+  const moreCount = discovery
+    ? discovery.painPoints.length + discovery.communities.length + discovery.externalMentions.length + discovery.threads.length
+    : 0;
 
   const threadCategories = useMemo(() => {
     const set = new Set<PMFThreadCategory>();
@@ -214,6 +209,7 @@ const PMFCustomerDiscovery: React.FC<PMFCustomerDiscoveryProps> = ({
   }, [discovery, categoryFilter]);
 
   const handleGenerate = async () => {
+    if (!ready) return;
     const splitSubreddits = (value: string) => value.split(',').map((item) => item.trim()).filter(Boolean);
     const result = await generateDiscovery({
       product,
@@ -228,10 +224,7 @@ const PMFCustomerDiscovery: React.FC<PMFCustomerDiscoveryProps> = ({
         excludeSubreddits: splitSubreddits(excludeSubreddits).slice(0, 20),
       } : undefined,
     });
-    if (result) {
-      setMatchesKey((key) => key + 1);
-      onCompleted?.();
-    }
+    if (result) onCompleted?.();
   };
 
   const copy = async (text: string, onDone: () => void) => {
@@ -239,22 +232,13 @@ const PMFCustomerDiscovery: React.FC<PMFCustomerDiscoveryProps> = ({
     catch { toast.error('Could not copy. Select the text manually.'); }
   };
 
-  const dmFor = (p: PMFPerson) => {
-    const community = personCommunityLabel(p) || 'your community';
-    const demoLink = stage === 'solution_validation' && selectedDemo ? ` Here it is: ${selectedDemo.url}` : '';
-    let template = discovery?.dmTemplate || STAGE_DEFAULT_DM[stage];
-    template = template
-      .replace(/\{\{\s*(subreddit|community)\s*\}\}/gi, community)
-      .replace(/\{\{\s*name\s*\}\}/gi, personDisplayName(p));
-    if (/\{\{\s*demo\s*\}\}/i.test(template)) {
-      template = template.replace(/\{\{\s*demo\s*\}\}/gi, demoLink);
-    } else if (demoLink) {
-      template = `${template}${demoLink}`;
-    }
-    return template;
-  };
-
-  const copyDm = (person: PMFPerson) => copy(dmFor(person), () => {
+  const copyDm = (person: PMFPerson) => copy(outreachMessage({
+    stage,
+    name: personDisplayName(person),
+    community: personCommunityLabel(person),
+    template: discovery?.dmTemplate,
+    demoUrl: selectedDemo?.url,
+  }), () => {
     setCopiedDm(person.username);
     setTimeout(() => setCopiedDm(null), 2000);
     if (user && person.leadId) {
@@ -270,10 +254,10 @@ const PMFCustomerDiscovery: React.FC<PMFCustomerDiscoveryProps> = ({
     try {
       await upsertExternalLead(user.id, mention);
       setSavedMentions((current) => ({ ...current, [mention.url]: true }));
-      toast.success('Saved to your discovery pipeline.');
+      toast.success('Added to your conversations list.');
     } catch (error) {
       console.warn('Failed to save external mention:', error);
-      toast.error('Could not save this lead.');
+      toast.error('Could not save this person.');
     } finally {
       setSavingMention(null);
     }
@@ -289,106 +273,101 @@ const PMFCustomerDiscovery: React.FC<PMFCustomerDiscoveryProps> = ({
         <div className="space-y-1">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary/70">Customer discovery</p>
           <p className="text-sm leading-relaxed text-muted-foreground">
-            We match you with founders on the platform and scan real discussions on Reddit, Hacker News, and the wider
-            web to surface the strongest pain points and the actual people you can talk to today — tuned to where your
-            project is in validation.
+            Find real people who have the problem you solve, then turn them into conversations. We search Reddit,
+            Hacker News and the web, and keep everyone you find in one list to work through.
           </p>
         </div>
       </div>
 
-      {/* Input form */}
-      <div className="rounded-2xl border border-border/60 bg-background/70 p-5 space-y-4">
-        {/* Validation stage */}
-        <div className="space-y-2">
-          <Label className="text-xs">What are you validating right now?</Label>
+      {/* Who to talk to */}
+      <div className="rounded-2xl border border-border/60 bg-background/70 p-5 space-y-5">
+        <fieldset className="space-y-2">
+          <legend className="text-sm font-semibold">What do you want to find out?</legend>
           <div className="flex flex-wrap gap-1.5">
-            {STAGE_OPTIONS.map((option) => (
-              <button key={option.value} type="button" onClick={() => setStage(option.value)}
+            {VALIDATION_STAGES.map((option) => (
+              <button key={option.value} type="button" onClick={() => setStage(option.value)} aria-pressed={stage === option.value}
                 className={cn(
-                  'rounded-full border px-3 py-1 text-caption font-medium transition-colors',
+                  'rounded-full border px-3 py-1.5 text-sm font-medium transition-colors',
                   stage === option.value ? 'border-primary bg-primary/10 text-primary' : 'border-border/60 text-muted-foreground hover:text-foreground',
                 )}>
-                {option.label}
+                {option.question}
               </button>
             ))}
           </div>
-          <p className="text-caption text-muted-foreground">{STAGE_OPTIONS.find((option) => option.value === stage)?.hint}</p>
-        </div>
+          <p className="text-caption text-muted-foreground">{VALIDATION_STAGES.find((option) => option.value === stage)?.hint}</p>
+        </fieldset>
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-1.5">
-            <Label htmlFor="cd-product" className="text-xs">Product</Label>
-            <Input id="cd-product" value={product} onChange={(e) => setProduct(e.target.value)}
-              placeholder="e.g. an invoicing tool for freelance designers" />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="cd-audience" className="text-xs">Target audience</Label>
-            <Input id="cd-audience" value={audience} onChange={(e) => setAudience(e.target.value)}
-              placeholder="e.g. freelance designers" />
-          </div>
-        </div>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-1.5">
-            <Label htmlFor="cd-industry" className="text-xs">Industry</Label>
-            <Input id="cd-industry" value={industry} onChange={(e) => setIndustry(e.target.value)}
-              placeholder="e.g. fintech, creator economy" />
-          </div>
-          {stage === 'solution_validation' && demos.length > 0 && (
-            <div className="space-y-1.5">
-              <Label htmlFor="cd-demo" className="text-xs flex items-center gap-1">
-                <MonitorPlay className="h-3 w-3" /> Attach a demo to your outreach
-              </Label>
-              <select id="cd-demo" className="h-10 w-full rounded-md border bg-background px-3 text-sm"
-                value={selectedDemoId} onChange={(event) => setSelectedDemoId(event.target.value)}>
-                <option value="">No demo link</option>
-                {demos.map((demo) => <option key={demo.id} value={demo.id}>{demo.label}</option>)}
-              </select>
-            </div>
-          )}
+        <div className="space-y-1.5">
+          <Label htmlFor="cd-audience" className="text-sm font-semibold">Who has this problem?</Label>
+          <Input id="cd-audience" value={audience} onChange={(e) => setAudience(e.target.value)}
+            placeholder="e.g. freelance designers" />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="cd-problem" className="text-xs">Problem / pain you solve</Label>
+          <Label htmlFor="cd-problem" className="text-sm font-semibold">What problem do they have?</Label>
           <Textarea id="cd-problem" value={problem} onChange={(e) => setProblem(e.target.value)} rows={3}
-            placeholder="Describe the specific pain in your customers' words — the more specific, the better the matches." />
+            placeholder="In their words, e.g. clients pay invoices weeks late and chasing them takes hours." />
         </div>
 
-        {searchV2Enabled && (
-          <details className="rounded-xl border border-border/60 bg-muted/20 p-3">
-            <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-medium">
-              <SlidersHorizontal className="h-4 w-4" /> Search filters
-            </summary>
-            <div className="mt-3 grid gap-3 sm:grid-cols-3">
+        {stage === 'solution_validation' && demos.length > 0 && (
+          <div className="space-y-1.5">
+            <Label htmlFor="cd-demo" className="text-xs flex items-center gap-1">
+              <MonitorPlay className="h-3 w-3" /> Attach a demo to your outreach
+            </Label>
+            <select id="cd-demo" className="h-10 w-full rounded-md border bg-background px-3 text-sm"
+              value={selectedDemoId} onChange={(event) => setSelectedDemoId(event.target.value)}>
+              <option value="">No demo link</option>
+              {demos.map((demo) => <option key={demo.id} value={demo.id}>{demo.label}</option>)}
+            </select>
+          </div>
+        )}
+
+        <details className="group rounded-xl border border-border/60 bg-muted/20 p-3">
+          <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-medium">
+            <SlidersHorizontal className="h-4 w-4" /> More detail <span className="font-normal text-muted-foreground">(optional)</span>
+            <ChevronDown className="ml-auto h-4 w-4 transition-transform group-open:rotate-180" aria-hidden="true" />
+          </summary>
+          <div className="mt-3 space-y-3">
+            <div className="grid gap-3 sm:grid-cols-2">
               <div className="space-y-1.5">
-                <Label htmlFor="cd-time" className="text-xs">Time range</Label>
-                <select id="cd-time" className="h-10 w-full rounded-md border bg-background px-3 text-sm" value={timeRange} onChange={(event) => setTimeRange(event.target.value as typeof timeRange)}>
-                  <option value="month">Past month</option><option value="year">Past year</option><option value="all">All time</option>
-                </select>
+                <Label htmlFor="cd-product" className="text-xs">Your product</Label>
+                <Input id="cd-product" value={product} onChange={(e) => setProduct(e.target.value)}
+                  placeholder="e.g. an invoicing tool for freelance designers" />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="cd-include" className="text-xs">Include subreddits</Label>
-                <Input id="cd-include" value={includeSubreddits} onChange={(event) => setIncludeSubreddits(event.target.value)} placeholder="startups, saas" />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="cd-exclude" className="text-xs">Exclude subreddits</Label>
-                <Input id="cd-exclude" value={excludeSubreddits} onChange={(event) => setExcludeSubreddits(event.target.value)} placeholder="jobs, selfpromo" />
+                <Label htmlFor="cd-industry" className="text-xs">Industry</Label>
+                <Input id="cd-industry" value={industry} onChange={(e) => setIndustry(e.target.value)}
+                  placeholder="e.g. fintech, creator economy" />
               </div>
             </div>
-          </details>
-        )}
+            {searchV2Enabled && (
+              <div className="grid gap-3 sm:grid-cols-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="cd-time" className="text-xs">Posts from</Label>
+                  <select id="cd-time" className="h-10 w-full rounded-md border bg-background px-3 text-sm" value={timeRange} onChange={(event) => setTimeRange(event.target.value as typeof timeRange)}>
+                    <option value="month">Past month</option><option value="year">Past year</option><option value="all">Any time</option>
+                  </select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="cd-include" className="text-xs">Only these subreddits</Label>
+                  <Input id="cd-include" value={includeSubreddits} onChange={(event) => setIncludeSubreddits(event.target.value)} placeholder="startups, saas" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="cd-exclude" className="text-xs">Skip these subreddits</Label>
+                  <Input id="cd-exclude" value={excludeSubreddits} onChange={(event) => setExcludeSubreddits(event.target.value)} placeholder="jobs, selfpromo" />
+                </div>
+              </div>
+            )}
+          </div>
+        </details>
 
         <CreditCostNotice feature="PMF_DISCOVERY" featureName="PMF Customer Discovery" />
 
-        <div className="flex flex-wrap gap-3">
-          <Button size="sm" onClick={handleGenerate} disabled={isGenerating}>
+        <div className="flex flex-wrap items-center gap-3">
+          <Button onClick={handleGenerate} disabled={isGenerating || !ready}>
             {hasResults ? <RefreshCw className={cn('mr-2 h-4 w-4', isGenerating && 'animate-spin')} /> : <Search className="mr-2 h-4 w-4" />}
-            {isGenerating ? 'Scanning sources…' : hasResults ? 'Regenerate' : 'Find customers to talk to'}
+            {isGenerating ? 'Searching Reddit, Hacker News and the web…' : hasResults ? 'Search again' : 'Find people to talk to'}
           </Button>
-          {hasResults && discovery && (
-            <Button size="sm" variant="outline" onClick={() => copy(buildMarkdown(discovery), () => { setCopiedAll(true); setTimeout(() => setCopiedAll(false), 2000); })}>
-              {copiedAll ? <Check className="mr-2 h-4 w-4 text-success" /> : <Copy className="mr-2 h-4 w-4" />}
-              {copiedAll ? 'Copied' : 'Copy all'}
-            </Button>
-          )}
+          {!ready && <p className="text-xs text-muted-foreground">Add {missing.join(' and ')} to start.</p>}
           {runs.length > 1 && (
             <div className="ml-auto flex items-center gap-1.5">
               <History className="h-3.5 w-3.5 text-muted-foreground" />
@@ -399,7 +378,7 @@ const PMFCustomerDiscovery: React.FC<PMFCustomerDiscoveryProps> = ({
                 aria-label="Scan history">
                 {runs.map((run) => (
                   <option key={run.id} value={run.id}>
-                    {new Date(run.createdAt).toLocaleDateString()} · {run.productName || run.targetAudience || 'Scan'}
+                    {new Date(run.createdAt).toLocaleDateString()} · {firstRealName(run.productName) || run.targetAudience || 'Search'}
                   </option>
                 ))}
               </select>
@@ -408,25 +387,22 @@ const PMFCustomerDiscovery: React.FC<PMFCustomerDiscoveryProps> = ({
         </div>
       </div>
 
-      {/* Platform members — the warmest source, shown before external scans. */}
-      <PMFCommunityMatches industry={industry} audience={audience} problem={problem} refreshKey={matchesKey} />
-
       {discoveryError && (
         <div className="rounded-xl border border-warning/30 bg-warning-subtle p-4 flex items-start gap-2" role="alert">
           <Info className="h-4 w-4 text-warning shrink-0 mt-0.5" />
           <div className="space-y-1">
             <p className="text-sm font-medium text-foreground">
               {discoveryError.errorCode === 'NO_LEADS_FOUND' || discoveryError.errorCode === 'NO_USABLE_LEADS'
-                ? 'No matching leads found'
+                ? 'No matching people found'
                 : discoveryError.errorCode.startsWith('REDDIT_')
-                  ? 'Reddit scan unavailable'
-                  : 'Customer discovery could not finish'}
+                  ? 'Reddit search unavailable'
+                  : 'The search could not finish'}
             </p>
             <p className="text-xs leading-relaxed text-muted-foreground">{discoveryError.message}</p>
             <p className="text-caption text-muted-foreground">
               {discoveryError.creditsUsed > 0 && !discoveryError.refunded
                 ? `${discoveryError.creditsUsed} credits require support review.`
-                : 'No credits were used for this run.'}
+                : 'No credits were used for this search.'}
             </p>
           </div>
         </div>
@@ -436,9 +412,9 @@ const PMFCustomerDiscovery: React.FC<PMFCustomerDiscoveryProps> = ({
         <div className="rounded-xl border border-warning/30 bg-warning-subtle p-4 flex items-start gap-2" role="status">
           <Info className="h-4 w-4 text-warning shrink-0 mt-0.5" />
           <div className="space-y-1">
-            <p className="text-sm font-medium text-foreground">This saved run contains no usable leads</p>
+            <p className="text-sm font-medium text-foreground">This saved search found no one to talk to</p>
             <p className="text-xs leading-relaxed text-muted-foreground">
-              Run the scan again. Empty results are no longer treated as completed or charged work.
+              Search again. Empty results are not charged.
             </p>
           </div>
         </div>
@@ -446,58 +422,18 @@ const PMFCustomerDiscovery: React.FC<PMFCustomerDiscoveryProps> = ({
 
       {hasResults && discovery && (
         <div className="space-y-6">
-          {discovery.queryMeta && (
-            <div className="flex flex-wrap gap-2 text-caption text-muted-foreground">
-              <Badge variant="outline">Search v{discovery.queryMeta.searchVersion}</Badge>
-              {discovery.queryMeta.validationStage && (
-                <Badge variant="outline">{STAGE_OPTIONS.find((option) => option.value === discovery.queryMeta?.validationStage)?.label || discovery.queryMeta.validationStage}</Badge>
-              )}
-              <Badge variant="outline">{discovery.queryMeta.requestsSucceeded}/{discovery.queryMeta.requestsAttempted} source requests</Badge>
-              {(discovery.sourceMeta?.hackernewsThreads ?? 0) > 0 && <Badge variant="outline">+{discovery.sourceMeta.hackernewsThreads} Hacker News</Badge>}
-              <Badge variant="outline">{(discovery.queryMeta.durationMs / 1000).toFixed(1)}s</Badge>
-              {discovery.queryMeta.partial && <Badge variant="outline" className="border-warning/30 text-warning">Partial source coverage</Badge>}
-            </div>
-          )}
-          {!redditAvailable && (
+          {(discovery.queryMeta?.partial || !redditAvailable) && (
             <div className="rounded-xl border border-warning/25 bg-warning-subtle p-4 flex items-start gap-2">
               <Info className="h-4 w-4 text-warning shrink-0 mt-0.5" />
               <p className="text-xs leading-relaxed text-foreground">
-                Live Reddit data was unavailable for this run, so these results are based on a web search — without
-                upvotes, comment counts, or a people-to-contact list. Try again shortly.
+                {!redditAvailable
+                  ? 'Reddit was unavailable for this search, so these results come from a web search, without upvotes, comment counts or people to contact. Try again shortly.'
+                  : 'Some sources did not answer, so this search may have missed people. You can search again.'}
               </p>
             </div>
           )}
 
-          {/* 1 — Pain points */}
-          {discovery.painPoints.length > 0 && (
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <Flame className="h-4 w-4 text-destructive shrink-0" />
-                <h3 className="text-sm font-semibold">Top pain points ({discovery.painPoints.length})</h3>
-              </div>
-              <div className="space-y-2.5">
-                {discovery.painPoints.map((p, i) => (
-                  <div key={i} className="rounded-2xl border border-border/60 bg-background/70 p-4 space-y-2">
-                    <div className="flex items-start justify-between gap-3">
-                      <p className="text-sm font-semibold text-foreground">{p.label}</p>
-                      <Badge variant="outline" className={cn('text-caption shrink-0', intensityTone(p.intensity))}>
-                        Intensity {p.intensity}/5
-                      </Badge>
-                    </div>
-                    {p.summary && <p className="text-xs leading-relaxed text-muted-foreground">{p.summary}</p>}
-                    {p.exampleQuote && <p className="text-xs italic text-muted-foreground line-clamp-2">"{p.exampleQuote}"</p>}
-                    {(p.threadCount > 0 || p.totalEngagement > 0) && (
-                      <p className="text-caption text-muted-foreground">
-                        {p.threadCount} thread{p.threadCount === 1 ? '' : 's'} · ▲ {fmt(p.totalEngagement)} total engagement
-                      </p>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* 2 — People to talk to */}
+          {/* People to talk to — the reason for the search, so first. */}
           {discovery.people.length > 0 && (
             <div className="space-y-3">
               <div className="flex items-center gap-2">
@@ -505,7 +441,8 @@ const PMFCustomerDiscovery: React.FC<PMFCustomerDiscoveryProps> = ({
                 <h3 className="text-sm font-semibold">People to talk to ({discovery.people.length})</h3>
               </div>
               <p className="text-caption text-muted-foreground">
-                Real people who voiced this pain publicly. Engage authentically — read their post, be helpful, and ask to learn (don't pitch or spam).
+                Real people who described this problem in public. Everyone here is in your conversations list below.
+                Read their post first, then ask to learn. Don't pitch.
               </p>
               <div className="grid gap-2.5 md:grid-cols-2">
                 {discovery.people.map((p, i) => (
@@ -515,19 +452,20 @@ const PMFCustomerDiscovery: React.FC<PMFCustomerDiscoveryProps> = ({
                       {personCommunityLabel(p) && <Badge variant="outline" className="text-caption shrink-0">{personCommunityLabel(p)}</Badge>}
                     </div>
                     {p.painQuote && <p className="text-xs italic text-muted-foreground line-clamp-3">"{p.painQuote}"</p>}
-                    <div className="flex flex-wrap gap-2 pt-1">
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-2 pt-1">
                       {p.permalink && (
                         <a href={p.permalink} target="_blank" rel="noopener noreferrer"
                           className="inline-flex items-center gap-1 text-xs text-primary hover:underline">
-                          <ExternalLink className="h-3 w-3" /> View post
+                          <ExternalLink className="h-3 w-3" /> Read their post
                         </a>
                       )}
                       <button type="button"
                         className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
                         onClick={() => copyDm(p)}>
                         {copiedDm === p.username ? <Check className="h-3 w-3 text-success" /> : <Copy className="h-3 w-3" />}
-                        {copiedDm === p.username ? 'Copied' : 'Copy DM'}
+                        {copiedDm === p.username ? 'Copied' : 'Copy a message'}
                       </button>
+                      {p.leadId && <span className="ml-auto inline-flex items-center gap-1 text-caption text-success"><Check className="h-3 w-3" /> In your list</span>}
                     </div>
                   </div>
                 ))}
@@ -535,140 +473,180 @@ const PMFCustomerDiscovery: React.FC<PMFCustomerDiscoveryProps> = ({
             </div>
           )}
 
-          {/* 3 — Communities */}
-          {discovery.communities.length > 0 && (
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <Users className="h-4 w-4 text-primary shrink-0" />
-                <h3 className="text-sm font-semibold">Communities to join ({discovery.communities.length})</h3>
-              </div>
-              <div className="grid gap-3 md:grid-cols-2">
-                {discovery.communities.map((c, i) => (
-                  <div key={`${c.name}-${i}`} className="rounded-2xl border border-border/60 bg-background/70 p-4 space-y-2">
-                    <div className="flex items-start justify-between gap-2">
-                      <p className="text-sm font-semibold text-foreground">{c.name}</p>
-                      <Badge variant="outline" className={cn('text-caption shrink-0', c.source === 'reddit' ? 'bg-primary/10 text-primary border-primary/20' : '')}>
-                        {c.source === 'reddit' ? 'Reddit' : (c.platform || 'Web')}
-                      </Badge>
+          {moreCount > 0 && (
+            <details className="group rounded-2xl border border-border/60 bg-background/40 p-4" open={discovery.people.length === 0}>
+              <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-semibold">
+                More from this search
+                <span className="font-normal text-muted-foreground">
+                  {[
+                    count(discovery.painPoints.length, 'pain point', 'pain points'),
+                    count(discovery.communities.length, 'community', 'communities'),
+                    count(discovery.threads.length, 'discussion', 'discussions'),
+                  ].filter(Boolean).join(' · ')}
+                </span>
+                <ChevronDown className="ml-auto h-4 w-4 transition-transform group-open:rotate-180" aria-hidden="true" />
+              </summary>
+              <div className="mt-4 space-y-6">
+                {discovery.painPoints.length > 0 && (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Flame className="h-4 w-4 text-destructive shrink-0" />
+                      <h3 className="text-sm font-semibold">Top pain points ({discovery.painPoints.length})</h3>
                     </div>
-                    {typeof c.subscribers === 'number' && c.subscribers > 0 && (
-                      <p className="text-caption text-muted-foreground">{fmt(c.subscribers)} members</p>
-                    )}
-                    {c.whyRelevant && <p className="text-xs leading-relaxed text-muted-foreground">{c.whyRelevant}</p>}
-                    {c.howToEngage && (
-                      <p className="text-xs leading-relaxed text-foreground">
-                        <span className="font-medium text-primary/80">How to show up: </span>{c.howToEngage}
-                      </p>
-                    )}
-                    {c.url && (
-                      <a href={c.url} target="_blank" rel="noopener noreferrer"
-                        className="flex items-center gap-1 text-xs text-primary hover:underline min-w-0">
-                        <ExternalLink className="h-3 w-3 shrink-0" /><span className="truncate">{c.url}</span>
-                      </a>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* 4 — X / LinkedIn mentions (verify manually) */}
-          {discovery.externalMentions.length > 0 && (
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <Globe className="h-4 w-4 text-info shrink-0" />
-                <h3 className="text-sm font-semibold">On X and LinkedIn ({discovery.externalMentions.length})</h3>
-              </div>
-              <p className="text-caption text-muted-foreground">
-                Public posts surfaced by web search — lower confidence than the sources above, so open and verify before
-                reaching out.
-              </p>
-              <div className="grid gap-2.5 md:grid-cols-2">
-                {discovery.externalMentions.map((mention) => (
-                  <div key={mention.url} className="rounded-2xl border border-border/60 bg-muted/20 p-4 space-y-2">
-                    <div className="flex items-start justify-between gap-2">
-                      <p className="text-sm font-medium text-foreground line-clamp-2">{mention.title}</p>
-                      <Badge variant="outline" className="text-caption shrink-0">{mention.platform === 'x' ? 'X' : 'LinkedIn'}</Badge>
-                    </div>
-                    {mention.snippet && <p className="text-xs leading-relaxed text-muted-foreground line-clamp-2">{mention.snippet}</p>}
-                    <div className="flex flex-wrap gap-2 pt-1">
-                      <a href={mention.url} target="_blank" rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 text-xs text-primary hover:underline">
-                        <ExternalLink className="h-3 w-3" /> Open post
-                      </a>
-                      <button type="button"
-                        className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground disabled:opacity-50"
-                        disabled={savingMention === mention.url || savedMentions[mention.url]}
-                        onClick={() => void saveMention(mention)}>
-                        {savedMentions[mention.url] ? <Check className="h-3 w-3 text-success" /> : <UserPlus className="h-3 w-3" />}
-                        {savedMentions[mention.url] ? 'In pipeline' : 'Save as lead'}
-                      </button>
+                    <div className="space-y-2.5">
+                      {discovery.painPoints.map((p, i) => (
+                        <div key={i} className="rounded-2xl border border-border/60 bg-background/70 p-4 space-y-2">
+                          <div className="flex items-start justify-between gap-3">
+                            <p className="text-sm font-semibold text-foreground">{p.label}</p>
+                            <Badge variant="outline" className={cn('text-caption shrink-0', intensityTone(p.intensity))}>
+                              Intensity {p.intensity}/5
+                            </Badge>
+                          </div>
+                          {p.summary && <p className="text-xs leading-relaxed text-muted-foreground">{p.summary}</p>}
+                          {p.exampleQuote && <p className="text-xs italic text-muted-foreground line-clamp-2">"{p.exampleQuote}"</p>}
+                          {(p.threadCount > 0 || p.totalEngagement > 0) && (
+                            <p className="text-caption text-muted-foreground">
+                              {p.threadCount} thread{p.threadCount === 1 ? '' : 's'} · ▲ {fmt(p.totalEngagement)} total engagement
+                            </p>
+                          )}
+                        </div>
+                      ))}
                     </div>
                   </div>
-                ))}
-              </div>
-            </div>
-          )}
+                )}
 
-          {/* 5 — Live discussions (with category filter) */}
-          {discovery.threads.length > 0 && (
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <MessagesSquare className="h-4 w-4 text-info shrink-0" />
-                <h3 className="text-sm font-semibold">Live discussions ({discovery.threads.length})</h3>
-              </div>
-              {threadCategories.length > 1 && (
-                <div className="flex flex-wrap gap-1.5">
-                  {(['all', ...threadCategories] as const).map((cat) => (
-                    <button key={cat} type="button" onClick={() => setCategoryFilter(cat)}
-                      className={cn(
-                        'rounded-full border px-3 py-1 text-caption font-medium transition-colors',
-                        categoryFilter === cat ? 'border-primary bg-primary/10 text-primary' : 'border-border/60 text-muted-foreground hover:text-foreground',
-                      )}>
-                      {cat === 'all' ? 'All' : CATEGORY_LABEL[cat]}
-                    </button>
-                  ))}
-                </div>
-              )}
-              <div className="space-y-2.5">
-                {visibleThreads.map((t, i) => (
-                  <div key={t.id || i} className="rounded-2xl border border-border/60 bg-muted/20 p-4 space-y-2">
-                    <div className="flex items-start justify-between gap-2">
-                      <p className="text-sm font-medium text-foreground">{t.title}</p>
-                      <div className="flex shrink-0 gap-1">
-                        {t.isNew && <Badge variant="outline" className="text-caption border-success/30 text-success">New</Badge>}
-                        {typeof t.rankScore === 'number' && <Badge variant="outline" className="text-caption">Score {t.rankScore}</Badge>}
-                        {t.category && <Badge variant="outline" className="text-caption">{CATEGORY_LABEL[t.category]}</Badge>}
-                      </div>
+                {discovery.communities.length > 0 && (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Users className="h-4 w-4 text-primary shrink-0" />
+                      <h3 className="text-sm font-semibold">Communities to join ({discovery.communities.length})</h3>
+                    </div>
+                    <div className="grid gap-3 md:grid-cols-2">
+                      {discovery.communities.map((c, i) => (
+                        <div key={`${c.name}-${i}`} className="rounded-2xl border border-border/60 bg-background/70 p-4 space-y-2">
+                          <div className="flex items-start justify-between gap-2">
+                            <p className="text-sm font-semibold text-foreground">{c.name}</p>
+                            <Badge variant="outline" className={cn('text-caption shrink-0', c.source === 'reddit' ? 'bg-primary/10 text-primary border-primary/20' : '')}>
+                              {c.source === 'reddit' ? 'Reddit' : (c.platform || 'Web')}
+                            </Badge>
+                          </div>
+                          {typeof c.subscribers === 'number' && c.subscribers > 0 && (
+                            <p className="text-caption text-muted-foreground">{fmt(c.subscribers)} members</p>
+                          )}
+                          {c.whyRelevant && <p className="text-xs leading-relaxed text-muted-foreground">{c.whyRelevant}</p>}
+                          {c.howToEngage && (
+                            <p className="text-xs leading-relaxed text-foreground">
+                              <span className="font-medium text-primary/80">How to show up: </span>{c.howToEngage}
+                            </p>
+                          )}
+                          {c.url && (
+                            <a href={c.url} target="_blank" rel="noopener noreferrer"
+                              className="flex items-center gap-1 text-xs text-primary hover:underline min-w-0">
+                              <ExternalLink className="h-3 w-3 shrink-0" /><span className="truncate">{c.url}</span>
+                            </a>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {discovery.externalMentions.length > 0 && (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Globe className="h-4 w-4 text-info shrink-0" />
+                      <h3 className="text-sm font-semibold">On X and LinkedIn ({discovery.externalMentions.length})</h3>
                     </div>
                     <p className="text-caption text-muted-foreground">
-                      {threadSourceLabel(t) ? `${threadSourceLabel(t)} · ` : ''}
-                      {typeof t.upvotes === 'number' ? `▲ ${fmt(t.upvotes)} · ` : ''}
-                      {typeof t.comments === 'number' ? `💬 ${fmt(t.comments)}` : ''}
-                      {typeof t.ageDays === 'number' && t.ageDays >= 0 ? ` · ${t.ageDays}d ago` : ''}
+                      Found by web search, so less certain than the people above. Open and check before reaching out.
                     </p>
-                    {t.snippet && <p className="text-xs leading-relaxed text-muted-foreground line-clamp-2">{t.snippet}</p>}
-                    {t.rankingReason && <p className="text-caption font-medium text-primary/80">Why it ranks: {t.rankingReason}</p>}
-                    {t.outreachAngle && (
-                      <p className="text-xs leading-relaxed text-foreground">
-                        <span className="font-medium text-primary/80">Your angle: </span>{t.outreachAngle}
-                      </p>
-                    )}
-                    {t.url && (
-                      <a href={t.url} target="_blank" rel="noopener noreferrer"
-                        className="flex items-center gap-1 text-xs text-primary hover:underline min-w-0">
-                        <ExternalLink className="h-3 w-3 shrink-0" /><span className="truncate">{t.url}</span>
-                      </a>
-                    )}
+                    <div className="grid gap-2.5 md:grid-cols-2">
+                      {discovery.externalMentions.map((mention) => (
+                        <div key={mention.url} className="rounded-2xl border border-border/60 bg-muted/20 p-4 space-y-2">
+                          <div className="flex items-start justify-between gap-2">
+                            <p className="text-sm font-medium text-foreground line-clamp-2">{mention.title}</p>
+                            <Badge variant="outline" className="text-caption shrink-0">{mention.platform === 'x' ? 'X' : 'LinkedIn'}</Badge>
+                          </div>
+                          {mention.snippet && <p className="text-xs leading-relaxed text-muted-foreground line-clamp-2">{mention.snippet}</p>}
+                          <div className="flex flex-wrap gap-3 pt-1">
+                            <a href={mention.url} target="_blank" rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 text-xs text-primary hover:underline">
+                              <ExternalLink className="h-3 w-3" /> Open post
+                            </a>
+                            <button type="button"
+                              className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground disabled:opacity-50"
+                              disabled={savingMention === mention.url || savedMentions[mention.url]}
+                              onClick={() => void saveMention(mention)}>
+                              {savedMentions[mention.url] ? <Check className="h-3 w-3 text-success" /> : <UserPlus className="h-3 w-3" />}
+                              {savedMentions[mention.url] ? 'In your list' : 'Add to your list'}
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                ))}
-              </div>
-            </div>
-          )}
+                )}
 
-          <p className="text-xs text-muted-foreground text-center">
-            Go talk to these people, then bring what you learn back into <span className="font-medium text-foreground">Score my evidence</span>.
-          </p>
+                {discovery.threads.length > 0 && (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <MessagesSquare className="h-4 w-4 text-info shrink-0" />
+                      <h3 className="text-sm font-semibold">Discussions ({discovery.threads.length})</h3>
+                    </div>
+                    {threadCategories.length > 1 && (
+                      <div className="flex flex-wrap gap-1.5">
+                        {(['all', ...threadCategories] as const).map((cat) => (
+                          <button key={cat} type="button" onClick={() => setCategoryFilter(cat)}
+                            className={cn(
+                              'rounded-full border px-3 py-1 text-caption font-medium transition-colors',
+                              categoryFilter === cat ? 'border-primary bg-primary/10 text-primary' : 'border-border/60 text-muted-foreground hover:text-foreground',
+                            )}>
+                            {cat === 'all' ? 'All' : CATEGORY_LABEL[cat]}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    <div className="space-y-2.5">
+                      {visibleThreads.map((t, i) => (
+                        <div key={t.id || i} className="rounded-2xl border border-border/60 bg-muted/20 p-4 space-y-2">
+                          <div className="flex items-start justify-between gap-2">
+                            <p className="text-sm font-medium text-foreground">{t.title}</p>
+                            <div className="flex shrink-0 gap-1">
+                              {t.isNew && <Badge variant="outline" className="text-caption border-success/30 text-success">New</Badge>}
+                              {t.category && <Badge variant="outline" className="text-caption">{CATEGORY_LABEL[t.category]}</Badge>}
+                            </div>
+                          </div>
+                          <p className="text-caption text-muted-foreground">
+                            {threadSourceLabel(t) ? `${threadSourceLabel(t)} · ` : ''}
+                            {typeof t.upvotes === 'number' ? `▲ ${fmt(t.upvotes)} · ` : ''}
+                            {typeof t.comments === 'number' ? `💬 ${fmt(t.comments)}` : ''}
+                            {typeof t.ageDays === 'number' && t.ageDays >= 0 ? ` · ${t.ageDays}d ago` : ''}
+                          </p>
+                          {t.snippet && <p className="text-xs leading-relaxed text-muted-foreground line-clamp-2">{t.snippet}</p>}
+                          {t.outreachAngle && (
+                            <p className="text-xs leading-relaxed text-foreground">
+                              <span className="font-medium text-primary/80">Your angle: </span>{t.outreachAngle}
+                            </p>
+                          )}
+                          {t.url && (
+                            <a href={t.url} target="_blank" rel="noopener noreferrer"
+                              className="flex items-center gap-1 text-xs text-primary hover:underline min-w-0">
+                              <ExternalLink className="h-3 w-3 shrink-0" /><span className="truncate">{t.url}</span>
+                            </a>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <Button size="sm" variant="outline" onClick={() => copy(buildMarkdown(discovery), () => { setCopiedAll(true); setTimeout(() => setCopiedAll(false), 2000); })}>
+                  {copiedAll ? <Check className="mr-2 h-4 w-4 text-success" /> : <Copy className="mr-2 h-4 w-4" />}
+                  {copiedAll ? 'Copied' : 'Copy the whole search'}
+                </Button>
+              </div>
+            </details>
+          )}
         </div>
       )}
       {pipelineEnabled && <PMFDiscoveryPipeline key={discovery?.id || 'pipeline'} onLogInterview={onLogInterview} />}
