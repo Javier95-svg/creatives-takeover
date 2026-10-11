@@ -22,6 +22,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { logDiscoveryLeadActivity, upsertExternalLead } from '@/lib/pmfDiscoveryLeads';
 import { firstRealName, outreachMessage, VALIDATION_STAGES } from '@/lib/pmfDiscoveryOutreach';
 import PMFDiscoveryPipeline, { type PMFInterviewLeadSeed } from '@/components/pmf/PMFDiscoveryPipeline';
+import { PMFAskCommunity } from '@/components/pmf/PMFAskCommunity';
 
 interface PMFCustomerDiscoveryProps {
   /** The PMF Lab idea the search belongs to; without it nothing can be searched or loaded. */
@@ -144,6 +145,8 @@ const PMFCustomerDiscovery: React.FC<PMFCustomerDiscoveryProps> = ({
   const [includeSubreddits, setIncludeSubreddits] = useState('');
   const [excludeSubreddits, setExcludeSubreddits] = useState('');
   const [savedMentions, setSavedMentions] = useState<Record<string, boolean>>({});
+  // Bumped when someone is added from outside the list (a Rooms reply), so it reloads.
+  const [leadsVersion, setLeadsVersion] = useState(0);
   const [savingMention, setSavingMention] = useState<string | null>(null);
 
   useEffect(() => {
@@ -279,8 +282,8 @@ const PMFCustomerDiscovery: React.FC<PMFCustomerDiscoveryProps> = ({
         <div className="space-y-1">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary/70">Customer discovery</p>
           <p className="text-sm leading-relaxed text-muted-foreground">
-            Find real people who have the problem you solve, then turn them into conversations. We search Reddit,
-            Hacker News and the web, and keep everyone you find in one list to work through.
+            Find real people who have the problem you solve, then turn them into conversations. Ask founders in
+            Rooms for free, or search Reddit, Hacker News and the web, and keep everyone in one list to work through.
           </p>
         </div>
       </div>
@@ -366,13 +369,27 @@ const PMFCustomerDiscovery: React.FC<PMFCustomerDiscoveryProps> = ({
           </div>
         </details>
 
-        <CreditCostNotice feature="PMF_DISCOVERY" featureName="PMF Customer Discovery" />
+        {/* Two ways to find people: free in Rooms first, then the paid web search. */}
+        <div className="space-y-2">
+          <p className="text-sm font-semibold">Find people to talk to</p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <PMFAskCommunity validationContextId={validationContextId} stage={stage} audience={audience} problem={problem}
+              onLeadAdded={() => setLeadsVersion((version) => version + 1)} />
+            <div className="flex flex-col justify-between gap-3 rounded-xl border border-border/60 bg-background/70 p-4">
+              <div>
+                <p className="flex items-center gap-2 text-sm font-semibold"><Search className="h-4 w-4 text-primary" aria-hidden="true" />Search Reddit, Hacker News and the web</p>
+                <p className="mt-1 text-xs leading-relaxed text-muted-foreground">Find people who described this problem in public, with a message ready for each.</p>
+              </div>
+              <CreditCostNotice feature="PMF_DISCOVERY" featureName="PMF Customer Discovery" />
+              <Button className="w-full" onClick={handleGenerate} disabled={isGenerating || !ready}>
+                {hasResults ? <RefreshCw className={cn('mr-2 h-4 w-4', isGenerating && 'animate-spin')} /> : <Search className="mr-2 h-4 w-4" />}
+                {isGenerating ? 'Searching…' : hasResults ? 'Search again' : 'Search for people'}
+              </Button>
+            </div>
+          </div>
+        </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <Button onClick={handleGenerate} disabled={isGenerating || !ready}>
-            {hasResults ? <RefreshCw className={cn('mr-2 h-4 w-4', isGenerating && 'animate-spin')} /> : <Search className="mr-2 h-4 w-4" />}
-            {isGenerating ? 'Searching Reddit, Hacker News and the web…' : hasResults ? 'Search again' : 'Find people to talk to'}
-          </Button>
           {!ready && <p className="text-xs text-muted-foreground">Add {missing.join(' and ')} to start.</p>}
           {runs.length > 1 && (
             <div className="ml-auto flex items-center gap-1.5">
@@ -657,7 +674,7 @@ const PMFCustomerDiscovery: React.FC<PMFCustomerDiscoveryProps> = ({
       )}
       {pipelineEnabled && (
         <PMFDiscoveryPipeline
-          key={discovery?.id || 'pipeline'}
+          key={`${discovery?.id || 'pipeline'}:${leadsVersion}`}
           onLogInterview={onLogInterview}
           onOpenEvidence={onOpenEvidence}
           interviewsLogged={interviewsLogged}

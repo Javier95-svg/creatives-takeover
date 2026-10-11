@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrig
 import { Textarea } from '@/components/ui/textarea';
 import { useCreatePost, useUpdatePost } from '@/hooks/useLaunchpad';
 import { useProjects } from '@/hooks/useProjects';
-import { BODY_MAX, POST_KINDS, postKind, TITLE_MAX, type LaunchpadPost, type PostKind } from '@/lib/launchpad';
+import { BODY_MAX, POST_KINDS, postKind, TITLE_MAX, type LaunchpadPost, type NewPost, type PostKind } from '@/lib/launchpad';
 import { LAUNCHPAD_TOPIC_GROUP_LABEL, LAUNCHPAD_TOPICS, launchpadTopic, postPath } from '@/lib/launchpadTopics';
 import { cn } from '@/lib/utils';
 
@@ -20,11 +20,17 @@ const KEEP_PROJECT = 'keep';
  * people follow; attaching a project is optional and defaults to the one the
  * founder is working in.
  */
-export function PostComposerDialog({ open, onOpenChange, initialTopic, initialKind, editing }: {
+export function PostComposerDialog({ open, onOpenChange, initialTopic, initialKind, initialTitle, initialBody, source, onPublished, editing }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   initialTopic?: string | null;
   initialKind?: PostKind;
+  /** A draft to start from, e.g. a question written from Customer Discovery. */
+  initialTitle?: string;
+  initialBody?: string;
+  source?: NewPost['source'];
+  /** Given: stay on the current page after publishing instead of opening the post. */
+  onPublished?: (postId: string) => void;
   editing?: LaunchpadPost | null;
 }) {
   const navigate = useNavigate();
@@ -50,12 +56,12 @@ export function PostComposerDialog({ open, onOpenChange, initialTopic, initialKi
       setProjectId(editing.project_name ? KEEP_PROJECT : NO_PROJECT);
     } else {
       setKind(initialKind ?? 'feedback');
-      setTitle('');
-      setContent('');
+      setTitle(initialTitle ?? '');
+      setContent(initialBody ?? '');
       setTopic(initialTopic ?? '');
       setProjectId(activeProjectId ?? NO_PROJECT);
     }
-  }, [open, editing, initialTopic, initialKind, activeProjectId]);
+  }, [open, editing, initialTopic, initialKind, initialTitle, initialBody, activeProjectId]);
 
   const selectedTopic = launchpadTopic(topic);
   const errors = {
@@ -77,9 +83,10 @@ export function PostComposerDialog({ open, onOpenChange, initialTopic, initialKi
       onOpenChange(false);
       return;
     }
-    const id = await create.mutateAsync({ title, content, kind, topic, projectId: chosen });
+    const id = await create.mutateAsync({ title, content, kind, topic, projectId: chosen, source });
     onOpenChange(false);
-    navigate(postPath(id));
+    if (onPublished) onPublished(id);
+    else navigate(postPath(id));
   };
 
   return <Dialog open={open} onOpenChange={onOpenChange}>

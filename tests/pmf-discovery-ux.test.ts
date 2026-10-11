@@ -121,6 +121,41 @@ test('reminders are scheduled with the person, and reach the founder', () => {
   assert.doesNotMatch(migration, /return_cue_cron_secret/);
 });
 
+test('a Rooms question is drafted for the stage, in the matching room', async () => {
+  const { askRoom, draftCommunityQuestion, PMF_DISCOVERY_ORIGIN } = await import('../src/lib/pmfCommunityAsk.ts');
+  assert.deepEqual([askRoom('problem_discovery').room, askRoom('solution_validation').room, askRoom('pricing').room], ['customers', 'product', 'pricing']);
+  const draft = draftCommunityQuestion({ stage: 'problem_discovery', audience: 'freelance designers', problem: 'Clients pay invoices weeks late.' });
+  assert.equal(draft.title, 'Freelance designers: does this happen to you?');
+  assert.match(draft.body, /freelance designers have:\n\nClients pay invoices weeks late\.\n\n/);
+  assert.match(draft.body, /No pitch/);
+  assert.equal(draft.kind, 'discussion');
+  assert.equal(draftCommunityQuestion({ stage: 'pricing', audience: '', problem: 'x' }).title, 'Founders: what does this cost you today?');
+  assert.equal(PMF_DISCOVERY_ORIGIN, 'pmf_discovery');
+
+  // The rooms used must exist.
+  const topics = source('src/lib/launchpadTopics.ts');
+  for (const room of ['customers', 'product', 'pricing']) assert.match(topics, new RegExp(`slug: '${room}'`));
+});
+
+test('asking in Rooms keeps the founder on PMF Lab, links the post to the idea and turns replies into people', () => {
+  const composer = source('src/components/launchpad/PostComposerDialog.tsx');
+  assert.match(composer, /if \(onPublished\) onPublished\(id\);\s*else navigate\(postPath\(id\)\);/);
+  assert.match(composer, /setTitle\(initialTitle \?\? ''\);\s*setContent\(initialBody \?\? ''\);/);
+  // source_type only allows legacy values, so the origin lives in source_data.
+  const launchpad = source('src/lib/launchpad.ts');
+  assert.match(launchpad, /source_type: 'manual',\s*source_data: input\.source \? \{ origin: input\.source\.origin, \.\.\.\(input\.source\.data \?\? \{\}\) \} : null/);
+  assert.match(launchpad, /\.contains\('source_data', source\)/);
+
+  const ask = source('src/components/pmf/PMFAskCommunity.tsx');
+  assert.match(ask, /const source = \{ origin: PMF_DISCOVERY_ORIGIN, validationContextId \};/);
+  assert.match(ask, /filter\(\(comment\) => comment\.user_id !== user\?\.id\)/);
+  assert.match(ask, /upsertPlatformLead\(user\.id, \{\s*platformUserId: comment\.user_id/);
+  const discovery = source('src/components/pmf/PMFCustomerDiscovery.tsx');
+  // The free way comes before the paid one.
+  assert.ok(discovery.indexOf('<PMFAskCommunity') < discovery.indexOf('Search Reddit, Hacker News and the web'));
+  assert.match(source('src/lib/pmfDiscoveryLeads.ts'), /platform: 'Rooms'/);
+});
+
 test('outreach messages fill the name, community and demo link', () => {
   const problem = outreachMessage({ stage: 'problem_discovery', name: 'u/ana', community: 'r/freelance' });
   assert.match(problem, /^Hi u\/ana, I saw your post in r\/freelance/);

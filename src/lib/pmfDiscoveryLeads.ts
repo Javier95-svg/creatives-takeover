@@ -15,7 +15,8 @@ export type PMFDiscoveryLeadSource = 'reddit' | 'platform' | 'hackernews' | 'x' 
 
 export const LEAD_SOURCE_LABEL: Record<PMFDiscoveryLeadSource, string> = {
   reddit: 'Reddit',
-  platform: 'Community',
+  // Platform members are found through Rooms replies.
+  platform: 'Rooms',
   hackernews: 'Hacker News',
   x: 'X',
   linkedin: 'LinkedIn',

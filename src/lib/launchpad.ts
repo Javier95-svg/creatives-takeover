@@ -194,6 +194,8 @@ export interface NewPost {
   topic: string;
   /** null detaches; undefined (edits only) keeps whatever project is attached. */
   projectId?: string | null;
+  /** Where the post was started, e.g. Customer Discovery; kept in source_data. */
+  source?: { origin: string; data?: Record<string, unknown> };
 }
 
 export async function createPost(userId: string, input: NewPost): Promise<string> {
@@ -206,7 +208,9 @@ export async function createPost(userId: string, input: NewPost): Promise<string
     project_id: input.projectId ?? null,
     feedback_requested: input.kind === 'feedback',
     is_public: true,
+    // source_type only allows a few legacy values, so the origin goes in source_data.
     source_type: 'manual',
+    source_data: input.source ? { origin: input.source.origin, ...(input.source.data ?? {}) } : null,
     content_type: 'text',
     tags: [],
   }).select('id').single();
@@ -252,6 +256,16 @@ export async function listComments(postId: string): Promise<LaunchpadComment[]> 
   const rows = (data ?? []) as Omit<LaunchpadComment, 'author'>[];
   const authors = await authorsById(rows.map((row) => row.user_id));
   return rows.map((row) => ({ ...row, author: authors.get(row.user_id) ?? null }));
+}
+
+/** The author's latest post started from a given place, e.g. one PMF Lab idea's Customer Discovery. */
+export async function findOwnPostBySource(userId: string, source: Record<string, unknown>) {
+  const { data, error } = await db.from('community_posts')
+    .select('id, title, topic, comment_count, created_at')
+    .eq('user_id', userId).contains('source_data', source).is('hidden_at', null)
+    .order('created_at', { ascending: false }).limit(1).maybeSingle();
+  if (error) throw error;
+  return data as { id: string; title: string | null; topic: string | null; comment_count: number; created_at: string } | null;
 }
 
 export async function addComment(userId: string, postId: string, content: string) {
