@@ -4,6 +4,14 @@ import test from 'node:test';
 import {
   firstRealName, followUpMessage, isPlaceholderCaseName, outreachMessage, stageQuestion, VALIDATION_STAGES,
 } from '../src/lib/pmfDiscoveryOutreach.ts';
+import {
+  conversationProgress, followUpDate, followUpLabel, followUpState, groupConversations, nextAction, tabFor,
+  type ConversationLead,
+} from '../src/lib/pmfConversations.ts';
+import { buildSequenceCopy } from '../supabase/functions/_shared/retention-sequence-copy.ts';
+import { readFileSync } from 'node:fs';
+
+const source = (path: string) => readFileSync(new URL(`../${path}`, import.meta.url), 'utf8');
 
 test('stages are asked as plain questions, keeping the stored values', () => {
   assert.deepEqual(VALIDATION_STAGES.map((stage) => stage.value), ['problem_discovery', 'solution_validation', 'pricing']);
@@ -28,6 +36,89 @@ test('the discovery page passes its idea to the search, which refuses to run wit
   // Called as useCustomerDiscovery() from 1 Aug 2026, every search stopped there.
   assert.match(read('src/components/pmf/PMFCustomerDiscovery.tsx'), /useCustomerDiscovery\(validationContextId, originatingHandoffId\)/);
   assert.match(read('src/pages/PMFLabPage.tsx'), /<PMFCustomerDiscovery\s+key=\{validationContextId\}\s+validationContextId=\{validationContextId\}\s+originatingHandoffId=\{originatingHandoffId\}/);
+});
+
+const now = new Date(2026, 9, 15, 12, 0, 0);
+const lead = (id: string, status: ConversationLead['status'], extra: Partial<ConversationLead> = {}): ConversationLead =>
+  ({ id, status, rank_score: 50, last_seen_at: '2026-10-10T00:00:00Z', follow_up_at: null, ...extra });
+
+test('conversations group into four tabs, with due follow-ups first and not-a-fit kept apart', () => {
+  assert.equal(tabFor('new'), 'to_contact');
+  assert.equal(tabFor('saved'), 'to_contact');
+  assert.equal(tabFor('interview_scheduled'), 'booked');
+  assert.equal(tabFor('dismissed'), null);
+
+  const { groups, dismissed } = groupConversations([
+    lead('later', 'contacted', { follow_up_at: new Date(2026, 9, 20, 9).toISOString() }),
+    lead('overdue', 'contacted', { follow_up_at: new Date(2026, 9, 13, 9).toISOString() }),
+    lead('today', 'contacted', { follow_up_at: new Date(2026, 9, 15, 9).toISOString() }),
+    lead('low', 'new', { rank_score: 10 }),
+    lead('high', 'saved', { rank_score: 90 }),
+    lead('gone', 'dismissed'),
+  ], now);
+  assert.deepEqual(groups.contacted.map((item) => item.id), ['overdue', 'today', 'later']);
+  assert.deepEqual(groups.to_contact.map((item) => item.id), ['high', 'low']);
+  assert.deepEqual(dismissed.map((item) => item.id), ['gone']);
+});
+
+test('each person has one next step, and follow-ups read in plain words', () => {
+  assert.equal(nextAction('new').action, 'write_message');
+  assert.equal(nextAction('contacted').label, 'They replied: book an interview');
+  assert.equal(nextAction('interview_scheduled').action, 'log_interview');
+  assert.equal(nextAction('interviewed').action, 'see_evidence');
+  assert.equal(nextAction('dismissed').action, 'restore');
+
+  const reminder = followUpDate(3, now);
+  assert.equal(reminder.getDate(), 18);
+  assert.equal(reminder.getHours(), 9);
+  assert.equal(followUpState(lead('x', 'contacted', { follow_up_at: reminder.toISOString() }), now), 'upcoming');
+  // A reminder only matters while waiting for a reply.
+  assert.equal(followUpState(lead('x', 'interview_scheduled', { follow_up_at: reminder.toISOString() }), now), null);
+  assert.equal(followUpLabel(new Date(2026, 9, 15, 9).toISOString(), now), 'Follow up today');
+  assert.equal(followUpLabel(new Date(2026, 9, 16, 9).toISOString(), now), 'Follow up tomorrow');
+  assert.equal(followUpLabel(new Date(2026, 9, 1, 9).toISOString(), now), 'Follow-up overdue');
+});
+
+test('progress counts conversations against the five a first read needs', () => {
+  const progress = conversationProgress([
+    lead('a', 'new'), lead('b', 'saved'),
+    lead('c', 'contacted', { follow_up_at: new Date(2026, 9, 14, 9).toISOString() }),
+    lead('d', 'contacted', { follow_up_at: new Date(2026, 9, 30, 9).toISOString() }),
+  ], 2, now);
+  assert.deepEqual(progress, { interviews: 2, target: 5, percent: 40, toContact: 2, followUpsDue: 1 });
+  assert.equal(conversationProgress([], 9, now).percent, 100);
+});
+
+test('the follow-up email names the person and points to Customer Discovery', () => {
+  const facts = { firstName: 'Maya', projectTitle: 'Invoice Nudge' } as Parameters<typeof buildSequenceCopy>[1];
+  const discovery = buildSequenceCopy('follow_up_due', facts, { followUpName: 'u/ana_designs', followUpKind: 'discovery' });
+  assert.equal(discovery.subject, 'Time to follow up with u/ana_designs');
+  assert.match(discovery.opener, /reached out to u\/ana_designs on Invoice Nudge/);
+  assert.match(discovery.followUp[0], /Customer Discovery/);
+  const investor = buildSequenceCopy('follow_up_due', facts, { followUpKind: 'investor' });
+  assert.equal(investor.subject, 'Your investor follow-up is due');
+});
+
+test('reminders are scheduled with the person, and reach the founder', () => {
+  const leadsLib = source('src/lib/pmfDiscoveryLeads.ts');
+  assert.match(leadsLib, /reasonKey: 'discovery_follow_up_due'/);
+  assert.match(leadsLib, /ctaUrl: `\/pmf-lab\?mode=discover&lead=\$\{encodeURIComponent\(lead\.id\)\}`/);
+  assert.match(leadsLib, /metadata: \{ name: leadDisplayHandle\(lead\), kind: 'discovery' \}/);
+  // Booking, logging or dismissing someone clears their reminder.
+  assert.match(source('src/hooks/useDiscoveryLeads.ts'), /if \(lead && status !== 'contacted'\) \{\s*await clearLeadFollowUp/);
+
+  const cues = source('supabase/functions/process-return-cues/index.ts');
+  assert.match(cues, /if \(!isServiceRoleToken\(authorization, serviceKey\) && \(!cronSecret \|\| suppliedCron !== cronSecret\)\)/);
+  assert.match(cues, /sequence: 'follow_up_due'/);
+  assert.doesNotMatch(cues, /sequence: 'progress_nudge'/);
+  // The role claim is only trusted behind the gateway's signature check.
+  assert.match(source('supabase/config.toml'), /\[functions\.process-return-cues\][^[]*verify_jwt = true/);
+
+  const migration = source('supabase/migrations/20261016120000_discovery_follow_ups.sql');
+  assert.match(migration, /ADD COLUMN IF NOT EXISTS follow_up_at timestamptz/);
+  assert.match(migration, /WHEN 'discovery_follow_up_due' THEN left\('Time to follow up with '/);
+  assert.match(migration, /'Authorization', 'Bearer ' \|\| \(SELECT value FROM private\.service_config WHERE key = 'supabase_service_key'\)/);
+  assert.doesNotMatch(migration, /return_cue_cron_secret/);
 });
 
 test('outreach messages fill the name, community and demo link', () => {

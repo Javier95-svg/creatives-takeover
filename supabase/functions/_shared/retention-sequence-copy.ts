@@ -25,12 +25,14 @@ export type SequenceType =
   | "profile_incomplete_nudge"
   | "routine_reminder"
   | "task_plan_digest"
-  | "celebration";
+  | "celebration"
+  | "follow_up_due";
 
 export const SEQUENCE_TYPES: readonly SequenceType[] = [
   "activation_day0", "activation_day2", "activation_day7", "weekly_digest", "weekly_scorecard",
   "activation_nudge", "progress_nudge", "reengagement", "reengagement_30d", "reengagement_60d",
   "milestone_celebration", "profile_incomplete_nudge", "routine_reminder", "task_plan_digest", "celebration",
+  "follow_up_due",
 ];
 
 export interface SequenceHints {
@@ -46,6 +48,9 @@ export interface SequenceHints {
   suggestedFocus?: string | null;
   /** A verified roadmap signal such as "You reached scope review in MVP Builder." */
   lastStep?: string | null;
+  /** Who a planned follow-up is with, and what kind (a discovery lead, an investor, a mentor). */
+  followUpName?: string | null;
+  followUpKind?: "discovery" | "investor" | "mentor" | null;
 }
 
 export interface SequenceCopy {
@@ -309,6 +314,27 @@ export function buildSequenceCopy(sequence: SequenceType, facts: ProjectFacts, h
         followUp: ["When you are ready, your next step is on your dashboard."],
         defaultCtaLabel: "Open my dashboard",
       };
+
+    case "follow_up_due": {
+      const name = cleanFact(hints.followUpName, 40);
+      if (hints.followUpKind === "discovery") {
+        return {
+          subject: name ? `Time to follow up with ${name}` : "Time to follow up",
+          opener: name
+            ? `A few days ago you reached out to ${name}${onProject}. If they have not replied yet, a short, friendly follow-up often gets one.`
+            : `A few days ago you reached out to someone${onProject}. If they have not replied yet, a short, friendly follow-up often gets one.`,
+          followUp: ["Your follow-up message is ready to copy in Customer Discovery."],
+          defaultCtaLabel: "Open my conversations",
+        };
+      }
+      const who = hints.followUpKind === "investor" ? "investor" : hints.followUpKind === "mentor" ? "mentor" : null;
+      return {
+        subject: name ? `Your follow-up with ${name} is due` : who ? `Your ${who} follow-up is due` : "Your follow-up is due",
+        opener: `You planned to follow up${name ? ` with ${name}` : who ? ` with your ${who}` : ""} today${onProject}.`,
+        followUp: ["Picking it up while the context is fresh keeps the conversation going."],
+        defaultCtaLabel: "Continue",
+      };
+    }
   }
 }
 

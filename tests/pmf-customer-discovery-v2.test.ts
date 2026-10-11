@@ -253,7 +253,7 @@ test('client surfaces flags, filters, pipeline, export, and interview linkage', 
   assert.match(discovery, /pmf-discovery-pipeline-v1/);
   assert.match(discovery, /includeSubreddits/);
   assert.match(pipeline, /Export CSV/);
-  assert.match(pipeline, /Active leads/);
+  assert.match(pipeline, /Your conversations/);
   assert.match(interview, /sourceLeadId/);
   assert.match(workflow, /workflow_dispatch:/);
   assert.match(workflow, /schema_backup_reference:/);

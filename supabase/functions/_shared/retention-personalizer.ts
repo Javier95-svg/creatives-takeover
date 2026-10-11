@@ -62,6 +62,7 @@ const SEQUENCE_PURPOSE: Record<SequenceType, string> = {
   routine_reminder: "They set up a founder routine and have not checked in. Ask for one check-in today.",
   task_plan_digest: "Their daily plan is ready. Point to the first task.",
   celebration: "They finished a step. Short acknowledgement and the next step.",
+  follow_up_due: "They planned to follow up with someone today. Remind them kindly; the message is ready.",
 };
 
 export const PERSONALIZER_SYSTEM_PROMPT = [

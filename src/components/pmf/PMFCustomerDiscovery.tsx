@@ -33,6 +33,12 @@ interface PMFCustomerDiscoveryProps {
   defaultProblem?: string | null;
   onCompleted?: () => void;
   onLogInterview?: (seed: PMFInterviewLeadSeed) => void;
+  /** Back to the evidence view, where logged interviews live. */
+  onOpenEvidence?: () => void;
+  /** Interviews logged for this idea, for the progress strip. */
+  interviewsLogged?: number;
+  /** A person to bring into view, from a follow-up reminder link. */
+  focusLeadId?: string | null;
 }
 
 interface PublishedDemo {
@@ -114,7 +120,7 @@ const buildMarkdown = (d: PMFDiscovery): string => {
  */
 const PMFCustomerDiscovery: React.FC<PMFCustomerDiscoveryProps> = ({
   validationContextId, originatingHandoffId, defaultProductName, defaultTargetAudience, defaultIndustry, defaultProblem,
-  onCompleted, onLogInterview,
+  onCompleted, onLogInterview, onOpenEvidence, interviewsLogged = 0, focusLeadId = null,
 }) => {
   const { user } = useAuth();
   const { activeProject } = useProjects();
@@ -649,7 +655,18 @@ const PMFCustomerDiscovery: React.FC<PMFCustomerDiscoveryProps> = ({
           )}
         </div>
       )}
-      {pipelineEnabled && <PMFDiscoveryPipeline key={discovery?.id || 'pipeline'} onLogInterview={onLogInterview} />}
+      {pipelineEnabled && (
+        <PMFDiscoveryPipeline
+          key={discovery?.id || 'pipeline'}
+          onLogInterview={onLogInterview}
+          onOpenEvidence={onOpenEvidence}
+          interviewsLogged={interviewsLogged}
+          focusLeadId={focusLeadId}
+          stage={stage}
+          messageTemplate={discovery?.dmTemplate}
+          demoUrl={selectedDemo?.url}
+        />
+      )}
     </div>
   );
 };

@@ -49,6 +49,9 @@ interface RetentionEmailRequest {
   weeklyOutcomeState?: "completed" | "missed" | "open";
   activeDaysLast14?: number;
   suggestedFocus?: string;
+  /** follow_up_due: who the founder planned to follow up with, and what kind. */
+  followUpName?: string;
+  followUpKind?: "discovery" | "investor" | "mentor";
 }
 
 // The service client is used untyped here, as in the shared retention loaders.
@@ -244,6 +247,8 @@ serve(async (req: Request): Promise<Response> => {
       weeklyOutcomeState,
       activeDaysLast14,
       suggestedFocus,
+      followUpName,
+      followUpKind,
     } = body;
 
     if (!email || !sequence || !userId) {
@@ -468,6 +473,8 @@ serve(async (req: Request): Promise<Response> => {
       weeklyOutcomeState,
       activeDaysLast14,
       suggestedFocus,
+      followUpName,
+      followUpKind: followUpKind === "discovery" || followUpKind === "investor" || followUpKind === "mentor" ? followUpKind : null,
     };
     const template = finalizeCopy(buildSequenceCopy(sequence, facts, hints));
     const finalCtaLabel = cleanCopy(ctaLabel) || template.defaultCtaLabel;

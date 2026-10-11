@@ -321,7 +321,9 @@ verify_jwt = true
 
 # Cron/service-role coordinated in-app and lifecycle-email return cues.
 [functions.process-return-cues]
-verify_jwt = false
+# On: the cron job calls with the service role key, and the function trusts the
+# token's role claim only because the gateway has verified the signature.
+verify_jwt = true
 
 # Destructive account operation; the function verifies the bearer token again,
 # confirms password-based identities, cancels billing, and deletes server-side.

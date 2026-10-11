@@ -501,6 +501,9 @@ export default function PMFLabPage() {
             defaultIndustry={icpIndustry}
             defaultProblem={icpProblem}
             onCompleted={() => void loadDiscovery()}
+            interviewsLogged={interviewCount}
+            focusLeadId={searchParams.get('lead')}
+            onOpenEvidence={() => handleModeChange('score')}
             onLogInterview={(seed) => {
               setInterviewLeadSeed(seed);
               setMode('score');

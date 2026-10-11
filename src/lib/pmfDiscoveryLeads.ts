@@ -1,6 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { captureEvent, trackCustomerEvidenceRecorded } from '@/lib/analytics';
 import type { PMFDiscoveryLeadStatus } from '@/hooks/useCustomerDiscovery';
+import { completeReturnCue, scheduleReturnCue } from '@/lib/returnCues';
 
 export type PMFDiscoveryLeadActivityType =
   | 'status_changed'
@@ -46,6 +47,9 @@ export interface PMFDiscoveryLead {
   interview_scheduled_at: string | null;
   interviewed_at: string | null;
   dismissed_at: string | null;
+  /** When the founder planned to follow up, and the return cue that reminds them. */
+  follow_up_at?: string | null;
+  follow_up_cue_id?: string | null;
 }
 
 const client = supabase as any;
@@ -169,7 +173,41 @@ export interface PlatformLeadSeed {
 }
 
 /**
- * Save a validation-network member as a discovery lead (source = 'platform').
+ * Remind the founder to follow up with someone they messaged: an in-app
+ * notification and, within the email limits, an email that names the person.
+ */
+export async function scheduleLeadFollowUp(userId: string, lead: PMFDiscoveryLead, when: Date) {
+  const cue = await scheduleReturnCue({
+    sourceSection: 'bizmap',
+    entityType: 'pmf_discovery_lead',
+    entityId: lead.id,
+    reasonKey: 'discovery_follow_up_due',
+    scheduledFor: when.toISOString(),
+    ctaUrl: `/pmf-lab?mode=discover&lead=${encodeURIComponent(lead.id)}`,
+    dedupeKey: `pmf-lead-follow-up:${lead.id}`,
+    metadata: { name: leadDisplayHandle(lead), kind: 'discovery' },
+  });
+  const { error } = await client.from('pmf_discovery_leads')
+    .update({ follow_up_at: when.toISOString(), follow_up_cue_id: cue.id })
+    .eq('id', lead.id).eq('user_id', userId);
+  if (error) throw error;
+  captureEvent('pmf_discovery_follow_up_scheduled', { days_ahead: Math.round((when.getTime() - Date.now()) / 86_400_000) });
+}
+
+/** The follow-up is no longer needed: they replied, booked, or were not a fit. */
+export async function clearLeadFollowUp(userId: string, lead: PMFDiscoveryLead) {
+  if (!lead.follow_up_at && !lead.follow_up_cue_id) return;
+  if (lead.follow_up_cue_id) {
+    await completeReturnCue(lead.follow_up_cue_id).catch((error) => console.warn('Could not complete the follow-up reminder:', error));
+  }
+  const { error } = await client.from('pmf_discovery_leads')
+    .update({ follow_up_at: null, follow_up_cue_id: null })
+    .eq('id', lead.id).eq('user_id', userId);
+  if (error) throw error;
+}
+
+/**
+ * Save a platform member, such as someone who replied in Rooms, as a discovery lead (source = 'platform').
  * Upserts on (user_id, source, normalized_username) so repeat saves refresh
  * the snapshot instead of duplicating the lead.
  */

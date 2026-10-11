@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import {
+  clearLeadFollowUp,
   fetchDiscoveryLeads,
   saveDiscoveryLeadNotes,
+  scheduleLeadFollowUp,
   updateDiscoveryLeadStatus,
   type PMFDiscoveryLead,
 } from '@/lib/pmfDiscoveryLeads';
@@ -22,7 +24,7 @@ export function useDiscoveryLeads(enabled = true) {
       setLeads(await fetchDiscoveryLeads(user.id));
     } catch (err) {
       console.warn('Failed to load PMF discovery leads:', err);
-      setError('Could not load the discovery pipeline.');
+      setError('Could not load your conversations.');
     } finally {
       setLoading(false);
     }
@@ -33,8 +35,31 @@ export function useDiscoveryLeads(enabled = true) {
   const setStatus = useCallback(async (leadId: string, status: PMFDiscoveryLeadStatus) => {
     if (!user) return;
     await updateDiscoveryLeadStatus(user.id, leadId, status);
+    // A follow-up only makes sense while waiting for a reply.
+    const lead = leads.find((item) => item.id === leadId);
+    if (lead && status !== 'contacted') {
+      await clearLeadFollowUp(user.id, lead).catch((err) => console.warn('Could not clear the follow-up:', err));
+    }
     await reload();
-  }, [reload, user]);
+  }, [leads, reload, user]);
+
+  /** "I sent it": contacted, with an optional reminder to follow up. */
+  const markContacted = useCallback(async (leadId: string, followUpAt: Date | null) => {
+    if (!user) return;
+    await updateDiscoveryLeadStatus(user.id, leadId, 'contacted');
+    const lead = leads.find((item) => item.id === leadId);
+    if (lead && followUpAt) await scheduleLeadFollowUp(user.id, lead, followUpAt);
+    await reload();
+  }, [leads, reload, user]);
+
+  const setFollowUp = useCallback(async (leadId: string, followUpAt: Date | null) => {
+    if (!user) return;
+    const lead = leads.find((item) => item.id === leadId);
+    if (!lead) return;
+    if (followUpAt) await scheduleLeadFollowUp(user.id, lead, followUpAt);
+    else await clearLeadFollowUp(user.id, lead);
+    await reload();
+  }, [leads, reload, user]);
 
   const saveNotes = useCallback(async (leadId: string, notes: string) => {
     if (!user) return;
@@ -42,6 +67,5 @@ export function useDiscoveryLeads(enabled = true) {
     await reload();
   }, [reload, user]);
 
-  return { leads, loading, error, reload, setStatus, saveNotes };
+  return { leads, loading, error, reload, setStatus, markContacted, setFollowUp, saveNotes };
 }
-
