@@ -12,6 +12,7 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import {
   cohortTotals, segmentComparison, share, timeSpent, topSection, type AdoptionMetrics, type AdoptionSegment,
 } from '@/lib/adoptionMetrics';
+import { funnelRows, type DiscoveryFunnel } from '@/lib/discoveryFunnel';
 import { cn } from '@/lib/utils';
 
 const WEEKS = 12;
@@ -44,6 +45,13 @@ function TimeCell({ stat, strong }: { stat: Parameters<typeof timeSpent>[0]; str
  * covers every account regardless of cookie choices, except time spent, which
  * only comes from accounts that accepted analytics. Internal accounts excluded.
  */
+/** Customer Discovery, from finding people to interviewing them (20261017130000). */
+const fetchDiscoveryFunnel = async () => {
+  const { data, error } = await supabase.rpc('admin_discovery_funnel' as never, { p_days: 30 } as never);
+  if (error) throw error;
+  return data as unknown as DiscoveryFunnel;
+};
+
 const fetchReport = async (segment: AdoptionSegment | null) => {
   // The all-accounts call omits the segment, so it also works before 20261014130000.
   const args = segment ? { p_weeks: WEEKS, p_segment: segment } : { p_weeks: WEEKS };
@@ -59,6 +67,7 @@ export default function AdminAdoption() {
   // comparison and the filtered tables share one definition of every figure.
   const founders = useQuery({ queryKey: ['admin-adoption-metrics', WEEKS, 'founder'], queryFn: () => fetchReport('founder'), retry: false });
   const builders = useQuery({ queryKey: ['admin-adoption-metrics', WEEKS, 'builder'], queryFn: () => fetchReport('builder'), retry: false });
+  const discovery = useQuery({ queryKey: ['admin-discovery-funnel', 30], queryFn: fetchDiscoveryFunnel, retry: false });
   const segmentsReady = Boolean(founders.data?.summary?.accounts !== undefined && builders.data?.summary?.accounts !== undefined);
   const metrics = segment === 'founder' && segmentsReady ? founders : segment === 'builder' && segmentsReady ? builders : all;
   const comparison = segmentsReady && founders.data && builders.data ? segmentComparison(founders.data, builders.data) : null;
@@ -279,6 +288,55 @@ export default function AdminAdoption() {
                 </TableRow>
               </TableBody>
             </Table>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Customer Discovery funnel</CardTitle>
+            <CardDescription>
+              PMF Lab, from finding people to interviewing them, last {discovery.data?.days ?? 30} days and all time. A person counts at a step once
+              they reach it or a later one. Shows where founders stop.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {discovery.isPending && <p role="status" className="text-sm text-muted-foreground">Loading the funnel…</p>}
+            {discovery.isError && <p className="text-sm text-muted-foreground">The funnel needs the 20261017130000_admin_discovery_funnel migration. Run it and reload.</p>}
+            {discovery.data && <>
+              <Table>
+                <TableHeader><TableRow>
+                  <TableHead>Step</TableHead>
+                  <TableHead className="text-right">Founders, {discovery.data.days} days</TableHead>
+                  <TableHead className="text-right">People, {discovery.data.days} days</TableHead>
+                  <TableHead className="text-right">From the step before</TableHead>
+                  <TableHead className="text-right">People, all time</TableHead>
+                </TableRow></TableHeader>
+                <TableBody>
+                  {funnelRows(discovery.data.steps).map((row) => <TableRow key={row.step}>
+                    <TableCell>
+                      <span className="font-medium">{row.label}</span>
+                      <span className="block text-xs text-muted-foreground">{row.hint}</span>
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums">{row.founders}</TableCell>
+                    <TableCell className="text-right tabular-nums">{row.people}</TableCell>
+                    <TableCell className="text-right tabular-nums">{row.fromPrevious ?? '–'}</TableCell>
+                    <TableCell className="text-right tabular-nums">{row.peopleAll}</TableCell>
+                  </TableRow>)}
+                </TableBody>
+              </Table>
+              <dl className="grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-4">
+                {[
+                  { label: 'Founders using it', value: discovery.data.founders, hint: 'Searched, asked in Rooms or added someone' },
+                  { label: 'Paid searches', value: discovery.data.searches, hint: 'Reddit, Hacker News and the web' },
+                  { label: 'Rooms questions', value: discovery.data.roomsQuestions, hint: `${discovery.data.roomsReplies.recent} replies, ${discovery.data.addedFromRooms.recent} people added` },
+                  { label: 'Follow-up reminders', value: discovery.data.followUpsSet, hint: `${discovery.data.followUpsDelivered.recent} delivered in app, ${discovery.data.followUpsEmailed.recent} by email` },
+                ].map((item) => <div key={item.label} className="rounded-lg border border-border/60 p-3">
+                  <dt className="text-muted-foreground">{item.label}</dt>
+                  <dd className="text-2xl font-semibold tabular-nums">{item.value.recent}</dd>
+                  <dd className="text-xs text-muted-foreground">{item.hint}. All time: {item.value.all}.</dd>
+                </div>)}
+              </dl>
+            </>}
           </CardContent>
         </Card>
 

@@ -181,3 +181,23 @@ test('the adoption report opens inside the workspace frame; other admin pages ke
   assert.doesNotMatch(page, /<Navigation \/>/);
   assert.match(page, /<CardTitle>Sections<\/CardTitle>/);
 });
+
+test('the Customer Discovery funnel is admin only, excludes the team and reads step by step', async () => {
+  const migration = read('../supabase/migrations/20261017130000_admin_discovery_funnel.sql');
+  assert.match(migration, /IF NOT public\.is_admin_user\(\) THEN\s+RAISE EXCEPTION 'Admin access required'/);
+  assert.match(migration, /u\.email NOT ILIKE '%@creatives-takeover\.com'/);
+  assert.match(migration, /REVOKE ALL ON FUNCTION public\.admin_discovery_funnel\(integer\) FROM PUBLIC, anon;/);
+  // A no is a reply, so it counts at "replied" but not at "booked".
+  assert.match(migration, /LEAST\(l\.interview_scheduled_at, l\.interviewed_at, said_no\.at\) AS replied_at/);
+  assert.match(migration, /act\.metadata->>'reason' = 'said_no'/);
+  assert.match(migration, /p\.source_data @> '\{"origin": "pmf_discovery"\}'::jsonb/);
+
+  const { funnelRows } = await import('../src/lib/discoveryFunnel.ts');
+  const step = (name: string, people: number) => ({ step: name, founders: 1, people, foundersAll: 1, peopleAll: people });
+  const rows = funnelRows([step('found', 10), step('contacted', 4), step('replied', 2), step('booked', 1), step('interviewed', 0)] as never);
+  assert.deepEqual(rows.map((row) => row.label), ['Found', 'Contacted', 'Replied', 'Interview booked', 'Interviewed']);
+  assert.equal(rows[0].fromPrevious, null);
+  assert.equal(rows[1].fromPrevious, '4 of 10 (40%)');
+  assert.equal(rows[4].fromPrevious, '0 of 1 (0%)');
+  assert.match(read('../src/pages/AdminAdoption.tsx'), /supabase\.rpc\('admin_discovery_funnel' as never, \{ p_days: 30 \} as never\)/);
+});
