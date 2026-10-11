@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  BellRing, Check, Copy, Download, ExternalLink, History, Loader2, MessageSquareText, MoreHorizontal, NotebookPen, Send,
+  BellRing, Check, Copy, Download, ExternalLink, History, Loader2, MessageSquareText, MoreHorizontal, NotebookPen, Send, X,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
@@ -353,6 +353,12 @@ export default function PMFDiscoveryPipeline({
 
               <div className="flex flex-wrap items-center gap-2">
                 {primary(lead)}
+                {lead.status === 'contacted' && (
+                  <Button size="sm" variant="outline" disabled={pending === lead.id}
+                    onClick={() => void run(lead.id, () => setStatus(lead.id, 'dismissed', 'said_no'), 'Moved to Not a fit. A no still tells you something.')}>
+                    <X className="mr-1.5 h-4 w-4" aria-hidden="true" />They said no
+                  </Button>
+                )}
                 {lead.status === 'contacted' && (
                   <Button size="sm" variant="ghost" onClick={() => void copyText(lead, followUpMessage(leadDisplayHandle(lead)), 'outreach_copied')}>
                     <Copy className="mr-1.5 h-4 w-4" aria-hidden="true" />Copy a follow-up

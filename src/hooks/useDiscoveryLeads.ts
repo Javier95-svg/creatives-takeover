@@ -7,6 +7,7 @@ import {
   scheduleLeadFollowUp,
   updateDiscoveryLeadStatus,
   type PMFDiscoveryLead,
+  type PMFDiscoveryLeadDismissReason,
 } from '@/lib/pmfDiscoveryLeads';
 import type { PMFDiscoveryLeadStatus } from '@/hooks/useCustomerDiscovery';
 
@@ -36,9 +37,9 @@ export function useDiscoveryLeads(enabled = true) {
 
   useEffect(() => { void reload(); }, [reload]);
 
-  const setStatus = useCallback(async (leadId: string, status: PMFDiscoveryLeadStatus) => {
+  const setStatus = useCallback(async (leadId: string, status: PMFDiscoveryLeadStatus, reason?: PMFDiscoveryLeadDismissReason) => {
     if (!user) return;
-    await updateDiscoveryLeadStatus(user.id, leadId, status);
+    await updateDiscoveryLeadStatus(user.id, leadId, status, reason);
     // A follow-up only makes sense while waiting for a reply.
     const lead = leads.find((item) => item.id === leadId);
     if (lead && status !== 'contacted') {

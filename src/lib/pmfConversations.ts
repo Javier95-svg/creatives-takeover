@@ -78,7 +78,7 @@ export function nextAction(status: ConversationStatus): { action: NextAction; la
     case 'saved':
       return { action: 'write_message', label: 'Write a message' };
     case 'contacted':
-      return { action: 'book_interview', label: 'They replied: book an interview' };
+      return { action: 'book_interview', label: 'They said yes: book an interview' };
     case 'interview_scheduled':
       return { action: 'log_interview', label: 'Log the interview' };
     case 'interviewed':

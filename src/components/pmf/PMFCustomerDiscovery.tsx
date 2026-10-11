@@ -420,7 +420,7 @@ const PMFCustomerDiscovery: React.FC<PMFCustomerDiscoveryProps> = ({
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="min-w-0">
             <p className="text-xs text-muted-foreground">Looking for · {stageQuestion(stage)}</p>
-            <p className="truncate text-sm font-medium">{audience.trim() || 'Who has the problem is not set'}</p>
+            <p className="truncate text-sm font-medium">{audience.trim() || 'Not set yet'}</p>
             {problem.trim() && <p className="truncate text-xs text-muted-foreground">{problem}</p>}
           </div>
           <Button variant="outline" onClick={() => {

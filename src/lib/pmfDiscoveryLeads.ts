@@ -83,10 +83,14 @@ export async function logDiscoveryLeadActivity(
   if (error) throw error;
 }
 
+/** Why someone left the list: "said_no" is a reply, unlike a lead that was never a fit. */
+export type PMFDiscoveryLeadDismissReason = 'said_no';
+
 export async function updateDiscoveryLeadStatus(
   userId: string,
   leadId: string,
   status: PMFDiscoveryLeadStatus,
+  reason?: PMFDiscoveryLeadDismissReason,
 ) {
   const now = new Date().toISOString();
   const payload: Record<string, string | null> = { status };
@@ -96,10 +100,10 @@ export async function updateDiscoveryLeadStatus(
   payload.dismissed_at = status === 'dismissed' ? now : null;
   const { error } = await client.from('pmf_discovery_leads').update(payload).eq('id', leadId).eq('user_id', userId);
   if (error) throw error;
-  await logDiscoveryLeadActivity(userId, leadId, 'status_changed', { status });
+  await logDiscoveryLeadActivity(userId, leadId, 'status_changed', reason ? { status, reason } : { status });
   if (status === 'contacted') await logDiscoveryLeadActivity(userId, leadId, 'outreach_sent');
   if (status === 'interview_scheduled') await logDiscoveryLeadActivity(userId, leadId, 'interview_scheduled');
-  captureEvent(`pmf_discovery_lead_${status}`, { lead_status: status });
+  captureEvent(`pmf_discovery_lead_${status}`, reason ? { lead_status: status, reason } : { lead_status: status });
   const evidenceType = status === 'saved'
     ? 'prospect_qualified'
     : status === 'contacted'

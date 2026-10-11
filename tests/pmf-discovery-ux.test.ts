@@ -63,7 +63,7 @@ test('conversations group into four tabs, with due follow-ups first and not-a-fi
 
 test('each person has one next step, and follow-ups read in plain words', () => {
   assert.equal(nextAction('new').action, 'write_message');
-  assert.equal(nextAction('contacted').label, 'They replied: book an interview');
+  assert.equal(nextAction('contacted').label, 'They said yes: book an interview');
   assert.equal(nextAction('interview_scheduled').action, 'log_interview');
   assert.equal(nextAction('interviewed').action, 'see_evidence');
   assert.equal(nextAction('dismissed').action, 'restore');
@@ -168,6 +168,14 @@ test('a returning founder sees their conversations first, with the search folded
   const pipeline = source('src/components/pmf/PMFDiscoveryPipeline.tsx');
   assert.match(pipeline, /From your latest search/);
   assert.doesNotMatch(pipeline, /useDiscoveryLeads\(/, 'the pipeline uses the list it is given');
+});
+
+test('a contacted person can be answered either way, and a no is recorded as a reply', () => {
+  const pipeline = source('src/components/pmf/PMFDiscoveryPipeline.tsx');
+  assert.match(pipeline, /setStatus\(lead\.id, 'dismissed', 'said_no'\)[\s\S]{0,200}They said no/);
+  const leadsLib = source('src/lib/pmfDiscoveryLeads.ts');
+  assert.match(leadsLib, /logDiscoveryLeadActivity\(userId, leadId, 'status_changed', reason \? \{ status, reason \} : \{ status \}\)/);
+  assert.match(source('src/hooks/useDiscoveryLeads.ts'), /updateDiscoveryLeadStatus\(user\.id, leadId, status, reason\)/);
 });
 
 test('outreach messages fill the name, community and demo link', () => {
