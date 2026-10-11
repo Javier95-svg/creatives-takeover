@@ -54,10 +54,11 @@ export function PMFAskCommunity({ validationContextId, stage, audience, problem,
   });
 
   const addToList = async (comment: NonNullable<typeof replies.data>[number]) => {
-    if (!user || !comment.author?.username) return;
+    if (!user || !validationContextId || !comment.author?.username) return;
     setPending(comment.id);
     try {
       await upsertPlatformLead(user.id, {
+        validationContextId,
         platformUserId: comment.user_id,
         username: comment.author.username,
         displayName: comment.author.full_name,

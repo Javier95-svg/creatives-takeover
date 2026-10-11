@@ -57,11 +57,16 @@ export interface PMFDiscoveryLead {
 
 const client = supabase as any;
 
-export async function fetchDiscoveryLeads(userId: string): Promise<PMFDiscoveryLead[]> {
-  const { data, error } = await client
+/** The people for one idea, plus anyone not tied to an idea (found before ideas existed). */
+export async function fetchDiscoveryLeads(userId: string, validationContextId: string | null): Promise<PMFDiscoveryLead[]> {
+  let query = client
     .from('pmf_discovery_leads')
     .select('*')
-    .eq('user_id', userId)
+    .eq('user_id', userId);
+  query = validationContextId
+    ? query.or(`validation_context_id.eq.${validationContextId},validation_context_id.is.null`)
+    : query.is('validation_context_id', null);
+  const { data, error } = await query
     .order('rank_score', { ascending: false })
     .order('last_seen_at', { ascending: false });
   if (error) throw error;
@@ -145,7 +150,7 @@ export interface ExternalMentionSeed {
  * Save a web-search X/LinkedIn mention as a low-confidence lead. These are
  * "verify manually" — the URL is the source of truth, the handle best-effort.
  */
-export async function upsertExternalLead(userId: string, mention: ExternalMentionSeed): Promise<PMFDiscoveryLead> {
+export async function upsertExternalLead(userId: string, validationContextId: string, mention: ExternalMentionSeed): Promise<PMFDiscoveryLead> {
   const username = (mention.username || mention.title).trim().slice(0, 80);
   const profileUrl = mention.username
     ? (mention.platform === 'x'
@@ -156,6 +161,7 @@ export async function upsertExternalLead(userId: string, mention: ExternalMentio
     .from('pmf_discovery_leads')
     .upsert({
       user_id: userId,
+      validation_context_id: validationContextId,
       source: mention.platform,
       normalized_username: username.toLowerCase(),
       username,
@@ -163,7 +169,7 @@ export async function upsertExternalLead(userId: string, mention: ExternalMentio
       latest_permalink: mention.url,
       latest_pain_quote: mention.snippet?.trim() || mention.title,
       last_seen_at: new Date().toISOString(),
-    }, { onConflict: 'user_id,source,normalized_username' })
+    }, { onConflict: LEAD_CONFLICT })
     .select('*')
     .single();
   if (error) throw error;
@@ -171,7 +177,11 @@ export async function upsertExternalLead(userId: string, mention: ExternalMentio
   return data as PMFDiscoveryLead;
 }
 
+/** One row per person per idea. */
+const LEAD_CONFLICT = 'user_id,validation_context_id,source,normalized_username';
+
 export interface PlatformLeadSeed {
+  validationContextId: string;
   platformUserId: string;
   username: string;
   displayName?: string | null;
@@ -215,8 +225,8 @@ export async function clearLeadFollowUp(userId: string, lead: PMFDiscoveryLead) 
 
 /**
  * Save a platform member, such as someone who replied in Rooms, as a discovery lead (source = 'platform').
- * Upserts on (user_id, source, normalized_username) so repeat saves refresh
- * the snapshot instead of duplicating the lead.
+ * Upserts on (user_id, validation_context_id, source, normalized_username) so
+ * repeat saves refresh the snapshot instead of duplicating the lead.
  */
 export async function upsertPlatformLead(userId: string, seed: PlatformLeadSeed): Promise<PMFDiscoveryLead> {
   const username = seed.username.trim();
@@ -224,6 +234,7 @@ export async function upsertPlatformLead(userId: string, seed: PlatformLeadSeed)
     .from('pmf_discovery_leads')
     .upsert({
       user_id: userId,
+      validation_context_id: seed.validationContextId,
       source: 'platform',
       normalized_username: username.toLowerCase(),
       username,
@@ -233,7 +244,7 @@ export async function upsertPlatformLead(userId: string, seed: PlatformLeadSeed)
       latest_pain_quote: seed.painQuote?.trim() || null,
       rank_score: Math.max(0, Math.min(100, Math.round(seed.rankScore ?? 0))),
       last_seen_at: new Date().toISOString(),
-    }, { onConflict: 'user_id,source,normalized_username' })
+    }, { onConflict: LEAD_CONFLICT })
     .select('*')
     .single();
   if (error) throw error;

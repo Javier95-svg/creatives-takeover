@@ -148,7 +148,7 @@ const PMFCustomerDiscovery: React.FC<PMFCustomerDiscoveryProps> = ({
   const [savingMention, setSavingMention] = useState<string | null>(null);
   // The list lives here so the page can follow it: someone with people to
   // work through sees them first, and the search folds to one line.
-  const leadsApi = useDiscoveryLeads(pipelineEnabled);
+  const leadsApi = useDiscoveryLeads(pipelineEnabled, validationContextId);
   const returning = leadsApi.leads.some((lead) => lead.status !== 'dismissed');
   const [searchOpen, setSearchOpen] = useState<boolean | null>(null);
   const showSearch = searchOpen ?? !returning;
@@ -254,10 +254,10 @@ const PMFCustomerDiscovery: React.FC<PMFCustomerDiscoveryProps> = ({
   };
 
   const saveMention = async (mention: PMFExternalMention) => {
-    if (!user) return;
+    if (!user || !validationContextId) return;
     setSavingMention(mention.url);
     try {
-      await upsertExternalLead(user.id, mention);
+      await upsertExternalLead(user.id, validationContextId, mention);
       setSavedMentions((current) => ({ ...current, [mention.url]: true }));
       toast.success('Added to Your conversations.');
       void leadsApi.reload();

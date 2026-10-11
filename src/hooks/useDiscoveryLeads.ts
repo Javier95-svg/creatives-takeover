@@ -11,7 +11,8 @@ import {
 } from '@/lib/pmfDiscoveryLeads';
 import type { PMFDiscoveryLeadStatus } from '@/hooks/useCustomerDiscovery';
 
-export function useDiscoveryLeads(enabled = true) {
+/** The people for one idea, so the list matches that idea's progress. */
+export function useDiscoveryLeads(enabled: boolean, validationContextId: string | null) {
   const { user } = useAuth();
   const [leads, setLeads] = useState<PMFDiscoveryLead[]>([]);
   const [loading, setLoading] = useState(false);
@@ -25,7 +26,7 @@ export function useDiscoveryLeads(enabled = true) {
     setLoading(true);
     setError(null);
     try {
-      setLeads(await fetchDiscoveryLeads(user.id));
+      setLeads(await fetchDiscoveryLeads(user.id, validationContextId));
     } catch (err) {
       console.warn('Failed to load PMF discovery leads:', err);
       setError('Could not load your conversations.');
@@ -33,7 +34,7 @@ export function useDiscoveryLeads(enabled = true) {
       setLoading(false);
       setLoaded(true);
     }
-  }, [enabled, user]);
+  }, [enabled, user, validationContextId]);
 
   useEffect(() => { void reload(); }, [reload]);
 

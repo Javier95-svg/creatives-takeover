@@ -149,7 +149,7 @@ test('asking in Rooms keeps the founder on PMF Lab, links the post to the idea a
   const ask = source('src/components/pmf/PMFAskCommunity.tsx');
   assert.match(ask, /const source = \{ origin: PMF_DISCOVERY_ORIGIN, validationContextId \};/);
   assert.match(ask, /filter\(\(comment\) => comment\.user_id !== user\?\.id\)/);
-  assert.match(ask, /upsertPlatformLead\(user\.id, \{\s*platformUserId: comment\.user_id/);
+  assert.match(ask, /upsertPlatformLead\(user\.id, \{\s*validationContextId,\s*platformUserId: comment\.user_id/);
   const discovery = source('src/components/pmf/PMFCustomerDiscovery.tsx');
   // The free way comes before the paid one.
   assert.ok(discovery.indexOf('<PMFAskCommunity') < discovery.indexOf('Search Reddit, Hacker News and the web'));
@@ -176,6 +176,24 @@ test('a contacted person can be answered either way, and a no is recorded as a r
   const leadsLib = source('src/lib/pmfDiscoveryLeads.ts');
   assert.match(leadsLib, /logDiscoveryLeadActivity\(userId, leadId, 'status_changed', reason \? \{ status, reason \} : \{ status \}\)/);
   assert.match(source('src/hooks/useDiscoveryLeads.ts'), /updateDiscoveryLeadStatus\(user\.id, leadId, status, reason\)/);
+});
+
+test('each idea has its own list, so the list matches that idea\'s progress', () => {
+  const migration = source('supabase/migrations/20261017120000_discovery_leads_per_idea.sql');
+  assert.match(migration, /ADD COLUMN IF NOT EXISTS validation_context_id uuid\s+REFERENCES public\.prebuild_validation_contexts\(id\) ON DELETE SET NULL/);
+  assert.match(migration, /DROP CONSTRAINT IF EXISTS pmf_discovery_leads_user_id_source_normalized_username_key/);
+  assert.match(migration, /UNIQUE \(user_id, validation_context_id, source, normalized_username\)/);
+  // A search's people join the search's idea.
+  assert.match(migration, /SELECT validation_context_id INTO v_context_id\s+FROM public\.pmf_customer_discovery/);
+  assert.match(migration, /ON CONFLICT \(user_id, validation_context_id, source, normalized_username\) DO UPDATE/);
+  assert.match(migration, /GRANT EXECUTE ON FUNCTION public\.finalize_pmf_discovery_leads\(uuid, uuid, jsonb\) TO service_role/);
+
+  const leadsLib = source('src/lib/pmfDiscoveryLeads.ts');
+  assert.match(leadsLib, /validation_context_id\.eq\.\$\{validationContextId\},validation_context_id\.is\.null/);
+  assert.equal((leadsLib.match(/onConflict: LEAD_CONFLICT/g) ?? []).length, 2, 'Rooms and X/LinkedIn saves both key on the idea');
+  assert.match(leadsLib, /const LEAD_CONFLICT = 'user_id,validation_context_id,source,normalized_username';/);
+  assert.match(source('src/components/pmf/PMFCustomerDiscovery.tsx'), /useDiscoveryLeads\(pipelineEnabled, validationContextId\)/);
+  assert.match(source('src/components/pmf/PMFAskCommunity.tsx'), /upsertPlatformLead\(user\.id, \{\s*validationContextId,/);
 });
 
 test('outreach messages fill the name, community and demo link', () => {
