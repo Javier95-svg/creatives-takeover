@@ -105,7 +105,7 @@ const DEFAULT_STATS: HeroStat[] = [
 const DEFAULT_LEDE = (
   <>
     <span className="ct-hero__lede-block">
-      Business Development platform for startup founders, product managers and indie builders.
+      Customized workspace for startup founders, product managers and indie builders.
     </span>
     <span className="ct-hero__lede-block">
       Define your ideal customer, prove demand, build your MVP, launch it, and find investment.
