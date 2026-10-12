@@ -6,6 +6,8 @@ import { CREDIT_COSTS } from '../_shared/credit-constants.ts';
 import { resolveCreditIdempotencyKey } from '../_shared/request-idempotency.ts';
 import { inferMotion, rankChannels, type GTMIntakeV2 } from '../_shared/gtm-channel-engine.ts';
 import { emitBusinessEvent, resolveAnalyticsErrorCode } from '../_shared/analytics.ts';
+import { callGemini, GEMINI_TEXT_MODELS } from '../_shared/gemini.ts';
+import { searchWeb } from '../_shared/web-research.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -76,37 +78,43 @@ function validatedSixWeekPlan(value: unknown, plays: Array<{ actions: string[] }
   }));
 }
 
+// Live research: a web search finds current sources, then Gemini writes the
+// evidence brief from those sources only, citing them by number.
 async function researchGTM(intake: GTMIntakeV2) {
-  const apiKey = Deno.env.get('PERPLEXITY_API_KEY');
   const retrievedAt = new Date().toISOString();
-  if (!apiKey) return { provider: 'perplexity' as const, providerStatus: 'not_configured' as const, status: 'unavailable' as const, answer: '', sources: [] as Array<Record<string, unknown>>, sourceCount: 0, retrievedAt };
+  const searchProvider = Deno.env.get('TAVILY_API_KEY') ? 'tavily' : 'gemini';
   try {
-    const response = await fetch('https://api.perplexity.ai/chat/completions', {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'sonar-pro',
-        messages: [
-          { role: 'system', content: 'Research current go-to-market evidence for a launch-ready founder. Prefer primary and reputable sources. Separate evidence from inference.' },
-          { role: 'user', content: `Product: ${intake.productName}\nURL: ${intake.productUrl || 'not supplied'}\nMarket: ${intake.targetSegment}\nGeography: ${intake.geography}\nProblem: ${intake.problem}\nKnown alternatives: ${intake.knownCompetitors.join(', ') || 'unknown'}\nFounder evidence summary: ${(intake.firstPartyEvidence ?? []).map((item) => `${item.title}: ${item.content.slice(0, 800)}`).join('\n').slice(0, 5000) || 'none supplied'}\nFind current competitors and alternatives, pricing, positioning, where buyers discover solutions, buying triggers, and channel conditions. Return concise evidence with citations. Do not treat founder-provided claims as independently verified market facts.` },
-        ],
-        temperature: 0.2,
-        max_tokens: 1400,
-        return_citations: true,
-        search_recency_filter: 'year',
-      }),
+    const search = await searchWeb({
+      query: `${intake.productName}: ${intake.problem}. Competitors, alternatives and pricing for ${intake.targetSegment} in ${intake.geography}`,
+      maxResults: 6,
+      recency: 'year',
+      timeoutMs: 20_000,
     });
-    if (!response.ok) throw new Error(`Research failed: ${response.status}`);
-    const data = await response.json();
-    const citations = Array.isArray(data.citations) ? data.citations.slice(0, 6) : [];
-    const sources = citations.map((citation: any, index: number) => typeof citation === 'string'
-      ? { id: `research-${index + 1}`, title: `Source ${index + 1}`, url: citation, kind: 'external', verifiedAt: new Date().toISOString() }
-      : { id: `research-${index + 1}`, title: citation.title || citation.name || `Source ${index + 1}`, url: citation.url || citation.source || '', snippet: citation.snippet || citation.summary, publishedDate: citation.published_date || citation.date, kind: 'external', verifiedAt: new Date().toISOString() })
-      .filter((source: any) => /^https?:\/\//.test(source.url));
-    return { provider: 'perplexity' as const, providerStatus: sources.length > 0 ? 'healthy' as const : 'empty' as const, status: sources.length >= 3 ? 'complete' as const : sources.length > 0 ? 'limited' as const : 'unavailable' as const, answer: data.choices?.[0]?.message?.content || '', sources, sourceCount: sources.length, retrievedAt };
+    const verifiedAt = new Date().toISOString();
+    const sources = search.sources.map((source, index) => ({
+      id: `research-${index + 1}`,
+      title: source.title || `Source ${index + 1}`,
+      url: source.url,
+      snippet: source.snippet,
+      kind: 'external',
+      verifiedAt,
+    }));
+    if (sources.length === 0) {
+      return { provider: search.provider, providerStatus: 'empty' as const, status: 'unavailable' as const, answer: '', sources, sourceCount: 0, retrievedAt };
+    }
+
+    const brief = await callGemini({
+      models: GEMINI_TEXT_MODELS,
+      systemInstruction: 'Research current go-to-market evidence for a launch-ready founder. Use only the numbered sources provided and cite them as [n]. Separate evidence from inference, and say plainly when the sources do not cover something.',
+      parts: [{ text: `Product: ${intake.productName}\nURL: ${intake.productUrl || 'not supplied'}\nMarket: ${intake.targetSegment}\nGeography: ${intake.geography}\nProblem: ${intake.problem}\nKnown alternatives: ${intake.knownCompetitors.join(', ') || 'unknown'}\nFounder evidence summary: ${(intake.firstPartyEvidence ?? []).map((item) => `${item.title}: ${item.content.slice(0, 800)}`).join('\n').slice(0, 5000) || 'none supplied'}\n\nSources:\n${sources.map((source, index) => `[${index + 1}] ${source.title} (${source.url})\n${source.snippet ?? ''}`).join('\n\n')}\n\nFrom these sources, report current competitors and alternatives, pricing, positioning, where buyers discover solutions, buying triggers, and channel conditions. Return concise evidence with citations. Do not treat founder-provided claims as independently verified market facts.` }],
+      temperature: 0.2,
+      maxOutputTokens: 6000,
+      timeoutMs: 40_000,
+    });
+    return { provider: search.provider, providerStatus: 'healthy' as const, status: sources.length >= 3 ? 'complete' as const : 'limited' as const, answer: brief.text, sources, sourceCount: sources.length, retrievedAt };
   } catch (error) {
     console.warn('GTM live research unavailable:', error);
-    return { provider: 'perplexity' as const, providerStatus: 'unhealthy' as const, status: 'unavailable' as const, answer: '', sources: [] as Array<Record<string, unknown>>, sourceCount: 0, retrievedAt };
+    return { provider: searchProvider, providerStatus: 'unhealthy' as const, status: 'unavailable' as const, answer: '', sources: [] as Array<Record<string, unknown>>, sourceCount: 0, retrievedAt };
   }
 }
 

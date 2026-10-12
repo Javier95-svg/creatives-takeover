@@ -1,5 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { searchWeb } from "../_shared/web-research.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -32,7 +33,7 @@ function setCachedResult(key: string, data: WebSearchResponse): void {
   // Limit cache size to 100 entries
   if (searchCache.size >= 100) {
     const firstKey = searchCache.keys().next().value;
-    searchCache.delete(firstKey);
+    if (firstKey !== undefined) searchCache.delete(firstKey);
   }
   searchCache.set(key, { data, timestamp: Date.now() });
 }
@@ -73,15 +74,10 @@ serve(async (req) => {
 
   try {
     const payload: WebSearchRequest = await req.json();
-    const { query, model = 'llama-3.1-sonar-large-128k-online', maxResults = 5, searchRecency = 'month', businessContext } = payload;
+    const { query, maxResults = 5, searchRecency = 'month', businessContext } = payload;
 
     if (!query || query.trim().length === 0) {
       throw new Error('Query is required');
-    }
-
-    const perplexityApiKey = Deno.env.get('PERPLEXITY_API_KEY');
-    if (!perplexityApiKey) {
-      throw new Error('PERPLEXITY_API_KEY is not configured');
     }
 
     // Check cache first
@@ -96,7 +92,7 @@ serve(async (req) => {
       );
     }
 
-    console.log(`🔍 Web search request: "${query}" (model: ${model})`);
+    console.log(`🔍 Web search request: "${query}"`);
 
     // Optimize query for business context
     let optimizedQuery = query;
@@ -110,70 +106,21 @@ serve(async (req) => {
     }
 
     // Build system prompt for better results
-    const systemPrompt = businessContext?.industry 
-      ? `You are a business intelligence assistant specializing in ${businessContext.industry}. Provide accurate, well-cited information from recent web sources. Always include specific citations with URLs.`
-      : `You are a helpful assistant with access to real-time web information. Provide accurate, well-cited answers. Always include specific citations with URLs.`;
+    const systemPrompt = businessContext?.industry
+      ? `You are a business intelligence assistant specializing in ${businessContext.industry}. Search the web and answer from what you find, accurately and concisely.`
+      : `You are a helpful assistant with access to real-time web information. Search the web and answer from what you find, accurately and concisely.`;
 
-    const response = await fetch('https://api.perplexity.ai/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${perplexityApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: model,
-        messages: [
-          {
-            role: 'system',
-            content: systemPrompt
-          },
-          {
-            role: 'user',
-            content: optimizedQuery
-          }
-        ],
-        max_tokens: 800,
-        temperature: 0.2,
-        return_citations: true,
-        search_recency_filter: searchRecency,
-        search_domain_filter: businessContext?.industry ? undefined : undefined, // Let Perplexity choose domains
-      }),
+    const result = await searchWeb({
+      query: optimizedQuery,
+      maxResults,
+      recency: searchRecency,
+      // Callers wait 8-12 seconds; leave room for their own overhead.
+      timeoutMs: 10_000,
+      withAnswer: true,
+      systemInstruction: systemPrompt,
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`❌ Perplexity API error: ${response.status} - ${errorText}`);
-      throw new Error(`Perplexity API error: ${response.status}`);
-    }
-
-    const data = await response.json();
-    const answer = data.choices?.[0]?.message?.content || '';
-    /*
-     * Perplexity returns `citations` as an array of bare URL strings, and puts
-     * the titled records in `search_results`. Reading `.url` off a string
-     * yields undefined, so every source used to come back with an empty url
-     * and the citation list came back empty. Accept both shapes: prefer
-     * search_results when present, fall back to citations either way.
-     */
-    const rawCitations: any[] = Array.isArray(data.citations) ? data.citations : [];
-    const searchResults: any[] = Array.isArray(data.search_results) ? data.search_results : [];
-    const normalizedCitations = (searchResults.length > 0 ? searchResults : rawCitations)
-      .map((citation: any, index: number) => {
-        if (typeof citation === 'string') {
-          return { url: citation, title: '', snippet: '', relevance: undefined, publishedDate: undefined, index };
-        }
-        return {
-          url: citation?.url || citation?.source || '',
-          title: citation?.title || citation?.name || '',
-          snippet: citation?.snippet || citation?.summary || '',
-          relevance: citation?.relevance,
-          publishedDate: citation?.published_date || citation?.date || undefined,
-          index,
-        };
-      })
-      .filter((citation) => Boolean(citation.url));
-
-    console.log(`✅ Web search completed: ${normalizedCitations.length} citations found`);
+    console.log(`✅ Web search completed with ${result.model}: ${result.sources.length} sources found`);
 
     const hostLabel = (url: string) => {
       try {
@@ -183,25 +130,19 @@ serve(async (req) => {
       }
     };
 
-    const sources: WebSearchSource[] = normalizedCitations.slice(0, maxResults).map((citation, index) => ({
-      url: citation.url,
-      // A bare URL still deserves a readable label, and the host is the honest
-      // one. "Source 3" told the caller nothing about what it was citing.
-      title: citation.title || hostLabel(citation.url) || `Source ${index + 1}`,
-      snippet: citation.snippet,
-      relevanceScore: citation.relevance ?? 1.0 - (index * 0.1),
-      publishedDate: citation.publishedDate,
+    const sources: WebSearchSource[] = result.sources.map((source, index) => ({
+      url: source.url,
+      title: source.title || hostLabel(source.url) || `Source ${index + 1}`,
+      snippet: source.snippet,
+      relevanceScore: 1.0 - (index * 0.1),
     }));
-
-    // Extract unique citation URLs for easy reference
-    const citationUrls = [...new Set(normalizedCitations.map((citation) => citation.url))];
 
     const searchResponse: WebSearchResponse = {
       success: true,
-      answer,
+      answer: result.answer,
       sources,
-      citations: citationUrls,
-      model,
+      citations: result.sources.map((source) => source.url),
+      model: result.model,
     };
 
     // Cache the result

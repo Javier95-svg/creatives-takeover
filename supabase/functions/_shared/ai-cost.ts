@@ -25,6 +25,12 @@ const MODEL_PRICES_PER_MTOK: Record<string, { input: number; output: number }> =
   // Google Gemini (cheap class)
   "google/gemini-3-flash": { input: 0.1, output: 0.4 },
   "google/gemini-2.5-flash": { input: 0.1, output: 0.4 },
+  // Google Gemini API, paid-tier list prices (Oct 2026). A free-tier key costs
+  // nothing, so these are the upper bound.
+  "gemini-3.8-flash": { input: 0.75, output: 3.75 },
+  "gemini-3.6-flash": { input: 0.75, output: 3.75 },
+  "gemini-3.5-flash-lite": { input: 0.3, output: 2.5 },
+  "gemini-2.5-flash": { input: 0.3, output: 2.5 },
   // OpenAI (approximate; extend as models are added)
   "gpt-4o": { input: 2.5, output: 10 },
   "gpt-4o-mini": { input: 0.15, output: 0.6 },
