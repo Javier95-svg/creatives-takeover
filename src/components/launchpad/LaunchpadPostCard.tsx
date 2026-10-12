@@ -3,6 +3,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { ArrowBigUp, Bookmark, Flag, FolderKanban, Link2, MessageSquare, MoreHorizontal } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { authorRoleLabel } from '@/lib/accountTypes';
 import { founderStageLabel } from '@/lib/bizmapStageOrder';
 import { authorName, postKind, postKindLabel, type LaunchpadAuthor, type LaunchpadPost } from '@/lib/launchpad';
 import { launchpadTopic, postPath, roomPath } from '@/lib/launchpadTopics';
@@ -18,6 +19,14 @@ export function AuthorAvatar({ author, className }: { author: LaunchpadAuthor | 
   </Avatar>;
 }
 
+/** Founder, Builder, Mentor, Investor or Service provider, so readers know who is answering. */
+export function AuthorRole({ author }: { author: LaunchpadAuthor | null }) {
+  const label = authorRoleLabel(author?.user_type);
+  if (!label) return null;
+  const expert = author?.user_type === 'mentor' || author?.user_type === 'investor';
+  return <span className={cn('rounded-full px-2 py-0.5 text-xs font-medium', expert ? 'bg-info/10 text-info' : 'bg-muted text-muted-foreground')}>{label}</span>;
+}
+
 export function AuthorLine({ author, createdAt, stage }: { author: LaunchpadAuthor | null; createdAt: string; stage?: number | null }) {
   const name = authorName(author);
   const stageLabel = founderStageLabel(stage);
@@ -25,6 +34,7 @@ export function AuthorLine({ author, createdAt, stage }: { author: LaunchpadAuth
     {author?.username
       ? <Link to={`/profile/${encodeURIComponent(author.username)}`} className="no-touch-target !min-h-0 !min-w-0 truncate font-medium underline-offset-4 hover:underline">{name}</Link>
       : <span className="truncate font-medium">{name}</span>}
+    <AuthorRole author={author} />
     {stageLabel && <span className="text-xs text-muted-foreground">· Stage {stage} {stageLabel}</span>}
     <span className="text-xs text-muted-foreground">· {formatDistanceToNow(new Date(createdAt), { addSuffix: true })}</span>
   </div>;

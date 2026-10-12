@@ -7,7 +7,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { AuthorAvatar, AuthorLine, PostMeta, UpvotePill } from '@/components/launchpad/LaunchpadPostCard';
+import { AuthorAvatar, AuthorLine, AuthorRole, PostMeta, UpvotePill } from '@/components/launchpad/LaunchpadPostCard';
 import { LaunchpadShell } from '@/components/launchpad/LaunchpadShell';
 import { PostComposerDialog } from '@/components/launchpad/PostComposerDialog';
 import { copyPostLink } from '@/components/launchpad/postActions';
@@ -182,6 +182,7 @@ export default function LaunchpadPostDetail() {
                       {comment.author?.username
                         ? <Link to={`/profile/${encodeURIComponent(comment.author.username)}`} className="no-touch-target !min-h-0 !min-w-0 font-medium underline-offset-4 hover:underline">{authorName(comment.author)}</Link>
                         : <span className="font-medium">{authorName(comment.author)}</span>}
+                      <AuthorRole author={comment.author} />
                       {isAuthor && <span className="rounded-full bg-primary/15 px-2 py-0.5 text-xs font-medium text-primary">Author</span>}
                       <span className="text-xs text-muted-foreground">{formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}</span>
                       <span className="ml-auto">

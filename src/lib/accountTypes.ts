@@ -27,6 +27,15 @@ export function isReviewedUserType(value: string): value is ReviewedUserType {
   return (REVIEWED_USER_TYPES as readonly string[]).includes(value);
 }
 
+/**
+ * How an author shows in Rooms, next to their name. "Marketplace" is the
+ * account type; to a reader the person is a service provider.
+ */
+export function authorRoleLabel(value: unknown): string | null {
+  if (!isUserType(value)) return null;
+  return value === 'marketplace' ? 'Service provider' : USER_TYPE_LABEL[value];
+}
+
 /** Narrows a value read from the database, which is plain text with no check constraint. */
 export function isUserType(value: unknown): value is UserType {
   return typeof value === 'string' && (USER_TYPES as readonly string[]).includes(value);

@@ -40,6 +40,8 @@ export interface LaunchpadAuthor {
   username: string | null;
   full_name: string | null;
   avatar_url: string | null;
+  /** Founder, builder, mentor, investor or marketplace, shown next to the name. */
+  user_type?: string | null;
 }
 
 export interface LaunchpadPost {
@@ -74,7 +76,7 @@ const POST_COLUMNS = 'id, user_id, title, content, post_type, topic, project_nam
 async function authorsById(ids: string[]): Promise<Map<string, LaunchpadAuthor>> {
   const unique = [...new Set(ids)];
   if (unique.length === 0) return new Map();
-  const { data, error } = await db.from('public_profiles').select('id, username, full_name, avatar_url').in('id', unique);
+  const { data, error } = await db.from('public_profiles').select('id, username, full_name, avatar_url, user_type').in('id', unique);
   if (error) throw error;
   return new Map(((data ?? []) as LaunchpadAuthor[]).map((row) => [row.id, row]));
 }

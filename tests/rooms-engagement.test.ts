@@ -57,3 +57,15 @@ test('the reply email reaches mentors, skips AI rewriting and is not held to the
   assert.match(cues, /const ROOMS_REPLY = 'rooms_reply_received';/);
   assert.match(cues, /sequence: 'rooms_reply',\s+replierName: names\.get\(cue\.cue_id\),\s+postTitle: reply\?\.title,\s+replyCount: reply\?\.replies,/);
 });
+
+test('authors in Rooms show who they are: founder, builder, mentor, investor or service provider', async () => {
+  const { authorRoleLabel } = await import('../src/lib/accountTypes.ts');
+  assert.equal(authorRoleLabel('mentor'), 'Mentor');
+  assert.equal(authorRoleLabel('builder'), 'Builder');
+  assert.equal(authorRoleLabel('marketplace'), 'Service provider');
+  assert.equal(authorRoleLabel(null), null);
+  assert.equal(authorRoleLabel('admin'), null);
+  assert.match(source('src/lib/launchpad.ts'), /select\('id, username, full_name, avatar_url, user_type'\)/);
+  assert.match(source('src/components/launchpad/LaunchpadPostCard.tsx'), /<AuthorRole author=\{author\} \/>/);
+  assert.match(source('src/pages/launchpad/LaunchpadPostDetail.tsx'), /<AuthorRole author=\{comment\.author\} \/>/);
+});
