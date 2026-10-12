@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
 import { ArrowLeft, ArrowRight, Bookmark, Flag, Link2, MessageSquare, Pencil, Trash2 } from 'lucide-react';
@@ -20,7 +20,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import {
   useCommentMutations, useDeletePost, useLaunchpadComments, useLaunchpadPost, useLaunchpadPosts, useMyProfileSummary, useSavePost, useUpvote,
 } from '@/hooks/useLaunchpad';
-import { authorName, COMMENT_MAX, postKind } from '@/lib/launchpad';
+import { authorName, COMMENT_MAX, markRepliesRead, postKind } from '@/lib/launchpad';
 import { launchpadTopic, postPath, roomPath, ROOMS_PATH } from '@/lib/launchpadTopics';
 import { WORKSPACE_ROUTES } from '@/lib/workspaceNavigation';
 import CommunityRoomsWallpaper, { RoomsThreadChart } from '@/components/wallpapers/CommunityRoomsWallpaper';
@@ -86,6 +86,12 @@ export default function LaunchpadPostDetail() {
   const room = launchpadTopic(data?.topic);
   const stripe = data ? KIND_VISUALS[postKind(data.post_type)].stripe : '';
   const myName = me?.full_name || me?.username || 'You';
+  const repliesToRead = isOwn && Boolean(data?.comment_count);
+
+  // The author has now seen the replies, so the waiting reply email is dropped.
+  useEffect(() => {
+    if (repliesToRead && id) void markRepliesRead(id);
+  }, [repliesToRead, id]);
 
   const submitReply = async () => {
     if (!reply.trim()) return;

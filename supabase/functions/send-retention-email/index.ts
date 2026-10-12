@@ -52,6 +52,10 @@ interface RetentionEmailRequest {
   /** follow_up_due: who the founder planned to follow up with, and what kind. */
   followUpName?: string;
   followUpKind?: "discovery" | "investor" | "mentor";
+  /** rooms_reply: who replied, to which post, and how many replies are waiting. */
+  replierName?: string;
+  postTitle?: string;
+  replyCount?: number;
 }
 
 // The service client is used untyped here, as in the shared retention loaders.
@@ -174,7 +178,8 @@ async function personalize(args: {
   ctaLabel: string;
 }): Promise<{ copy: SequenceCopy; source: CopySource }> {
   const mode = parseAiCopyMode(Deno.env.get("RETENTION_AI_COPY"));
-  if (!shouldUseAi(mode, args.userId, args)) return { copy: args.template, source: "template" };
+  // A reply notification says who replied to what; a rewrite could lose either.
+  if (args.sequence === "rooms_reply" || !shouldUseAi(mode, args.userId, args)) return { copy: args.template, source: "template" };
 
   const outcome = await generatePersonalizedCopy(args.userId, args);
   if (!outcome.copy) {
@@ -249,6 +254,9 @@ serve(async (req: Request): Promise<Response> => {
       suggestedFocus,
       followUpName,
       followUpKind,
+      replierName,
+      postTitle,
+      replyCount,
     } = body;
 
     if (!email || !sequence || !userId) {
@@ -265,8 +273,9 @@ serve(async (req: Request): Promise<Response> => {
     // Mentors are service providers offering their time on the platform, not
     // active founders. Exclude them from every retention sequence routed through
     // this sender (weekly scorecards, dormant/inactive nudges, ICP sprint,
-    // routine reminders, lifecycle).
-    const { data: mentorRow } = await supabase
+    // routine reminders, lifecycle). A reply to their own post in Rooms is not a
+    // retention nudge, so it still reaches them.
+    const { data: mentorRow } = sequence === "rooms_reply" ? { data: null } : await supabase
       .from("mentors")
       .select("id")
       .eq("user_id", userId)
@@ -443,9 +452,11 @@ serve(async (req: Request): Promise<Response> => {
 
     // routine_reminder cadence is governed upstream (per-day dedup + global weekly
     // cap in process_routine_reminder_emails), so it is exempt from the 6-day
-    // per-sequence guard that protects the slower lifecycle sequences. The guard
-    // runs before any model call so skipped sends cost nothing.
-    if (sequence !== "routine_reminder" && sequence !== "task_plan_digest") {
+    // per-sequence guard that protects the slower lifecycle sequences. So is
+    // rooms_reply: its return cue sends at most one email per post per day,
+    // within the weekly cap in claim_due_return_cues_v1. The guard runs before
+    // any model call so skipped sends cost nothing.
+    if (sequence !== "routine_reminder" && sequence !== "task_plan_digest" && sequence !== "rooms_reply") {
       const sixDaysAgo = new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString();
       const { data: existingSend } = await supabase
         .from("retention_email_log")
@@ -475,6 +486,9 @@ serve(async (req: Request): Promise<Response> => {
       suggestedFocus,
       followUpName,
       followUpKind: followUpKind === "discovery" || followUpKind === "investor" || followUpKind === "mentor" ? followUpKind : null,
+      replierName,
+      postTitle,
+      replyCount: typeof replyCount === "number" ? replyCount : undefined,
     };
     const template = finalizeCopy(buildSequenceCopy(sequence, facts, hints));
     const finalCtaLabel = cleanCopy(ctaLabel) || template.defaultCtaLabel;

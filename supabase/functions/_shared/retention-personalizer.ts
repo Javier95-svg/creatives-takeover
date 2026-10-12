@@ -63,6 +63,7 @@ const SEQUENCE_PURPOSE: Record<SequenceType, string> = {
   task_plan_digest: "Their daily plan is ready. Point to the first task.",
   celebration: "They finished a step. Short acknowledgement and the next step.",
   follow_up_due: "They planned to follow up with someone today. Remind them kindly; the message is ready.",
+  rooms_reply: "Someone replied to their post in Rooms, the community. Tell them who replied and invite them back to read it and answer.",
 };
 
 export const PERSONALIZER_SYSTEM_PROMPT = [

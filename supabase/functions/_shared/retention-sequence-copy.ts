@@ -26,13 +26,14 @@ export type SequenceType =
   | "routine_reminder"
   | "task_plan_digest"
   | "celebration"
-  | "follow_up_due";
+  | "follow_up_due"
+  | "rooms_reply";
 
 export const SEQUENCE_TYPES: readonly SequenceType[] = [
   "activation_day0", "activation_day2", "activation_day7", "weekly_digest", "weekly_scorecard",
   "activation_nudge", "progress_nudge", "reengagement", "reengagement_30d", "reengagement_60d",
   "milestone_celebration", "profile_incomplete_nudge", "routine_reminder", "task_plan_digest", "celebration",
-  "follow_up_due",
+  "follow_up_due", "rooms_reply",
 ];
 
 export interface SequenceHints {
@@ -51,6 +52,10 @@ export interface SequenceHints {
   /** Who a planned follow-up is with, and what kind (a discovery lead, an investor, a mentor). */
   followUpName?: string | null;
   followUpKind?: "discovery" | "investor" | "mentor" | null;
+  /** rooms_reply: who replied, to which post, and how many replies are waiting. */
+  replierName?: string | null;
+  postTitle?: string | null;
+  replyCount?: number;
 }
 
 export interface SequenceCopy {
@@ -333,6 +338,27 @@ export function buildSequenceCopy(sequence: SequenceType, facts: ProjectFacts, h
         opener: `You planned to follow up${name ? ` with ${name}` : who ? ` with your ${who}` : ""} today${onProject}.`,
         followUp: ["Picking it up while the context is fresh keeps the conversation going."],
         defaultCtaLabel: "Continue",
+      };
+    }
+
+    case "rooms_reply": {
+      const who = cleanFact(hints.replierName, 40);
+      const title = cleanFact(hints.postTitle, 80);
+      const replies = Math.max(1, Math.floor(hints.replyCount ?? 1));
+      const onPost = title ? ` to ${quote(title)}` : " to your post";
+      if (replies > 1) {
+        return {
+          subject: `${plural(replies, "new reply", "new replies")} to your post`,
+          opener: `Your post${title ? ` ${quote(title)}` : ""} has ${plural(replies, "new reply", "new replies")} in Rooms${who ? `, the latest from ${who}` : ""}.`,
+          followUp: ["Answering while it is fresh keeps the conversation going."],
+          defaultCtaLabel: "Read the replies",
+        };
+      }
+      return {
+        subject: who ? `${who} replied to your post` : "You have a reply in Rooms",
+        opener: `${who || "Someone"} replied${onPost} in Rooms.`,
+        followUp: ["Answering while it is fresh keeps the conversation going."],
+        defaultCtaLabel: "Read the reply",
       };
     }
   }

@@ -8,12 +8,16 @@ const json = (body: unknown, status = 200) => new Response(JSON.stringify(body),
 });
 
 // Only the button label is set here. The email's words come from the
-// follow_up_due sequence, built from data rather than caller copy.
+// follow_up_due or rooms_reply sequence, built from data rather than caller copy.
 const ctaLabels: Record<string, string> = {
   investor_follow_up_due: 'Continue investor research',
   mentor_follow_up_due: 'Continue the relationship',
   discovery_follow_up_due: 'Open my conversations',
+  rooms_reply_received: 'Read the reply',
 };
+
+/** A reply to the founder's post in Rooms, queued by the post_comments trigger. */
+const ROOMS_REPLY = 'rooms_reply_received';
 
 const followUpKind = (reasonKey: string) =>
   reasonKey === 'discovery_follow_up_due' ? 'discovery'
@@ -40,14 +44,19 @@ serve(async (request) => {
   const { data, error } = await supabase.rpc('claim_due_return_cues_v1', { p_limit: 50 });
   if (error) return json({ error: error.message }, 500);
 
-  // The claim does not return metadata; the follow-up's name lives there.
+  // The claim does not return metadata; the follow-up's name, and a reply's
+  // post title and count, live there.
   const cueIds = (data || []).map((cue: { cue_id: string }) => cue.cue_id);
   const names = new Map<string, string>();
+  const posts = new Map<string, { title?: string; replies?: number }>();
   if (cueIds.length) {
     const { data: rows } = await supabase.from('user_return_cues').select('id, metadata').in('id', cueIds);
     for (const row of rows || []) {
       const name = typeof row.metadata?.name === 'string' ? row.metadata.name.trim().slice(0, 60) : '';
       if (name) names.set(row.id, name);
+      const title = typeof row.metadata?.postTitle === 'string' ? row.metadata.postTitle.trim().slice(0, 120) : '';
+      const replies = Number(row.metadata?.replies);
+      posts.set(row.id, { title: title || undefined, replies: Number.isFinite(replies) && replies > 0 ? Math.floor(replies) : undefined });
     }
   }
 
@@ -61,6 +70,7 @@ serve(async (request) => {
       continue;
     }
     let delivered = false;
+    const reply = cue.reason_key === ROOMS_REPLY ? posts.get(cue.cue_id) : undefined;
     try {
       const response = await fetch(`${supabaseUrl}/functions/v1/send-retention-email`, {
         method: 'POST',
@@ -74,11 +84,19 @@ serve(async (request) => {
           fullName: cue.full_name,
           // Not progress_nudge: that sequence goes down the inactive-user path,
           // which ignores what the follow-up is about.
-          sequence: 'follow_up_due',
-          followUpName: names.get(cue.cue_id),
-          followUpKind: followUpKind(cue.reason_key),
+          ...(cue.reason_key === ROOMS_REPLY ? {
+            sequence: 'rooms_reply',
+            replierName: names.get(cue.cue_id),
+            postTitle: reply?.title,
+            replyCount: reply?.replies,
+            ctaLabel: (reply?.replies ?? 1) > 1 ? 'Read the replies' : ctaLabels[ROOMS_REPLY],
+          } : {
+            sequence: 'follow_up_due',
+            followUpName: names.get(cue.cue_id),
+            followUpKind: followUpKind(cue.reason_key),
+            ctaLabel: ctaLabels[cue.reason_key] || 'Continue your next action',
+          }),
           ctaUrl: `${appUrl}${cue.cta_url}`,
-          ctaLabel: ctaLabels[cue.reason_key] || 'Continue your next action',
         }),
       });
       const result = await response.json();

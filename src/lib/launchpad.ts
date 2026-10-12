@@ -268,6 +268,15 @@ export async function findOwnPostBySource(userId: string, source: Record<string,
   return data as { id: string; title: string | null; topic: string | null; comment_count: number; created_at: string } | null;
 }
 
+/**
+ * The author opened their post, so its replies are read: the reply email that
+ * was waiting to go out is no longer needed (20261018120000_rooms_reply_emails).
+ */
+export async function markRepliesRead(postId: string) {
+  const { error } = await db.rpc('complete_rooms_reply_cues_v1', { p_post_id: postId });
+  if (error) console.warn('Could not mark replies as read:', error.message);
+}
+
 export async function addComment(userId: string, postId: string, content: string) {
   const { error } = await db.from('post_comments').insert({ user_id: userId, post_id: postId, content: content.trim() });
   if (error) throw error;
