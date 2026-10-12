@@ -13,6 +13,7 @@ import {
   cohortTotals, segmentComparison, share, timeSpent, topSection, type AdoptionMetrics, type AdoptionSegment,
 } from '@/lib/adoptionMetrics';
 import { funnelRows, type DiscoveryFunnel } from '@/lib/discoveryFunnel';
+import { roomsMeasures, type RoomsEngagement } from '@/lib/roomsEngagement';
 import { cn } from '@/lib/utils';
 
 const WEEKS = 12;
@@ -52,6 +53,13 @@ const fetchDiscoveryFunnel = async () => {
   return data as unknown as DiscoveryFunnel;
 };
 
+/** Whether people talk to each other in Rooms (20261018130000). */
+const fetchRoomsEngagement = async () => {
+  const { data, error } = await supabase.rpc('admin_rooms_engagement' as never, { p_days: 30 } as never);
+  if (error) throw error;
+  return data as unknown as RoomsEngagement;
+};
+
 const fetchReport = async (segment: AdoptionSegment | null) => {
   // The all-accounts call omits the segment, so it also works before 20261014130000.
   const args = segment ? { p_weeks: WEEKS, p_segment: segment } : { p_weeks: WEEKS };
@@ -68,6 +76,8 @@ export default function AdminAdoption() {
   const founders = useQuery({ queryKey: ['admin-adoption-metrics', WEEKS, 'founder'], queryFn: () => fetchReport('founder'), retry: false });
   const builders = useQuery({ queryKey: ['admin-adoption-metrics', WEEKS, 'builder'], queryFn: () => fetchReport('builder'), retry: false });
   const discovery = useQuery({ queryKey: ['admin-discovery-funnel', 30], queryFn: fetchDiscoveryFunnel, retry: false });
+  const rooms = useQuery({ queryKey: ['admin-rooms-engagement', 30], queryFn: fetchRoomsEngagement, retry: false });
+  const maxRoomsWeek = Math.max(1, ...(rooms.data?.weekly ?? []).map((week) => week.foundersBuilders + week.others));
   const segmentsReady = Boolean(founders.data?.summary?.accounts !== undefined && builders.data?.summary?.accounts !== undefined);
   const metrics = segment === 'founder' && segmentsReady ? founders : segment === 'builder' && segmentsReady ? builders : all;
   const comparison = segmentsReady && founders.data && builders.data ? segmentComparison(founders.data, builders.data) : null;
@@ -288,6 +298,54 @@ export default function AdminAdoption() {
                 </TableRow>
               </TableBody>
             </Table>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Rooms engagement</CardTitle>
+            <CardDescription>
+              Whether members talk to each other in Rooms, last {rooms.data?.days ?? 30} days, against the first month's targets.
+              Team posts and replies count as activity but never as members.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {rooms.isPending && <p role="status" className="text-sm text-muted-foreground">Loading Rooms engagement…</p>}
+            {rooms.isError && <p className="text-sm text-muted-foreground">This card needs the 20261018130000_admin_rooms_engagement migration. Run it and reload.</p>}
+            {rooms.data && <>
+              <dl className="grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-5">
+                {roomsMeasures(rooms.data).map((measure) => <div key={measure.label} className="rounded-lg border border-border/60 p-3">
+                  <dt className="text-muted-foreground">{measure.label}</dt>
+                  <dd className="text-xl font-semibold tabular-nums">{measure.value}</dd>
+                  <dd className="text-xs text-muted-foreground">{measure.hint} Target: {measure.target}.</dd>
+                </div>)}
+              </dl>
+              <Table>
+                <TableHeader><TableRow>
+                  <TableHead>Week of</TableHead>
+                  <TableHead className="w-2/5">Members taking part</TableHead>
+                  <TableHead className="text-right"><span className="mr-1.5 inline-block h-2 w-2 rounded-full bg-primary" aria-hidden="true" />Founders and builders</TableHead>
+                  <TableHead className="text-right"><span className="mr-1.5 inline-block h-2 w-2 rounded-full bg-info" aria-hidden="true" />Mentors and others</TableHead>
+                  <TableHead className="text-right">Posts</TableHead>
+                  <TableHead className="text-right">Replies</TableHead>
+                </TableRow></TableHeader>
+                <TableBody>
+                  {rooms.data.weekly.map((week) => <TableRow key={week.week}>
+                    <TableCell>{formatWeek(week.week)}</TableCell>
+                    <TableCell>
+                      <div className="flex h-2 overflow-hidden rounded-full" style={{ width: `${((week.foundersBuilders + week.others) / maxRoomsWeek) * 100}%` }} aria-hidden="true">
+                        <div className="bg-primary" style={{ flexGrow: week.foundersBuilders }} />
+                        <div className="bg-info" style={{ flexGrow: week.others }} />
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums">{week.foundersBuilders}</TableCell>
+                    <TableCell className="text-right tabular-nums">{week.others}</TableCell>
+                    <TableCell className="text-right tabular-nums">{week.posts}</TableCell>
+                    <TableCell className="text-right tabular-nums">{week.replies}</TableCell>
+                  </TableRow>)}
+                </TableBody>
+              </Table>
+            </>}
           </CardContent>
         </Card>
 

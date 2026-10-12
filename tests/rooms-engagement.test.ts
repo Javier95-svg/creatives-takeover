@@ -69,3 +69,27 @@ test('authors in Rooms show who they are: founder, builder, mentor, investor or 
   assert.match(source('src/components/launchpad/LaunchpadPostCard.tsx'), /<AuthorRole author=\{author\} \/>/);
   assert.match(source('src/pages/launchpad/LaunchpadPostDetail.tsx'), /<AuthorRole author=\{comment\.author\} \/>/);
 });
+
+test('Rooms engagement is admin only, keeps the team out of member counts and reads against targets', async () => {
+  const migration = source('supabase/migrations/20261018130000_admin_rooms_engagement.sql');
+  assert.match(migration, /IF NOT public\.is_admin_user\(\) THEN\s+RAISE EXCEPTION 'Admin access required'/);
+  assert.match(migration, /u\.email ILIKE '%@creatives-takeover\.com'/);
+  assert.match(migration, /REVOKE ALL ON FUNCTION public\.admin_rooms_engagement\(integer\) FROM PUBLIC, anon;/);
+  // A reply counts only from someone other than the author, and posts younger than 48h are not judged yet.
+  assert.match(migration, /r\.user_id <> posts\.user_id\) AS first_reply_at/);
+  assert.match(migration, /created_at <= now\(\) - interval '48 hours'/);
+  assert.match(migration, /WHERE c\.hidden_at IS NULL/);
+
+  const { roomsMeasures } = await import('../src/lib/roomsEngagement.ts');
+  const measures = roomsMeasures({
+    generatedAt: '', days: 30,
+    participants: { foundersBuilders: 6, others: 3, foundersBuildersAll: 6, othersAll: 3 },
+    posts: { recent: 12, all: 12 }, replies: { recent: 30, all: 30 },
+    replyRate: { eligible: 10, replied: 9, medianHours: 5.5 },
+    depth: { threads: 10, deep: 4 }, returnAfterReply: { eligible: 8, returned: 5 },
+    memberShare: { members: 30, team: 12 }, weekly: [],
+  });
+  assert.deepEqual(measures.map((measure) => measure.value), ['6', '9 of 10 (90%)', '4 of 10 (40%)', '5 of 8 (63%)', '30 of 42 (71%)']);
+  assert.match(measures[1].hint, /Median wait: 5\.5 h\./);
+  assert.match(source('src/pages/AdminAdoption.tsx'), /supabase\.rpc\('admin_rooms_engagement' as never, \{ p_days: 30 \} as never\)/);
+});
