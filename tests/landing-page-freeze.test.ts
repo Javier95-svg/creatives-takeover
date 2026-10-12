@@ -23,7 +23,10 @@ const frozenFiles = {
   // preview links to /signup with hover motion, and the scrolling cards show
   // seven sourced figures on modern entrepreneurship (global, not US-only,
   // after review). Headline, lede and layout are unchanged.
-  '../src/components/Hero.tsx': 'd773a1855fb40ffe382a5303556d21599699f154d4b695d50bfe2499ca229da4',
+  // Rehashed 2026-10-11 for the requested subtitle "Customized workspace for
+  // startup founders, product managers and indie builders." (2e04de09). The
+  // rest of the copy and the layout are unchanged.
+  '../src/components/Hero.tsx': '2ac2777ffba1d144261639a9914925face983e09bbdbe2c3fc11085ebf7bce87',
   // Rehashed 2026-07-28 for the performance audit: mobile and desktop journey
   // branches are now mutually exclusive, preventing duplicate 147 MB GIF loads.
   // Content, visual order, actions, and responsive layout remain unchanged.
