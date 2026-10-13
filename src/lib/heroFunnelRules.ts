@@ -139,7 +139,7 @@ export function resolveHeroArtifactState({
 }
 
 /**
- * Carries the founder's sentence to the demo builder without starting a run.
+ * Legacy screenshot-demo link helper. The two-start homepage generates in place.
  *
  * `autostart=1` is gone. Generating on arrival was only possible because the
  * page would accept a description alone, and that path produces generated
@@ -153,8 +153,8 @@ export function buildHeroProductPath(seed: string): string {
 }
 
 /**
- * Where a signed-out homepage submission goes: the guest onboarding quiz at
- * /start (answers first, account last). The tool the visitor asked for rides
+ * Legacy quiz link helper, retained for existing links. The new homepage skips
+ * this quiz. /start still supports answers first, account last, with the tool
  * along as `return`, and is where they land once onboarding is saved.
  */
 export function buildHeroStartPath(toolPath: string): string {

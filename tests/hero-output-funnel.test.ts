@@ -37,7 +37,7 @@ test('hero generation resolves every success and failure order without a stuck b
   assert.equal(resolveHeroArtifactState({ hasCompact: false, hasDeep: false, timedOut: true }), 'failed');
 });
 
-test('a signed-out submission opens the guest quiz, carrying the tool it asked for', () => {
+test('legacy quiz links still carry their tool destination', () => {
   const toolPath = buildHeroProductPath('a CRM for mobile car detailers');
   const start = new URL(buildHeroStartPath(toolPath), 'https://creatives-takeover.com');
   assert.equal(start.pathname, '/start');
@@ -50,7 +50,7 @@ test('a signed-out submission opens the guest quiz, carrying the tool it asked f
   assert.equal(HERO_MODE_ACCOUNT_TYPE.product, 'founder');
 });
 
-test('Product mode carries the seed to Demo Studio without starting a run', () => {
+test('legacy screenshot-demo links carry the seed without starting a run', () => {
   const path = buildHeroProductPath('  a CRM for mobile car detailers  ');
   const url = new URL(path, 'https://creatives-takeover.com');
 

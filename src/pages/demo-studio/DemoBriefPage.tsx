@@ -329,7 +329,7 @@ export default function DemoBriefPage() {
           icon: Wand2,
         }
       : {
-          label: 'Build the demo from this storyboard',
+          label: 'Add product screens',
           description: 'Creates a demo with one screen per storyboard step. You add the screenshots.',
           onClick: handleCreateDemoFromStoryboard,
           icon: MonitorPlay,

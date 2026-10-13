@@ -42,7 +42,8 @@ export function beginAttributedSignup({ method, source, returnUrl, entryId }: Be
   const local = getSafeLocalStorage();
   const session = getSafeSessionStorage();
   try {
-    const existing = JSON.parse(local.getItem(INTENT_KEY) ?? "null") as SignupAttributionIntent | null;
+    const raw = local.getItem(INTENT_KEY);
+    const existing = JSON.parse(typeof raw === 'string' ? raw : "null") as SignupAttributionIntent | null;
     if (
       existing?.version === 1 &&
       existing.method === method &&
@@ -88,6 +89,9 @@ export function beginAttributedSignup({ method, source, returnUrl, entryId }: Be
     had_output_before_signup: Boolean(outputContext),
     ...(outputContext ? {
       output_route: outputContext.outputRoute,
+      mode: outputContext.mode,
+      experience_version: outputContext.experienceVersion,
+      output_kind: outputContext.outputKind,
       anonymous_artifact_id: outputContext.anonymousArtifactId,
       time_to_signup_s: Math.max(0, Math.round((Date.now() - outputContext.outputGeneratedAt) / 1000)),
     } : {}),
@@ -109,7 +113,7 @@ export function beginAttributedOAuthSignup(params: BeginSignupAttributionParams)
 export function completeAttributedSignup(): SignupAttributionIntent | null {
   const storage = getSafeLocalStorage();
   const raw = storage.getItem(INTENT_KEY);
-  if (!raw) return null;
+  if (typeof raw !== 'string' || !raw) return null;
   try {
     const intent = JSON.parse(raw) as SignupAttributionIntent;
     if (intent.version !== 1 || Date.now() - intent.startedAt > 30 * 60 * 1000) return null;

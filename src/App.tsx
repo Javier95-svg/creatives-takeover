@@ -84,6 +84,7 @@ const Signup = lazy(() => import("./pages/Signup"));
 const BizMapJourneyHubPage = lazy(() => import("./pages/BizMapJourneyHubPage"));
 const Onboarding = lazy(() => import("./pages/Onboarding"));
 const StartOnboarding = lazy(() => import("./pages/StartOnboarding"));
+const ProductStoryStart = lazy(() => import("./pages/ProductStoryStart"));
 const AdminFirstCustomerSprintPage = lazy(() => import("./pages/AdminFirstCustomerSprintPage"));
 
 const Login = lazy(() => import("./pages/Login"));
@@ -504,6 +505,7 @@ function App() {
                         <Route path="/onboarding" element={<Onboarding />} />
                         {/* The homepage box's quiz for signed-out visitors: answers first, account last. */}
                         <Route path="/start" element={<StartOnboarding />} />
+                        <Route path="/start/product" element={<RouteErrorBoundary routeName="Demo story"><ProductStoryStart /></RouteErrorBoundary>} />
                         <Route
                           path="/dashboard"
                           element={

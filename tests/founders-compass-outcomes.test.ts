@@ -5,7 +5,7 @@ import test from 'node:test';
 import { evaluateGTMOutcome } from '../src/lib/gtmOutcome.ts';
 import { evaluateMvpQuality } from '../src/lib/mvp-builder/qualityChecks.ts';
 import { getPmfConfidence, getPmfDecision } from '../src/lib/pmfConfidence.ts';
-import { HERO_MODES } from '../src/lib/heroFunnelRules.ts';
+import { STARTING_CARDS } from '../src/lib/startingExperience.ts';
 import type { GTMPlanV2 } from '../src/lib/gtmV2.ts';
 
 test('PMF confidence changes exactly at five, ten, and twenty five weighted signals', () => {
@@ -82,7 +82,7 @@ test('fixed hero copy and server rendered pricing remain available without JavaS
   const prerender = readFileSync(new URL('../scripts/generate-prerendered-pages.mjs', import.meta.url), 'utf8');
   const paragraphs = [
     'Customized workspace for startup founders, product managers and indie builders.',
-    'Define your ideal customer, prove demand, build your MVP, launch it, and find investment.',
+    'Identify what’s worth building, validate demand with real customer evidence, and turn insights into products and go-to-market strategies, all in one workspace.',
     'No application. No cohort. No equity.',
   ];
   const renderedSources = [hero, fallback, prerender].map((source) =>
@@ -109,7 +109,7 @@ test('fixed hero copy and server rendered pricing remain available without JavaS
    * that mentioned the old label - the exact drift between the live hero and
    * the crawler sources that this check exists to catch.
    */
-  const ctaLabels = Object.values(HERO_MODES).map((mode) => mode.cta);
+  const ctaLabels = Object.values(STARTING_CARDS).map((mode) => mode.cta);
   assert.equal(ctaLabels.length, 2);
   ctaLabels.forEach((label) => {
     assert.ok(fallback.includes(label), `crawler fallback is missing the "${label}" CTA`);
@@ -118,7 +118,7 @@ test('fixed hero copy and server rendered pricing remain available without JavaS
   // Both aha routes must stay linked and crawlable - they have organic entries.
   [fallback, prerender].forEach((source) => {
     assert.match(source, /(?:href|action)="\/icp-builder"/);
-    assert.match(source, /href="\/demo-studio\/try"/);
+    assert.match(source, /href="\/#get-started"/);
   });
   assert.doesNotMatch(fallback, /id="homepage-shell"/);
   assert.doesNotMatch(fallback, /background: #080d18/);

@@ -141,6 +141,8 @@ const ACTIVATION_ROUTE_BY_INTENT: Record<ActivationIntent, string> = {
 
 const SIGNUP_SOURCE_ACTIVATION_INTENT: Record<string, ActivationIntent> = {
   'demo-try': 'build_demo',
+  'hero-product-story': 'build_demo',
+  'hero-icp-output': 'run_icp',
   'pitch-deck-unlock': 'unlock_pitch_deck',
   'pitch-deck-analyzer': 'unlock_pitch_deck',
   'tech-stack': 'unlock_tech_stack',

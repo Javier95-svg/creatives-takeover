@@ -1,6 +1,7 @@
 import type { AuthError } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { getSignupMetadata } from "@/lib/attribution";
+import { getOnboardingReturn } from "@/lib/authRedirect";
 
 interface SignUpWithFallbackParams {
   email: string;
@@ -133,6 +134,7 @@ export async function signUpWithFallback({
     email,
     password,
     options: {
+      emailRedirectTo: `${window.location.origin}/auth/callback?return=${encodeURIComponent(getOnboardingReturn('/onboarding'))}`,
       data: {
         ...attributionMetadata,
         full_name: fullName || "",

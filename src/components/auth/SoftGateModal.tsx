@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Loader2, X } from "lucide-react";
 import { toast } from "sonner";
 
@@ -361,6 +361,7 @@ const SoftGateModal = ({
               <div className="space-y-2">
                 <Input
                   autoComplete="email"
+                  aria-label="Email address"
                   disabled={isLoading}
                   onChange={(event) => {
                     setEmail(event.target.value);
@@ -378,6 +379,7 @@ const SoftGateModal = ({
               <div className="space-y-2">
                 <Input
                   autoComplete="new-password"
+                  aria-label="Create a password"
                   disabled={isLoading}
                   onChange={(event) => {
                     setPassword(event.target.value);
@@ -405,6 +407,11 @@ const SoftGateModal = ({
             </form>
           ) : null}
 
+          <p className="mt-5 text-center text-sm">
+            <Link onClick={onBeforeAuthContinue} to={`/login?source=${encodeURIComponent(signupSource)}&return=${encodeURIComponent(returnPath)}`}>
+              I already have an account
+            </Link>
+          </p>
           <p className="mt-5 text-center text-xs leading-5 text-muted-foreground">
             We'll never post anything. Unsubscribe anytime.
           </p>

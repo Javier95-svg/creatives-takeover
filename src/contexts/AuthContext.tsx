@@ -309,6 +309,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             had_output_before_signup: Boolean(outputSignupContext),
             ...(outputSignupContext ? {
               output_route: outputSignupContext.outputRoute,
+              mode: outputSignupContext.mode,
+              experience_version: outputSignupContext.experienceVersion,
+              output_kind: outputSignupContext.outputKind,
               source: outputSignupContext.source,
               time_to_signup_s: Math.max(0, Math.round((Date.now() - outputSignupContext.outputGeneratedAt) / 1000)),
               anonymous_artifact_id: outputSignupContext.anonymousArtifactId,

@@ -84,7 +84,7 @@ import {
 } from "@/lib/journeyOutcomes";
 import { evaluateIcpArtifact } from "@/lib/icpOutcome";
 import { ensurePrebuildContext } from "@/lib/prebuildContext";
-import { claimHeroGuestArtifact, persistHeroGuestArtifact } from "@/lib/heroIcpGeneration";
+import { claimHeroGuestArtifact, loadHeroGuestArtifact, persistHeroGuestArtifact, type HeroDecisionBrief } from "@/lib/heroIcpGeneration";
 
 const ICP_RESULTS_TABLE = "icp_analysis_results";
 const SEED_TIMEOUT_MS = 25000;
@@ -467,6 +467,7 @@ const ICPBuilder: React.FC<ICPBuilderProps> = ({ backControl }) => {
   const [isHydratingEdit, setIsHydratingEdit] = useState(false);
   const [isHydratingResume, setIsHydratingResume] = useState(false);
   const [guestClaimError, setGuestClaimError] = useState<string | null>(null);
+  const [guestCompact, setGuestCompact] = useState<HeroDecisionBrief | null>(null);
   const [guestClaimAttempt, setGuestClaimAttempt] = useState(0);
   const [showLegacy, setShowLegacy] = useState(false);
   const [legacyAnalysis, setLegacyAnalysis] = useState<LegacyAnalysis | null>(null);
@@ -1022,6 +1023,10 @@ const ICPBuilder: React.FC<ICPBuilderProps> = ({ backControl }) => {
       savedAnalysisId: analysisId,
     }));
     completedRef.current = true;
+    if (source === 'guest_claim') {
+      captureEvent('starting_experience_artifact_saved', { mode: 'idea', source: 'hero-icp-output',
+        experience_version: 'two_starts_v1', output_kind: 'customer_decision_brief', artifact_id: analysisId });
+    }
     const completionMode = mode || "guided";
     const timeToCompleteSeconds = Math.max(
       0,
@@ -1465,6 +1470,9 @@ const ICPBuilder: React.FC<ICPBuilderProps> = ({ backControl }) => {
       setIsHydratingResume(true);
       setGuestClaimError(null);
       try {
+        const snapshot = await loadHeroGuestArtifact(guestArtifactToken);
+        if (cancelled) return;
+        setGuestCompact(snapshot.compact);
         const deadline = Date.now() + 90_000;
         while (!cancelled && Date.now() < deadline) {
           const result = await claimHeroGuestArtifact(guestArtifactToken);
@@ -2225,6 +2233,7 @@ const ICPBuilder: React.FC<ICPBuilderProps> = ({ backControl }) => {
             <CardContent className="space-y-4 px-6 py-8 text-center">
               <h1 className="text-xl font-semibold">Your brief is safe</h1>
               <p className="text-sm text-muted-foreground">{guestClaimError}</p>
+              {guestCompact ? <GuestClaimSummary brief={guestCompact} /> : null}
               <Button onClick={() => setGuestClaimAttempt((current) => current + 1)}>Try saving again</Button>
             </CardContent>
           </Card>
@@ -2239,9 +2248,10 @@ const ICPBuilder: React.FC<ICPBuilderProps> = ({ backControl }) => {
         <IcpProgressBar progress={0} shellOffset />
         <div className="flex min-h-screen items-center justify-center px-6">
           <Card className="rounded-5xl border-border/60 bg-white/80 shadow-sm backdrop-blur dark:bg-slate-950/75">
-            <CardContent className="flex items-center gap-3 px-6 py-8 text-muted-foreground">
+            <CardContent className="space-y-4 px-6 py-8 text-muted-foreground">
               <Loader2 className="h-5 w-5 animate-spin" />
               {isHydratingEdit ? "Restoring your ICP Draft for editing..." : "Restoring your ICP Draft..."}
+              {guestCompact ? <GuestClaimSummary brief={guestCompact} /> : null}
             </CardContent>
           </Card>
         </div>
@@ -2363,3 +2373,12 @@ const ICPBuilder: React.FC<ICPBuilderProps> = ({ backControl }) => {
 };
 
 export default ICPBuilder;
+
+function GuestClaimSummary({ brief }: { brief: HeroDecisionBrief }) {
+  return <div className="max-w-xl space-y-3 text-left text-sm">
+    <p><strong>Likely customer:</strong> {brief.primarySegment}</p>
+    <p><strong>Urgent problem:</strong> {brief.urgentProblem}</p>
+    <p><strong>Your first test:</strong> {brief.validationStep}</p>
+    <p className="text-xs text-muted-foreground">These are starting assumptions to check with customers.</p>
+  </div>;
+}

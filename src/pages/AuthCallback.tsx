@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { supabase } from '@/integrations/supabase/client';
@@ -35,11 +35,16 @@ const AuthCallback = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [status, setStatus] = useState<'loading' | 'error' | 'success'>('loading');
+  const callbackStarted = useRef(false);
 
   useEffect(() => {
+    // This callback consumes OAuth return state and single-use confirmation
+    // tokens. Effect replay must not run the consumption a second time.
+    if (callbackStarted.current) return;
+    callbackStarted.current = true;
     const handleAuthCallback = async () => {
       try {
-        const pendingReturn = sanitizeReturnPath(localStorage.getItem('oauth_return_url'), '/app-entry');
+        const pendingReturn = sanitizeReturnPath(searchParams.get('return') || localStorage.getItem('oauth_return_url'), '/app-entry');
         const redirectToLogin = (delay = 3000) => {
           const loginPath = appendReturnParam('/login', pendingReturn);
           setTimeout(() => navigate(loginPath), delay);
@@ -154,7 +159,7 @@ const AuthCallback = () => {
           const fallbackReturnUrl = getSafeSessionStorage().getItem(ICP_SEED_STORAGE_KEY)
             ? '/icp-builder'
             : '/app-entry';
-          const returnUrl = sanitizeReturnPath(localStorage.getItem('oauth_return_url') || fallbackReturnUrl, '/app-entry');
+          const returnUrl = sanitizeReturnPath(searchParams.get('return') || localStorage.getItem('oauth_return_url') || fallbackReturnUrl, '/app-entry');
           const oauthSource = localStorage.getItem('oauth_source');
           const oauthSignupMethod = localStorage.getItem('oauth_signup_method');
           completeAttributedOAuthSignup();
@@ -183,12 +188,13 @@ const AuthCallback = () => {
           });
           if (
             isNewlyCreatedUser(session.user.created_at) &&
-            (oauthSource === 'demo-try' || oauthSource === 'icp-draft-unlock')
+            oauthSource &&
+            ['demo-try', 'icp-draft-unlock', 'hero-product-story', 'hero-icp-output'].includes(oauthSource ?? '')
           ) {
-            const tool = oauthSource === 'demo-try' ? 'demo_studio' : 'icp_builder';
+            const tool = oauthSource === 'demo-try' || oauthSource === 'hero-product-story' ? 'demo_studio' : 'icp_builder';
             trackJourneyEvent('journey_account_created_from_output', {
               tool,
-              artifact_type: tool === 'demo_studio' ? 'interactive_demo_preview' : 'customer_decision_preview',
+              artifact_type: oauthSource === 'hero-product-story' ? 'demo_story' : tool === 'demo_studio' ? 'interactive_demo_preview' : 'customer_decision_preview',
               outcome_status: 'draft',
               source: oauthSource,
               return_path: returnUrl,

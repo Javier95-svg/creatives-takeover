@@ -52,6 +52,53 @@
     "breakingChangeRule": "Never rename a live event. Add a new event or schema_version and keep the old contract during migration."
   },
   "events": {
+    "starting_experience_viewed": {
+      "stage": "activation",
+      "owner": "growth",
+      "source": "client",
+      "sourceFile": "src/components/hero/StartingExperiences.tsx",
+      "requiredProperties": [
+        "experience_version",
+        "source"
+      ]
+    },
+    "starting_experience_submitted": {
+      "stage": "activation",
+      "owner": "growth",
+      "source": "client",
+      "sourceFile": "src/components/hero/StartingExperiences.tsx",
+      "requiredProperties": [
+        "mode",
+        "source",
+        "experience_version",
+        "output_kind"
+      ]
+    },
+    "starting_experience_result_viewed": {
+      "stage": "value",
+      "owner": "product",
+      "source": "client",
+      "sourceFile": "src/components/hero/ProductStoryResult.tsx",
+      "requiredProperties": [
+        "mode",
+        "source",
+        "experience_version",
+        "output_kind"
+      ]
+    },
+    "starting_experience_artifact_saved": {
+      "stage": "value",
+      "owner": "product",
+      "source": "client",
+      "sourceFile": "src/components/hero/ProductStoryResult.tsx",
+      "requiredProperties": [
+        "mode",
+        "source",
+        "experience_version",
+        "output_kind",
+        "artifact_id"
+      ]
+    },
     "landing_viewed": {
       "stage": "acquisition",
       "owner": "growth",
@@ -774,6 +821,19 @@
     }
   },
   "funnels": [
+    {
+      "key": "two_starts_activation",
+      "name": "Two starts: visitor to saved work",
+      "windowDays": 14,
+      "steps": [
+        "starting_experience_viewed",
+        "starting_experience_submitted",
+        "first_output_generated",
+        "signup_completed",
+        "artifact_claim_succeeded"
+      ],
+      "breakdownProperty": "mode"
+    },
     {
       "key": "guest_quiz_to_account",
       "name": "Homepage guest quiz to saved onboarding",

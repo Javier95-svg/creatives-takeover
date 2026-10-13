@@ -62,6 +62,9 @@ export interface SignupCompletedProps {
   method: SignupMethod;
   referrer: string | null;
   had_output_before_signup?: boolean;
+  mode?: 'idea' | 'product';
+  experience_version?: string;
+  output_kind?: 'customer_decision_brief' | 'demo_story';
   output_route?: 'icp' | 'demo';
   source?: string;
   time_to_signup_s?: number;

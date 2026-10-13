@@ -1,5 +1,5 @@
 import { CSSProperties, ReactNode, Suspense, lazy, useEffect, useRef, useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { ArrowRight, LayoutDashboard, User } from "lucide-react";
 
 import { useAuth } from "@/contexts/AuthContext";
@@ -7,31 +7,9 @@ import { useConversionTracking } from "@/hooks/useConversionTracking";
 import { useCTAAttribution } from "@/hooks/useCTAAttribution";
 import { supabase } from "@/integrations/supabase/client";
 import heroCompass from "@/assets/hero-compass.svg";
-import HeroIdeaInput from "@/components/hero/HeroIdeaInput";
+import StartingExperiences from "@/components/hero/StartingExperiences";
 import "./hero-cinematic-spotlight.css";
-import { trackActivationEntry, trackActivationFunnelEvent } from "@/lib/activationEntry";
-import { classifyHeroInput, trackHeroInputFocused, trackHeroInputSubmitted } from "@/lib/heroFunnel";
-import {
-  buildHeroProductPath,
-  buildHeroStartPath,
-  DEFAULT_HERO_MODE,
-  HERO_MODE_ACCOUNT_TYPE,
-  type HeroMode,
-} from "@/lib/heroFunnelRules";
-import { buildIcpSeedReturnPath, persistIcpSeed } from "@/lib/icpSeed";
-import { rememberIntendedAccountType } from "@/lib/intendedAccountType";
-import { rememberToolHandoff } from "@/lib/toolHandoff";
-
-/*
- * The hero no longer generates anything in place.
- *
- * It used to render the customer brief on the homepage, behind a lazy island.
- * That design never produced a single submission: `hero_input_submitted` was 0
- * for its entire life, because visitors clicked the CTA before typing and the
- * empty-field path only pulsed. Both modes now hand straight off to the tool
- * that owns the work, carrying the description, so the hero has exactly one
- * job - take the idea and get out of the way.
- */
+import { trackActivationEntry } from "@/lib/activationEntry";
 
 // Also lazy: it renders nothing until opened, but statically it dragged the
 // Radix dialog and ~20 lucide icons into the homepage's critical path. Homepage
@@ -108,7 +86,7 @@ const DEFAULT_LEDE = (
       Customized workspace for startup founders, product managers and indie builders.
     </span>
     <span className="ct-hero__lede-block">
-      Define your ideal customer, prove demand, build your MVP, launch it, and find investment.
+      Identify what’s worth building, validate demand with real customer evidence, and turn insights into products and go-to-market strategies, all in one workspace.
     </span>
     <strong className="ct-hero__lede-final">No application. No cohort. No equity.</strong>
   </>
@@ -131,15 +109,12 @@ const Hero = ({
   const { isAuthenticated, user } = useAuth();
   const { trackTriggerView, trackEngagement } = useConversionTracking();
   const location = useLocation();
-  const navigate = useNavigate();
   const { set: setAttribution } = useCTAAttribution();
   const heroRef = useRef<HTMLElement>(null);
   const hasTrackedView = useRef(false);
   const [userUsername, setUserUsername] = useState<string | null>(null);
   const [isAudienceDialogOpen, setIsAudienceDialogOpen] = useState(false);
   const [hasOpenedAudienceDialog, setHasOpenedAudienceDialog] = useState(false);
-  const [ideaText, setIdeaText] = useState("");
-  const [heroMode, setHeroMode] = useState<HeroMode>(DEFAULT_HERO_MODE);
 
   useEffect(() => {
     if (!user) {
@@ -227,49 +202,6 @@ const Hero = ({
     setIsAudienceDialogOpen(true);
   };
 
-  const handleIdeaSubmit = () => {
-    const trimmed = ideaText.trim();
-    if (trimmed.length < 3) return;
-
-    const { route, hasUrl } = classifyHeroInput(trimmed, heroMode);
-    const isDemo = route === "demo";
-    trackHeroInputSubmitted({
-      char_count: trimmed.length,
-      has_url: hasUrl,
-      routed_to: route,
-      source: "homepage_hero",
-      mode: heroMode,
-    });
-    setAttribution(isDemo ? "hero_demo_try" : "hero_icp_builder", location.pathname);
-    trackActivationFunnelEvent("activation_step_completed", {
-      entry_id: isDemo ? "hero_demo_try" : "hero_icp_builder",
-      tool: isDemo ? "demo_studio" : "icp_builder",
-      source: "homepage_hero",
-      step: "entry_click",
-      entry_page: location.pathname,
-      placement: "hero_input",
-      is_authenticated: isAuthenticated,
-    });
-
-    // The tool that owns the work, with the description carried so it never
-    // restarts from an empty field.
-    const toolPath = isDemo ? buildHeroProductPath(trimmed) : buildIcpSeedReturnPath(trimmed);
-    if (!isDemo) persistIcpSeed(trimmed);
-
-    if (isAuthenticated) {
-      navigate(toolPath);
-      return;
-    }
-
-    // Signed-out visitors take the matching onboarding quiz first (Idea ->
-    // Builder, Product -> Founder), pre-filled with what they typed, and create
-    // their account at the end to save their plan. They then land on the tool
-    // they asked for, so the promised result still arrives.
-    rememberToolHandoff({ mode: heroMode, tool: isDemo ? "demo_studio" : "icp_builder", seed: trimmed });
-    rememberIntendedAccountType(HERO_MODE_ACCOUNT_TYPE[heroMode]);
-    navigate(buildHeroStartPath(toolPath));
-  };
-
   return (
     <section
       ref={heroRef}
@@ -299,6 +231,8 @@ const Hero = ({
 
         <p className="ct-hero__lede">{isAuthenticated ? SIGNED_IN_LEDE : lede}</p>
 
+        {isAuthenticated && new URLSearchParams(location.search).has("resume") ? <StartingExperiences /> : null}
+
         <div className="ct-hero__cta-row">
           {isAuthenticated ? (
             <>
@@ -318,14 +252,7 @@ const Hero = ({
             </>
           ) : (
             <>
-              <HeroIdeaInput
-                value={ideaText}
-                onChange={setIdeaText}
-                onSubmit={handleIdeaSubmit}
-                onFirstFocus={trackHeroInputFocused}
-                mode={heroMode}
-                onModeChange={setHeroMode}
-              />
+              <StartingExperiences />
               <div className="ct-hero__secondary-row">
                 <button type="button" className="ct-hero__audience-link" onClick={handleWhoIsThisForClick}>
                   Who is this for?

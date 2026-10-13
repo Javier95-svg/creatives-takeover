@@ -10,6 +10,9 @@ export interface OutputSignupContext {
   anonymousArtifactId: string;
   outputGeneratedAt: number;
   signupStartedAt: number;
+  mode?: 'idea' | 'product';
+  experienceVersion?: string;
+  outputKind?: 'customer_decision_brief' | 'demo_story';
 }
 
 export function persistOutputSignupContext(
@@ -27,7 +30,7 @@ export function persistOutputSignupContext(
 export function readOutputSignupContext(): OutputSignupContext | null {
   try {
     const raw = getSafeLocalStorage().getItem(OUTPUT_SIGNUP_CONTEXT_KEY);
-    if (!raw) return null;
+    if (typeof raw !== 'string' || !raw) return null;
     const value = JSON.parse(raw) as Partial<OutputSignupContext>;
     if (
       value.version !== 1 ||

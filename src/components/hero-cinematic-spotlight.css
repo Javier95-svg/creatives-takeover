@@ -1,4 +1,4 @@
-/* Direction B - Cinematic Spotlight homepage hero. All styles are scoped under .ct-hero. */
+/* Cinematic homepage hero and its two starting experiences. */
 
 .ct-hero {
   --ct-bg: #f8faff;
@@ -1577,4 +1577,54 @@
   .ct-hero__spotlight:focus-visible .ct-hero__st-cta {
     transform: translate(-50%, 0);
   }
+}
+
+/* One sentence to useful work. Result components load only after submission. */
+.ct-start { width: min(100%, 960px); scroll-margin-top: 120px; text-align: left; }
+.ct-start > h2 { margin: 0; text-align: center; font-size: clamp(1.5rem, 3vw, 2rem); font-weight: 650; color: var(--ct-fg); }
+.ct-start__intro { margin: 10px 0 24px; text-align: center; color: var(--ct-muted); font-size: 15px; line-height: 1.6; }
+.ct-start__cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+.ct-start__card { display: flex; flex-direction: column; gap: 12px; min-width: 0; padding: 26px; border: 1px solid var(--ct-line); border-radius: 24px; background: var(--ct-idea-surface); }
+.ct-start__card.is-selected { border-color: var(--ct-blue); }
+.ct-start__card h3 { margin: 0; color: var(--ct-fg); font-size: 22px; font-weight: 650; }
+.ct-start__challenge { min-height: 48px; margin: 0 0 4px; color: var(--ct-muted); line-height: 1.6; font-size: 15px; }
+.ct-start__card label { color: var(--ct-fg); font-size: 13px; font-weight: 600; }
+.ct-start textarea, .ct-story textarea { width: 100%; min-height: 88px; resize: vertical; padding: 12px 14px; border: 1px solid hsl(var(--border)); border-radius: 12px; background: hsl(var(--background)); color: hsl(var(--foreground)); font: inherit; font-size: 15px; line-height: 1.6; }
+.ct-start textarea::placeholder { color: hsl(var(--muted-foreground)); }
+.ct-start textarea:focus-visible, .ct-story textarea:focus-visible { outline: 2px solid hsl(var(--primary)); outline-offset: 3px; }
+.ct-start__output { margin: 0; color: var(--ct-muted); font-size: 13px; line-height: 1.6; }
+.ct-start__card .ct-hero__cta { margin-top: auto; width: 100%; font-size: 15px; min-height: 48px; justify-content: center; }
+.ct-start__card .ct-hero__cta:disabled { opacity: .7; cursor: wait; }
+.ct-start__error { margin: 0; color: hsl(var(--destructive)); font-size: 14px; line-height: 1.6; }
+.ct-start__error button { text-decoration: underline; min-height: 44px; }
+.ct-start__direct { display: block; width: fit-content; margin: 18px auto 0; color: var(--ct-muted); font-size: 13px; text-decoration: underline; text-underline-offset: 4px; padding: 8px; }
+.ct-start__result { margin-top: 24px; overflow-wrap: anywhere; scroll-margin-top: 120px; }
+.ct-story { padding: 26px; border: 1px solid hsl(var(--border)); border-radius: 24px; background: hsl(var(--background)); color: hsl(var(--foreground)); text-align: left; }
+.ct-story h3 { font-size: 24px; font-weight: 650; margin: 8px 0 12px; }
+.ct-story h4 { font-size: 16px; font-weight: 650; margin: 8px 0; }
+.ct-story__kicker { font-size: 11px; font-weight: 650; text-transform: uppercase; letter-spacing: .12em; color: hsl(var(--primary)); }
+.ct-story__pitch { font-size: 19px; line-height: 1.6; margin: 0 0 16px; }
+.ct-story__assumption { font-size: 13px; line-height: 1.7; color: hsl(var(--muted-foreground)); margin: 12px 0; }
+.ct-story__context { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; margin: 22px 0; }
+.ct-story dt { font-size: 12px; font-weight: 650; margin-bottom: 6px; }
+.ct-story dd { margin: 0; font-size: 15px; line-height: 1.7; }
+.ct-story__steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; padding: 0; list-style: none; }
+.ct-story__steps li { border: 1px solid hsl(var(--border)); border-radius: 14px; padding: 16px; }
+.ct-story__steps p { font-size: 14px; line-height: 1.7; margin: 8px 0; }
+.ct-story__script { color: hsl(var(--muted-foreground)); }
+.ct-story__edit { margin: 18px 0; }
+.ct-story__edit summary { cursor: pointer; padding: 12px 0; font-size: 14px; }
+.ct-story__edit label { display: block; font-size: 13px; margin: 12px 0; }
+.ct-story__edit textarea { display: block; margin-top: 6px; }
+.ct-story__actions { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; margin-top: 18px; }
+.ct-story__actions > button { min-height: 48px; font-size: 14px; }
+.ct-story .ct-hero__cta { background: hsl(var(--primary)); color: hsl(var(--primary-foreground)); padding: 12px 22px; border-radius: 12px; }
+.ct-story__actions > button:not(.ct-hero__cta) { text-decoration: underline; text-underline-offset: 4px; }
+.ct-story-resume { max-width: 1000px; margin: 0 auto; padding: 40px 20px; }
+.ct-story-resume > a { display: inline-block; padding: 12px 0; margin-bottom: 16px; }
+@media (max-width: 640px) {
+  .ct-start__cards, .ct-story__steps, .ct-story__context { grid-template-columns: 1fr; }
+  .ct-start__card, .ct-story { padding: 20px; }
+  .ct-start__challenge { min-height: 0; }
+  .ct-story__actions .ct-hero__cta { width: 100%; justify-content: center; }
 }

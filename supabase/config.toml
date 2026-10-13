@@ -11,7 +11,9 @@ verify_jwt = true
 verify_jwt = false
 
 [functions.demo-studio-generator]
-verify_jwt = true
+# Anonymous starts are rate-limited inside the handler. Paid modes still verify
+# the bearer token with getUserFromAuth before any generation or credit charge.
+verify_jwt = false
 
 # Public launch-page signups arrive with the anon JWT that supabase-js attaches
 # automatically (same as demo-studio-generator's /try path), so verify_jwt stays on.

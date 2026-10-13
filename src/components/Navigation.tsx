@@ -818,7 +818,7 @@ const LegacyNavigation = () => {
                     className="rounded-xl bg-gradient-unified hover:opacity-95 text-primary-foreground shadow-[0_10px_22px_-14px_hsl(var(--primary)/0.55)] transition-all duration-300 font-semibold px-4"
                     asChild
                   >
-                    <Link to="/signup">Sign Up</Link>
+                    <Link to="/#get-started">Join Today</Link>
                   </Button>
                 </div>
               )}
@@ -1074,7 +1074,7 @@ const LegacyNavigation = () => {
                         onClick={() => setIsOpen(false)}
                         asChild
                       >
-                        <Link to="/signup">Sign Up</Link>
+                        <Link to="/#get-started">Join Today</Link>
                       </Button>
                     </div>
                   )}

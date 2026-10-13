@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import SoftGateModal from "@/components/auth/SoftGateModal";
+import { captureEvent } from '@/lib/analytics';
 import {
   buildHeroClaimReturnPath,
-  buildHeroResumePath,
   loadHeroGuestArtifact,
   persistHeroGuestArtifact,
   retryHeroDeepGeneration,
@@ -12,12 +12,10 @@ import {
   type HeroGuestArtifactRef,
 } from "@/lib/heroIcpGeneration";
 import {
-  markSignupPromptDismissed,
   trackDeepOutputGenerated,
   trackFirstOutputGenerated,
   trackOutputGenerationFailed,
   trackSignupPromptShown,
-  wasSignupPromptDismissed,
 } from "@/lib/heroFunnel";
 import {
   createEmptyIcpBuilderSession,
@@ -82,9 +80,9 @@ export function HeroResultIsland({
   const [artifact, setArtifact] = useState<StoredIcpArtifact | null>(null);
   const [guestRef, setGuestRef] = useState<HeroGuestArtifactRef | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [promptDismissed, setPromptDismissed] = useState(() => wasSignupPromptDismissed());
   const [signupOpen, setSignupOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [copyError, setCopyError] = useState<string | null>(null);
   const [activeResumeToken, setActiveResumeToken] = useState(initialResumeToken ?? null);
   const [resumeReloadKey, setResumeReloadKey] = useState(0);
   const outputGeneratedAtRef = useRef<number | null>(null);
@@ -93,6 +91,8 @@ export function HeroResultIsland({
     initialResumeToken ? "homepage_resume" : "homepage_hero",
   );
   const promptTrackedRef = useRef<string | null>(null);
+  const generationRef = useRef<ReturnType<typeof startHeroIcpGeneration> | null>(null);
+  const resultViewed = useRef(false);
 
   // Announce arrival before any generation work, so the hero's watchdog can
   // stand down the moment the chunk is actually running.
@@ -224,7 +224,8 @@ export function HeroResultIsland({
           return;
         }
 
-        const result = await startHeroIcpGeneration(description);
+        generationRef.current ??= startHeroIcpGeneration(description);
+        const result = await generationRef.current;
         if (cancelled) return;
         const ref: HeroGuestArtifactRef = {
           artifactId: result.artifactId,
@@ -275,12 +276,17 @@ export function HeroResultIsland({
   }, [activeResumeToken, description, resumeReloadKey, runId]);
 
   const hasUsefulOutput = Boolean(compact || artifact);
-  const showSignupCard = hasUsefulOutput && !isAuthenticated && !promptDismissed && Boolean(guestRef);
+  const showSignupCard = hasUsefulOutput && !isAuthenticated && Boolean(guestRef);
 
   // Effects run after React commits the result. This is the canonical
   // visibility boundary: request completion by itself is not an output view.
   useEffect(() => {
     if (!hasUsefulOutput || !guestRef) return;
+    if (!resultViewed.current) {
+      resultViewed.current = true;
+      captureEvent('starting_experience_result_viewed', { mode: 'idea', source: 'hero-icp-output',
+        experience_version: 'two_starts_v1', output_kind: 'customer_decision_brief' });
+    }
     if (!outputGeneratedAtRef.current) outputGeneratedAtRef.current = Date.now();
     trackFirstOutputGenerated({
       route: "icp",
@@ -290,6 +296,7 @@ export function HeroResultIsland({
       anonymous_artifact_id: guestRef.artifactId,
       latency_ms: Math.max(0, outputGeneratedAtRef.current - generationStartedAtRef.current),
       is_anonymous: !isAuthenticated,
+      mode: "idea", output_kind: "customer_decision_brief", experience_version: "two_starts_v1",
     });
   }, [guestRef, hasUsefulOutput, isAuthenticated, runId]);
 
@@ -329,14 +336,18 @@ export function HeroResultIsland({
       outputRoute: "icp",
       anonymousArtifactId: guestRef.artifactId,
       outputGeneratedAt: outputGeneratedAtRef.current ?? Date.now(),
+      mode: 'idea', experienceVersion: 'two_starts_v1', outputKind: 'customer_decision_brief',
     });
   };
 
-  const copyResumeLink = async () => {
-    if (!guestRef || typeof navigator === "undefined" || !navigator.clipboard) return;
-    await navigator.clipboard.writeText(`${window.location.origin}${buildHeroResumePath(guestRef.resumeToken)}`);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2_000);
+  const copyBrief = async () => {
+    const text = compact ? ["Your first validation test", compact.validationStep,
+      "Likely customer: " + compact.primarySegment, "Urgent problem: " + compact.urgentProblem,
+      "Assumptions to validate: the customer, urgency, and buying trigger are hypotheses based on your description.",
+      "Buying trigger: " + compact.buyingTrigger].join("\n\n")
+      : artifact ? [artifact.draftDocument.customer.summary, artifact.draftDocument.pain.quote].join("\n\n") : "";
+    try { await navigator.clipboard.writeText(text); setCopied(true); setCopyError(null); }
+    catch { setCopyError("Could not copy automatically. You can select and copy the brief below."); }
   };
 
   if (runState === "failed" && !hasUsefulOutput) {
@@ -385,7 +396,8 @@ export function HeroResultIsland({
             * answer. It is required by normalizeCompact, so it is always
             * present whenever this card renders.
             */}
-          <p className="ct-hero__result-kicker">Your first step</p>
+          <p className="ct-hero__result-kicker">Your idea brief</p>
+          <p className="ct-story__assumption">The customer, problem, and buying trigger are starting assumptions. Your first test helps check them with real customers.</p>
           <ResultBlock
             className="ct-hero__result-firststep"
             label="Do this first"
@@ -394,7 +406,7 @@ export function HeroResultIsland({
           <h3 className="ct-hero__result-persona">{compact.personaName}</h3>
           {compact.roleLine ? <p className="ct-hero__result-line">{compact.roleLine}</p> : null}
           <div className="ct-hero__result-grid">
-            <ResultBlock label="Primary segment" value={compact.primarySegment} />
+            <ResultBlock label="Likely customer" value={compact.primarySegment} />
             <ResultBlock label="Urgent problem" value={compact.urgentProblem} />
             <ResultBlock label="Buying trigger" value={compact.buyingTrigger} />
             <ResultBlock label="Do not target first" value={compact.nonFitSegment} />
@@ -414,21 +426,18 @@ export function HeroResultIsland({
         </article>
       ) : null}
 
-      {artifact ? (
-        <details className="ct-hero__deep-report">
-          <summary>Deep customer report ready</summary>
-          <ResultBlock label="Customer" value={artifact.draftDocument.customer.summary} />
-          <ResultBlock label="Pain in their words" value={artifact.draftDocument.pain.quote} />
-          <ResultBlock label="Value proposition" value={artifact.draftDocument.build.valueProposition} />
-          <ResultBlock label="Current alternative" value={artifact.draftDocument.decisionBrief?.currentAlternative || artifact.draftDocument.build.replaces.join(", ")} />
-        </details>
-      ) : null}
-
-      {artifact ? (
-        <div className="ct-hero__result-actions">
-          <Link className="ct-hero__result-crosslink" to="/icp-builder">Open the full report in ICP Builder →</Link>
-        </div>
-      ) : null}
+      {!compact && artifact ? <article className="ct-hero__result-card">
+        <p className="ct-hero__result-kicker">Your idea brief</p>
+        <p className="ct-story__assumption">These are assumptions to check with customers.</p>
+        <ResultBlock label="Likely customer" value={artifact.draftDocument.customer.summary} />
+        <ResultBlock label="Urgent problem" value={artifact.draftDocument.pain.quote} />
+        <ResultBlock label="Your first test" value={artifact.draftDocument.decisionBrief?.interviewValidationPlan[0]?.question || "Ask a likely customer how they handle this problem today and what it costs them."} />
+      </article> : null}
+      {hasUsefulOutput ? <div className="ct-hero__result-actions">
+        {isAuthenticated && guestRef ? <Link className="ct-hero__cta" to={buildHeroClaimReturnPath(guestRef.resumeToken)}>Save my brief</Link> : null}
+        <button type="button" className="ct-hero__save-card-dismiss" onClick={() => void copyBrief()}>{copied ? "Copied" : "Copy brief"}</button>
+        {copyError ? <p role="alert">{copyError}</p> : null}
+      </div> : null}
 
       {/*
         * The save card trades on continuity, not storage. Asking someone to
@@ -438,8 +447,8 @@ export function HeroResultIsland({
         */}
       {showSignupCard && guestRef ? (
         <div className="ct-hero__save-card">
-          <h3>Pick up where you left off</h3>
-          <p>Your first step is saved for seven days. Create a free account and we&apos;ll keep track of what&apos;s done and what&apos;s next.</p>
+          <h3>Keep your brief and continue</h3>
+          <p>Create a free account to save this brief and unlock the deeper customer report.</p>
           <div className="ct-hero__save-card-actions">
             <button
               className="ct-hero__cta"
@@ -449,20 +458,7 @@ export function HeroResultIsland({
                 setSignupOpen(true);
               }}
             >
-              Save and continue free
-            </button>
-            <button type="button" className="ct-hero__save-card-dismiss" onClick={() => void copyResumeLink()}>
-              {copied ? "Link copied" : "Copy 7-day link"}
-            </button>
-            <button
-              type="button"
-              className="ct-hero__save-card-dismiss"
-              onClick={() => {
-                markSignupPromptDismissed();
-                setPromptDismissed(true);
-              }}
-            >
-              Not now
+              Save my brief
             </button>
           </div>
         </div>
@@ -474,7 +470,7 @@ export function HeroResultIsland({
           onOpenChange={setSignupOpen}
           seed={description}
           trigger="hero-icp-output"
-          title="Save your first step"
+          title="Save your brief"
           description="Create your founder profile in seconds. Your result will be claimed automatically."
           returnPathOverride={buildHeroClaimReturnPath(guestRef.resumeToken)}
           onBeforeAuthContinue={prepareSignup}

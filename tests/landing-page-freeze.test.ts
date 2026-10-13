@@ -9,6 +9,7 @@ import test from 'node:test';
 // pure LF. A raw-byte pin therefore cannot match in both places at once, and the
 // pin silently drifts from the committed content. Normalising first makes the
 // hash equal to the git blob hash in every environment.
+// Re-pinned 2026-10-13 for the approved two-start, result-before-signup experience.
 const frozenFiles = {
   // Rehashed 2026-08-02 for the approved output-led funnel upgrade. The single
   // input now creates a durable, claimable ICP result in place; Product mode
@@ -26,7 +27,11 @@ const frozenFiles = {
   // Rehashed 2026-10-11 for the requested subtitle "Customized workspace for
   // startup founders, product managers and indie builders." (2e04de09). The
   // rest of the copy and the layout are unchanged.
-  '../src/components/Hero.tsx': '2ac2777ffba1d144261639a9914925face983e09bbdbe2c3fc11085ebf7bce87',
+  // Rehashed 2026-10-13 for the requested second lede line "Identify what's
+  // worth building, validate demand with real customer evidence, and turn
+  // insights into products and go-to-market strategies, all in one
+  // workspace." The rest of the copy and the layout are unchanged.
+  '../src/components/Hero.tsx': '2efc75f4b651b991a1b7ef73b3757cf1aa48a07d5481b9e84e10e011bef38ad6',
   // Rehashed 2026-07-28 for the performance audit: mobile and desktop journey
   // branches are now mutually exclusive, preventing duplicate 147 MB GIF loads.
   // Content, visual order, actions, and responsive layout remain unchanged.
@@ -43,7 +48,7 @@ const frozenFiles = {
   // existing linked logo. The signed-out navbar remains unchanged.
   // Rehashed 2026-10-04: 83728f13 (2026-09-16) only returns null inside the
   // signed-in workspace frame; visitors get the same navbar as before.
-  '../src/components/Navigation.tsx': 'a11808b9ce2b4ded1f740c543088e477b9cf825a9aae5142292192fdfee251f2',
+  '../src/components/Navigation.tsx': 'a109744f512bf9ea56b709553dc56d94ac01493629ef41f5d86893f9d9d52d9b',
   // Re-pinned 2026-07-25 (delivery audit, Phase 1): AISpecializationTrends moved
   // from a static import to lazy() + Suspense, matching how HomeFAQ and
   // FounderAnswerLibraryTeaser are already loaded. It is the only homepage

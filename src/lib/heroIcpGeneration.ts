@@ -48,6 +48,7 @@ export interface HeroGuestArtifactSnapshot {
 
 export interface StartHeroGenerationResult extends HeroGuestArtifactSnapshot {
   resumeToken: string;
+  expiresAt: string;
 }
 
 export interface ClaimHeroArtifactResult {
@@ -95,7 +96,7 @@ async function readFunctionError(error: unknown) {
   }
 }
 
-async function invokeHero<T>(body: unknown, timeoutMs: number, label: string): Promise<T> {
+async function invokeHero<T>(body: Record<string, unknown>, timeoutMs: number, label: string): Promise<T> {
   const { data, error } = await withTimeout(
     supabase.functions.invoke("icp-analyzer", { body }),
     timeoutMs,
@@ -133,7 +134,7 @@ export function persistHeroGuestArtifact(ref: HeroGuestArtifactRef) {
 export function readHeroGuestArtifact(): HeroGuestArtifactRef | null {
   try {
     const raw = getSafeLocalStorage().getItem(HERO_GUEST_ARTIFACT_KEY);
-    if (!raw) return null;
+    if (typeof raw !== 'string' || !raw) return null;
     const value = JSON.parse(raw) as Partial<HeroGuestArtifactRef>;
     if (!value.artifactId || !value.resumeToken || !value.expiresAt || Date.parse(value.expiresAt) <= Date.now()) {
       getSafeLocalStorage().removeItem(HERO_GUEST_ARTIFACT_KEY);

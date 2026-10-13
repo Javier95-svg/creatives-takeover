@@ -66,6 +66,9 @@ export function hasGeneratedOutputThisSession(): boolean {
  * the coarser question of whether this visitor has seen any output.
  */
 type OutputEventProperties = {
+  mode?: HeroMode;
+  experience_version?: string;
+  output_kind?: 'customer_decision_brief' | 'demo_story';
   route: HeroRoute;
   tool: "icp_builder" | "demo_studio";
   source: string;

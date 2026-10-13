@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { getUserFromAuth } from "../_shared/credit-deduction.ts";
 import { emitBusinessEvent, resolveAnalyticsErrorCode } from "../_shared/analytics.ts";
+import { isDemoStoryDraft } from "../_shared/demo-story.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -68,6 +69,43 @@ serve(async (req) => {
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     if (!supabaseUrl || !serviceRoleKey) throw new Error("Missing required environment configuration");
     const serviceClient = createClient(supabaseUrl, serviceRoleKey);
+
+    // Versioned story payloads remain separate from screenshot-based demo previews.
+    if (["create_story", "load_story", "claim_story"].includes(operation)) {
+      const user = operation === "claim_story" ? await getUserFromAuth(req) : null;
+      if (operation === "claim_story" && !user) return json({ success: false, error: "Authentication required" }, 401);
+      const { error: rateError } = await serviceClient.rpc("assert_rate_limit", {
+        p_key: `guest_story_${operation}:${clientIp(req)}`, p_user_id: user?.id ?? null,
+        p_max_per_minute: operation === "create_story" ? 5 : 30,
+      });
+      if (rateError) return json({ success: false, error: "Too many requests. Wait a minute and retry.", errorCode: "RATE_LIMITED" }, 429);
+      if (operation === "create_story") {
+        if (!isDemoStoryDraft(body.draft)) return json({ success: false, error: "The demo story is invalid." }, 422);
+        const resumeToken = createToken();
+        const { data: row, error } = await serviceClient.from("guest_activation_artifacts").insert({
+          artifact_type: "demo", source: "hero-product-story", input_payload: { description: body.draft.description },
+          compact_payload: { kind: "demo_story", productName: body.draft.productName }, deep_payload: body.draft,
+          generation_status: "deep_ready", resume_token_hash: await hashToken(resumeToken),
+        }).select("id, expires_at").single();
+        if (error || !row) throw error || new Error("Could not preserve this story");
+        return json({ success: true, artifactId: row.id, resumeToken, expiresAt: row.expires_at });
+      }
+      const token = typeof body.resumeToken === "string" ? body.resumeToken.trim() : "";
+      if (!/^[A-Za-z0-9_-]{43}$/.test(token)) return json({ success: false, error: "This story link is invalid." }, 422);
+      const { data: row, error } = await serviceClient.from("guest_activation_artifacts").select("*")
+        .eq("artifact_type", "demo").eq("resume_token_hash", await hashToken(token))
+        .gt("expires_at", new Date().toISOString()).maybeSingle();
+      if (error) throw error;
+      if (!row || !isDemoStoryDraft(row.deep_payload)) return json({ success: false, error: "This demo story has expired or is unavailable." }, 404);
+      if (operation === "load_story") return json({ success: true, draft: row.deep_payload, artifactId: row.id, expiresAt: row.expires_at });
+      if (row.claimed_by && row.claimed_by !== user!.id) return json({ success: false, error: "This story is already saved to another account." }, 409);
+      const { data: projectId, error: claimError } = await serviceClient.rpc("claim_guest_demo_story", { p_guest_id: row.id, p_user_id: user!.id });
+      if (claimError) throw claimError;
+      await emitBusinessEvent({ eventName: "artifact_claim_succeeded", userId: user!.id,
+        properties: { tool: "demo_studio", source: "hero-product-story", artifact_type: "demo_story", artifact_id: projectId,
+          mode: "product", experience_version: "two_starts_v1", output_kind: "demo_story" } }).catch(error => console.warn("Story analytics delivery failed", error));
+      return json({ success: true, projectId });
+    }
 
     if (operation === "publish") {
       const user = await getUserFromAuth(req);
@@ -212,6 +250,7 @@ serve(async (req) => {
     }
 
     if (operation === "create_demo") {
+      if (body.draft?.kind === "demo_story") return json({ success: false, error: "Use the demo story save action for this result." }, 422);
       const serialized = JSON.stringify(body.draft ?? null);
       if (!body.draft || serialized === "null" || new TextEncoder().encode(serialized).byteLength > MAX_DEMO_DRAFT_BYTES) {
         return json({ success: false, error: "Demo draft is missing or too large." }, 422);
@@ -275,6 +314,7 @@ serve(async (req) => {
     if (loadError || !guest) return json({ success: false, error: "This demo result link is no longer valid." }, 404);
 
     if (operation === "load_demo") {
+      if (guest.deep_payload?.kind === "demo_story") return json({ success: false, error: "Use the demo story link to open this result." }, 422);
       return json({
         success: true,
         artifactId: guest.id,
@@ -286,6 +326,7 @@ serve(async (req) => {
     }
 
     if (operation === "claim_demo") {
+      if (guest.deep_payload?.kind === "demo_story") return json({ success: false, error: "Use the demo story save action for this result." }, 422);
       const user = await getUserFromAuth(req);
       if (!user) return json({ success: false, error: "Authentication required" }, 401);
       const nativeArtifactId = typeof body.nativeArtifactId === "string" ? body.nativeArtifactId.trim() : "";
