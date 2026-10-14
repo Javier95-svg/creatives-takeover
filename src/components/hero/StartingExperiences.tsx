@@ -1,14 +1,15 @@
 import { Suspense, lazy, useEffect, useRef, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCTAAttribution } from '@/hooks/useCTAAttribution';
 import { RouteErrorBoundary } from '@/components/RouteErrorBoundary';
 import { classifyHeroInput, trackHeroInputFocused, trackHeroInputSubmitted } from '@/lib/heroFunnel';
 import { captureEvent } from '@/lib/analytics';
-import { HERO_MODE_ACCOUNT_TYPE } from '@/lib/heroFunnelRules';
+import { DEFAULT_HERO_MODE, HERO_MODE_ACCOUNT_TYPE } from '@/lib/heroFunnelRules';
+import HeroIdeaInput, { type HeroIdeaInputHandle } from './HeroIdeaInput';
 import { rememberIntendedAccountType } from '@/lib/intendedAccountType';
 import { rememberToolHandoff } from '@/lib/toolHandoff';
-import { readStartingExperience, saveStartingExperience, STARTING_CARDS, STARTING_EXPERIENCE_VERSION, type StartingExperience, type StartingMode } from '@/lib/startingExperience';
+import { readStartingExperience, saveStartingExperience, STARTING_EXPERIENCE_VERSION, type StartingExperience, type StartingMode } from '@/lib/startingExperience';
 
 const IdeaResult = lazy(() => import('./HeroResultIsland'));
 const ProductResult = lazy(() => import('./ProductStoryResult'));
@@ -23,11 +24,11 @@ export default function StartingExperiences() {
   });
   const [run, setRun] = useState<StartingExperience | null>(initial);
   const [restoring, setRestoring] = useState(Boolean(initial));
-  const [values, setValues] = useState({ idea: initial?.mode === 'idea' ? initial.description : '', product: initial?.mode === 'product' ? initial.description : '' });
-  const [errors, setErrors] = useState<Partial<Record<StartingMode, string>>>({});
+  const [mode, setMode] = useState<StartingMode>(initial?.mode ?? DEFAULT_HERO_MODE);
+  const [value, setValue] = useState(initial?.description ?? '');
   const [busy, setBusy] = useState(false);
   const busyMode = useRef<StartingMode | null>(null);
-  const inputRefs = useRef<Partial<Record<StartingMode, HTMLTextAreaElement | null>>>({});
+  const inputRef = useRef<HeroIdeaInputHandle>(null);
   const entryTracked = useRef(false);
 
   useEffect(() => {
@@ -44,10 +45,9 @@ export default function StartingExperiences() {
 
   function submit(mode: StartingMode) {
     if (busyMode.current === mode) return;
-    const description = values[mode].trim();
+    const description = value.trim();
     if (description.length < 3) {
-      setErrors(previous => ({ ...previous, [mode]: 'A rough sentence is enough. Describe what you have in mind.' }));
-      inputRefs.current[mode]?.focus();
+      inputRef.current?.focus();
       return;
     }
     const next = { mode, description, runId: Math.max(Date.now(), (run?.runId ?? 0) + 1), savedAt: Date.now() };
@@ -80,30 +80,9 @@ export default function StartingExperiences() {
   }
 
   return (
-    <section id="get-started" className="ct-start" aria-labelledby="starting-heading">
-      <h2 id="starting-heading">What are you working on?</h2>
-      <p className="ct-start__intro">One sentence to start. See your result before creating an account.</p>
-      <div className="ct-start__cards">
-        {(['idea', 'product'] as const).map(mode => {
-          const config = STARTING_CARDS[mode];
-          return <form key={mode} className={`ct-start__card${run?.mode === mode ? ' is-selected' : ''}`} onSubmit={event => { event.preventDefault(); submit(mode); }}>
-            <h3>{config.title}</h3>
-            <p className="ct-start__challenge">{config.challenge}</p>
-            <label htmlFor={`start-${mode}`}>{config.label}</label>
-            <textarea id={`start-${mode}`} ref={el => { inputRefs.current[mode] = el; }} rows={2} maxLength={5000}
-              data-ph-no-capture value={values[mode]} placeholder={config.example}
-              aria-describedby={`start-${mode}-help${errors[mode] ? ` start-${mode}-error` : ''}`}
-              aria-invalid={Boolean(errors[mode])} onFocus={trackHeroInputFocused}
-              onChange={event => { setValues(previous => ({ ...previous, [mode]: event.target.value })); setErrors(previous => ({ ...previous, [mode]: undefined })); }}
-              onKeyDown={event => { if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) { event.preventDefault(); submit(mode); } }} />
-            <p id={`start-${mode}-help`} className="ct-start__output">{config.output}</p>
-            {errors[mode] ? <p id={`start-${mode}-error`} role="alert" className="ct-start__error">{errors[mode]}</p> : null}
-            <button type="submit" className="ct-hero__cta" disabled={busy && run?.mode === mode}>
-              {busy && run?.mode === mode ? 'Working…' : config.cta}<span aria-hidden="true"> →</span>
-            </button>
-          </form>;
-        })}
-      </div>
+    <div id="get-started" className="ct-start ct-start--chat" aria-label="Start with your idea or product">
+      <HeroIdeaInput ref={inputRef} value={value} onChange={setValue} mode={mode} onModeChange={setMode}
+        onSubmit={() => submit(mode)} onFirstFocus={trackHeroInputFocused} busy={busy} />
       {run ? <div id="starting-result" className="ct-start__result" key={run.runId} aria-label={run.mode === 'idea' ? 'Your idea brief' : 'Your demo story'}>
         <RouteErrorBoundary routeName="Starting experience">
           <Suspense fallback={<p role="status" className="ct-start__intro">Preparing your result…</p>}>
@@ -115,7 +94,6 @@ export default function StartingExperiences() {
           </Suspense>
         </RouteErrorBoundary>
       </div> : null}
-      <Link className="ct-start__direct" to="/signup">Create an account directly</Link>
-    </section>
+    </div>
   );
 }

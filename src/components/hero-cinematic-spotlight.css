@@ -1580,24 +1580,13 @@
 }
 
 /* One sentence to useful work. Result components load only after submission. */
-.ct-start { width: min(100%, 960px); scroll-margin-top: 120px; text-align: left; }
-.ct-start > h2 { margin: 0; text-align: center; font-size: clamp(1.5rem, 3vw, 2rem); font-weight: 650; color: var(--ct-fg); }
+.ct-start { width: min(100%, 900px); scroll-margin-top: 120px; text-align: left; }
 .ct-start__intro { margin: 10px 0 24px; text-align: center; color: var(--ct-muted); font-size: 15px; line-height: 1.6; }
-.ct-start__cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
-.ct-start__card { display: flex; flex-direction: column; gap: 12px; min-width: 0; padding: 26px; border: 1px solid var(--ct-line); border-radius: 24px; background: var(--ct-idea-surface); }
-.ct-start__card.is-selected { border-color: var(--ct-blue); }
-.ct-start__card h3 { margin: 0; color: var(--ct-fg); font-size: 22px; font-weight: 650; }
-.ct-start__challenge { min-height: 48px; margin: 0 0 4px; color: var(--ct-muted); line-height: 1.6; font-size: 15px; }
-.ct-start__card label { color: var(--ct-fg); font-size: 13px; font-weight: 600; }
-.ct-start textarea, .ct-story textarea { width: 100%; min-height: 88px; resize: vertical; padding: 12px 14px; border: 1px solid hsl(var(--border)); border-radius: 12px; background: hsl(var(--background)); color: hsl(var(--foreground)); font: inherit; font-size: 15px; line-height: 1.6; }
-.ct-start textarea::placeholder { color: hsl(var(--muted-foreground)); }
-.ct-start textarea:focus-visible, .ct-story textarea:focus-visible { outline: 2px solid hsl(var(--primary)); outline-offset: 3px; }
-.ct-start__output { margin: 0; color: var(--ct-muted); font-size: 13px; line-height: 1.6; }
-.ct-start__card .ct-hero__cta { margin-top: auto; width: 100%; font-size: 15px; min-height: 48px; justify-content: center; }
-.ct-start__card .ct-hero__cta:disabled { opacity: .7; cursor: wait; }
+.ct-story textarea { width: 100%; min-height: 88px; resize: vertical; padding: 12px 14px; border: 1px solid hsl(var(--border)); border-radius: 12px; background: hsl(var(--background)); color: hsl(var(--foreground)); font: inherit; font-size: 15px; line-height: 1.6; }
+.ct-story textarea::placeholder { color: hsl(var(--muted-foreground)); }
+.ct-story textarea:focus-visible { outline: 2px solid hsl(var(--primary)); outline-offset: 3px; }
 .ct-start__error { margin: 0; color: hsl(var(--destructive)); font-size: 14px; line-height: 1.6; }
 .ct-start__error button { text-decoration: underline; min-height: 44px; }
-.ct-start__direct { display: block; width: fit-content; margin: 18px auto 0; color: var(--ct-muted); font-size: 13px; text-decoration: underline; text-underline-offset: 4px; padding: 8px; }
 .ct-start__result { margin-top: 24px; overflow-wrap: anywhere; scroll-margin-top: 120px; }
 .ct-story { padding: 26px; border: 1px solid hsl(var(--border)); border-radius: 24px; background: hsl(var(--background)); color: hsl(var(--foreground)); text-align: left; }
 .ct-story h3 { font-size: 24px; font-weight: 650; margin: 8px 0 12px; }
@@ -1623,8 +1612,7 @@
 .ct-story-resume { max-width: 1000px; margin: 0 auto; padding: 40px 20px; }
 .ct-story-resume > a { display: inline-block; padding: 12px 0; margin-bottom: 16px; }
 @media (max-width: 640px) {
-  .ct-start__cards, .ct-story__steps, .ct-story__context { grid-template-columns: 1fr; }
-  .ct-start__card, .ct-story { padding: 20px; }
-  .ct-start__challenge { min-height: 0; }
+  .ct-story__steps, .ct-story__context { grid-template-columns: 1fr; }
+  .ct-story { padding: 20px; }
   .ct-story__actions .ct-hero__cta { width: 100%; justify-content: center; }
 }

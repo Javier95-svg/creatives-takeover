@@ -93,7 +93,7 @@ export const HeroIdeaInput = forwardRef<HeroIdeaInputHandle, HeroIdeaInputProps>
   }, [canSubmit, onSubmit]);
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (event.key === "Enter" && !event.shiftKey) {
+    if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
       event.preventDefault();
       handleSubmit();
     }
@@ -144,6 +144,7 @@ export const HeroIdeaInput = forwardRef<HeroIdeaInputHandle, HeroIdeaInputProps>
             className="ct-hero__idea-textarea"
             data-ph-no-capture
             rows={1}
+            maxLength={5000}
             value={value}
             disabled={disabled}
             onChange={(event) => onChange(event.target.value)}

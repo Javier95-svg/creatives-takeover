@@ -48,7 +48,7 @@ const frozenFiles = {
   // existing linked logo. The signed-out navbar remains unchanged.
   // Rehashed 2026-10-04: 83728f13 (2026-09-16) only returns null inside the
   // signed-in workspace frame; visitors get the same navbar as before.
-  '../src/components/Navigation.tsx': 'a109744f512bf9ea56b709553dc56d94ac01493629ef41f5d86893f9d9d52d9b',
+  '../src/components/Navigation.tsx': '1cba456e3009c8127309df78758b103deaef1dbc84059bf25a828f1fecb2b22c',
   // Re-pinned 2026-07-25 (delivery audit, Phase 1): AISpecializationTrends moved
   // from a static import to lazy() + Suspense, matching how HomeFAQ and
   // FounderAnswerLibraryTeaser are already loaded. It is the only homepage

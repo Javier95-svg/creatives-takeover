@@ -5,7 +5,7 @@ import test from 'node:test';
 import { evaluateGTMOutcome } from '../src/lib/gtmOutcome.ts';
 import { evaluateMvpQuality } from '../src/lib/mvp-builder/qualityChecks.ts';
 import { getPmfConfidence, getPmfDecision } from '../src/lib/pmfConfidence.ts';
-import { STARTING_CARDS } from '../src/lib/startingExperience.ts';
+import { HERO_MODES } from '../src/lib/heroFunnelRules.ts';
 import type { GTMPlanV2 } from '../src/lib/gtmV2.ts';
 
 test('PMF confidence changes exactly at five, ten, and twenty five weighted signals', () => {
@@ -109,7 +109,7 @@ test('fixed hero copy and server rendered pricing remain available without JavaS
    * that mentioned the old label - the exact drift between the live hero and
    * the crawler sources that this check exists to catch.
    */
-  const ctaLabels = Object.values(STARTING_CARDS).map((mode) => mode.cta);
+  const ctaLabels = Object.values(HERO_MODES).map((mode) => mode.cta);
   assert.equal(ctaLabels.length, 2);
   ctaLabels.forEach((label) => {
     assert.ok(fallback.includes(label), `crawler fallback is missing the "${label}" CTA`);

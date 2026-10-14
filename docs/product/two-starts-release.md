@@ -1,6 +1,6 @@
 # Two starting experiences
 
-The homepage now turns an Idea sentence into a customer brief and first test, or a Product sentence into a pitch and three-step demo story. Both results appear before signup. Product screenshots are requested later in Demo Studio.
+The original homepage chatbot-style input, animated examples, Idea/Product toggle, and button labels are retained. Its funnel now turns an Idea sentence into a customer brief and first test, or a Product sentence into a pitch and three-step demo story. Both results appear before signup. Product screenshots are requested later in Demo Studio.
 
 ## Backend deployment before the frontend
 
@@ -24,7 +24,7 @@ Confirm that the auth redirect allowlist permits the site's `/auth/callback` URL
 - Save each result with email and with Google; confirm the same artifact is restored and saved without regeneration or onboarding questions. Test an existing account through the login link as well. Verify email confirmation in a new tab.
 - Product save must create one project and brief. Repeat the auth return and retry the save; the project count must remain one. The native brief should offer **Add product screens** and retain the pitch and storyboard.
 - Test invalid/expired resume links, unavailable generation, and failed saves. Copy remains available when there is a result; retry must retain the description. Retrying an edited Product story must save the edited version.
-- Check desktop and 390px mobile widths, keyboard entry, both navbar Join Today links, and the direct-account link. Existing `/start` quiz, `/signup`, other account roles, and `/demo-studio/try` remain available.
+- Check desktop and 390px mobile widths, keyboard entry, both navbar Join Today links, and the unchanged single-input layout. Existing `/start` quiz, `/signup`, other account roles, and `/demo-studio/try` remain available.
 
 ## Measurement
 

@@ -11,7 +11,7 @@ const PulseWidget = () => {
   const isMobile = useIsMobile();
   const compactMobileHomepage = isMobile && location.pathname === '/';
   const focusedActivationSurface =
-    location.pathname === '/' || location.pathname === '/icp-builder' || location.pathname === '/demo-studio/try';
+    location.pathname === '/icp-builder' || location.pathname === '/demo-studio/try';
   const {
     isOpen,
     activeTab,

@@ -1,12 +1,6 @@
 export const STARTING_EXPERIENCE_VERSION = 'two_starts_v1';
 export const STARTING_SECTION_PATH = '/#get-started';
 export type StartingMode = 'idea' | 'product';
-export const STARTING_CARDS = {
-  idea: { title: 'I have an idea', challenge: 'Who would need this, and what should I test?', label: 'Describe your idea',
-    example: 'An app that helps barbers reduce no-shows', cta: 'Find my first test', output: 'A likely customer, their problem, and a first validation test.' },
-  product: { title: 'I have a product', challenge: 'How do I explain its value to potential customers?', label: 'Describe your product',
-    example: 'A scheduling tool for independent hairdressers', cta: 'Draft my demo story', output: 'A customer-facing pitch and a three-step demo script.' },
-} as const;
 export interface StartingExperience {
   mode: StartingMode;
   description: string;

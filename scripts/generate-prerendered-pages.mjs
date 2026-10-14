@@ -124,9 +124,9 @@ function buildFallbackHtml(routeConfig, hubChildren = {}) {
           <form action="/icp-builder" method="get">
             <label for="seo-hero-seed">What is your idea?</label>
             <textarea id="seo-hero-seed" name="seed" minlength="3" required></textarea>
-            <button type="submit">Find my first test</button>
+            <button type="submit">Assess viability</button>
           </form>
-          <p>I have a product: <a href="/#get-started">Draft my demo story</a>. One sentence to start; see your result before signup.</p>`
+          <p>I have a product: <a href="/#get-started">Build my demo</a>. One sentence to start; see your result before signup.</p>`
     : `<p>${routeConfig.heroCopy || routeConfig.description}</p>`;
   const authorByline = routeConfig.path.startsWith("/answers/")
     ? `<p>By <a href="/about#founder">Javier Peña, Founder &amp; CEO</a></p>`

@@ -39,9 +39,10 @@ test('one Product sentence renders a copyable story in place; signup preserves i
   const api = await mocks(page, { delay: 350 });
   await context.grantPermissions(['clipboard-read', 'clipboard-write']);
   await page.goto('/');
-  await expect(page.getByRole('heading', { name: 'I have an idea', exact: true })).toBeVisible();
-  await page.getByLabel('Describe your product', { exact: true }).fill(description);
-  await page.getByRole('button', { name: 'Draft my demo story' }).dblclick();
+  await expect(page.getByRole('tab', { name: 'Idea', exact: true })).toHaveAttribute('aria-selected', 'true');
+  await page.getByRole('tab', { name: 'Product', exact: true }).click();
+  await page.getByRole('textbox', { name: 'What are you building?', exact: true }).fill(description);
+  await page.getByRole('button', { name: 'Build my demo', exact: true }).dblclick();
   await expect(page.getByRole('heading', { name: draft.productName, exact: true })).toBeVisible();
   await page.locator('#get-started').screenshot({ path: '.cache/starting-experiences-desktop.png', animations: 'disabled' });
   expect(api.generations()).toBe(1);
@@ -63,8 +64,9 @@ test('one Product sentence renders a copyable story in place; signup preserves i
 test('refresh and corrections retain Product work without another generation', async ({ page }) => {
   const api = await mocks(page);
   await page.goto('/');
-  await page.getByLabel('Describe your product', { exact: true }).fill(description);
-  await page.getByRole('button', { name: 'Draft my demo story' }).click();
+  await page.getByRole('tab', { name: 'Product', exact: true }).click();
+  await page.getByRole('textbox', { name: 'What are you building?', exact: true }).fill(description);
+  await page.getByRole('button', { name: 'Build my demo', exact: true }).click();
   await expect(page.getByRole('heading', { name: draft.productName, exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Save my demo story' }).click();
   await expect(page.getByRole('dialog')).toBeVisible();
@@ -84,11 +86,10 @@ test('refresh and corrections retain Product work without another generation', a
 test('Idea reveals its first test before signup, and deeper failure preserves the useful brief', async ({ page }) => {
   const api = await mocks(page);
   await page.goto('/');
-  await page.getByRole('button', { name: 'Find my first test' }).click();
-  await expect(page.getByRole('alert')).toContainText('A rough sentence is enough');
-  await expect(page.getByLabel('Describe your idea', { exact: true })).toBeFocused();
-  await page.getByLabel('Describe your idea', { exact: true }).fill('An app that helps barbers reduce no-shows');
-  await page.getByRole('button', { name: 'Find my first test' }).click();
+  await page.getByRole('button', { name: 'Assess viability', exact: true }).click();
+  await expect(page.locator('#hero-idea-input')).toBeFocused();
+  await page.locator('#hero-idea-input').fill('An app that helps barbers reduce no-shows');
+  await page.getByRole('button', { name: 'Assess viability', exact: true }).click();
   await expect(page.getByText(compact.validationStep, { exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Retry deeper report' })).toBeVisible();
   await expect(page).toHaveURL(/\/$/);
@@ -104,32 +105,32 @@ test('Idea reveals its first test before signup, and deeper failure preserves th
 test('generation failure retries with the description retained', async ({ page }) => {
   const api = await mocks(page, { failFirst: true });
   await page.goto('/');
-  await page.getByLabel('Describe your product', { exact: true }).fill(description);
-  await page.getByRole('button', { name: 'Draft my demo story' }).click();
+  await page.getByRole('tab', { name: 'Product', exact: true }).click();
+  await page.getByRole('textbox', { name: 'What are you building?', exact: true }).fill(description);
+  await page.getByRole('button', { name: 'Build my demo', exact: true }).click();
   await expect(page.getByRole('alert')).toContainText('temporarily unavailable');
-  await expect(page.getByLabel('Describe your product', { exact: true })).toHaveValue(description);
+  await expect(page.getByRole('textbox', { name: 'What are you building?', exact: true })).toHaveValue(description);
   await page.getByRole('button', { name: 'Try again', exact: true }).click();
   await expect(page.getByRole('heading', { name: draft.productName, exact: true })).toBeVisible();
   expect(api.generations()).toBe(2);
 });
 
-test('mobile cards stack, keyboard submits, and Join Today scrolls to the starts', async ({ page }) => {
+test('original single input and toggle fit mobile, keyboard submits, and Join Today opens the same entry', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await mocks(page);
   await page.goto('/');
-  const cards = page.locator('.ct-start__card');
-  await expect(cards).toHaveCount(2);
-  const idea = await cards.nth(0).boundingBox();
-  const product = await cards.nth(1).boundingBox();
-  expect(product!.y).toBeGreaterThan(idea!.y + idea!.height);
+  await expect(page.locator('.ct-hero__idea-card')).toHaveCount(1);
+  await expect(page.locator('.ct-start__card')).toHaveCount(0);
+  await expect(page.locator('#hero-idea-input')).toHaveCount(1);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
-  await page.locator('.ct-start__cards').screenshot({ path: '.cache/starting-experiences-mobile.png', animations: 'disabled' });
+  await page.locator('.ct-hero__idea-card').screenshot({ path: '.cache/starting-experiences-mobile.png', animations: 'disabled' });
   await page.getByRole('button', { name: 'Open navigation menu' }).click();
   await page.getByRole('link', { name: 'Join Today', exact: true }).click();
   await expect(page).toHaveURL(/#get-started$/);
   await expect(page.getByRole('button', { name: 'Open navigation menu' })).toBeVisible();
-  await page.getByLabel('Describe your product', { exact: true }).fill(description);
-  await page.getByLabel('Describe your product', { exact: true }).press('Enter');
+  await page.getByRole('tab', { name: 'Product', exact: true }).click();
+  await page.getByRole('textbox', { name: 'What are you building?', exact: true }).fill(description);
+  await page.getByRole('textbox', { name: 'What are you building?', exact: true }).press('Enter');
   await expect(page.getByRole('heading', { name: draft.productName, exact: true })).toBeVisible();
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.getByRole('link', { name: 'Join Today', exact: true }).first().click();
@@ -185,3 +186,21 @@ test('an expired resume link explains recovery without asking for screenshots or
   await expect(page.getByRole('link', { name: 'Back to the starting experiences' })).toBeVisible();
   await expect(page.getByRole('dialog')).toHaveCount(0);
 });
+
+ test('mode switching keeps the original input and carries the selected mode into generation', async ({ page }) => {
+  const api = await mocks(page);
+  await page.goto('/');
+  const field = page.locator('#hero-idea-input');
+  await field.fill(description);
+  await page.getByRole('tab', { name: 'Product', exact: true }).click();
+  await expect(field).toHaveValue(description);
+  await page.getByRole('tab', { name: 'Idea', exact: true }).click();
+  await expect(field).toHaveValue(description);
+  await expect(page.getByRole('button', { name: 'Assess viability', exact: true })).toBeVisible();
+  await page.getByRole('tab', { name: 'Product', exact: true }).click();
+  await page.getByRole('button', { name: 'Build my demo', exact: true }).click();
+  await expect(page.getByRole('heading', { name: draft.productName, exact: true })).toBeVisible();
+  expect(api.generations()).toBe(1);
+  expect(api.calls.some(call => call.operation === 'start_hero_generation')).toBe(false);
+  await expect(page).toHaveURL(/\/$/);
+ });
