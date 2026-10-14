@@ -114,7 +114,7 @@ export const INDEXABLE_ROUTES = [
     priority: 1.0,
     heroHeading: "The Founders' Compass",
     heroCopy:
-      "Identify what’s worth building, validate demand with real customer evidence, and turn insights into products and go-to-market strategies, all in one workspace.",
+      "Identify what’s worth building, validate demand with reliable evidence, and turn insights into products and go-to-market strategies, all in one workspace.",
     sections: [
       {
         heading: "Reach value before signup",

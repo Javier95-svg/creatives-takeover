@@ -28,10 +28,10 @@ const frozenFiles = {
   // startup founders, product managers and indie builders." (2e04de09). The
   // rest of the copy and the layout are unchanged.
   // Rehashed 2026-10-13 for the requested second lede line "Identify what's
-  // worth building, validate demand with real customer evidence, and turn
+  // worth building, validate demand with reliable evidence, and turn
   // insights into products and go-to-market strategies, all in one
   // workspace." The rest of the copy and the layout are unchanged.
-  '../src/components/Hero.tsx': '2efc75f4b651b991a1b7ef73b3757cf1aa48a07d5481b9e84e10e011bef38ad6',
+  '../src/components/Hero.tsx': '42b30d57b6b0b3aed98ea06320bd01e634a6596b057a063f42d90f0fd54dc6c9',
   // Rehashed 2026-07-28 for the performance audit: mobile and desktop journey
   // branches are now mutually exclusive, preventing duplicate 147 MB GIF loads.
   // Content, visual order, actions, and responsive layout remain unchanged.

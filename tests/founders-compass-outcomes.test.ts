@@ -82,7 +82,7 @@ test('fixed hero copy and server rendered pricing remain available without JavaS
   const prerender = readFileSync(new URL('../scripts/generate-prerendered-pages.mjs', import.meta.url), 'utf8');
   const paragraphs = [
     'Customized workspace for startup founders, product managers and indie builders.',
-    'Identify what’s worth building, validate demand with real customer evidence, and turn insights into products and go-to-market strategies, all in one workspace.',
+    'Identify what’s worth building, validate demand with reliable evidence, and turn insights into products and go-to-market strategies, all in one workspace.',
     'No application. No cohort. No equity.',
   ];
   const renderedSources = [hero, fallback, prerender].map((source) =>
