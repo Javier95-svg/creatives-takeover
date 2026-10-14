@@ -29,9 +29,8 @@ const frozenFiles = {
   // rest of the copy and the layout are unchanged.
   // Rehashed 2026-10-13 for the requested second lede line "Identify what's
   // worth building, validate demand with reliable evidence, and turn
-  // insights into products and go-to-market strategies, all in one
-  // workspace." The rest of the copy and the layout are unchanged.
-  '../src/components/Hero.tsx': '42b30d57b6b0b3aed98ea06320bd01e634a6596b057a063f42d90f0fd54dc6c9',
+  // insights into products and go-to-market strategies." The rest of the copy and the layout are unchanged.
+  '../src/components/Hero.tsx': 'dce6dd492ed5bfed3b502883f5ddf91607d671f5bf6a32da0737f69b1d7b2820',
   // Rehashed 2026-07-28 for the performance audit: mobile and desktop journey
   // branches are now mutually exclusive, preventing duplicate 147 MB GIF loads.
   // Content, visual order, actions, and responsive layout remain unchanged.
