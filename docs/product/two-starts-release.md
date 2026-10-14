@@ -1,6 +1,6 @@
 # Two starting experiences
 
-The original homepage chatbot-style input, animated examples, Idea/Product toggle, and button labels are retained. Its funnel now turns an Idea sentence into a customer brief and first test, or a Product sentence into a pitch and three-step demo story. Both results appear before signup. Product screenshots are requested later in Demo Studio.
+The original homepage chatbot-style input, animated examples, Idea/Product toggle, and button labels are retained. Idea mode hands the sentence directly to the existing free ICP Builder, with its original viability analysis and draft view. Product mode generates a pitch and three-step demo story on the homepage. Both provide a free result before signup. Product screenshots are requested later in Demo Studio.
 
 ## Backend deployment before the frontend
 
@@ -13,13 +13,13 @@ supabase functions deploy demo-studio-generator --project-ref <project-ref> --no
 supabase functions deploy guest-activation-artifacts --project-ref <project-ref> --no-verify-jwt
 ```
 
-The generator's anonymous `story` mode uses the existing `OPENAI_API_KEY`, `SUPABASE_URL`, and `SUPABASE_SERVICE_ROLE_KEY`. There is no provider migration. Generation and artifact creation remain rate-limited. Non-draft generation still verifies the signed-in user and credits inside the handler. The Idea path reuses the already deployed `icp-analyzer` operations and guest artifact tables.
+The generator's anonymous `story` mode uses the existing `OPENAI_API_KEY`, `SUPABASE_URL`, and `SUPABASE_SERVICE_ROLE_KEY`. There is no provider migration. Generation and artifact creation remain rate-limited. Non-draft generation still verifies the signed-in user and credits inside the handler. The Idea path uses the already deployed `icp-analyzer` build_draft preview operation and the established guest analysis UI.
 
 Confirm that the auth redirect allowlist permits the site's `/auth/callback` URL, including email confirmation returns. Then deploy the frontend. Do not release the frontend before the new function operations and migration are available.
 
 ## Staging acceptance
 
-- Submit one Idea sentence. Read and copy the likely customer, problem, and first test without leaving the homepage or signing up. A deeper-generation failure must keep the brief visible.
+- Submit one Idea sentence. It must open ICP Builder directly with the description prefilled, without an onboarding quiz or signup. Generate the free draft and confirm the established score and ICP draft tabs are available.
 - Submit one Product sentence. Read and copy its pitch and three-step story with no URL, customer questionnaire, or screenshot upload. Edit the inferred customer, refresh, and confirm the correction remains.
 - Save each result with email and with Google; confirm the same artifact is restored and saved without regeneration or onboarding questions. Test an existing account through the login link as well. Verify email confirmation in a new tab.
 - Product save must create one project and brief. Repeat the auth return and retry the save; the project count must remain one. The native brief should offer **Add product screens** and retain the pitch and storyboard.

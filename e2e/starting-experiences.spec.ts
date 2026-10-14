@@ -1,3 +1,4 @@
+import { SAMPLE_ICP_PREVIEW_SAMPLES } from '../src/components/icp/sampleIcpPreviewData';
 import { test, expect, type Page } from '@playwright/test';
 
 const description = 'A scheduling tool for independent hairdressers';
@@ -27,6 +28,11 @@ async function mocks(page: Page, options: { failFirst?: boolean; delay?: number 
     }
     if (body.operation === 'create_story') { current = body.draft; return route.fulfill({ json: { success: true, ...ref } }); }
     if (body.operation === 'load_story') return route.fulfill({ json: { success: true, draft: current, ...ref } });
+    if (name === 'icp-analyzer' && body.operation === 'build_draft') return route.fulfill({ json: {
+      success: true, status: 'draft_ready', resumeToken: token, guestArtifactId: ref.artifactId, expiresAt: ref.expiresAt,
+      artifact: { version: 5, generatedAt: new Date().toISOString(), founderInputs: { mode: 'fast', fastDescription: body.fastInput.description, guided: null },
+        draftDocument: SAMPLE_ICP_PREVIEW_SAMPLES[0].draft, dashboardContext: { tasks: [], recommendations: [] }, enrichment: null },
+    } });
     if (body.operation === 'start_hero_generation') return route.fulfill({ json: { success: true, ...ref, compact, generationStatus: 'deep_running' } });
     if (body.operation === 'load_guest_artifact') return route.fulfill({ json: { success: true, ...ref, compact, generationStatus: 'deep_failed' } });
     return route.fulfill({ json: { success: true, data: [] } });
@@ -83,23 +89,28 @@ test('refresh and corrections retain Product work without another generation', a
   expect((creates[1].draft as typeof draft).brief.audience).toBe('Mobile hairdressers');
 });
 
-test('Idea reveals its first test before signup, and deeper failure preserves the useful brief', async ({ page }) => {
+test('Idea returns to the existing free ICP Builder analysis with the description carried over', async ({ page }) => {
   const api = await mocks(page);
   await page.goto('/');
   await page.getByRole('button', { name: 'Assess viability', exact: true }).click();
   await expect(page.locator('#hero-idea-input')).toBeFocused();
-  await page.locator('#hero-idea-input').fill('An app that helps barbers reduce no-shows');
+  const idea = 'An app that helps barbers reduce no-shows';
+  await page.locator('#hero-idea-input').fill(idea);
   await page.getByRole('button', { name: 'Assess viability', exact: true }).click();
-  await expect(page.getByText(compact.validationStep, { exact: true })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Retry deeper report' })).toBeVisible();
-  await expect(page).toHaveURL(/\/$/);
-  expect(api.calls.filter(call => call.operation === 'start_hero_generation')).toHaveLength(1);
-  await page.getByRole('button', { name: 'Save my brief', exact: true }).click();
-  await expect(page.getByRole('dialog')).toBeVisible();
-  await page.getByRole('button', { name: 'Use email instead' }).click();
-  await expect(page.getByLabel('Email address', { exact: true })).toBeVisible();
-  await expect(page.getByLabel('Create a password', { exact: true })).toBeVisible();
-  await expect(page.getByRole('dialog').locator('input')).toHaveCount(2);
+  await expect(page).toHaveURL(/\/icp-builder/);
+  await expect(page.getByRole('button', { name: 'Generate my free draft', exact: true })).toBeVisible();
+  await expect(page.getByRole('textbox').first()).toHaveValue(idea);
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Generate my free draft', exact: true }).click();
+  await expect(page.locator('[data-icp-tab-nav]')).toBeVisible({ timeout: 35000 });
+  await expect(page.locator('[data-icp-tab-panel="score"]')).toBeVisible();
+  await page.locator('[data-icp-tab-nav]').getByRole('button').nth(1).click();
+  await expect(page.locator('[data-icp-tab-panel="draft"]')).toBeVisible();
+  const requests = api.calls.filter(call => call.operation === 'build_draft');
+  expect(requests).toHaveLength(1);
+  expect(requests[0].mode).toBe('preview');
+  expect((requests[0].fastInput as { description: string }).description).toBe(idea);
+  expect(api.calls.some(call => call.operation === 'start_hero_generation')).toBe(false);
 });
 
 test('generation failure retries with the description retained', async ({ page }) => {

@@ -1,5 +1,5 @@
 import { Suspense, lazy, useEffect, useRef, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCTAAttribution } from '@/hooks/useCTAAttribution';
 import { RouteErrorBoundary } from '@/components/RouteErrorBoundary';
@@ -9,20 +9,25 @@ import { DEFAULT_HERO_MODE, HERO_MODE_ACCOUNT_TYPE } from '@/lib/heroFunnelRules
 import HeroIdeaInput, { type HeroIdeaInputHandle } from './HeroIdeaInput';
 import { rememberIntendedAccountType } from '@/lib/intendedAccountType';
 import { rememberToolHandoff } from '@/lib/toolHandoff';
+import { buildIcpSeedReturnPath, persistIcpSeed } from '@/lib/icpSeed';
+import { createEmptyIcpBuilderSession, persistIcpBuilderSession } from '@/lib/icpBuilderSession';
 import { readStartingExperience, saveStartingExperience, STARTING_EXPERIENCE_VERSION, type StartingExperience, type StartingMode } from '@/lib/startingExperience';
 
 const IdeaResult = lazy(() => import('./HeroResultIsland'));
 const ProductResult = lazy(() => import('./ProductStoryResult'));
 
 export default function StartingExperiences() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   const { set: setAttribution } = useCTAAttribution();
   const [initial] = useState(() => {
     const token = new URLSearchParams(location.search).get('resume');
     return token ? { mode: 'idea' as const, description: '', resumeToken: token, runId: Date.now(), savedAt: Date.now() } : readStartingExperience();
   });
-  const [run, setRun] = useState<StartingExperience | null>(initial);
+  // Old compact-result links remain resumable; new Idea starts use ICP Builder.
+  const [run, setRun] = useState<StartingExperience | null>(() =>
+    initial?.mode === 'product' || new URLSearchParams(location.search).has('resume') ? initial : null);
   const [restoring, setRestoring] = useState(Boolean(initial));
   const [mode, setMode] = useState<StartingMode>(initial?.mode ?? DEFAULT_HERO_MODE);
   const [value, setValue] = useState(initial?.description ?? '');
@@ -51,10 +56,6 @@ export default function StartingExperiences() {
       return;
     }
     const next = { mode, description, runId: Math.max(Date.now(), (run?.runId ?? 0) + 1), savedAt: Date.now() };
-    busyMode.current = mode;
-    setBusy(true);
-    setRestoring(false);
-    setRun(next);
     saveStartingExperience(next);
     rememberIntendedAccountType(HERO_MODE_ACCOUNT_TYPE[mode]);
     rememberToolHandoff({ mode, tool: mode === 'idea' ? 'icp_builder' : 'demo_studio', seed: description });
@@ -63,6 +64,19 @@ export default function StartingExperiences() {
     trackHeroInputSubmitted({ char_count: description.length, has_url: classification.hasUrl, routed_to: classification.route, source: 'homepage_hero', mode });
     captureEvent('starting_experience_submitted', { mode, source: 'homepage_hero', experience_version: STARTING_EXPERIENCE_VERSION,
       output_kind: mode === 'idea' ? 'customer_decision_brief' : 'demo_story', char_count: description.length });
+    if (mode === 'idea') {
+      // Restore the established free analysis flow, including its score and
+      // ICP draft UI. A new submission must not reopen another idea's draft.
+      persistIcpBuilderSession({ ...createEmptyIcpBuilderSession(), ownerUserId: user?.id ?? null,
+        mode: 'fast', currentScreen: 'fast_input' });
+      persistIcpSeed(description);
+      navigate(buildIcpSeedReturnPath(description));
+      return;
+    }
+    busyMode.current = mode;
+    setBusy(true);
+    setRestoring(false);
+    setRun(next);
     requestAnimationFrame(() => document.getElementById('starting-result')?.scrollIntoView({
       block: 'start', behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
     }));
