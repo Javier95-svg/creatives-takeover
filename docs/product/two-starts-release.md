@@ -4,6 +4,8 @@ The original homepage chatbot-style input, animated examples, Idea/Product toggl
 
 ## Backend deployment before the frontend
 
+ICP score sharing uses the original submitted idea, `@Creatives_Rule`, and `Test yours: https://creatives-takeover.com`. **Download score PNG** is available beside Share and inside the share dialog, without signup or publishing a link. The image contains only the frozen public score snapshot, with the idea, verdict, inferred customer, available recommendation/risk, and branding. The export module loads on demand and runs locally. X opens with the post text; visitors attach the downloaded image themselves. Longer idea descriptions are preserved and may require editing to fit a social network's character limit. These sharing fixes require no SQL migration or Edge Function update.
+
 Apply `supabase/migrations/20261013120000_claim_guest_demo_story.sql` to the intended Supabase project. The file can be run in the SQL Editor as `postgres`; it is safe to rerun. If deploying through the CLI, check migration history and the pending migration list before pushing. The migration adds a service-only function and does not change existing table layouts or preview payloads.
 
 Deploy these two functions from this checkout, substituting the project's reference:

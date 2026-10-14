@@ -365,7 +365,7 @@ export default function IcpDraftPage() {
         }
         scoreAction={
           scoreCard ? (
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <div className="flex flex-col flex-wrap gap-3 sm:flex-row sm:items-center">
               <Button type="button" size="lg" className="gap-2" onClick={handleDemoStudioClick}>
                 {isCompletionChainEnabled() ? 'Create your concept page' : 'Create my demo'}
                 <ArrowRight className="h-4 w-4" />

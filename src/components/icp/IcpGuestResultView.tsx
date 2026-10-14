@@ -83,7 +83,7 @@ export function IcpGuestResultView({
         visibleSections={ICP_GUEST_VISIBLE_SECTIONS}
         lockedSections={GUEST_LOCKED_SECTIONS}
         scoreAction={
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <div className="flex flex-col flex-wrap gap-3 sm:flex-row sm:items-center">
             <Button
               type="button"
               size="lg"

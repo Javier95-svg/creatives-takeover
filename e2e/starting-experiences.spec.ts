@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { SAMPLE_ICP_PREVIEW_SAMPLES } from '../src/components/icp/sampleIcpPreviewData';
 import { test, expect, type Page } from '@playwright/test';
 
@@ -215,3 +216,43 @@ test('an expired resume link explains recovery without asking for screenshots or
   expect(api.calls.some(call => call.operation === 'start_hero_generation')).toBe(false);
   await expect(page).toHaveURL(/\/$/);
  });
+
+for (const mobile of [false, true]) {
+  test(`Idea score shares the submitted idea and downloads a PNG before signup (${mobile ? 'mobile' : 'desktop'})`, async ({ page, context }) => {
+    if (mobile) await page.setViewportSize({ width: 390, height: 844 });
+    const api = await mocks(page);
+    await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+    const idea = 'A service that helps small restaurants sell leftover food to nearby customers.';
+    await page.goto('/');
+    await page.locator('#hero-idea-input').fill(idea);
+    await page.getByRole('button', { name: 'Assess viability', exact: true }).click();
+    await page.getByRole('button', { name: 'Generate my free draft', exact: true }).click();
+    await expect(page.locator('[data-icp-tab-panel="score"]')).toBeVisible({ timeout: 35000 });
+    const downloadPromise = page.waitForEvent('download');
+    await page.getByRole('button', { name: 'Download score PNG', exact: true }).click();
+    const download = await downloadPromise;
+    expect(download.suggestedFilename()).toMatch(/^idea-score-\d+-creatives-takeover\.png$/);
+    await download.saveAs(`.cache/idea-score-${mobile ? 'mobile' : 'desktop'}.png`);
+    const png = readFileSync(await download.path());
+    expect(png.subarray(0, 8).toString('hex')).toBe('89504e470d0a1a0a');
+    expect(png.readUInt32BE(16)).toBe(1200);
+    expect(png.readUInt32BE(20)).toBeGreaterThan(500);
+    expect(api.calls.some(call => call.operation === 'publish_score')).toBe(false);
+    await expect(page).toHaveURL(/\/icp-builder/);
+    await page.getByRole('button', { name: /Share your \d+\/100/ }).click();
+    const modal = page.getByRole('dialog');
+    await expect(modal).toContainText(idea);
+    await expect(modal).toContainText('@Creatives_Rule');
+    await expect(modal).toContainText('Test yours: https://creatives-takeover.com');
+    await modal.getByRole('button', { name: 'Copy post', exact: true }).click();
+    const copied = await page.evaluate(() => navigator.clipboard.readText());
+    expect(copied).toContain(idea);
+    expect(copied).toContain('Test yours: https://creatives-takeover.com');
+    await page.evaluate(() => { window.open = (target?: string | URL) => { (window as Window & { sharedTarget?: string }).sharedTarget = String(target); return null; }; });
+    await modal.getByRole('button', { name: 'X', exact: true }).click();
+    const target = new URL(await page.evaluate(() => (window as Window & { sharedTarget: string }).sharedTarget));
+    expect(target.searchParams.get('text')).toBe(copied.replace(/\r\n/g, '\n'));
+    expect(target.searchParams.has('url')).toBe(false);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  });
+}

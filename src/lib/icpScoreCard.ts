@@ -119,73 +119,30 @@ export function buildIcpScoreCard(
   };
 }
 
-/**
- * What the founder actually posts.
- *
- * X is the only one of the three networks that renders supplied text at all
- * (LinkedIn's share-offsite and Facebook's sharer both ignore it and read the
- * OG tags), so this string is the entire difference between a post that makes a
- * claim and a post that describes a document.
- *
- * It is band-aware because the interesting share is not only the good one. A
- * founder who scored 31 has a better post than one who scored 82: "here is what
- * would kill my idea" travels further than "my idea is fine", and it is the
- * honest framing of a low score rather than a consolation prize.
- *
- * Kept under ~240 characters so it survives X's limit once the ~23-character
- * URL is appended.
- */
-/**
- * Below this the draft is mostly inference, which changes what the score means
- * and therefore what an honest share of it says. Matches the point at which the
- * scorer's damping term is already costing the verdict more than it grants.
- */
+/** Retained for consumers that distinguish sparse assessments. */
 export const LOW_RIGOR_THRESHOLD = 0.5;
+export const ICP_TEST_YOURS_URL = "https://creatives-takeover.com";
 
+/** The founder's own description, rather than promotional copy about the tool. */
 export function buildIcpShareText(card: IcpScoreCard | null): string {
   if (!card) return LEGACY_SHARE_COPY;
-
-  const scoreLine = `${card.displayScore}/100`;
-
-  if (card.verdict === "stop" || card.verdict === "investigate") {
-    const risk = card.topRisk ? truncate(card.topRisk, 110) : null;
-    return risk
-      ? `I ran my startup idea through @CreativesTakeover. It scored ${scoreLine} and named what would kill it:
-
-"${risk}"
-
-Better to find that out now. Test yours:`
-      : `I ran my startup idea through @CreativesTakeover and it scored ${scoreLine}. Market, competitors, customer, pricing and risks in two minutes. Better to find out now. Test yours:`;
-  }
-
-  /*
-   * A good score on a thin draft is the most misleading post available, so it
-   * is the one place the share text names the rigor explicitly. Every other
-   * validator posts the number alone; the number plus the size of what is still
-   * unknown is the whole claim, and it reads as confident rather than hedged.
-   */
-  if (typeof card.rigor === "number" && card.rigor < LOW_RIGOR_THRESHOLD && (card.openQuestionCount ?? 0) > 0) {
-    return `My startup idea scored ${scoreLine} on @CreativesTakeover, and it told me I'm still guessing about ${card.openQuestionCount} things.
-
-Most idea validators only score the pitch. This scores what you actually know.
-
-Test yours:`;
-  }
-
-  return `My startup idea scored ${scoreLine} on @CreativesTakeover.
-
-Market → competitors → customer → willingness to pay → risks → the experiment to run next. Two minutes.
-
-Test yours:`;
+  const uncertainty = typeof card.rigor === "number" && card.rigor < LOW_RIGOR_THRESHOLD && (card.openQuestionCount ?? 0) > 0
+    ? `, and I'm still guessing about ${card.openQuestionCount} things`
+    : "";
+  return [
+    `My startup idea scored ${card.displayScore}/100 on @Creatives_Rule${uncertainty}.`,
+    card.idea?.trim(),
+    `Test yours: ${ICP_TEST_YOURS_URL}`,
+  ].filter(Boolean).join("\n\n");
 }
 
-function truncate(value: string, max: number): string {
-  return value.length > max ? `${value.slice(0, max - 1)}…` : value;
+/** The homepage is already in the text; do not append a score permalink. */
+export function buildIcpXShareUrl(card: IcpScoreCard | null): string {
+  return `https://x.com/intent/tweet?text=${encodeURIComponent(buildIcpShareText(card))}`;
 }
 
-/** Used for drafts shared before the score card existed. */
-export const LEGACY_SHARE_COPY =
-  "Just mapped my ICP using @CreativesTakeover — this is exactly who I'm building for. If you're an early-stage founder still guessing at your customer, run this. It takes 60 seconds.";
+/** Older cards may have no original description or recorded score. */
+export const LEGACY_SHARE_COPY = `I mapped my ideal customer on @Creatives_Rule.\n\nTest yours: ${ICP_TEST_YOURS_URL}`;
 
 export function isIcpScoreCard(value: unknown): value is IcpScoreCard {
   if (!value || typeof value !== "object") return false;

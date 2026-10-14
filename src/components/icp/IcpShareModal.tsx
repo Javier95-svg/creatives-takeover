@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Check, Copy, ExternalLink, Facebook, Linkedin, X as XIcon } from "lucide-react";
+import { Check, Copy, Facebook, Linkedin, X as XIcon } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -10,15 +10,14 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-const SHARE_COPY =
-  "Just mapped my ICP using @CreativesTakeover — this is exactly who I'm building for. If you're an early-stage founder still guessing at your customer, run this. It takes 60 seconds.";
+import { LEGACY_SHARE_COPY as SHARE_COPY, buildIcpXShareUrl } from "@/lib/icpScoreCard";
 
 function linkedinShareUrl(cardUrl: string) {
   return `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(cardUrl)}`;
 }
 
-function xShareUrl(cardUrl: string) {
-  return `https://x.com/intent/tweet?text=${encodeURIComponent(SHARE_COPY)}&url=${encodeURIComponent(cardUrl)}`;
+function xShareUrl() {
+  return buildIcpXShareUrl(null);
 }
 
 function facebookShareUrl(cardUrl: string) {
@@ -142,7 +141,7 @@ export function IcpShareModal({
               variant="outline"
               className="h-10 gap-1.5 border-border text-foreground hover:bg-muted"
             >
-              <a href={xShareUrl(shareUrl)} target="_blank" rel="noreferrer" onClick={() => toast.info("X share opened")}>
+              <a href={xShareUrl()} target="_blank" rel="noreferrer" onClick={() => toast.info("X share opened")}>
                 <XIcon className="h-3.5 w-3.5" />
                 X
               </a>

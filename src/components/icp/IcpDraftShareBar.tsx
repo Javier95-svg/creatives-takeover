@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Copy, Check, Download, Share2, Facebook, Linkedin, X as XIcon, Loader2, FileText } from "lucide-react";
+import { Copy, Check, Download, Facebook, Linkedin, X as XIcon, Loader2, FileText } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/contexts/AuthContext";
 
-import { buildIcpShareText, type IcpScoreCard } from "@/lib/icpScoreCard";
+import { buildIcpXShareUrl, type IcpScoreCard } from "@/lib/icpScoreCard";
 
 interface IcpDraftShareBarProps {
   /** The public share URL for this draft. Null if sharing not yet set up (will trigger share setup first). */
@@ -109,15 +109,17 @@ export function IcpDraftShareBar({
 
   const handleSocialShare = async (platform: "x" | "linkedin" | "facebook") => {
     if (!requireAuth("share", allowAnonymousShare)) return;
+    if (platform === "x") {
+      window.open(buildIcpXShareUrl(scoreCard), "_blank", "noopener,noreferrer");
+      return;
+    }
     const url = await getOrCreateShareUrl();
     if (!url) return;
 
     const encoded = encodeURIComponent(url);
-    const textEncoded = encodeURIComponent(buildIcpShareText(scoreCard));
 
     const shareUrls: Record<typeof platform, string> = {
       linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encoded}`,
-      x: `https://x.com/intent/tweet?text=${textEncoded}&url=${encoded}`,
       facebook: `https://www.facebook.com/sharer/sharer.php?u=${encoded}`,
     };
 

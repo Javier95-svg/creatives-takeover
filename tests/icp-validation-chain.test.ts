@@ -237,25 +237,24 @@ test('the shared post states the score', () => {
   assert.ok(text.includes(String(card.displayScore)));
 });
 
-test('a low score gets a post worth making, not a consolation prize', () => {
+test('a low score shares the original idea rather than replacing it with a risk', () => {
   const weak = buildIcpScoreCard(
     fixture({ dimensionScore: 8, answeredCount: 0, linkedCompetitors: 0, sources: 0, confidence: 'low' }),
-    { idea: 'x' },
+    { idea: 'Scheduling software for local shops' },
   );
   const text = buildIcpShareText(weak);
   assert.ok(text.includes(`${weak.displayScore}/100`), text);
-  // The rank-1 risk is the interesting half of a bad score.
-  assert.ok(text.includes('Shops may tolerate no-shows'), text);
+  assert.ok(text.includes('Scheduling software for local shops'), text);
+  assert.ok(text.includes('@Creatives_Rule'), text);
 });
 
-test('every share post fits in a tweet once the URL is appended', () => {
-  const URL_COST = 23 + 1;
+test('short ideas fit in a tweet with the homepage included', () => {
   for (const dimensionScore of [5, 30, 55, 70, 95]) {
     const card = buildIcpScoreCard(fixture({ dimensionScore }), { idea: 'x' });
-    const length = buildIcpShareText(card).length + URL_COST;
+    const length = buildIcpShareText(card).length;
     assert.ok(length <= 280, `post was ${length} chars at dimensionScore ${dimensionScore}`);
   }
-  assert.ok(LEGACY_SHARE_COPY.length + URL_COST <= 280);
+  assert.ok(LEGACY_SHARE_COPY.length <= 280);
 });
 
 test('a draft with no score card falls back to copy that still reads', () => {

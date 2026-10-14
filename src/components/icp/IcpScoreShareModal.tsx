@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from "react";
-import { Check, Copy, Facebook, Linkedin, Loader2, Share2, X as XIcon } from "lucide-react";
+import { Check, Copy, Download, Facebook, Linkedin, Loader2, Share2, X as XIcon } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { getSafeLocalStorage } from "@/lib/safeStorage";
-import { buildIcpShareText, type IcpScoreCard } from "@/lib/icpScoreCard";
+import { buildIcpShareText, buildIcpXShareUrl, type IcpScoreCard } from "@/lib/icpScoreCard";
 
 /**
  * Sharing, moved out of the page footer.
@@ -25,10 +25,6 @@ const AUTO_OPEN_KEY_PREFIX = "ct_icp_score_share_prompted_";
 
 function linkedinShareUrl(url: string) {
   return `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`;
-}
-
-function xShareUrl(url: string, text: string) {
-  return `https://x.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
 }
 
 function facebookShareUrl(url: string) {
@@ -51,6 +47,7 @@ export function IcpScoreShareModal({ card, onResolveUrl, autoOpenKey }: IcpScore
   const [url, setUrl] = useState<string | null>(null);
   const [resolving, setResolving] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [downloading, setDownloading] = useState(false);
   const hasAutoOpened = useRef(false);
 
   /*
@@ -81,6 +78,9 @@ export function IcpScoreShareModal({ card, onResolveUrl, autoOpenKey }: IcpScore
       const resolved = await onResolveUrl();
       if (resolved) setUrl(resolved);
       return resolved;
+    } catch {
+      toast.error("Could not create the score link. You can still download the PNG or share on X.");
+      return null;
     } finally {
       setResolving(false);
     }
@@ -96,39 +96,73 @@ export function IcpScoreShareModal({ card, onResolveUrl, autoOpenKey }: IcpScore
   const shareText = buildIcpShareText(card);
 
   const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(shareText);
+      setCopied(true);
+      toast.success("Post copied");
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.error("Could not copy the post");
+    }
+  };
+
+  const handleCopyLink = async () => {
     const resolved = await ensureUrl();
     if (!resolved) return;
     try {
       await navigator.clipboard.writeText(resolved);
-      setCopied(true);
-      toast.success("Link copied");
-      setTimeout(() => setCopied(false), 2000);
+      toast.success("Score link copied");
     } catch {
-      toast.error("Could not copy the link");
+      toast.error("Could not copy the score link");
     }
   };
 
   const handleNetwork = async (network: "x" | "linkedin" | "facebook") => {
+    if (network === "x") {
+      window.open(buildIcpXShareUrl(card), "_blank", "noopener,noreferrer");
+      return;
+    }
     const resolved = await ensureUrl();
     if (!resolved) return;
     const target =
-      network === "x"
-        ? xShareUrl(resolved, shareText)
-        : network === "linkedin"
+      network === "linkedin"
           ? linkedinShareUrl(resolved)
           : facebookShareUrl(resolved);
     window.open(target, "_blank", "noopener,noreferrer");
   };
 
+  const handleDownload = async () => {
+    if (downloading) return;
+    setDownloading(true);
+    try {
+      const { downloadIcpScoreCardPng } = await import("@/lib/icpScoreCardExport");
+      await downloadIcpScoreCardPng(card);
+    } catch {
+      toast.error("Could not download the score image. Please try again.");
+    } finally {
+      setDownloading(false);
+    }
+  };
+
+  const downloadButton = (
+    <Button type="button" size="lg" variant="outline" className="gap-2" disabled={downloading} onClick={() => void handleDownload()}>
+      {downloading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+      {downloading ? "Preparing PNG…" : "Download score PNG"}
+    </Button>
+  );
+
   return (
     <>
-      <Button type="button" size="lg" className="gap-2" onClick={() => setOpen(true)}>
-        <Share2 className="h-4 w-4" />
-        Share your {card.displayScore}/100
-      </Button>
+      <div className="flex flex-wrap gap-2">
+        {downloadButton}
+        <Button type="button" size="lg" className="gap-2" onClick={() => setOpen(true)}>
+          <Share2 className="h-4 w-4" />
+          Share your {card.displayScore}/100
+        </Button>
+      </div>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Share your {card.displayScore}/100</DialogTitle>
           </DialogHeader>
@@ -141,22 +175,24 @@ export function IcpScoreShareModal({ card, onResolveUrl, autoOpenKey }: IcpScore
             <p className="whitespace-pre-line text-sm leading-6 text-foreground/80">{shareText}</p>
           </div>
 
+          {downloadButton}
+          <p className="text-xs leading-5 text-muted-foreground">
+            Download your score image and attach it to your post. X opens with the text ready; add the PNG in its composer.
+          </p>
+
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             <Button
               type="button"
               variant="outline"
               className="gap-1.5"
               onClick={() => void handleCopy()}
-              disabled={resolving}
             >
-              {resolving ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              ) : copied ? (
+              {copied ? (
                 <Check className="h-3.5 w-3.5 text-success" />
               ) : (
                 <Copy className="h-3.5 w-3.5" />
               )}
-              {copied ? "Copied" : "Copy"}
+              {copied ? "Copied" : "Copy post"}
             </Button>
             <Button type="button" variant="outline" className="gap-1.5" onClick={() => void handleNetwork("x")}>
               <XIcon className="h-3.5 w-3.5" />X
@@ -182,9 +218,12 @@ export function IcpScoreShareModal({ card, onResolveUrl, autoOpenKey }: IcpScore
           </div>
 
           {url ? (
-            <p className="truncate text-xs text-muted-foreground" title={url}>
-              {url}
-            </p>
+            <div className="flex min-w-0 items-center gap-2">
+              <a href={url} className="min-w-0 flex-1 truncate text-xs text-muted-foreground underline" title={url} target="_blank" rel="noreferrer">
+                View score: {url}
+              </a>
+              <Button type="button" size="sm" variant="ghost" onClick={() => void handleCopyLink()}>Copy score link</Button>
+            </div>
           ) : null}
         </DialogContent>
       </Dialog>
