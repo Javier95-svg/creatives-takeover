@@ -7,7 +7,6 @@ import {
   GraduationCap,
   Handshake,
   Info,
-  Landmark,
   type LucideIcon,
   Menu,
   Mic,
@@ -32,17 +31,15 @@ import { useCTAAttribution } from "@/hooks/useCTAAttribution";
 
 type VisitorLink = { label: string; href: string; icon: LucideIcon; sectionId?: string; exact?: boolean };
 
-// Links in display order. Home is covered by the brand lockup. The audience
-// pages lead, so a visitor sees who the platform serves before anything else
-// (B2B2C repositioning, 2026-10-15).
+// Links in display order. Home is covered by the brand lockup. The programs
+// page leads (B2B2C repositioning, 2026-10-15). Founders are the obvious
+// audience, so they need no entry of their own, and investors wait until there
+// are case studies to show them (2026-10-16).
 const visitorLinks: VisitorLink[] = [
-  { label: "For founders", href: "/for-founders", icon: Rocket },
   { label: "For programs", href: "/for-programs", icon: GraduationCap },
-  { label: "For investors", href: "/for-investors", icon: Landmark },
 ];
 
-// Everything that is not an audience page sits behind one Explore menu, so
-// the bar stays at four entries.
+// Everything else sits behind one Explore menu, so the bar stays short.
 const exploreLinks: VisitorLink[] = [
   // exact, because /demo-studio and /demo-calls both start with /demo and would
   // otherwise light this entry up while the visitor is somewhere else entirely.

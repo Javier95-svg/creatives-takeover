@@ -24,19 +24,18 @@ const linkTable = (name: string) => {
 };
 
 test('visitor navigation keeps the intended public destinations', () => {
-  for (const label of ['For founders', 'For programs', 'For investors', 'How it works', 'Build', 'Collab', 'News', 'Podcast', 'About', 'Pricing']) {
+  for (const label of ['For programs', 'How it works', 'Build', 'Collab', 'News', 'Podcast', 'About', 'Pricing']) {
     assert.match(source, new RegExp(`label: "${label}"`));
   }
 });
 
-test('the bar is the three audience pages plus Explore, four entries in all', () => {
-  // B2B2C repositioning (2026-10-16): like naano, the bar says who the platform
-  // is for and stays short. Tour became "How it works" on the same route.
+test('the bar is For programs plus Explore', () => {
+  // B2B2C repositioning (2026-10-16): the bar stays short. Founders are the
+  // obvious audience and investors wait for case studies, so neither has an
+  // entry. Tour became "How it works" on the same route.
   const { table, labels } = linkTable('visitorLinks');
-  assert.deepEqual(labels, ['For founders', 'For programs', 'For investors']);
-  assert.match(table, /label: "For founders", href: "\/for-founders"/);
+  assert.deepEqual(labels, ['For programs']);
   assert.match(table, /label: "For programs", href: "\/for-programs"/);
-  assert.match(table, /label: "For investors", href: "\/for-investors"/);
   assert.equal(source.match(/<DropdownMenuTrigger/g)?.length, 1, 'one dropdown: Explore');
   assert.match(source, /<DropdownMenuTrigger[\s\S]*?Explore/);
 });

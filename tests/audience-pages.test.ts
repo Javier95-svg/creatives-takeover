@@ -15,12 +15,15 @@ const index = readFileSync('src/pages/Index.tsx', 'utf8');
 const form = readFileSync('src/components/audience/InstitutionContactForm.tsx', 'utf8');
 const pages = Object.values(AUDIENCE_PAGES);
 
-test('each audience page has a route, a navbar entry and a footer link', () => {
+test('each audience page has a route and a footer link; only programs is in the navbar', () => {
   for (const page of pages) {
     assert.match(app, new RegExp(`<Route path="${page.path}" element=`), `${page.path} route`);
-    assert.match(navbar, new RegExp(`label: "${page.navLabel}", href: "${page.path}"`), `${page.path} navbar`);
     assert.ok(footer.includes(`to: "${page.path}"`), `${page.path} footer`);
   }
+  // The navbar stays short (2026-10-16): founders are the obvious audience and
+  // investors wait for case studies.
+  assert.match(navbar, /label: "For programs", href: "\/for-programs"/);
+  assert.doesNotMatch(navbar, /href: "\/for-founders"|href: "\/for-investors"/);
 });
 
 test('the audience pages are indexable with the same title and description the page renders', () => {
