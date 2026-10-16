@@ -191,7 +191,7 @@
 
 .ent-hero {
   position: relative;
-  padding: 124px 0 40px;
+  padding: 124px 0 24px;
 }
 
 .ent-hero__backdrop {
@@ -303,50 +303,6 @@
     radial-gradient(40% 40% at 70% 15%, rgba(60, 207, 142, 0.16), transparent 70%);
   filter: blur(30px);
   pointer-events: none;
-}
-
-/* Outcomes strip under the hero: three statements, divided by hairlines. */
-.ent-outcomes {
-  display: grid;
-  margin-top: 64px;
-  border-top: 1px solid var(--ent-line-soft);
-}
-
-@media (min-width: 768px) {
-  .ent-outcomes {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
-
-.ent-outcomes > div {
-  padding: 22px 0;
-}
-
-@media (min-width: 768px) {
-  .ent-outcomes > div {
-    padding: 26px 28px 6px;
-    border-left: 1px solid var(--ent-line-soft);
-  }
-
-  .ent-outcomes > div:first-child {
-    padding-left: 0;
-    border-left: 0;
-  }
-}
-
-.ent-outcomes dt {
-  color: var(--ent-ink);
-  font-family: var(--ent-display);
-  font-size: 22px;
-  font-weight: 600;
-  letter-spacing: -0.025em;
-}
-
-.ent-outcomes dd {
-  margin-top: 6px;
-  color: var(--ent-muted);
-  font-size: 15px;
-  line-height: 1.55;
 }
 
 /* ---------- Hero mock ---------- */

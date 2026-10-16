@@ -61,7 +61,8 @@ test('the enterprise page lands its offer in the hero', () => {
   // Programs should get the value proposition without scrolling: the promise,
   // the three things they get, a way to talk to us, and the product itself.
   assert.equal(enterprise.ENTERPRISE_HERO.points.length, 3);
-  const hero = enterprisePage.slice(enterprisePage.indexOf('className="ent-hero"'), enterprisePage.indexOf('ent-outcomes'));
+  const heroStart = enterprisePage.indexOf('className="ent-hero"');
+  const hero = enterprisePage.slice(heroStart, enterprisePage.indexOf('</section>', heroStart));
   for (const piece of ['ENTERPRISE_HERO.titleLead', 'ENTERPRISE_HERO.lede', 'ENTERPRISE_HERO.primaryCta', 'ENTERPRISE_HERO.points', '<CohortBoardMock />']) {
     assert.ok(hero.includes(piece), `hero is missing ${piece}`);
   }

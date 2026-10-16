@@ -28,7 +28,6 @@ import {
   ENTERPRISE_FAQS,
   ENTERPRISE_FEATURES,
   ENTERPRISE_HERO,
-  ENTERPRISE_OUTCOMES,
   ENTERPRISE_PATH,
   ENTERPRISE_PERKS,
   ENTERPRISE_SEO,
@@ -137,17 +136,6 @@ const Enterprise = () => {
                 <div className="ent-hero__visual">
                   <CohortBoardMock />
                 </div>
-              </div>
-
-              <div className="ent-container">
-                <dl className="ent-outcomes">
-                  {ENTERPRISE_OUTCOMES.map((outcome) => (
-                    <div key={outcome.value}>
-                      <dt>{outcome.value}</dt>
-                      <dd>{outcome.label}</dd>
-                    </div>
-                  ))}
-                </dl>
               </div>
             </section>
 

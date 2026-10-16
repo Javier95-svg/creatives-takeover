@@ -41,12 +41,6 @@ export const ENTERPRISE_HERO = {
   note: 'Set up around your program’s length, from a few weeks to several months. Founders join free.',
 };
 
-export const ENTERPRISE_OUTCOMES = [
-  { value: 'Real progress', label: 'Stages move when founders do the work, not when they say they did.' },
-  { value: 'Week 3, not week 10', label: 'Founders who go quiet or stay stuck are flagged while there is time to help.' },
-  { value: 'Perks for every founder', label: 'Tools for every stage and a network of experts, service providers and investors.' },
-];
-
 export const ENTERPRISE_COMPARISON = {
   eyebrow: 'Why programs switch',
   title: 'Running a cohort, before and after',
