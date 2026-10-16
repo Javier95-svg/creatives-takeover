@@ -1220,8 +1220,11 @@
 
 .ct-hero__secondary-row {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: center;
+  /* "Who is this for?" plus the program and investor page links. */
+  gap: 4px 20px;
   width: 100%;
   margin-top: 18px;
 }

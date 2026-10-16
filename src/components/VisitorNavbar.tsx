@@ -2,9 +2,12 @@ import type { MouseEvent } from "react";
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
+  ChevronDown,
   DollarSign,
+  GraduationCap,
   Handshake,
   Info,
+  Landmark,
   type LucideIcon,
   Menu,
   Mic,
@@ -15,6 +18,12 @@ import {
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import ThemeToggle from "@/components/ThemeToggle";
 import ctLogoPolished from "@/assets/ct-logo-polished-borders.webp";
 import { cn } from "@/lib/utils";
@@ -23,18 +32,28 @@ import { useCTAAttribution } from "@/hooks/useCTAAttribution";
 
 type VisitorLink = { label: string; href: string; icon: LucideIcon; sectionId?: string; exact?: boolean };
 
-// Links in display order. Home is covered by the brand lockup.
+// Links in display order. Home is covered by the brand lockup. The audience
+// pages lead, so a visitor sees who the platform serves before anything else
+// (B2B2C repositioning, 2026-10-15).
 const visitorLinks: VisitorLink[] = [
+  { label: "For founders", href: "/for-founders", icon: Rocket },
+  { label: "For programs", href: "/for-programs", icon: GraduationCap },
+  { label: "For investors", href: "/for-investors", icon: Landmark },
   // exact, because /demo-studio and /demo-calls both start with /demo and would
   // otherwise light this entry up while the visitor is somewhere else entirely.
-  { label: "Tour", href: "/demo", icon: PlayCircle, exact: true },
+  { label: "How it works", href: "/demo", icon: PlayCircle, exact: true },
+];
+
+// Everything that is not an audience page sits behind one Explore menu.
+const exploreLinks: VisitorLink[] = [
   { label: "Build", href: "/build", icon: Wrench },
   { label: "Collab", href: "/mentorship", icon: Handshake },
   { label: "News", href: "/newspaper", icon: Newspaper },
   { label: "Podcast", href: "/podcast", icon: Mic },
   { label: "About", href: "/about", icon: Info },
-  { label: "Pricing", href: "/pricing", icon: DollarSign },
 ];
+
+const pricingLink: VisitorLink = { label: "Pricing", href: "/pricing", icon: DollarSign };
 
 import { useWorkspaceFrame } from '@/contexts/WorkspaceFrameContext';
 
@@ -102,6 +121,28 @@ const LegacyVisitorNavbar = () => {
 
   const linkClassName = (href: string, sectionId?: string, exact?: boolean) => navItemClass(isActive(href, sectionId, exact));
 
+  const exploreActive = exploreLinks.some((item) => isActive(item.href, item.sectionId, item.exact));
+
+  const renderMobileLink = (item: VisitorLink) => {
+    const Icon = item.icon;
+    return (
+      <Link
+        key={item.label}
+        to={item.href}
+        className={cn(
+          "flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-colors",
+          isActive(item.href, item.sectionId, item.exact)
+            ? "bg-background text-foreground"
+            : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+        )}
+        onClick={(event) => handleNavClick(event, item, `Mobile ${item.label}`)}
+      >
+        <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+        {item.label}
+      </Link>
+    );
+  };
+
   return (
     <nav
       style={{ top: "var(--banner-height, 0)" } as React.CSSProperties}
@@ -141,21 +182,52 @@ const LegacyVisitorNavbar = () => {
             </Link>
 
             <div className="hidden min-w-0 flex-1 items-center justify-center gap-1 lg:flex">
-              {visitorLinks.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <Link
-                    key={item.label}
-                    to={item.href}
-                    className={cn(linkClassName(item.href, item.sectionId, item.exact), "inline-flex items-center gap-2 whitespace-nowrap")}
-                    onClick={(event) => handleNavClick(event, item)}
-                  >
-                    {/* Seven links only fit with icons from 2xl; below that the labels carry it. */}
-                    <Icon className="hidden h-4 w-4 shrink-0 2xl:block" aria-hidden="true" />
-                    {item.label}
-                  </Link>
-                );
-              })}
+              {/* Labels only: the audience names are long enough that icons would
+                  crowd the bar at lg. */}
+              {visitorLinks.map((item) => (
+                <Link
+                  key={item.label}
+                  to={item.href}
+                  className={cn(linkClassName(item.href, item.sectionId, item.exact), "inline-flex items-center whitespace-nowrap")}
+                  onClick={(event) => handleNavClick(event, item)}
+                >
+                  {item.label}
+                </Link>
+              ))}
+
+              <DropdownMenu modal={false}>
+                <DropdownMenuTrigger
+                  className={cn(navItemClass(exploreActive), "group inline-flex items-center gap-1 whitespace-nowrap")}
+                  onClick={() => trackNavClick("Explore")}
+                >
+                  Explore
+                  <ChevronDown
+                    className="h-3.5 w-3.5 opacity-70 transition-transform group-data-[state=open]:rotate-180"
+                    aria-hidden="true"
+                  />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="center" sideOffset={10} className="w-52 rounded-2xl p-1.5">
+                  {exploreLinks.map((item) => {
+                    const Icon = item.icon;
+                    return (
+                      <DropdownMenuItem key={item.label} asChild className="cursor-pointer rounded-xl px-3 py-2.5">
+                        <Link to={item.href} onClick={() => trackNavClick(`Explore ${item.label}`)}>
+                          <Icon className="mr-2.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                          {item.label}
+                        </Link>
+                      </DropdownMenuItem>
+                    );
+                  })}
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              <Link
+                to={pricingLink.href}
+                className={cn(linkClassName(pricingLink.href), "inline-flex items-center whitespace-nowrap")}
+                onClick={(event) => handleNavClick(event, pricingLink)}
+              >
+                {pricingLink.label}
+              </Link>
             </div>
 
             <div className="ml-auto hidden items-center gap-2 pl-2 lg:flex xl:pl-4">
@@ -197,25 +269,12 @@ const LegacyVisitorNavbar = () => {
           >
             <div className="min-h-0">
               <div className="space-y-2 border-t border-border/70 px-3 py-4 sm:px-4">
-                {visitorLinks.map((item) => {
-                  const Icon = item.icon;
-                  return (
-                    <Link
-                      key={item.label}
-                      to={item.href}
-                      className={cn(
-                        "flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-colors",
-                        isActive(item.href, item.sectionId, item.exact)
-                          ? "bg-background text-foreground"
-                          : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
-                      )}
-                      onClick={(event) => handleNavClick(event, item, `Mobile ${item.label}`)}
-                    >
-                      <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
-                      {item.label}
-                    </Link>
-                  );
-                })}
+                {[...visitorLinks, pricingLink].map(renderMobileLink)}
+
+                <p className="px-4 pb-1 pt-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground/80">
+                  Explore
+                </p>
+                {exploreLinks.map(renderMobileLink)}
 
                 <div className="grid gap-2 border-t border-border/70 pt-3">
                   <Button asChild variant="outline" className="w-full">

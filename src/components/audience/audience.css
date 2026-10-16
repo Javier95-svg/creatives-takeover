@@ -1,0 +1,333 @@
+/* Audience pages (/for-founders, /for-programs, /for-investors) and the
+   homepage "Who it's for" section. The hero reuses the homepage .ct-hero
+   styles; everything here sits on the shared theme tokens so it follows
+   light and dark mode. */
+
+.audience-hero {
+  padding: 150px 0 24px;
+}
+
+.audience-hero .ct-hero__title {
+  font-size: clamp(44px, 5.8vw, 82px);
+}
+
+.audience-hero .ct-hero__lede {
+  max-width: 640px;
+  font-size: 17px;
+}
+
+.audience-hero__badge {
+  padding: 6px 14px;
+  font-size: 12px;
+  letter-spacing: 0.02em;
+}
+
+.audience-closing {
+  padding: 0;
+  background: transparent;
+}
+
+.audience-closing .ct-hero__cta-row {
+  margin-bottom: 0;
+}
+
+@media (max-width: 640px) {
+  .audience-hero {
+    padding: 112px 0 8px;
+  }
+
+  .audience-hero .ct-hero__title {
+    font-size: clamp(36px, 10.5vw, 52px);
+  }
+
+  .audience-hero .ct-hero__lede {
+    font-size: 15px;
+  }
+
+  .audience-hero .ct-hero__cta {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+.audience-section {
+  position: relative;
+}
+
+.audience-grid {
+  display: grid;
+  gap: 1.25rem;
+  max-width: 72rem;
+  margin: 0 auto;
+}
+
+@media (min-width: 768px) {
+  .audience-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.audience-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  border-radius: 1.75rem;
+  padding: 1.75rem;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.audience-card:hover {
+  transform: translateY(-3px);
+  box-shadow:
+    0 28px 64px -36px hsl(var(--primary) / 0.45),
+    0 10px 24px -20px hsl(var(--foreground) / 0.12);
+}
+
+.audience-card__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 0.95rem;
+  color: #fff;
+  background: linear-gradient(135deg, #5aa2fb, #6d7cf6 55%, #25cb7a);
+  box-shadow: 0 12px 28px -12px rgba(91, 162, 251, 0.75);
+}
+
+.audience-card__number {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  color: hsl(var(--primary));
+}
+
+.audience-card__title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.2rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+  color: hsl(var(--foreground));
+}
+
+.audience-card__body {
+  color: hsl(var(--muted-foreground));
+  font-size: 0.95rem;
+  line-height: 1.65;
+}
+
+/* How it works: numbered steps joined by a line on wide screens. */
+.audience-steps {
+  position: relative;
+  display: grid;
+  gap: 2rem;
+  max-width: 64rem;
+  margin: 0 auto;
+  padding: 0;
+  list-style: none;
+}
+
+@media (min-width: 768px) {
+  .audience-steps {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .audience-steps::before {
+    content: "";
+    position: absolute;
+    top: 1.375rem;
+    left: 16.66%;
+    right: 16.66%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, hsl(var(--primary) / 0.45), transparent);
+  }
+}
+
+.audience-step {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  text-align: center;
+}
+
+.audience-step__number {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  margin-bottom: 0.5rem;
+  border-radius: 999px;
+  border: 1px solid hsl(var(--primary) / 0.45);
+  background: hsl(var(--background));
+  color: hsl(var(--primary));
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  box-shadow: 0 0 24px -6px hsl(var(--primary) / 0.55);
+}
+
+/* Privacy / trust statement. */
+.audience-trust {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.25rem;
+  max-width: 52rem;
+  margin: 0 auto;
+  border-radius: 1.75rem;
+  padding: 1.75rem 2rem;
+}
+
+.audience-trust__icon {
+  flex-shrink: 0;
+  width: 2rem;
+  height: 2rem;
+  color: #25cb7a;
+}
+
+.audience-trust__title {
+  margin-bottom: 0.4rem;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.35rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: hsl(var(--foreground));
+}
+
+.audience-crosslink {
+  max-width: 52rem;
+  margin: 1.5rem auto 0;
+  text-align: center;
+  color: hsl(var(--muted-foreground));
+  font-size: 0.95rem;
+}
+
+.audience-crosslink a {
+  font-weight: 600;
+  color: hsl(var(--primary));
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+/* Example visuals: a small "Example" tag keeps fictional data honest. */
+.audience-example-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border-radius: 999px;
+  border: 1px dashed hsl(var(--border));
+  padding: 0.2rem 0.65rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: hsl(var(--muted-foreground));
+}
+
+.audience-preview {
+  border-radius: 1.75rem;
+  overflow: hidden;
+}
+
+.audience-stage-bar {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 3px;
+}
+
+.audience-stage-bar span {
+  height: 0.5rem;
+  border-radius: 999px;
+  background: hsl(var(--muted-foreground) / 0.18);
+}
+
+.audience-stage-bar span.is-done {
+  background: linear-gradient(90deg, #5aa2fb, #6d7cf6);
+}
+
+.audience-stage-bar span.is-current {
+  background: #5aa2fb;
+  box-shadow: 0 0 12px rgba(91, 162, 251, 0.8);
+}
+
+.audience-stage-bar--stalled span.is-current {
+  background: #f37575;
+  box-shadow: 0 0 12px rgba(243, 117, 117, 0.75);
+}
+
+/* Homepage "Who it's for". */
+.audience-flow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem 1rem;
+  max-width: 64rem;
+  margin: 2.5rem auto 0;
+  color: hsl(var(--muted-foreground));
+  font-size: 0.95rem;
+}
+
+.audience-flow__step {
+  border-radius: 999px;
+  border: 1px solid hsl(var(--border) / 0.85);
+  background: hsl(var(--background) / 0.75);
+  padding: 0.5rem 1rem;
+  color: hsl(var(--foreground));
+  backdrop-filter: blur(10px);
+}
+
+.audience-card__list {
+  display: grid;
+  gap: 0.55rem;
+  margin: 0.25rem 0 0.5rem;
+  padding: 0;
+  list-style: none;
+}
+
+.audience-card__list li {
+  display: flex;
+  gap: 0.55rem;
+  color: hsl(var(--muted-foreground));
+  font-size: 0.93rem;
+  line-height: 1.5;
+}
+
+.audience-card__link {
+  margin-top: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-weight: 600;
+  color: hsl(var(--primary));
+}
+
+.audience-card__link svg {
+  transition: transform 0.2s ease;
+}
+
+.audience-card:hover .audience-card__link svg {
+  transform: translateX(3px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .audience-card,
+  .audience-card__link svg {
+    transition: none;
+  }
+
+  .audience-card:hover {
+    transform: none;
+  }
+}
+
+.audience-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #5aa2fb, #6d7cf6);
+}

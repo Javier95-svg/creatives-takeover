@@ -603,8 +603,12 @@ export const clearInternalDevice = () => {
   writeInternalDevice(false);
 };
 
-/** Internal account signed in now, or a device the team uses. */
-export const isInternalUser = () => internalUser || internalDevice;
+// Vercel preview deployments (*.vercel.app) are only opened while the team
+// reviews a branch, so their visits never count as traffic.
+const onPreviewHost = typeof window !== 'undefined' && window.location.hostname.endsWith('.vercel.app');
+
+/** Internal account signed in now, a device the team uses, or a preview deployment. */
+export const isInternalUser = () => internalUser || internalDevice || onPreviewHost;
 
 /**
  * Tear every vendor down when a visitor withdraws consent mid-session (accepted,

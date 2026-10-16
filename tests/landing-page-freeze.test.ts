@@ -30,7 +30,13 @@ const frozenFiles = {
   // Rehashed 2026-10-13 for the requested second lede line "Identify what's
   // worth building, validate demand with reliable evidence, and turn
   // insights into products and go-to-market strategies." The rest of the copy and the layout are unchanged.
-  '../src/components/Hero.tsx': 'dce6dd492ed5bfed3b502883f5ddf91607d671f5bf6a32da0737f69b1d7b2820',
+  // Rehashed 2026-10-16 for the B2B2C repositioning reviewed on the
+  // b2b2c-repositioning preview: headline "The Startup Ecosystem Workspace",
+  // a lede naming founders, programs and investors, "Free for founders. No
+  // equity." replacing "No application. No cohort. No equity.", and links to
+  // /for-programs and /for-investors beside "Who is this for?". Input, funnel,
+  // dashboard preview and stats are unchanged.
+  '../src/components/Hero.tsx': 'da64e75eab79bd3a9c7eb4f66146748baf9f8ef86914952bb7c2a2951cc9752c',
   // Rehashed 2026-07-28 for the performance audit: mobile and desktop journey
   // branches are now mutually exclusive, preventing duplicate 147 MB GIF loads.
   // Content, visual order, actions, and responsive layout remain unchanged.
@@ -68,7 +74,10 @@ const frozenFiles = {
   // Rehashed 2026-10-04 for two approved changes the red CI hid: 36bbf23c
   // (2026-08-30, sticky mobile CTA removed) and 8a1bdfe9 (2026-09-08, new
   // social image).
-  '../src/pages/Index.tsx': 'dce7e669f3d2e31f3df70b0ed99141fe8c06213b32d3edb67be54f4d988874ab',
+  // Rehashed 2026-10-16 for the B2B2C repositioning: the "Who it's for"
+  // AudienceSection sits right after the hero in both branches, and the meta
+  // description names founders, programs and investors. Title unchanged.
+  '../src/pages/Index.tsx': 'b8a045fea59c1d20d4960afdf77c0769de08c37510252018a43e10ed1938334f',
 } as const;
 
 test('the approved unauthenticated landing page remains frozen during core-tool work', () => {

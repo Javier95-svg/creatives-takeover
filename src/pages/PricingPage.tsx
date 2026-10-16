@@ -7,8 +7,33 @@ import SubscriptionFeatures from "@/components/SubscriptionFeatures";
 import PricingComparison from "@/components/PricingComparison";
 import PricingFAQ from "@/components/PricingFAQ";
 import HomeWallpaper from "@/components/wallpapers/HomeWallpaper";
+import { Link } from "react-router-dom";
+import { ArrowRight } from "lucide-react";
 import { trackPricingViewed } from "@/lib/analytics";
 import { ScrollReveal } from "@/components/animations/ScrollReveal";
+
+// The plans above are for founders. Programs and sponsors get a quote per
+// cohort, so the band sends them to the form instead of showing a price.
+const ProgramsPricingBand = () => (
+  <section className="container mx-auto px-4 pb-4 sm:px-6">
+    <div className="surface-panel trust-outline mx-auto flex max-w-5xl flex-col items-start justify-between gap-4 rounded-3xl px-6 py-5 sm:flex-row sm:items-center sm:px-8">
+      <div>
+        <p className="font-space-grotesk text-lg font-semibold text-foreground">Running a program or a fund?</p>
+        <p className="text-sm text-muted-foreground">
+          Cohort pricing for incubators, accelerators, universities and sponsors depends on the size of the cohort.
+        </p>
+      </div>
+      <div className="flex shrink-0 flex-wrap gap-x-5 gap-y-2 text-sm font-semibold">
+        <Link to="/for-programs#talk" className="inline-flex items-center gap-1 text-primary hover:underline">
+          For programs <ArrowRight className="h-4 w-4" aria-hidden="true" />
+        </Link>
+        <Link to="/for-investors#talk" className="inline-flex items-center gap-1 text-primary hover:underline">
+          For investors <ArrowRight className="h-4 w-4" aria-hidden="true" />
+        </Link>
+      </div>
+    </div>
+  </section>
+);
 
 
 const PricingPage = () => {
@@ -61,6 +86,7 @@ const PricingPage = () => {
         <div className="relative z-10">
           <Navigation />
           <Pricing />
+          <ProgramsPricingBand />
           <ScrollReveal>
             <PricingComparison />
           </ScrollReveal>

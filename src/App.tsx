@@ -59,6 +59,9 @@ const ProductGuidePrototype = lazy(() => import('./pages/prototypes/ProductGuide
 const WorkspaceRouteFrame = lazy(() => import('./components/WorkspaceRouteFrame'));
 const About = lazy(() => import("./pages/About"));
 const PricingPage = lazy(() => import("./pages/PricingPage"));
+const ForFounders = lazy(() => import("./pages/ForFounders"));
+const ForPrograms = lazy(() => import("./pages/ForPrograms"));
+const ForInvestors = lazy(() => import("./pages/ForInvestors"));
 const SubscriptionSuccess = lazy(() => import("./pages/SubscriptionSuccess"));
 const PurchaseHistory = lazy(() => import("./pages/PurchaseHistory"));
 const Contact = lazy(() => import("./pages/Contact"));
@@ -362,6 +365,9 @@ function App() {
                         <Route path="/" element={isProjectSubdomain() ? <PublicLaunchPage /> : <Index />} />
                         <Route path="/about" element={<About />} />
                         <Route path="/pricing" element={<PricingPage />} />
+                        <Route path="/for-founders" element={<ForFounders />} />
+                        <Route path="/for-programs" element={<ForPrograms />} />
+                        <Route path="/for-investors" element={<ForInvestors />} />
                         <Route path="/subscription-success" element={<SubscriptionSuccess />} />
                         <Route path="/purchase-history" element={<PurchaseHistory />} />
                         <Route path="/build" element={<BuildPage />} />

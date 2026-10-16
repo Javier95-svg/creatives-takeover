@@ -109,13 +109,17 @@ export const INDEXABLE_ROUTES = [
     path: "/",
     title: "Creatives Takeover | Startup Development Platform",
     description:
-      "Creatives Takeover is a startup development platform that helps first-time founders validate ideas, build MVPs, launch, gain traction, and prepare to raise.",
+      "Creatives Takeover is the startup ecosystem workspace: founders test and build ideas, programs track every team, and investors meet founders who execute.",
     changefreq: "daily",
     priority: 1.0,
-    heroHeading: "The Founders' Compass",
+    heroHeading: "The Startup Ecosystem Workspace",
     heroCopy:
-      "Identify what’s worth building, validate demand with reliable evidence, and turn insights into products and go-to-market strategies.",
+      "Founders test and build their ideas here. Incubators, accelerators and universities see how every team is progressing, and investors meet founders who are already executing.",
     sections: [
+      {
+        heading: "Who it's for",
+        copy: "Founders and builders start and test their projects. Incubators, accelerators and universities see every team's progress. VCs and family offices meet teams that are executing.",
+      },
       {
         heading: "Reach value before signup",
         copy: "Launch a personalized live demo or draft an evidence backed customer decision before creating an account.",
@@ -151,6 +155,79 @@ export const INDEXABLE_ROUTES = [
       {
         heading: "Transparent credits and stable entitlements",
         copy: "See the credit cost before every metered action and upgrade only when you need more capacity, expert accountability, or deeper fundraising support.",
+      },
+    ],
+  },
+  // Audience pages (B2B2C repositioning, 2026-10-15). Title and description
+  // mirror src/data/audiencePages.ts; tests/audience-pages.test.ts keeps them equal.
+  {
+    path: "/for-founders",
+    title: "For Founders and Builders | Creatives Takeover",
+    description:
+      "Start and test your project in one workspace: a tool for every stage, plus mentors, service providers, investors and other founders. Free to start, no equity.",
+    changefreq: "monthly",
+    priority: 0.9,
+    heroHeading: "Start and test your project here",
+    heroCopy:
+      "Define who you are building for, put your idea in front of real buyers and build what they ask for, with mentors, service providers, investors and other founders in the same place.",
+    sections: [
+      {
+        heading: "A tool for every stage",
+        copy: "ICP Builder, Demo Studio, PMF Lab, MVP Builder, GTM Strategist and Traction Engine, each ending in something you can show.",
+      },
+      {
+        heading: "Free to start. No equity.",
+        copy: "Create an account without applying. We can’t promise investment: you choose whether investors can see your progress, and they decide whom to contact.",
+      },
+    ],
+  },
+  {
+    path: "/for-programs",
+    title: "For Incubators and Accelerators | Creatives Takeover",
+    description:
+      "Give your cohort one workspace to test and build their ideas, and see every team’s stage, progress and stalls in one view, with an impact report at the end.",
+    changefreq: "monthly",
+    priority: 0.9,
+    heroHeading: "Every team’s progress, visible every week",
+    heroCopy:
+      "For incubators, accelerators and universities. Give your founders one workspace to test and build their ideas. You see what stage each team has reached, what it has proven and which teams have stalled, without chasing status updates.",
+    sections: [
+      {
+        heading: "Cohort progress dashboard",
+        copy: "A live view of every team: its current stage, what it has completed and how long it has been there. Teams that go quiet or stay stuck too long are flagged.",
+      },
+      {
+        heading: "Impact report",
+        copy: "When the cohort ends, an anonymized report: stages completed, customers interviewed, demand pages published, first paying customers and where teams got stuck.",
+      },
+      {
+        heading: "You see progress, not private content",
+        copy: "Program staff see stages, completed tools and activity. Founders’ ideas, files and conversations stay theirs, and every report is anonymized.",
+      },
+    ],
+  },
+  {
+    path: "/for-investors",
+    title: "For VCs and Family Offices | Creatives Takeover",
+    description:
+      "Sponsor a founder cohort in your thesis area, or get matched with early founders who chose to share their progress with investors.",
+    changefreq: "monthly",
+    priority: 0.9,
+    heroHeading: "Meet founders while they’re still building",
+    heroCopy:
+      "For VCs and family offices. Sponsor a cohort in your thesis area, or create an investor account and get matched with teams whose progress you can read.",
+    sections: [
+      {
+        heading: "Sponsored cohort",
+        copy: "Fund a cohort under your brand, by thesis area, region or university. Founders use the platform free, and you follow the teams that choose to share their progress with you.",
+      },
+      {
+        heading: "Investor account",
+        copy: "Set the sectors and stages you invest in and get matched with founders who opted in to be visible to investors.",
+      },
+      {
+        heading: "Founders decide what you see",
+        copy: "Visibility is opt-in, founder by founder. Sponsoring a cohort doesn’t commit you, or the founders, to an investment.",
       },
     ],
   },

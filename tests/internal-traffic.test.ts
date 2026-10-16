@@ -12,7 +12,9 @@ test("the team's own visits never reach PostHog, signed in or not", () => {
   // A device stays internal after signing out, and can be marked by link.
   assert.match(source, /const INTERNAL_DEVICE_KEY = 'ct_internal_device_v1'/);
   assert.match(source, /get\('ct_internal'\)/);
-  assert.match(source, /export const isInternalUser = \(\) => internalUser \|\| internalDevice;/);
+  assert.match(source, /export const isInternalUser = \(\) => internalUser \|\| internalDevice \|\| onPreviewHost;/);
+  // Branch previews (*.vercel.app) are only opened by the team reviewing them.
+  assert.match(source, /const onPreviewHost = [^\n]*hostname\.endsWith\('\.vercel\.app'\)/);
   const setInternal = source.slice(source.indexOf('export const setInternalUser'), source.indexOf('export const clearInternalDevice'));
   assert.match(setInternal, /writeInternalDevice\(true\)/);
   assert.doesNotMatch(setInternal, /writeInternalDevice\(false\)/, 'signing out must not clear the device');

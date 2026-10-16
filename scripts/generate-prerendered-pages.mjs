@@ -11,11 +11,14 @@ const TEMPLATE_PATH = path.join(DIST_DIR, "index.html");
 // setting: prominence in the sitewide nav plus SiteNavigationElement markup is
 // the lever a site actually has. /demo was in the footer only, which is why the
 // result showed /demo-studio/try in its place.
+//
+// Since the B2B2C repositioning (2026-10-15) the audience pages lead, matching
+// the visitor navbar.
 const SITELINK_NAV = [
-  { href: "/demo", label: "Tour" },
-  { href: "/build", label: "Build" },
-  { href: "/mentorship", label: "Collab" },
-  { href: "/about", label: "About" },
+  { href: "/for-founders", label: "For founders" },
+  { href: "/for-programs", label: "For programs" },
+  { href: "/for-investors", label: "For investors" },
+  { href: "/demo", label: "How it works" },
   { href: "/pricing", label: "Pricing" },
 ];
 
@@ -30,6 +33,9 @@ const SITELINK_NAV = [
 const PRIMARY_NAV = [
   { href: "/", label: "Home" },
   ...SITELINK_NAV,
+  { href: "/build", label: "Build" },
+  { href: "/mentorship", label: "Collab" },
+  { href: "/about", label: "About" },
   { href: "/bizmap-ai", label: "Startup Cycle" },
   { href: "/answers", label: "Founder Answers" },
   { href: "/newspaper", label: "Newspaper" },
@@ -46,6 +52,14 @@ const PRIMARY_NAV = [
 // A grouped footer is the conventional fix: it costs a little link equity per
 // page and buys every route at least one real inbound link.
 const FOOTER_GROUPS = [
+  {
+    heading: "Who it's for",
+    links: [
+      { href: "/for-founders", label: "For founders" },
+      { href: "/for-programs", label: "For programs" },
+      { href: "/for-investors", label: "For investors" },
+    ],
+  },
   {
     heading: "Explore",
     links: [
@@ -117,10 +131,10 @@ function buildFallbackHtml(routeConfig, hubChildren = {}) {
     .map((item) => `<a href="${item.href}">${item.label}</a>`)
     .join(" | ");
   const heroContent = routeConfig.path === "/"
-    ? `<p>Creatives Takeover &middot; Founders Compass</p>
-          <p>Customized workspace for startup founders, product managers and indie builders.</p>
-          <p>Identify what’s worth building, validate demand with reliable evidence, and turn insights into products and go-to-market strategies.</p>
-          <p><strong>No application. No cohort. No equity.</strong></p>
+    ? `<p>Creatives Takeover &middot; The Startup Ecosystem Workspace</p>
+          <p>Founders test and build their ideas here.</p>
+          <p>Incubators, accelerators and universities see how every team is progressing, and investors meet founders who are already executing.</p>
+          <p><strong>Free for founders. No equity.</strong></p>
           <form action="/icp-builder" method="get">
             <label for="seo-hero-seed">What is your idea?</label>
             <textarea id="seo-hero-seed" name="seed" minlength="3" required></textarea>

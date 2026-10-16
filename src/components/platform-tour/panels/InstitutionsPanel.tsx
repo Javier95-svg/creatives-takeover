@@ -51,14 +51,14 @@ export function InstitutionsPanel() {
     <Card className="mt-6">
       <CardContent className="flex flex-wrap items-center justify-between gap-4 pt-6">
         <p className="text-sm text-muted-foreground">
-          Talk to us about a cohort licence, a pilot with one class, or portfolio access.
+          Talk to us about a pilot with one cohort or one class, or about sponsoring a cohort.
         </p>
         <div className="flex flex-wrap gap-2">
-          <Button asChild size="sm" onClick={() => trackPlatformTourPartnershipClicked({ panel: 'for-institutions', destination: '/contact' })}>
-            <Link to="/contact">Start a conversation</Link>
+          <Button asChild size="sm" onClick={() => trackPlatformTourPartnershipClicked({ panel: 'for-institutions', destination: '/for-programs' })}>
+            <Link to="/for-programs#talk">For programs</Link>
           </Button>
-          <Button asChild variant="outline" size="sm" onClick={() => trackPlatformTourPartnershipClicked({ panel: 'for-institutions', destination: 'mailto' })}>
-            <a href="mailto:javier@admin-creatives-takeover.com?subject=Program%20partnership">Email us directly</a>
+          <Button asChild variant="outline" size="sm" onClick={() => trackPlatformTourPartnershipClicked({ panel: 'for-institutions', destination: '/for-investors' })}>
+            <Link to="/for-investors#talk">For investors</Link>
           </Button>
         </div>
       </CardContent>

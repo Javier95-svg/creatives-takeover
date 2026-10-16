@@ -1,8 +1,14 @@
 # Creatives Takeover
 
-> Last updated: 2026-09-19
+> Last updated: 2026-10-16
 
-> Creatives Takeover is a business development platform for first-time startup founders. It combines AI tools that draft startup artifacts (ideal customer profile, MVP scope, go-to-market plan, pitch deck review) with a marketplace of reviewed human startup mentors who can be booked directly. Founders keep 100% equity: there is no application, no cohort, and no accelerator commitment.
+> Creatives Takeover is the startup ecosystem workspace. Founders test and build their ideas with AI tools that draft startup artifacts (ideal customer profile, MVP scope, go-to-market plan, pitch deck review) and a marketplace of reviewed human startup mentors who can be booked directly. Incubators, accelerators and universities use it to see how every team in a cohort is progressing, and VCs and family offices use it to meet founders who are executing. Founders can start free without applying and keep 100% equity.
+
+## Who it is for
+
+- [For founders and builders](https://creatives-takeover.com/for-founders): Start and test a project with a tool for every stage, plus mentors, service providers, investors and other founders. Free to start, no equity.
+- [For incubators, accelerators and universities](https://creatives-takeover.com/for-programs): Give a cohort one workspace and see each team's stage, completed tools and stalls in one view, with an anonymized impact report at the end. Staff see progress, not founders' private content. Pricing depends on cohort size; programs contact the team for a pilot.
+- [For VCs and family offices](https://creatives-takeover.com/for-investors): Sponsor a founder cohort in a thesis area, or create an investor account and get matched with founders who opted in to be visible to investors. Visibility is always opt-in per founder.
 
 ## What it is
 
@@ -15,7 +21,7 @@ Two things distinguish it from general AI assistants and from single-purpose ide
 
 ## Pricing
 
-All plans are self-serve with no equity taken and no application required. Credits are consumed by AI tool runs and reset each billing period; they do not roll over.
+Founder plans are self-serve with no equity taken and no application required. Cohort pricing for programs and sponsors is quoted per cohort. Credits are consumed by AI tool runs and reset each billing period; they do not roll over.
 
 | Plan | Monthly | Yearly | Credits/month |
 |---|---:|---:|---:|

@@ -5,12 +5,15 @@ import { INDEXABLE_ROUTES } from '../scripts/seo-route-config.mjs';
 
 const script = readFileSync('scripts/generate-prerendered-pages.mjs', 'utf8');
 
-/** The five routes, in the order they should be offered to Google. */
+/**
+ * The five routes, in the order they should be offered to Google. The audience
+ * pages lead since the B2B2C repositioning (2026-10-15), matching the navbar.
+ */
 const WANTED = [
-  ['/demo', 'Tour'],
-  ['/build', 'Build'],
-  ['/mentorship', 'Collab'],
-  ['/about', 'About'],
+  ['/for-founders', 'For founders'],
+  ['/for-programs', 'For programs'],
+  ['/for-investors', 'For investors'],
+  ['/demo', 'How it works'],
   ['/pricing', 'Pricing'],
 ] as const;
 

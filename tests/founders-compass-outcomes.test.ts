@@ -80,10 +80,12 @@ test('fixed hero copy and server rendered pricing remain available without JavaS
   const hero = readFileSync(new URL('../src/components/Hero.tsx', import.meta.url), 'utf8');
   const fallback = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
   const prerender = readFileSync(new URL('../scripts/generate-prerendered-pages.mjs', import.meta.url), 'utf8');
+  // B2B2C repositioning (2026-10-15): the hero names founders, programs and
+  // investors; "No cohort" was retired because programs now bring cohorts.
   const paragraphs = [
-    'Customized workspace for startup founders, product managers and indie builders.',
-    'Identify what’s worth building, validate demand with reliable evidence, and turn insights into products and go-to-market strategies.',
-    'No application. No cohort. No equity.',
+    'Founders test and build their ideas here.',
+    'Incubators, accelerators and universities see how every team is progressing, and investors meet founders who are already executing.',
+    'Free for founders. No equity.',
   ];
   const renderedSources = [hero, fallback, prerender].map((source) =>
     source.replaceAll('&apos;', "'").replaceAll('&amp;', '&'),

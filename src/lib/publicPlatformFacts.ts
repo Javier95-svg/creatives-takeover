@@ -46,6 +46,8 @@ export const PUBLIC_PULSE_LINKS: readonly PublicPulseLink[] = [
   { route: '/marketplace', destination: '/marketplace', title: 'Marketplace', reason: 'Find help with design, marketing or technology.' },
   { route: '/signup', destination: '/signup', title: 'Create a free account', reason: 'Save your work and pick up where you left off.' },
   { route: '/about', destination: '/about', title: 'About Creatives Takeover', reason: 'Who we are and why we built it.' },
+  { route: '/for-programs', destination: '/for-programs', title: 'For incubators, accelerators and universities', reason: 'See every team in a cohort in one view.' },
+  { route: '/for-investors', destination: '/for-investors', title: 'For VCs and family offices', reason: 'Sponsor a cohort or meet founders who opted in.' },
 ];
 
 /** The allowed page a link in a reply points at, or null for anything else. */
@@ -151,6 +153,10 @@ Creatives Takeover is a place to turn an idea or an early product into real prog
 
 Who it is for (account types):
 ${accounts}
+
+Programs and investors (they bring the platform to founders):
+- Incubators, accelerators and universities give a cohort one workspace and see each team's stage, completed tools and which teams have stalled, with an anonymized impact report at the end. Staff see progress, not the content of founders' work. Pricing depends on the cohort; they get in touch through /for-programs.
+- VCs and family offices can sponsor a cohort in their thesis area, or create an investor account and get matched with founders who opted in. Founders always decide who sees their progress, and nobody is promised investment. Details: /for-investors.
 
 The two founder paths:
 ${profiles}
