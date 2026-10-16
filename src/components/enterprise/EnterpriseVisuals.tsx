@@ -58,7 +58,7 @@ export const CohortBoardMock = () => (
           <i />
           <i />
         </span>
-        <span className="ent-window__title">Founder CRM · Spring cohort</span>
+        <span className="ent-window__title">Spring cohort · Program view</span>
         <ExampleTag />
       </div>
 
@@ -285,7 +285,8 @@ const NETWORK_ICONS: Record<string, LucideIcon> = {
   founders: Users,
 };
 
-type NetworkNode = { key: string; title: string; body: string };
+// helps: what this part of the ecosystem takes off the program team.
+type NetworkNode = { key: string; title: string; body: string; helps?: string };
 
 /** Perks: the cohort in the middle, the network around it. */
 export const NetworkHub = ({ nodes }: { nodes: NetworkNode[] }) => {
@@ -300,6 +301,7 @@ export const NetworkHub = ({ nodes }: { nodes: NetworkNode[] }) => {
         <div>
           <p className="ent-hub__title">{node.title}</p>
           <p className="ent-hub__body">{node.body}</p>
+          {node.helps ? <p className="ent-helps">{node.helps}</p> : null}
         </div>
       </li>
     );

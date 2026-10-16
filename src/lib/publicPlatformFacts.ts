@@ -46,7 +46,7 @@ export const PUBLIC_PULSE_LINKS: readonly PublicPulseLink[] = [
   { route: '/marketplace', destination: '/marketplace', title: 'Marketplace', reason: 'Find help with design, marketing or technology.' },
   { route: '/signup', destination: '/signup', title: 'Create a free account', reason: 'Save your work and pick up where you left off.' },
   { route: '/about', destination: '/about', title: 'About Creatives Takeover', reason: 'Who we are and why we built it.' },
-  { route: '/enterprise', destination: '/enterprise', title: 'Enterprise: founder CRM for programs', reason: 'Track the real progress of every founder in a cohort.' },
+  { route: '/enterprise', destination: '/enterprise', title: 'Enterprise: for accelerators and incubators', reason: 'Give a cohort the whole ecosystem and save staff time.' },
   { route: '/for-investors', destination: '/for-investors', title: 'For VCs and family offices', reason: 'Sponsor a cohort or meet founders who opted in.' },
 ];
 
@@ -155,7 +155,7 @@ Who it is for (account types):
 ${accounts}
 
 Programs and investors (they bring the platform to founders):
-- Accelerators, incubators and universities get a founder CRM for their cohort: each founder's stage moves when they do the work in the platform, founders who stall are flagged, and an anonymized impact report comes at the end. Every founder in the cohort also gets the platform's tools and access to its network. Staff see progress, not the content of founders' work. Pricing depends on the cohort; they get in touch through /enterprise.
+- Accelerators, incubators and universities give their cohort the platform's ecosystem: a tool for every stage, experts in specific fields, service providers, visibility to investors and other founders. Their team saves time on building networks, chasing updates and writing funder reports, because progress is recorded as founders work and reports are drafted in the funder's format. Staff see progress, not the content of founders' work. Pricing depends on the cohort; they get in touch through /enterprise.
 - VCs and family offices can sponsor a cohort in their thesis area, or create an investor account and get matched with founders who opted in. Founders always decide who sees their progress, and nobody is promised investment. Details: /for-investors.
 
 The two founder paths:

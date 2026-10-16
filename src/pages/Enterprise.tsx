@@ -93,7 +93,7 @@ const Enterprise = () => {
         <div className="relative z-10">
           <Navigation />
           <main>
-            {/* Hero: promise, the three things a program gets, and the product. */}
+            {/* Hero: the ecosystem, the hours it gives back, and the product. */}
             <section className="ent-hero" aria-labelledby="ent-title">
               <div className="ent-hero__backdrop" aria-hidden="true" />
               <div className="ent-container ent-hero__grid">
@@ -139,7 +139,29 @@ const Enterprise = () => {
               </div>
             </section>
 
-            {/* Before and after: the switch in four lines. */}
+            {/* The ecosystem the cohort joins: the lead offer, right after the hero. */}
+            <ScrollReveal variant="fade" amount={0.08}>
+              <section className="ent-section ent-section--tint">
+                <div className="ent-container">
+                  <SectionHead eyebrow={ENTERPRISE_PERKS.eyebrow} title={ENTERPRISE_PERKS.title} copy={ENTERPRISE_PERKS.copy} />
+                  <div className="ent-perks">
+                    <article className="ent-tile ent-perks__tools">
+                      <div className="ent-tile__text">
+                        <Layers className="ent-tile__icon" aria-hidden="true" />
+                        <h3>{ENTERPRISE_PERKS.tools.title}</h3>
+                        <p>{ENTERPRISE_PERKS.tools.body}</p>
+                        <p className="ent-helps">{ENTERPRISE_PERKS.tools.helps}</p>
+                      </div>
+                      <ToolFlow />
+                    </article>
+                    <NetworkHub nodes={ENTERPRISE_PERKS.network} />
+                  </div>
+                </div>
+              </section>
+            </ScrollReveal>
+
+
+            {/* Time saved: the three tasks the ecosystem and progress record take off staff. */}
             <ScrollReveal variant="fade" amount={0.1}>
               <section className="ent-section">
                 <div className="ent-container">
@@ -165,7 +187,7 @@ const Enterprise = () => {
               </section>
             </ScrollReveal>
 
-            {/* The CRM, each feature shown with the product. */}
+            {/* The program view, each feature shown with the product. */}
             <ScrollReveal variant="fade" amount={0.08}>
               <section className="ent-section ent-section--tint">
                 <div className="ent-container">
@@ -215,26 +237,6 @@ const Enterprise = () => {
                       </div>
                       <VisibilitySplit />
                     </article>
-                  </div>
-                </div>
-              </section>
-            </ScrollReveal>
-
-            {/* What every founder in the cohort gets for joining. */}
-            <ScrollReveal variant="fade" amount={0.08}>
-              <section className="ent-section">
-                <div className="ent-container">
-                  <SectionHead eyebrow={ENTERPRISE_PERKS.eyebrow} title={ENTERPRISE_PERKS.title} copy={ENTERPRISE_PERKS.copy} />
-                  <div className="ent-perks">
-                    <article className="ent-tile ent-perks__tools">
-                      <div className="ent-tile__text">
-                        <Layers className="ent-tile__icon" aria-hidden="true" />
-                        <h3>{ENTERPRISE_PERKS.tools.title}</h3>
-                        <p>{ENTERPRISE_PERKS.tools.body}</p>
-                      </div>
-                      <ToolFlow />
-                    </article>
-                    <NetworkHub nodes={ENTERPRISE_PERKS.network} />
                   </div>
                 </div>
               </section>

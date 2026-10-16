@@ -7,7 +7,7 @@
 ## Who it is for
 
 - [For founders and builders](https://creatives-takeover.com/for-founders): Start and test a project with a tool for every stage, plus mentors, service providers, investors and other founders. Free to start, no equity.
-- [Enterprise: founder CRM for accelerators, incubators and universities](https://creatives-takeover.com/enterprise): Track the real progress of every founder in a cohort in one CRM, where stages move when founders do the work (interviews, demand tests, decisions). Founders who stall are flagged, and an anonymized impact report is produced at the end. Every founder in the cohort gets the platform's tools and access to its network of mentors, service providers and investors. Staff see progress, not founders' private content. Pricing depends on cohort size; programs contact the team for a pilot.
+- [Enterprise: for accelerators, incubators and universities](https://creatives-takeover.com/enterprise): Every founder in a program's cohort gets the platform's ecosystem: a tool for every stage, experts in specific fields, service providers, visibility to investors and other founders. The program team saves time on building networks, chasing updates and writing funder reports: progress is recorded as founders work, stalled teams are flagged, and reports are drafted in the funder's format. Staff see progress, not founders' private content. Pricing depends on cohort size; programs contact the team for a pilot.
 - [For VCs and family offices](https://creatives-takeover.com/for-investors): Sponsor a founder cohort in a thesis area, or create an investor account and get matched with founders who opted in to be visible to investors. Visibility is always opt-in per founder.
 
 ## What it is

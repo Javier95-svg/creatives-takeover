@@ -180,26 +180,26 @@ export const INDEXABLE_ROUTES = [
   },
   {
     path: "/enterprise",
-    title: "Founder CRM for Accelerators | Creatives Takeover",
+    title: "For Accelerators and Incubators | Creatives Takeover",
     description:
-      "A founder CRM for accelerators and incubators: track every team’s real progress in one place, while your cohort gets our tools and network for joining.",
+      "Give your cohort tools for every stage, experts, providers, investors and other founders, and get your team’s hours back on networks, updates and reports.",
     changefreq: "monthly",
     priority: 0.9,
-    heroHeading: "The founder CRM built around your program",
+    heroHeading: "A whole ecosystem for your cohort. Hours back for your team.",
     heroCopy:
-      "For accelerators, incubators and universities. Track the real progress of every founder in your cohort, backed by the work they do, not status updates. And every founder gets our tools and network just for joining.",
+      "For accelerators, incubators and universities. Your founders get a tool for every stage, experts in specific fields, service providers, investors who can find them and other founders. Your team stops building networks from scratch, chasing updates and writing reports by hand.",
     sections: [
       {
-        heading: "Founder pipeline and records",
-        copy: "Every founder by stage, with the evidence behind it: interviews logged, demand tested, decisions made. Founders who go quiet or stay stuck are flagged.",
+        heading: "What your founders get just for joining",
+        copy: "A tool for every stage, experts in specific fields, services for sales, marketing, operations, automation and technical support, visibility to investors on the platform, and rooms, launches and co-founder matching with other builders.",
       },
       {
-        heading: "What your founders get for joining",
-        copy: "A tool for every stage, plus access to experts, service providers, investors and other founders on the platform.",
+        heading: "Where your team gets its hours back",
+        copy: "Founders find experts, service providers and investors on the platform. Progress is recorded as founders do the work. Funder reports are drafted in your funder's format from that progress.",
       },
       {
-        heading: "Impact report",
-        copy: "When the cohort ends, an anonymized report: stages completed, customers interviewed, demand pages published and first paying customers.",
+        heading: "Progress, not private content",
+        copy: "Staff see stages, evidence and activity. Founders’ ideas, files and conversations stay theirs, and reports are anonymized.",
       },
     ],
   },

@@ -1332,6 +1332,28 @@
   line-height: 1.5;
 }
 
+/* What each part of the ecosystem takes off the program team. */
+.ent-helps {
+  position: relative;
+  margin-top: 10px;
+  padding-left: 14px;
+  color: var(--ent-ink);
+  font-size: 13.5px;
+  font-weight: 500;
+  line-height: 1.45;
+}
+
+.ent-helps::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.4em;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--ent-green);
+}
+
 .ent-hub__core {
   position: relative;
   display: none;

@@ -1,19 +1,20 @@
 /**
  * Copy for /enterprise: the page for accelerators, incubators and university
- * programs (B2B2C repositioning, 2026-10-16).
+ * programs (B2B2C repositioning).
  *
- * Positioning: a founder CRM set up around the program, where staff track the
- * real progress of every founder (evidence, not status updates). On top of
- * that, every founder in the cohort gets the platform's tools and network just
- * for joining. Programs pay; founders join free.
- *
- * The page has to land this in the first screen, so the hero carries the
- * promise, the three things a program gets, and the product itself.
+ * Positioning (2026-10-16, from the Founder CRM market research): lead with
+ * the ecosystem a cohort joins, and sell the hours it gives back to the
+ * program team. The three time savings are the tasks program managers lose
+ * the most time on: building the network, chasing updates, and writing funder
+ * reports. Verified progress is how the time is saved, not the headline, and
+ * AI is not part of the pitch. Programs pay; founders join free.
  *
  * Rules: no public prices ("talk to us"), no customer logos or testimonials
- * until they exist, every product visual is labelled as an example, and no
- * promise of investment to founders. Perks only name what exists on the
- * platform today (checked 2026-10-16).
+ * until they exist, every product visual is labelled as an example, no
+ * promise of investment to founders, no hour figures until pilots measure
+ * them, and the ecosystem is described only with wording verified against
+ * the product (checked 2026-10-16). No counts of mentors, providers or
+ * investors.
  *
  * Pure data with no imports, so node tests can read it. The SEO title and
  * description are mirrored in scripts/seo-route-config.mjs.
@@ -22,42 +23,79 @@
 export const ENTERPRISE_PATH = '/enterprise';
 
 export const ENTERPRISE_SEO = {
-  title: 'Founder CRM for Accelerators | Creatives Takeover',
+  title: 'For Accelerators and Incubators | Creatives Takeover',
   description:
-    'A founder CRM for accelerators and incubators: track every team’s real progress in one place, while your cohort gets our tools and network for joining.',
+    'Give your cohort tools for every stage, experts, providers, investors and other founders, and get your team’s hours back on networks, updates and reports.',
   keywords:
-    'founder CRM, accelerator CRM, incubator software, cohort management, founder progress tracking, accelerator program management, impact report',
+    'accelerator software, incubator software, cohort management, mentor network, founder progress tracking, funder reporting, accelerator program management',
 };
 
 export const ENTERPRISE_HERO = {
   eyebrow: 'For accelerators, incubators and universities',
-  titleLead: 'The founder CRM',
-  titleAccent: 'built around your program.',
+  titleLead: 'A whole ecosystem for your cohort.',
+  titleAccent: 'Hours back for your team.',
   lede:
-    'Track the real progress of every founder in your cohort, backed by the work they do, not status updates. And every founder gets our tools and network just for joining.',
+    'Your founders get a tool for every stage, experts in specific fields, service providers, investors who can find them and other founders. Your team stops building networks from scratch, chasing updates and writing reports by hand.',
   primaryCta: 'Book a pilot call',
   secondaryCta: { label: 'See the platform', href: '/demo?panel=for-institutions' },
-  points: ['Every founder in one pipeline', 'Progress backed by evidence', 'Tools and network for your cohort'],
+  points: ['A network you don’t build alone', 'Progress without chasing updates', 'Funder reports drafted for you'],
   note: 'Set up around your program’s length, from a few weeks to several months. Founders join free.',
 };
 
+export const ENTERPRISE_PERKS = {
+  eyebrow: 'The ecosystem',
+  title: 'What your founders get just for joining',
+  copy: 'The tools to do the work and the people who can help, in one place. Your team no longer has to source every mentor, provider and investor contact itself.',
+  tools: {
+    title: 'A tool for every stage',
+    body: 'The same path for every team, from defining the customer to early traction.',
+    helps: 'Every team always knows its next step, without a custom plan from your staff.',
+  },
+  network: [
+    {
+      key: 'mentors',
+      title: 'Mentors',
+      body: 'Founders can find experts in specific fields.',
+      helps: 'Your mentors stay. Founders reach further without you sourcing every expert.',
+    },
+    {
+      key: 'providers',
+      title: 'Service providers',
+      body: 'Services for sales, marketing, operations, automation and technical support.',
+      helps: 'Founders find help themselves instead of asking your team for contacts.',
+    },
+    {
+      key: 'investors',
+      title: 'Investors',
+      body: 'Founders can choose to be visible to investors on the platform.',
+      helps: 'Investor connections don’t depend only on introductions your team makes.',
+    },
+    {
+      key: 'founders',
+      title: 'Other founders',
+      body: 'Rooms, launches and co-founder matching with other builders.',
+      helps: 'Community reaches beyond your own cohort.',
+    },
+  ],
+};
+
 export const ENTERPRISE_COMPARISON = {
-  eyebrow: 'Why programs switch',
-  title: 'Running a cohort, before and after',
+  eyebrow: 'Time saved',
+  title: 'Where your team gets its hours back',
   rows: [
-    { topic: 'Tracking founders', before: 'Spreadsheets, check-in calls and status emails', after: 'A CRM with every founder’s live stage' },
-    { topic: 'Knowing what is real', before: 'What founders say in the weekly update', after: 'Interviews, tests and decisions they logged' },
-    { topic: 'Mentor time', before: 'Goes to the teams that ask loudest', after: 'Goes to the teams that need it' },
-    { topic: 'Impact reporting', before: 'Weeks of chasing teams for numbers', after: 'An anonymized report when the cohort ends' },
+    { topic: 'Building the network', before: 'Recruit and keep every mentor, provider and investor contact yourself', after: 'Founders find experts, service providers and investors on the platform' },
+    { topic: 'Knowing where teams stand', before: 'Check-in calls, status emails and spreadsheets', after: 'Progress recorded as founders do the work' },
+    { topic: 'Funder reports', before: 'Chasing every team for numbers, then formatting by hand', after: 'A draft in your funder’s format, built from that progress' },
+    { topic: 'Spotting who needs help', before: 'Found at the final review', after: 'Teams that stall are flagged while there is time to help' },
   ],
 };
 
 export const ENTERPRISE_FEATURES = {
-  eyebrow: 'The CRM',
-  title: 'Everything your team needs to run the cohort',
+  eyebrow: 'The program view',
+  title: 'See every team without chasing anyone',
   pipeline: {
     title: 'Founder pipeline',
-    body: 'Every founder by stage, with what they have completed and how long they have been there.',
+    body: 'Every founder by stage, updated as they work, with what they have completed and how long they have been there.',
   },
   alerts: {
     title: 'Stall alerts',
@@ -68,8 +106,8 @@ export const ENTERPRISE_FEATURES = {
     body: 'Each record shows the evidence behind the stage: interviews logged, demand tested, decisions made.',
   },
   report: {
-    title: 'Impact report',
-    body: 'Stages completed, customers interviewed, demand pages published and first paying customers. Anonymized.',
+    title: 'Funder reports',
+    body: 'Stages completed, customers interviewed, demand pages published and first paying customers. Anonymized and drafted in your funder’s format.',
   },
   privacy: {
     title: 'Progress, not private content',
@@ -77,30 +115,14 @@ export const ENTERPRISE_FEATURES = {
   },
 };
 
-export const ENTERPRISE_PERKS = {
-  eyebrow: 'Included for your cohort',
-  title: 'What your founders get just for joining',
-  copy: 'Your program gets the CRM. Every founder in it gets the platform: the tools to do the work and the people who can help.',
-  tools: {
-    title: 'A tool for every stage',
-    body: 'The same path for every team, from defining the customer to early traction.',
-  },
-  network: [
-    { key: 'mentors', title: 'Mentors', body: 'Founders can find experts in specific fields.' },
-    { key: 'providers', title: 'Service providers', body: 'Services for sales, marketing, operations, automation and technical support.' },
-    { key: 'investors', title: 'Investors', body: 'Founders can choose to be visible to investors on the platform.' },
-    { key: 'founders', title: 'Other founders', body: 'Rooms, launches and co-founder matching with other builders.' },
-  ],
-};
-
 export const ENTERPRISE_STEPS = {
   eyebrow: 'How a pilot works',
   title: 'Start with one cohort',
   copy: 'Every program runs on its own clock. We adapt to yours, whether it lasts a few weeks or several months.',
   items: [
-    { when: 'Before kickoff', title: 'Set up', body: 'We set up the CRM around your program’s length and calendar. Your founders join with their own accounts.' },
-    { when: 'During the cohort', title: 'Run', body: 'Founders work in the platform alongside your sessions. Your staff follow the pipeline and step in where founders stall.' },
-    { when: 'Cohort end', title: 'Report', body: 'You receive the anonymized impact report, ready for your funders or your university.' },
+    { when: 'Before kickoff', title: 'Set up', body: 'We set up your cohort around your program’s length and calendar. Your founders join with their own accounts and get the whole ecosystem.' },
+    { when: 'During the cohort', title: 'Run', body: 'Founders work and find help on the platform alongside your sessions. Your staff follow progress and step in where founders stall.' },
+    { when: 'Cohort end', title: 'Report', body: 'You receive the anonymized report, drafted in your funder’s or your university’s format.' },
   ],
 };
 
@@ -110,16 +132,20 @@ export const ENTERPRISE_FAQS = [
     answer: 'It depends on the size of the cohort and the length of the program. Tell us about yours and we’ll send a proposal for a pilot. Founders don’t pay to join.',
   },
   {
-    question: 'How is this different from a regular CRM?',
-    answer: 'A regular CRM tracks what your staff type into it. Here, a founder’s stage moves when they do the work in the platform (interviews, demand tests, decisions), so what you see is real progress rather than a status update.',
+    question: 'Where exactly does my team save time?',
+    answer: 'In three places. Founders find experts, service providers and investors on the platform, so your team doesn’t source every contact. Progress is recorded as founders work, so nobody chases status updates. And funder reports are drafted from that progress instead of assembled by hand. In the pilot we measure the hours against how your team works today.',
+  },
+  {
+    question: 'Does the ecosystem replace our own mentors?',
+    answer: 'No. Your mentors and partners stay. The platform adds experts in specific fields, service providers, investors and other founders, so your network reaches further without your team building it alone.',
+  },
+  {
+    question: 'Can reports follow our funder’s format?',
+    answer: 'Yes. In the pilot we shape the report to your funder’s template, for example ProInnóvate milestone reports for programs in Peru.',
   },
   {
     question: 'Our program is shorter or longer than most. Does that work?',
     answer: 'Yes. Not every accelerator runs for the same number of weeks or months, so we adapt to the timing of your program and set the cohort up around your calendar.',
-  },
-  {
-    question: 'Do we have to change our curriculum?',
-    answer: 'No. Founders use the platform alongside your sessions and mentoring. The stages fit your calendar, whether the program runs for a few weeks or several months.',
   },
   {
     question: 'What can our staff see?',
@@ -127,19 +153,19 @@ export const ENTERPRISE_FAQS = [
   },
   {
     question: 'What happens to founders when the program ends?',
-    answer: 'They keep their account and their work. They can carry on with the free plan or choose a paid one.',
+    answer: 'They keep their account and their work, and can keep using the platform on the free plan or a paid one.',
   },
 ];
 
 export const ENTERPRISE_CONTACT = {
   eyebrow: 'Talk to us',
   title: 'Book a pilot call',
-  copy: 'Tell us about your program and we’ll shape a pilot around your cohort size and calendar.',
+  copy: 'Tell us about your program and we’ll shape a pilot around your cohort, your calendar and your funder’s reporting.',
   pilotIncludes: [
-    'The founder CRM for one cohort',
-    'Platform access for every founder',
-    'Access to our network of experts and service providers',
-    'An impact report when the cohort ends',
+    'The ecosystem for every founder in one cohort',
+    'A program view of every team’s progress',
+    'Funder report drafts in your format',
+    'Setup around your program’s length',
   ],
   person: {
     name: 'Javier Peña',
