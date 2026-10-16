@@ -46,7 +46,7 @@ export const PUBLIC_PULSE_LINKS: readonly PublicPulseLink[] = [
   { route: '/marketplace', destination: '/marketplace', title: 'Marketplace', reason: 'Find help with design, marketing or technology.' },
   { route: '/signup', destination: '/signup', title: 'Create a free account', reason: 'Save your work and pick up where you left off.' },
   { route: '/about', destination: '/about', title: 'About Creatives Takeover', reason: 'Who we are and why we built it.' },
-  { route: '/enterprise', destination: '/enterprise', title: 'Enterprise: for accelerators and incubators', reason: 'Give a cohort the whole ecosystem and save staff time.' },
+  { route: '/enterprise', destination: '/enterprise', title: 'Enterprise: for accelerators and incubators', reason: 'Run a 30-day founder validation pilot with a cohort.' },
   { route: '/for-investors', destination: '/for-investors', title: 'For VCs and family offices', reason: 'Sponsor a cohort or meet founders who opted in.' },
 ];
 
@@ -155,7 +155,7 @@ Who it is for (account types):
 ${accounts}
 
 Programs and investors (they bring the platform to founders):
-- Accelerators, incubators and universities give their cohort the platform's ecosystem: a tool for every stage, experts in specific fields, service providers, visibility to investors and other founders. Their team saves time on building networks, chasing updates and writing funder reports, because progress is recorded as founders work and reports are drafted in the funder's format. Staff see progress, not the content of founders' work. Pricing depends on the cohort; they get in touch through /enterprise.
+- Accelerators, incubators and universities can start with a 30-day founder validation pilot for 5 to 10 startups: we provide platform access, a structured validation workflow, weekly progress check-ins and a final cohort report, and the program provides the founders and one contact. Founders end with a validation plan and documented customer research; it does not promise product-market fit, paying customers or investment readiness in 30 days. The pilot is set up around the program's size, founder focus and length, and founders also get the platform's ecosystem. Staff see progress, not the content of founders' work. Pricing depends on the program; they get in touch through /enterprise.
 - VCs and family offices can sponsor a cohort in their thesis area, or create an investor account and get matched with founders who opted in. Founders always decide who sees their progress, and nobody is promised investment. Details: /for-investors.
 
 The two founder paths:

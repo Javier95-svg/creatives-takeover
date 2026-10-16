@@ -57,15 +57,38 @@ test('cohort prices stay off the public pages', () => {
   for (const page of pages) assert.doesNotMatch(page.copy, /\$\s?\d/, page.path);
 });
 
-test('the enterprise page lands its offer in the hero', () => {
-  // Programs should get the value proposition without scrolling: the promise,
-  // the three things they get, a way to talk to us, and the product itself.
-  assert.equal(enterprise.ENTERPRISE_HERO.points.length, 3);
+test('the enterprise page lands the pilot offer in the hero', () => {
+  // Programs should get the offer without scrolling (2026-10-16): the 30-day
+  // pilot, its terms at a glance, a way to talk to us, and the pilot itself.
+  assert.deepEqual(
+    enterprise.ENTERPRISE_HERO.facts.map((fact) => fact.label),
+    ['days', 'startups', 'check-ins', 'cohort report'],
+  );
   const heroStart = enterprisePage.indexOf('className="ent-hero"');
   const hero = enterprisePage.slice(heroStart, enterprisePage.indexOf('</section>', heroStart));
-  for (const piece of ['ENTERPRISE_HERO.titleLead', 'ENTERPRISE_HERO.lede', 'ENTERPRISE_HERO.primaryCta', 'ENTERPRISE_HERO.points', '<CohortBoardMock />']) {
+  for (const piece of ['ENTERPRISE_HERO.titleLead', 'ENTERPRISE_HERO.lede', 'ENTERPRISE_HERO.facts', 'ENTERPRISE_HERO.primaryCta', 'ENTERPRISE_HERO.note', '<PilotBoardMock />']) {
     assert.ok(hero.includes(piece), `hero is missing ${piece}`);
   }
+});
+
+test('the pilot promises a process and evidence, and adapts to each program', () => {
+  // Thirty days can't prove product-market fit, so the page says so instead of
+  // implying it. Every outcome is shown with a visual.
+  assert.deepEqual(
+    enterprise.ENTERPRISE_OUTCOMES.items.map((outcome) => outcome.key),
+    ['plan', 'evidence', 'report', 'admin'],
+  );
+  for (const outcome of enterprise.ENTERPRISE_OUTCOMES.items) {
+    assert.match(enterprisePage, new RegExp(`\\b${outcome.key}: `), `${outcome.key} has a visual`);
+  }
+  assert.match(enterprise.ENTERPRISE_PILOT.honesty, /won’t prove product-market fit/);
+  assert.doesNotMatch(JSON.stringify(enterprise), /guaranteed|get funded|achieve product-market fit/i);
+  // Programs differ in size, founder focus and length.
+  assert.deepEqual(
+    enterprise.ENTERPRISE_ADAPT.items.map((item) => item.key),
+    ['size', 'focus', 'length'],
+  );
+  assert.match(JSON.stringify(enterprise.ENTERPRISE_ADAPT), /[Ff]intech/);
 });
 
 test('the institution form reuses the contact function with known roles', () => {

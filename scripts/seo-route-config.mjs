@@ -182,24 +182,28 @@ export const INDEXABLE_ROUTES = [
     path: "/enterprise",
     title: "For Accelerators and Incubators | Creatives Takeover",
     description:
-      "Give your cohort tools for every stage, experts, providers, investors and other founders, and get your team’s hours back on networks, updates and reports.",
+      "A 30-day founder validation pilot for accelerators and incubators: a validation plan and documented evidence for every founder, and a cohort report.",
     changefreq: "monthly",
     priority: 0.9,
-    heroHeading: "A whole ecosystem for your cohort. Hours back for your team.",
+    heroHeading: "Every founder tests their idea. You see the evidence.",
     heroCopy:
-      "For accelerators, incubators and universities. Your founders get a tool for every stage, experts in specific fields, service providers, investors who can find them and other founders. Your team stops building networks from scratch, chasing updates and writing reports by hand.",
+      "A 30-day founder validation pilot for accelerators, incubators and universities. Your startups follow a structured validation workflow for 30 days, and you get the evidence behind every team.",
     sections: [
       {
-        heading: "What your founders get just for joining",
+        heading: "Four outcomes in 30 days",
+        copy: "A validation plan for every founder, documented customer research and experiments, a final cohort report with next steps per startup, and less chasing for your team.",
+      },
+      {
+        heading: "We run it. You bring the founders.",
+        copy: "We provide platform access, a structured validation workflow, weekly progress check-ins and the final cohort report. You provide 5 to 10 startups and one program contact. Thirty days won’t prove product-market fit; they give every founder a disciplined process and documented evidence.",
+      },
+      {
+        heading: "Your size, your founders, your calendar",
+        copy: "The pilot is set up around your cohort size, your founders’ sector, such as fintech, and your program’s length.",
+      },
+      {
+        heading: "The whole ecosystem comes with it",
         copy: "A tool for every stage, experts in specific fields, services for sales, marketing, operations, automation and technical support, visibility to investors on the platform, and rooms, launches and co-founder matching with other builders.",
-      },
-      {
-        heading: "Where your team gets its hours back",
-        copy: "Founders find experts, service providers and investors on the platform. Progress is recorded as founders do the work. Funder reports are drafted in your funder's format from that progress.",
-      },
-      {
-        heading: "Progress, not private content",
-        copy: "Staff see stages, evidence and activity. Founders’ ideas, files and conversations stay theirs, and reports are anonymized.",
       },
     ],
   },
