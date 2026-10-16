@@ -256,7 +256,7 @@ const Enterprise = () => {
             <ScrollReveal variant="fade" amount={0.1}>
               <section className="ent-section">
                 <div className="ent-container">
-                  <SectionHead eyebrow={ENTERPRISE_STEPS.eyebrow} title={ENTERPRISE_STEPS.title} />
+                  <SectionHead eyebrow={ENTERPRISE_STEPS.eyebrow} title={ENTERPRISE_STEPS.title} copy={ENTERPRISE_STEPS.copy} />
                   <ol className="ent-timeline">
                     {ENTERPRISE_STEPS.items.map((step, index) => (
                       <li key={step.title}>

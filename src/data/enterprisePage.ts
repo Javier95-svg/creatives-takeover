@@ -38,7 +38,7 @@ export const ENTERPRISE_HERO = {
   primaryCta: 'Book a pilot call',
   secondaryCta: { label: 'See the platform', href: '/demo?panel=for-institutions' },
   points: ['Every founder in one pipeline', 'Progress backed by evidence', 'Tools and network for your cohort'],
-  note: 'Pilots start with one cohort or one class. Founders join free.',
+  note: 'Set up around your program’s length, from a few weeks to several months. Founders join free.',
 };
 
 export const ENTERPRISE_OUTCOMES = [
@@ -102,8 +102,9 @@ export const ENTERPRISE_PERKS = {
 export const ENTERPRISE_STEPS = {
   eyebrow: 'How a pilot works',
   title: 'Start with one cohort',
+  copy: 'Every program runs on its own clock. We adapt to yours, whether it lasts a few weeks or several months.',
   items: [
-    { when: 'Before kickoff', title: 'Set up', body: 'We set up the CRM for your program: your cohort and your calendar. Your founders join with their own accounts.' },
+    { when: 'Before kickoff', title: 'Set up', body: 'We set up the CRM around your program’s length and calendar. Your founders join with their own accounts.' },
     { when: 'During the cohort', title: 'Run', body: 'Founders work in the platform alongside your sessions. Your staff follow the pipeline and step in where founders stall.' },
     { when: 'Cohort end', title: 'Report', body: 'You receive the anonymized impact report, ready for your funders or your university.' },
   ],
@@ -119,8 +120,12 @@ export const ENTERPRISE_FAQS = [
     answer: 'A regular CRM tracks what your staff type into it. Here, a founder’s stage moves when they do the work in the platform (interviews, demand tests, decisions), so what you see is real progress rather than a status update.',
   },
   {
+    question: 'Our program is shorter or longer than most. Does that work?',
+    answer: 'Yes. Not every accelerator runs for the same number of weeks or months, so we adapt to the timing of your program and set the cohort up around your calendar.',
+  },
+  {
     question: 'Do we have to change our curriculum?',
-    answer: 'No. Founders use the platform alongside your sessions and mentoring. The stages fit most program calendars, from a six-week sprint to a full semester.',
+    answer: 'No. Founders use the platform alongside your sessions and mentoring. The stages fit your calendar, whether the program runs for a few weeks or several months.',
   },
   {
     question: 'What can our staff see?',
