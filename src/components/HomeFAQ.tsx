@@ -12,14 +12,6 @@ const HomeFAQ = () => {
       answer: "Think of us as your AI powered startup support system. We help founders, indie hackers, and builders go from a rough idea to a real startup without needing to stitch together ten different tools on their own.\n\nOur moat is not just writing business plans. It is helping you build your startup from scratch through the Startup Development Cycle: clarify the problem, validate demand, define your ideal customer, shape the offer, choose the right stack, build the MVP, and keep moving with focus. You get AI guidance, practical tools, mentors, co-founders, and fundraising support in one place."
     },
     {
-      question: "Can my incubator, accelerator or university use Creatives Takeover with a cohort?",
-      answer: "Yes. Programs give their founders the workspace and get a live view of every team's stage, alerts when a team stalls, and an anonymized impact report when the cohort ends. Program staff see progress, not the content of founders' ideas or files.\n\nMost programs start with a pilot for one cohort or one class. See the page for programs at creatives-takeover.com/for-programs or email javier@creatives-takeover.com."
-    },
-    {
-      question: "I'm an investor. How do I use Creatives Takeover?",
-      answer: "Two ways. You can create an investor account and get matched, by sector and stage, with founders who chose to be visible to investors. Or a fund or family office can sponsor a cohort in its thesis area and follow the teams that opt in to share their progress.\n\nFounders always decide who sees their progress. See creatives-takeover.com/for-investors."
-    },
-    {
       question: "How does the Startup Development Cycle work?",
       answer: "The Startup Development Cycle is our step by step way of helping you build from zero instead of getting stuck in random advice.\n\nYou start by clarifying the problem, customer, and offer. Then you pressure test the idea using tools like ICP Builder and PMF Lab. From there, BizMap AI helps you make the practical decisions that matter next: your MVP scope, launch priorities, messaging, and execution plan. Tech Stack Builder helps with tool choices, while Focus Funnel and Core Metrics help you stay accountable once you're building.\n\nThe point is momentum. Every stage is designed to move you one step closer to a real startup people want, not just a document that looks impressive."
     },

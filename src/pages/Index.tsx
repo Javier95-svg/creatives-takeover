@@ -4,7 +4,6 @@ import Hero from "@/components/Hero";
 import ValuePropositionCards from "@/components/ValuePropositionCards";
 import UserReviews from "@/components/UserReviews";
 import EntrepreneurProblems from "@/components/EntrepreneurProblems";
-import AudienceSection from "@/components/AudienceSection";
 import { PullToRefresh } from "@/components/mobile/PullToRefresh";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ScrollReveal } from "@/components/animations/ScrollReveal";
@@ -61,7 +60,7 @@ const Index = () => {
       <HomeWallpaper variant="landing" />
       <SEO
         title="Creatives Takeover | Startup Development Platform"
-        description="Creatives Takeover is the startup ecosystem workspace: founders test and build ideas, programs track every team, and investors meet founders who execute."
+        description="Creatives Takeover is a startup development platform that helps first-time founders validate ideas, build MVPs, launch, gain traction, and prepare to raise."
         keywords="founder operating system, startup idea validation, customer decision brief, interactive product demo, product market fit evidence, MVP builder, go-to-market execution, traction engine, first-time solo founders"
         url="/"
         image="/og-founders-compass-2026-09.png"
@@ -74,9 +73,6 @@ const Index = () => {
         {isMobile ? (
           <PullToRefresh onRefresh={handleRefresh}>
             <Hero />
-            <ScrollReveal variant="fade" amount={0.05}>
-              <AudienceSection />
-            </ScrollReveal>
             <ScrollReveal variant="fade" amount={0.05}>
               <div className="homepage-band-muted">
                 <EntrepreneurProblems />
@@ -111,9 +107,6 @@ const Index = () => {
         ) : (
           <>
             <Hero />
-            <ScrollReveal variant="fade" amount={0.05}>
-              <AudienceSection />
-            </ScrollReveal>
             <ScrollReveal variant="fade" amount={0.05}>
               <div className="homepage-band-muted">
                 <EntrepreneurProblems />

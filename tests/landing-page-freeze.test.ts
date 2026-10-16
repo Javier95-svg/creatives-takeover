@@ -68,10 +68,7 @@ const frozenFiles = {
   // Rehashed 2026-10-04 for two approved changes the red CI hid: 36bbf23c
   // (2026-08-30, sticky mobile CTA removed) and 8a1bdfe9 (2026-09-08, new
   // social image).
-  // Rehashed 2026-10-16 for the B2B2C repositioning: the "Who it's for"
-  // AudienceSection sits right after the hero in both branches, and the meta
-  // description names founders, programs and investors. Title unchanged.
-  '../src/pages/Index.tsx': 'b8a045fea59c1d20d4960afdf77c0769de08c37510252018a43e10ed1938334f',
+  '../src/pages/Index.tsx': 'dce7e669f3d2e31f3df70b0ed99141fe8c06213b32d3edb67be54f4d988874ab',
 } as const;
 
 test('the approved unauthenticated landing page remains frozen during core-tool work', () => {

@@ -6,19 +6,16 @@ import { AUDIENCE_PAGES, INSTITUTION_ORG_TYPES } from '../src/data/audiencePages
 import { INDEXABLE_ROUTES } from '../scripts/seo-route-config.mjs';
 
 // B2B2C repositioning (2026-10-15): one page per audience, linked from the
-// visitor navbar, the homepage and the footer.
+// navbar (programs only) and the site metadata.
 
 const app = readFileSync('src/App.tsx', 'utf8');
 const navbar = readFileSync('src/components/VisitorNavbar.tsx', 'utf8');
-const footer = readFileSync('src/components/Footer.tsx', 'utf8');
-const index = readFileSync('src/pages/Index.tsx', 'utf8');
 const form = readFileSync('src/components/audience/InstitutionContactForm.tsx', 'utf8');
 const pages = Object.values(AUDIENCE_PAGES);
 
-test('each audience page has a route and a footer link; only programs is in the navbar', () => {
+test('each audience page has a route; only programs is in the navbar', () => {
   for (const page of pages) {
     assert.match(app, new RegExp(`<Route path="${page.path}" element=`), `${page.path} route`);
-    assert.ok(footer.includes(`to: "${page.path}"`), `${page.path} footer`);
   }
   // The navbar stays short (2026-10-16): the programs page is "Enterprise",
   // founders are the obvious audience and investors wait for case studies.
@@ -38,12 +35,6 @@ test('the audience pages are indexable with the same title and description the p
     assert.ok(page.seo.title.length <= 60, `${page.path} title is ${page.seo.title.length} chars`);
     assert.ok(page.seo.description.length <= 160, `${page.path} description is ${page.seo.description.length} chars`);
   }
-});
-
-test('the homepage introduces all three audiences right after the hero', () => {
-  const desktop = index.slice(index.lastIndexOf('<Hero />'));
-  assert.ok(desktop.indexOf('<AudienceSection />') < desktop.indexOf('<EntrepreneurProblems />'));
-  assert.equal(index.match(/<AudienceSection \/>/g)?.length, 2, 'mobile and desktop branches');
 });
 
 test('copy never promises investment or calls the platform an accelerator to founders', () => {

@@ -109,17 +109,13 @@ export const INDEXABLE_ROUTES = [
     path: "/",
     title: "Creatives Takeover | Startup Development Platform",
     description:
-      "Creatives Takeover is the startup ecosystem workspace: founders test and build ideas, programs track every team, and investors meet founders who execute.",
+      "Creatives Takeover is a startup development platform that helps first-time founders validate ideas, build MVPs, launch, gain traction, and prepare to raise.",
     changefreq: "daily",
     priority: 1.0,
     heroHeading: "The Founders' Compass",
     heroCopy:
       "Identify what’s worth building, validate demand with reliable evidence, and turn insights into products and go-to-market strategies.",
     sections: [
-      {
-        heading: "Who it's for",
-        copy: "Founders and builders start and test their projects. Incubators, accelerators and universities see every team's progress. VCs and family offices meet teams that are executing.",
-      },
       {
         heading: "Reach value before signup",
         copy: "Launch a personalized live demo or draft an evidence backed customer decision before creating an account.",

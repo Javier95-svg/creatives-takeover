@@ -1,7 +1,6 @@
-/* Audience pages (/for-founders, /for-programs, /for-investors) and the
-   homepage "Who it's for" section. The hero reuses the homepage .ct-hero
-   styles; everything here sits on the shared theme tokens so it follows
-   light and dark mode. */
+/* Audience pages (/for-founders, /for-programs, /for-investors). The hero
+   reuses the homepage .ct-hero styles; everything here sits on the shared
+   theme tokens so it follows light and dark mode. */
 
 .audience-hero {
   padding: 150px 0 24px;
@@ -260,64 +259,8 @@
   box-shadow: 0 0 12px rgba(243, 117, 117, 0.75);
 }
 
-/* Homepage "Who it's for". */
-.audience-flow {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: 0.75rem 1rem;
-  max-width: 64rem;
-  margin: 2.5rem auto 0;
-  color: hsl(var(--muted-foreground));
-  font-size: 0.95rem;
-}
-
-.audience-flow__step {
-  border-radius: 999px;
-  border: 1px solid hsl(var(--border) / 0.85);
-  background: hsl(var(--background) / 0.75);
-  padding: 0.5rem 1rem;
-  color: hsl(var(--foreground));
-  backdrop-filter: blur(10px);
-}
-
-.audience-card__list {
-  display: grid;
-  gap: 0.55rem;
-  margin: 0.25rem 0 0.5rem;
-  padding: 0;
-  list-style: none;
-}
-
-.audience-card__list li {
-  display: flex;
-  gap: 0.55rem;
-  color: hsl(var(--muted-foreground));
-  font-size: 0.93rem;
-  line-height: 1.5;
-}
-
-.audience-card__link {
-  margin-top: auto;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  font-weight: 600;
-  color: hsl(var(--primary));
-}
-
-.audience-card__link svg {
-  transition: transform 0.2s ease;
-}
-
-.audience-card:hover .audience-card__link svg {
-  transform: translateX(3px);
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .audience-card,
-  .audience-card__link svg {
+  .audience-card {
     transition: none;
   }
 
