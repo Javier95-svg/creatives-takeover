@@ -24,25 +24,24 @@ const linkTable = (name: string) => {
 };
 
 test('visitor navigation keeps the intended public destinations', () => {
-  for (const label of ['For programs', 'How it works', 'Build', 'Collab', 'News', 'Podcast', 'About', 'Pricing']) {
+  for (const label of ['How it works', 'Explore', 'Enterprise', 'Build', 'Collab', 'News', 'Podcast', 'About', 'Pricing']) {
     assert.match(source, new RegExp(`label: "${label}"`));
   }
 });
 
-test('the bar is For programs plus Explore', () => {
-  // B2B2C repositioning (2026-10-16): the bar stays short. Founders are the
-  // obvious audience and investors wait for case studies, so neither has an
-  // entry. Tour became "How it works" on the same route.
-  const { table, labels } = linkTable('visitorLinks');
-  assert.deepEqual(labels, ['For programs']);
-  assert.match(table, /label: "For programs", href: "\/for-programs"/);
-  assert.equal(source.match(/<DropdownMenuTrigger/g)?.length, 1, 'one dropdown: Explore');
-  assert.match(source, /<DropdownMenuTrigger[\s\S]*?Explore/);
+test('the bar runs How it works, Explore, Enterprise, About, Pricing', () => {
+  // Order requested 2026-10-16. Tour became "How it works" on the same route,
+  // and Enterprise is the programs page. Explore is the only menu.
+  const { table, labels } = linkTable('visitorEntries');
+  assert.deepEqual(labels, ['How it works', 'Explore', 'Enterprise', 'About', 'Pricing']);
+  assert.match(table, /label: "Explore", links: exploreLinks/);
+  assert.match(table, /label: "Enterprise", href: "\/for-programs"/);
+  assert.equal(source.match(/<DropdownMenuTrigger/g)?.length, 1, 'one dropdown, rendered for the Explore entry');
 });
 
-test('everything else sits in the Explore menu', () => {
+test('Explore holds Build, Collab, News and Podcast', () => {
   const { table, labels } = linkTable('exploreLinks');
-  assert.deepEqual(labels, ['How it works', 'Build', 'Collab', 'News', 'Podcast', 'About', 'Pricing']);
+  assert.deepEqual(labels, ['Build', 'Collab', 'News', 'Podcast']);
   // Collab replaced Guidance and keeps the same destination.
   assert.match(table, /label: "Collab", href: "\/mentorship", icon: Handshake/);
   assert.doesNotMatch(table, /Guidance|Compass|Connect/);

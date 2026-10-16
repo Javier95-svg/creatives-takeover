@@ -20,9 +20,9 @@ test('each audience page has a route and a footer link; only programs is in the 
     assert.match(app, new RegExp(`<Route path="${page.path}" element=`), `${page.path} route`);
     assert.ok(footer.includes(`to: "${page.path}"`), `${page.path} footer`);
   }
-  // The navbar stays short (2026-10-16): founders are the obvious audience and
-  // investors wait for case studies.
-  assert.match(navbar, /label: "For programs", href: "\/for-programs"/);
+  // The navbar stays short (2026-10-16): the programs page is "Enterprise",
+  // founders are the obvious audience and investors wait for case studies.
+  assert.match(navbar, /label: "Enterprise", href: "\/for-programs"/);
   assert.doesNotMatch(navbar, /href: "\/for-founders"|href: "\/for-investors"/);
 });
 
