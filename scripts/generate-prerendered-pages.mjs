@@ -131,10 +131,10 @@ function buildFallbackHtml(routeConfig, hubChildren = {}) {
     .map((item) => `<a href="${item.href}">${item.label}</a>`)
     .join(" | ");
   const heroContent = routeConfig.path === "/"
-    ? `<p>Creatives Takeover &middot; The Startup Ecosystem Workspace</p>
-          <p>Founders test and build their ideas here.</p>
-          <p>Incubators, accelerators and universities see how every team is progressing, and investors meet founders who are already executing.</p>
-          <p><strong>Free for founders. No equity.</strong></p>
+    ? `<p>Creatives Takeover &middot; Founders Compass</p>
+          <p>Customized workspace for startup founders, product managers and indie builders.</p>
+          <p>Identify what’s worth building, validate demand with reliable evidence, and turn insights into products and go-to-market strategies.</p>
+          <p><strong>No application. No cohort. No equity.</strong></p>
           <form action="/icp-builder" method="get">
             <label for="seo-hero-seed">What is your idea?</label>
             <textarea id="seo-hero-seed" name="seed" minlength="3" required></textarea>

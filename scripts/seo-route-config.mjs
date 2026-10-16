@@ -112,9 +112,9 @@ export const INDEXABLE_ROUTES = [
       "Creatives Takeover is the startup ecosystem workspace: founders test and build ideas, programs track every team, and investors meet founders who execute.",
     changefreq: "daily",
     priority: 1.0,
-    heroHeading: "The Startup Ecosystem Workspace",
+    heroHeading: "The Founders' Compass",
     heroCopy:
-      "Founders test and build their ideas here. Incubators, accelerators and universities see how every team is progressing, and investors meet founders who are already executing.",
+      "Identify what’s worth building, validate demand with reliable evidence, and turn insights into products and go-to-market strategies.",
     sections: [
       {
         heading: "Who it's for",

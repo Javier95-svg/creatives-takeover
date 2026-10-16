@@ -29,24 +29,24 @@ test('visitor navigation keeps the intended public destinations', () => {
   }
 });
 
-test('visitor links lead with the three audience pages, then How it works', () => {
-  // B2B2C repositioning (2026-10-15): like naano, the bar says who the platform
-  // is for before anything else. Tour became "How it works" on the same route.
+test('the bar is the three audience pages plus Explore, four entries in all', () => {
+  // B2B2C repositioning (2026-10-16): like naano, the bar says who the platform
+  // is for and stays short. Tour became "How it works" on the same route.
   const { table, labels } = linkTable('visitorLinks');
-  assert.deepEqual(labels, ['For founders', 'For programs', 'For investors', 'How it works']);
+  assert.deepEqual(labels, ['For founders', 'For programs', 'For investors']);
   assert.match(table, /label: "For founders", href: "\/for-founders"/);
   assert.match(table, /label: "For programs", href: "\/for-programs"/);
   assert.match(table, /label: "For investors", href: "\/for-investors"/);
+  assert.equal(source.match(/<DropdownMenuTrigger/g)?.length, 1, 'one dropdown: Explore');
+  assert.match(source, /<DropdownMenuTrigger[\s\S]*?Explore/);
 });
 
-test('everything else sits in the Explore menu, and Pricing closes the bar', () => {
+test('everything else sits in the Explore menu', () => {
   const { table, labels } = linkTable('exploreLinks');
-  assert.deepEqual(labels, ['Build', 'Collab', 'News', 'Podcast', 'About']);
+  assert.deepEqual(labels, ['How it works', 'Build', 'Collab', 'News', 'Podcast', 'About', 'Pricing']);
   // Collab replaced Guidance and keeps the same destination.
   assert.match(table, /label: "Collab", href: "\/mentorship", icon: Handshake/);
   assert.doesNotMatch(table, /Guidance|Compass|Connect/);
-  assert.match(source, /const pricingLink: VisitorLink = \{ label: "Pricing", href: "\/pricing"/);
-  assert.match(source, /<DropdownMenuTrigger[\s\S]*?Explore/);
 });
 
 test('visitor navbar has no Content menu any more', () => {

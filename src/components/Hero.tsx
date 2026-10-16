@@ -80,28 +80,17 @@ const DEFAULT_STATS: HeroStat[] = [
   { value: "435M", label: "People may already earn from online gig work, up to 12% of the global workforce", source: "World Bank, 2023" },
 ];
 
-// B2B2C repositioning (2026-10-15): the hero names the whole ecosystem the
-// platform connects (founders, the programs that support them, the investors
-// who back them) instead of founders alone.
 const DEFAULT_LEDE = (
   <>
     <span className="ct-hero__lede-block">
-      Founders test and build their ideas here.
+      Customized workspace for startup founders, product managers and indie builders.
     </span>
     <span className="ct-hero__lede-block">
-      Incubators, accelerators and universities see how every team is progressing, and investors meet founders who are already executing.
+      Identify what’s worth building, validate demand with reliable evidence, and turn insights into products and go-to-market strategies.
     </span>
-    <strong className="ct-hero__lede-final">Free for founders. No equity.</strong>
+    <strong className="ct-hero__lede-final">No application. No cohort. No equity.</strong>
   </>
 );
-
-// Audience pages, offered next to the "Who is this for?" link. Founders already
-// have the idea input right above, so the row points the other two sides to
-// their pages.
-const AUDIENCE_LINKS = [
-  { label: "Running a program?", href: "/for-programs" },
-  { label: "Investing?", href: "/for-investors" },
-];
 
 const SIGNED_IN_LEDE =
   "Set up your profile, then head to your dashboard to see what matters now, plan your next steps, and keep moving forward one task at a time.";
@@ -109,8 +98,8 @@ const SIGNED_IN_LEDE =
 const Hero = ({
   eyebrow = "Referral program available in your dashboard — invite friends and earn a free plan upgrade.",
   eyebrowPill = "New",
-  titleLine1 = "The Startup Ecosystem",
-  titleLine2 = "Workspace",
+  titleLine1 = "The Founders'",
+  titleLine2 = "Compass",
   lede = DEFAULT_LEDE,
   dashboardUrl = "creatives-takeover.com/dashboard",
   dashboardBread = "Building · Stage 4 of 7",
@@ -268,17 +257,6 @@ const Hero = ({
                 <button type="button" className="ct-hero__audience-link" onClick={handleWhoIsThisForClick}>
                   Who is this for?
                 </button>
-                {AUDIENCE_LINKS.map((link) => (
-                  <Link
-                    key={link.href}
-                    to={link.href}
-                    className="ct-hero__audience-link"
-                    onClick={() => void trackEngagement(`hero-audience-${link.href.slice(1)}`, 60)}
-                  >
-                    {link.label}
-                    <ArrowRight aria-hidden="true" className="h-3.5 w-3.5" />
-                  </Link>
-                ))}
               </div>
             </>
           )}

@@ -39,21 +39,21 @@ const visitorLinks: VisitorLink[] = [
   { label: "For founders", href: "/for-founders", icon: Rocket },
   { label: "For programs", href: "/for-programs", icon: GraduationCap },
   { label: "For investors", href: "/for-investors", icon: Landmark },
+];
+
+// Everything that is not an audience page sits behind one Explore menu, so
+// the bar stays at four entries.
+const exploreLinks: VisitorLink[] = [
   // exact, because /demo-studio and /demo-calls both start with /demo and would
   // otherwise light this entry up while the visitor is somewhere else entirely.
   { label: "How it works", href: "/demo", icon: PlayCircle, exact: true },
-];
-
-// Everything that is not an audience page sits behind one Explore menu.
-const exploreLinks: VisitorLink[] = [
   { label: "Build", href: "/build", icon: Wrench },
   { label: "Collab", href: "/mentorship", icon: Handshake },
   { label: "News", href: "/newspaper", icon: Newspaper },
   { label: "Podcast", href: "/podcast", icon: Mic },
   { label: "About", href: "/about", icon: Info },
+  { label: "Pricing", href: "/pricing", icon: DollarSign },
 ];
-
-const pricingLink: VisitorLink = { label: "Pricing", href: "/pricing", icon: DollarSign };
 
 import { useWorkspaceFrame } from '@/contexts/WorkspaceFrameContext';
 
@@ -220,14 +220,6 @@ const LegacyVisitorNavbar = () => {
                   })}
                 </DropdownMenuContent>
               </DropdownMenu>
-
-              <Link
-                to={pricingLink.href}
-                className={cn(linkClassName(pricingLink.href), "inline-flex items-center whitespace-nowrap")}
-                onClick={(event) => handleNavClick(event, pricingLink)}
-              >
-                {pricingLink.label}
-              </Link>
             </div>
 
             <div className="ml-auto hidden items-center gap-2 pl-2 lg:flex xl:pl-4">
@@ -269,7 +261,7 @@ const LegacyVisitorNavbar = () => {
           >
             <div className="min-h-0">
               <div className="space-y-2 border-t border-border/70 px-3 py-4 sm:px-4">
-                {[...visitorLinks, pricingLink].map(renderMobileLink)}
+                {visitorLinks.map(renderMobileLink)}
 
                 <p className="px-4 pb-1 pt-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground/80">
                   Explore

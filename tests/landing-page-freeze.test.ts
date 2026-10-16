@@ -30,13 +30,7 @@ const frozenFiles = {
   // Rehashed 2026-10-13 for the requested second lede line "Identify what's
   // worth building, validate demand with reliable evidence, and turn
   // insights into products and go-to-market strategies." The rest of the copy and the layout are unchanged.
-  // Rehashed 2026-10-16 for the B2B2C repositioning reviewed on the
-  // b2b2c-repositioning preview: headline "The Startup Ecosystem Workspace",
-  // a lede naming founders, programs and investors, "Free for founders. No
-  // equity." replacing "No application. No cohort. No equity.", and links to
-  // /for-programs and /for-investors beside "Who is this for?". Input, funnel,
-  // dashboard preview and stats are unchanged.
-  '../src/components/Hero.tsx': 'da64e75eab79bd3a9c7eb4f66146748baf9f8ef86914952bb7c2a2951cc9752c',
+  '../src/components/Hero.tsx': 'dce6dd492ed5bfed3b502883f5ddf91607d671f5bf6a32da0737f69b1d7b2820',
   // Rehashed 2026-07-28 for the performance audit: mobile and desktop journey
   // branches are now mutually exclusive, preventing duplicate 147 MB GIF loads.
   // Content, visual order, actions, and responsive layout remain unchanged.
