@@ -41,7 +41,7 @@ const Contact = () => {
               <h2 className="text-xl font-semibold">Programs and partnerships</h2>
               <p className="mt-2 text-muted-foreground">
                 For incubators, accelerators and universities, see{" "}
-                <a href="/for-programs" className="underline underline-offset-4 hover:text-foreground transition-colors">Creatives Takeover for programs</a>
+                <a href="/enterprise" className="underline underline-offset-4 hover:text-foreground transition-colors">Creatives Takeover for programs</a>
                 . For VCs and family offices, see{" "}
                 <a href="/for-investors" className="underline underline-offset-4 hover:text-foreground transition-colors">Creatives Takeover for investors</a>
                 . Both pages have a short form, or email us directly.

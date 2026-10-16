@@ -11,14 +11,14 @@ import { captureEvent } from "@/lib/analytics";
 import {
   INSTITUTION_ORG_TYPES,
   INSTITUTION_SIZES,
-  type AudienceKey,
   type InstitutionOrgType,
 } from "@/data/audiencePages";
 
 const FALLBACK_EMAIL = "javier@creatives-takeover.com";
 
 type InstitutionContactFormProps = {
-  audience: AudienceKey;
+  /** Which page the lead came from, for analytics (founders, investors, enterprise). */
+  audience: string;
   defaultOrgType: InstitutionOrgType;
   submitLabel: string;
 };

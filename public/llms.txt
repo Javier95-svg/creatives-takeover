@@ -7,7 +7,7 @@
 ## Who it is for
 
 - [For founders and builders](https://creatives-takeover.com/for-founders): Start and test a project with a tool for every stage, plus mentors, service providers, investors and other founders. Free to start, no equity.
-- [For incubators, accelerators and universities](https://creatives-takeover.com/for-programs): Give a cohort one workspace and see each team's stage, completed tools and stalls in one view, with an anonymized impact report at the end. Staff see progress, not founders' private content. Pricing depends on cohort size; programs contact the team for a pilot.
+- [For incubators, accelerators and universities](https://creatives-takeover.com/enterprise): Give a cohort one workspace and see each team's stage, completed tools and stalls in one view, with an anonymized impact report at the end. Staff see progress, not founders' private content. Pricing depends on cohort size; programs contact the team for a pilot.
 - [For VCs and family offices](https://creatives-takeover.com/for-investors): Sponsor a founder cohort in a thesis area, or create an investor account and get matched with founders who opted in to be visible to investors. Visibility is always opt-in per founder.
 
 ## What it is

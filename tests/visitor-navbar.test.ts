@@ -35,7 +35,7 @@ test('the bar runs How it works, Explore, Enterprise, About, Pricing', () => {
   const { table, labels } = linkTable('visitorEntries');
   assert.deepEqual(labels, ['How it works', 'Explore', 'Enterprise', 'About', 'Pricing']);
   assert.match(table, /label: "Explore", links: exploreLinks/);
-  assert.match(table, /label: "Enterprise", href: "\/for-programs"/);
+  assert.match(table, /label: "Enterprise", href: "\/enterprise"/);
   assert.equal(source.match(/<DropdownMenuTrigger/g)?.length, 1, 'one dropdown, rendered for the Explore entry');
 });
 

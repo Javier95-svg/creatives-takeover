@@ -155,7 +155,8 @@ export const INDEXABLE_ROUTES = [
     ],
   },
   // Audience pages (B2B2C repositioning, 2026-10-15). Title and description
-  // mirror src/data/audiencePages.ts; tests/audience-pages.test.ts keeps them equal.
+  // mirror src/data/audiencePages.ts and src/data/enterprisePage.ts;
+  // tests/audience-pages.test.ts keeps them equal.
   {
     path: "/for-founders",
     title: "For Founders and Builders | Creatives Takeover",
@@ -178,15 +179,15 @@ export const INDEXABLE_ROUTES = [
     ],
   },
   {
-    path: "/for-programs",
+    path: "/enterprise",
     title: "For Incubators and Accelerators | Creatives Takeover",
     description:
       "Give your cohort one workspace to test and build their ideas, and see every team’s stage, progress and stalls in one view, with an impact report at the end.",
     changefreq: "monthly",
     priority: 0.9,
-    heroHeading: "Every team’s progress, visible every week",
+    heroHeading: "Know which teams are moving and which are stuck",
     heroCopy:
-      "For incubators, accelerators and universities. Give your founders one workspace to test and build their ideas. You see what stage each team has reached, what it has proven and which teams have stalled, without chasing status updates.",
+      "For incubators, accelerators and university programs. Your founders get one workspace to test and build their ideas. Your team gets a live view of every team’s stage, evidence and stalls, and an impact report when the cohort ends.",
     sections: [
       {
         heading: "Cohort progress dashboard",

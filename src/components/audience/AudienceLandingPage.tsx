@@ -61,7 +61,7 @@ const AudienceLandingPage = ({ content, preview }: AudienceLandingPageProps) => 
   const location = useLocation();
   usePageAnalytics(content.path, `${content.navLabel} - Creatives Takeover`);
 
-  // Links like /for-programs#talk (tour panel, contact page) land on the form.
+  // Links like /for-investors#talk land on the form.
   // The router doesn't scroll to hashes, and the page is lazy-loaded, so wait a
   // frame for the section to exist.
   useEffect(() => {

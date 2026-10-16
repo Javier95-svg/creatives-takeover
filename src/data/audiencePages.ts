@@ -1,6 +1,7 @@
 /**
- * Copy for the three audience pages (/for-founders, /for-programs,
- * /for-investors), kept in one place so positioning edits stay in one file.
+ * Copy for the founder and investor pages (/for-founders, /for-investors),
+ * kept in one place so positioning edits stay in one file. The programs page
+ * became its own design at /enterprise (src/data/enterprisePage.ts).
  *
  * B2B2C repositioning, 2026-10-15: programs and investors pay to put the
  * platform in front of their founders; founders keep using it free to start.
@@ -17,7 +18,7 @@
  * prerendered HTML; tests/audience-pages.test.ts keeps the two in step.
  */
 
-export type AudienceKey = 'founders' | 'programs' | 'investors';
+export type AudienceKey = 'founders' | 'investors';
 
 export type AudienceIcon =
   | 'dashboard'
@@ -92,118 +93,6 @@ export const INSTITUTION_ORG_TYPES: ReadonlyArray<{ value: InstitutionOrgType; l
 ];
 
 export const INSTITUTION_SIZES = ['Under 10 teams', '10 to 25 teams', '25 to 50 teams', 'More than 50 teams', 'Not sure yet'] as const;
-
-export const FOR_PROGRAMS: AudiencePageContent = {
-  key: 'programs',
-  path: '/for-programs',
-  navLabel: 'For programs',
-  seo: {
-    title: 'For Incubators and Accelerators | Creatives Takeover',
-    description: 'Give your cohort one workspace to test and build their ideas, and see every team’s stage, progress and stalls in one view, with an impact report at the end.',
-    keywords: 'cohort management, incubator software, accelerator program management, university entrepreneurship program, founder progress tracking, impact report',
-  },
-  badge: 'For incubators, accelerators and universities',
-  titleLead: 'Every team’s progress,',
-  titleAccent: 'visible every week.',
-  lede: 'Give your founders one workspace to test and build their ideas. You see what stage each team has reached, what it has proven and which teams have stalled, without chasing status updates.',
-  primaryCta: { label: 'Talk to us', kind: 'scroll', target: 'talk' },
-  secondaryCta: { label: 'See how it works', kind: 'link', href: '/demo?panel=for-institutions' },
-  problem: {
-    badge: 'The gap',
-    title: 'Programs find out too late',
-    copy: 'Founder progress is scattered across decks, docs and check-in calls, so the picture comes together at the end, when it is too late to help.',
-    items: [
-      {
-        title: 'Stalled teams surface at the end',
-        body: 'A team that stopped moving in week three often only shows up in week ten, at demo day or the final review.',
-      },
-      {
-        title: 'Impact reports take weeks',
-        body: 'Funders and universities ask for outcomes. Pulling them together means chasing every team, and the result is still anecdotal.',
-      },
-      {
-        title: 'Support goes to whoever asks',
-        body: 'Without a shared view, mentor time goes to the loudest teams instead of the ones that are stuck.',
-      },
-    ],
-  },
-  offer: {
-    badge: 'What you get',
-    title: 'One workspace for your founders. One view for your team.',
-    items: [
-      {
-        icon: 'dashboard',
-        title: 'Cohort progress dashboard',
-        body: 'A live view of every team: its current stage, what it has completed and how long it has been there. Teams that go quiet or stay stuck too long are flagged.',
-      },
-      {
-        icon: 'report',
-        title: 'Impact report',
-        body: 'When the cohort ends, an anonymized report: stages completed, customers interviewed, demand pages published, first paying customers and where teams got stuck. Ready for your funders.',
-      },
-      {
-        icon: 'workspace',
-        title: 'A workspace for every founder',
-        body: 'Each team gets the full toolset (ICP Builder, Demo Studio, PMF Lab, MVP Builder, GTM Strategist and more) plus mentors, service providers and other founders.',
-      },
-    ],
-  },
-  steps: {
-    badge: 'How a pilot works',
-    title: 'Start with one cohort',
-    items: [
-      {
-        title: 'We set up your cohort',
-        body: 'Tell us about your program. Your founders join under your cohort and don’t pay for their access while they are in it.',
-      },
-      {
-        title: 'Teams work in one place',
-        body: 'Every team uses the same stages and tools, so progress is comparable across the batch and nobody reports by hand.',
-      },
-      {
-        title: 'You step in where it matters',
-        body: 'Check the dashboard each week, help the teams that stall, and get the impact report when the cohort ends.',
-      },
-    ],
-  },
-  preview: {
-    badge: 'What your team sees',
-    title: 'A cohort at a glance',
-    copy: 'An example with fictional teams. Your dashboard shows your own cohort.',
-  },
-  trust: {
-    title: 'You see progress, not private content.',
-    body: 'Program staff see stages, completed tools and activity. Founders’ ideas, files and conversations stay theirs, and every report is anonymized.',
-  },
-  faqs: [
-    {
-      question: 'How much does it cost?',
-      answer: 'It depends on the size of the cohort and the length of the program. Tell us about yours and we’ll send a proposal for a pilot.',
-    },
-    {
-      question: 'Do we have to change our curriculum?',
-      answer: 'No. Teams use the workspace alongside your sessions and mentoring. The stages fit most program calendars, from a six-week sprint to a full semester.',
-    },
-    {
-      question: 'What can our staff see?',
-      answer: 'Each team’s stage, the tools it has completed, how long it has been in its current stage and recent activity. Not the content of their ideas, files or messages.',
-    },
-    {
-      question: 'Can we start small?',
-      answer: 'Yes. Most programs start with a pilot: one cohort, or one class in a university course.',
-    },
-    {
-      question: 'What happens to founders when the program ends?',
-      answer: 'They keep their account and their work. They can carry on with the free plan or choose a paid one.',
-    },
-  ],
-  contact: {
-    title: 'Tell us about your program',
-    copy: 'A few details are enough. We’ll reply with how a pilot would work for your cohort.',
-    defaultOrgType: 'incubator',
-    submitLabel: 'Send',
-  },
-};
 
 export const FOR_INVESTORS: AudiencePageContent = {
   key: 'investors',
@@ -397,7 +286,7 @@ export const FOR_FOUNDERS: AudiencePageContent = {
   crossLink: {
     text: 'In an incubator, accelerator or university program?',
     label: 'Show them how it works for programs',
-    href: '/for-programs',
+    href: '/enterprise',
   },
   faqs: [
     {
@@ -426,6 +315,5 @@ export const FOR_FOUNDERS: AudiencePageContent = {
 
 export const AUDIENCE_PAGES: Record<AudienceKey, AudiencePageContent> = {
   founders: FOR_FOUNDERS,
-  programs: FOR_PROGRAMS,
   investors: FOR_INVESTORS,
 };

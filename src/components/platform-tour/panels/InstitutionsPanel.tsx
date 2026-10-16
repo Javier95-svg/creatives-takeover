@@ -54,8 +54,8 @@ export function InstitutionsPanel() {
           Talk to us about a pilot with one cohort or one class, or about sponsoring a cohort.
         </p>
         <div className="flex flex-wrap gap-2">
-          <Button asChild size="sm" onClick={() => trackPlatformTourPartnershipClicked({ panel: 'for-institutions', destination: '/for-programs' })}>
-            <Link to="/for-programs#talk">For programs</Link>
+          <Button asChild size="sm" onClick={() => trackPlatformTourPartnershipClicked({ panel: 'for-institutions', destination: '/enterprise' })}>
+            <Link to="/enterprise#talk">For programs</Link>
           </Button>
           <Button asChild variant="outline" size="sm" onClick={() => trackPlatformTourPartnershipClicked({ panel: 'for-institutions', destination: '/for-investors' })}>
             <Link to="/for-investors#talk">For investors</Link>

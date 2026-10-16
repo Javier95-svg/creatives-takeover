@@ -12,13 +12,13 @@ const TEMPLATE_PATH = path.join(DIST_DIR, "index.html");
 // the lever a site actually has. /demo was in the footer only, which is why the
 // result showed /demo-studio/try in its place.
 //
-// Since the B2B2C repositioning (2026-10-15) the audience pages lead, matching
-// the visitor navbar.
+// Mirrors the visitor navbar since 2026-10-16: How it works, Build (first in
+// Explore), Enterprise, About, Pricing.
 const SITELINK_NAV = [
-  { href: "/for-founders", label: "For founders" },
-  { href: "/for-programs", label: "For programs" },
-  { href: "/for-investors", label: "For investors" },
   { href: "/demo", label: "How it works" },
+  { href: "/build", label: "Build" },
+  { href: "/enterprise", label: "Enterprise" },
+  { href: "/about", label: "About" },
   { href: "/pricing", label: "Pricing" },
 ];
 
@@ -33,9 +33,7 @@ const SITELINK_NAV = [
 const PRIMARY_NAV = [
   { href: "/", label: "Home" },
   ...SITELINK_NAV,
-  { href: "/build", label: "Build" },
   { href: "/mentorship", label: "Collab" },
-  { href: "/about", label: "About" },
   { href: "/bizmap-ai", label: "Startup Cycle" },
   { href: "/answers", label: "Founder Answers" },
   { href: "/newspaper", label: "Newspaper" },
@@ -56,7 +54,7 @@ const FOOTER_GROUPS = [
     heading: "Who it's for",
     links: [
       { href: "/for-founders", label: "For founders" },
-      { href: "/for-programs", label: "For programs" },
+      { href: "/enterprise", label: "Enterprise" },
       { href: "/for-investors", label: "For investors" },
     ],
   },

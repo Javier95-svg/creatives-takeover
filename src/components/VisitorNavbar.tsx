@@ -51,7 +51,7 @@ const visitorEntries: VisitorEntry[] = [
   // otherwise light this entry up while the visitor is somewhere else entirely.
   { label: "How it works", href: "/demo", icon: PlayCircle, exact: true },
   { label: "Explore", links: exploreLinks },
-  { label: "Enterprise", href: "/for-programs", icon: Building2 },
+  { label: "Enterprise", href: "/enterprise", icon: Building2 },
   { label: "About", href: "/about", icon: Info },
   { label: "Pricing", href: "/pricing", icon: DollarSign },
 ];

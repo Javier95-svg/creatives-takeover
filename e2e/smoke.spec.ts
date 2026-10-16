@@ -12,7 +12,7 @@ import { test, expect } from '@playwright/test';
 const PUBLIC_ROUTES = [
   '/',
   '/for-founders',
-  '/for-programs',
+  '/enterprise',
   '/for-investors',
   '/pricing',
   '/about',

@@ -24,7 +24,7 @@ const ProgramsPricingBand = () => (
         </p>
       </div>
       <div className="flex shrink-0 flex-wrap gap-x-5 gap-y-2 text-sm font-semibold">
-        <Link to="/for-programs#talk" className="inline-flex items-center gap-1 text-primary hover:underline">
+        <Link to="/enterprise#talk" className="inline-flex items-center gap-1 text-primary hover:underline">
           For programs <ArrowRight className="h-4 w-4" aria-hidden="true" />
         </Link>
         <Link to="/for-investors#talk" className="inline-flex items-center gap-1 text-primary hover:underline">
