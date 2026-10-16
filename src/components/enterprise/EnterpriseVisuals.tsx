@@ -1,4 +1,17 @@
-import { AlertTriangle, ArrowRight, Check, FileText, Lock } from "lucide-react";
+import {
+  AlertTriangle,
+  ArrowRight,
+  Check,
+  CheckCircle2,
+  Circle,
+  GraduationCap,
+  Landmark,
+  Lock,
+  type LucideIcon,
+  TrendingUp,
+  Users,
+  Wrench,
+} from "lucide-react";
 
 import { getCoreFounderToolsForStage, type FounderJourneyStage } from "@/config/founderToolCatalog";
 import { BIZMAP_STAGE_ORDER, FOUNDER_STAGE_LABELS } from "@/lib/bizmapStageOrder";
@@ -45,7 +58,7 @@ export const CohortBoardMock = () => (
           <i />
           <i />
         </span>
-        <span className="ent-window__title">Spring cohort · Dashboard</span>
+        <span className="ent-window__title">Founder CRM · Spring cohort</span>
         <ExampleTag />
       </div>
 
@@ -97,12 +110,12 @@ export const CohortBoardMock = () => (
     </div>
 
     <div className="ent-float ent-float--report" aria-hidden="true">
-      <span className="ent-float__icon">
-        <FileText />
+      <span className="ent-float__icon is-good-bg">
+        <TrendingUp />
       </span>
       <div>
-        <p className="ent-float__title">Impact report</p>
-        <p className="ent-float__text">146 interviews · 9 demand pages</p>
+        <p className="ent-float__title">Delta reached Launch</p>
+        <p className="ent-float__text">14 interviews · first paying customer</p>
       </div>
     </div>
   </div>
@@ -177,28 +190,32 @@ const TOOL_FLOW = BIZMAP_STAGE_ORDER.slice(0, 6).map((stage, index) => ({
   tool: getCoreFounderToolsForStage(stage as FounderJourneyStage)[0]?.name ?? "",
 }));
 
-/** Bento: the same tool path every team follows, with where each team is now. */
-export const ToolFlow = () => (
+/** The same tool path every team follows; with showTeams, where each team is now. */
+export const ToolFlow = ({ showTeams = false }: { showTeams?: boolean }) => (
   <div className="ent-flow-wrap">
     <ol className="ent-flow">
       {TOOL_FLOW.map((step, index) => (
         <li key={step.stage}>
           <span className="ent-flow__stage">{step.stage}</span>
           <span className="ent-flow__tool">{step.tool}</span>
-          <span className="ent-flow__teams" aria-hidden="true">
-            {EXAMPLE_COHORT.filter((team) => team.stage === index + 1).map((team) => (
-              <i key={team.name} className={cn(team.stalled && "is-stalled")} title={team.name} />
-            ))}
-          </span>
+          {showTeams ? (
+            <span className="ent-flow__teams" aria-hidden="true">
+              {EXAMPLE_COHORT.filter((team) => team.stage === index + 1).map((team) => (
+                <i key={team.name} className={cn(team.stalled && "is-stalled")} title={team.name} />
+              ))}
+            </span>
+          ) : null}
           {index < TOOL_FLOW.length - 1 ? <ArrowRight className="ent-flow__arrow" aria-hidden="true" /> : null}
         </li>
       ))}
     </ol>
-    <p className="ent-flow__legend">
-      <span><i /> Team on track</span>
-      <span><i className="is-stalled" /> Stalled</span>
-      <ExampleTag />
-    </p>
+    {showTeams ? (
+      <p className="ent-flow__legend">
+        <span><i /> Team on track</span>
+        <span><i className="is-stalled" /> Stalled</span>
+        <ExampleTag />
+      </p>
+    ) : null}
   </div>
 );
 
@@ -229,3 +246,77 @@ export const VisibilitySplit = () => (
     </div>
   </div>
 );
+
+// One fictional founder record, as program staff would read it.
+const EXAMPLE_RECORD: Array<{ date: string; stage: string; text: string; done: boolean }> = [
+  { date: "3 Mar", stage: "Identity", text: "Target customer defined", done: true },
+  { date: "21 Mar", stage: "Prototyping", text: "Demand page live: 214 visits, 31 sign-ups", done: true },
+  { date: "12 Apr", stage: "Validation", text: "Decision: build, from 14 buyer interviews", done: true },
+  { date: "8 May", stage: "Launch", text: "First paying customer", done: true },
+];
+
+/** Bento: a founder record, where every stage is backed by logged work. */
+export const FounderRecord = () => (
+  <div className="ent-record">
+    <div className="ent-record__head">
+      <span className="ent-record__avatar" aria-hidden="true">D</span>
+      <div>
+        <p className="ent-record__name">Delta</p>
+        <p className="ent-record__meta">Tutoring marketplace · Launch</p>
+      </div>
+      <ExampleTag className="ent-record__tag" />
+    </div>
+    <ol className="ent-record__list">
+      {EXAMPLE_RECORD.map((entry) => (
+        <li key={entry.date}>
+          {entry.done ? <CheckCircle2 aria-hidden="true" className="is-good" /> : <Circle aria-hidden="true" />}
+          <span className="ent-record__text">{entry.text}</span>
+          <span className="ent-record__date">{entry.date}</span>
+        </li>
+      ))}
+    </ol>
+  </div>
+);
+
+const NETWORK_ICONS: Record<string, LucideIcon> = {
+  mentors: GraduationCap,
+  providers: Wrench,
+  investors: Landmark,
+  founders: Users,
+};
+
+type NetworkNode = { key: string; title: string; body: string };
+
+/** Perks: the cohort in the middle, the network around it. */
+export const NetworkHub = ({ nodes }: { nodes: NetworkNode[] }) => {
+  const half = Math.ceil(nodes.length / 2);
+  const renderNode = (node: NetworkNode) => {
+    const Icon = NETWORK_ICONS[node.key] ?? Users;
+    return (
+      <li key={node.key} className="ent-hub__node">
+        <span className="ent-hub__icon" aria-hidden="true">
+          <Icon />
+        </span>
+        <div>
+          <p className="ent-hub__title">{node.title}</p>
+          <p className="ent-hub__body">{node.body}</p>
+        </div>
+      </li>
+    );
+  };
+  return (
+    <div className="ent-hub">
+      <ul className="ent-hub__side ent-hub__side--left">{nodes.slice(0, half).map(renderNode)}</ul>
+      <div className="ent-hub__core" aria-hidden="true">
+        <span className="ent-hub__ring" />
+        <span className="ent-hub__ring ent-hub__ring--2" />
+        <span className="ent-hub__label">
+          Your
+          <br />
+          cohort
+        </span>
+      </div>
+      <ul className="ent-hub__side ent-hub__side--right">{nodes.slice(half).map(renderNode)}</ul>
+    </div>
+  );
+};

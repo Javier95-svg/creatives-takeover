@@ -180,26 +180,26 @@ export const INDEXABLE_ROUTES = [
   },
   {
     path: "/enterprise",
-    title: "For Incubators and Accelerators | Creatives Takeover",
+    title: "Founder CRM for Accelerators | Creatives Takeover",
     description:
-      "Give your cohort one workspace to test and build their ideas, and see every team’s stage, progress and stalls in one view, with an impact report at the end.",
+      "A founder CRM for accelerators and incubators: track every team’s real progress in one place, while your cohort gets our tools and network for joining.",
     changefreq: "monthly",
     priority: 0.9,
-    heroHeading: "Know which teams are moving and which are stuck",
+    heroHeading: "The founder CRM built around your program",
     heroCopy:
-      "For incubators, accelerators and university programs. Your founders get one workspace to test and build their ideas. Your team gets a live view of every team’s stage, evidence and stalls, and an impact report when the cohort ends.",
+      "For accelerators, incubators and universities. Track the real progress of every founder in your cohort, backed by the work they do, not status updates. And every founder gets our tools and network just for joining.",
     sections: [
       {
-        heading: "Cohort progress dashboard",
-        copy: "A live view of every team: its current stage, what it has completed and how long it has been there. Teams that go quiet or stay stuck too long are flagged.",
+        heading: "Founder pipeline and records",
+        copy: "Every founder by stage, with the evidence behind it: interviews logged, demand tested, decisions made. Founders who go quiet or stay stuck are flagged.",
+      },
+      {
+        heading: "What your founders get for joining",
+        copy: "A tool for every stage, plus access to mentors, service providers, investors and other founders on the platform.",
       },
       {
         heading: "Impact report",
-        copy: "When the cohort ends, an anonymized report: stages completed, customers interviewed, demand pages published, first paying customers and where teams got stuck.",
-      },
-      {
-        heading: "You see progress, not private content",
-        copy: "Program staff see stages, completed tools and activity. Founders’ ideas, files and conversations stay theirs, and every report is anonymized.",
+        copy: "When the cohort ends, an anonymized report: stages completed, customers interviewed, demand pages published and first paying customers.",
       },
     ],
   },

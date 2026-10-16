@@ -72,7 +72,7 @@ test('the institution form reuses the contact function with known roles', () => 
   assert.match(form, /reason: "partnership"/);
   for (const option of INSTITUTION_ORG_TYPES) assert.match(option.role, /^[a-z_]+$/);
   // Enterprise and investors get the form; founders get a sign-up CTA instead.
-  assert.match(enterprisePage, /<InstitutionContactForm audience="enterprise"/);
+  assert.match(enterprisePage, /<InstitutionContactForm\s+audience="enterprise"/);
   assert.ok(AUDIENCE_PAGES.investors.contact);
   assert.equal(AUDIENCE_PAGES.founders.contact, undefined);
 });

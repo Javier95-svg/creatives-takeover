@@ -1,6 +1,6 @@
 import { useEffect, type MouseEvent } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { ArrowRight, ArrowUpRight, BarChart3, Bell, Check, LayoutDashboard, Layers, ShieldCheck } from "lucide-react";
+import { ArrowRight, ArrowUpRight, BarChart3, Bell, Check, FileCheck2, Kanban, Layers, Mail, ShieldCheck } from "lucide-react";
 
 import SEO, { createBreadcrumbSchema, createFAQSchema, createWebPageSchema } from "@/components/SEO";
 import Navigation from "@/components/Navigation";
@@ -11,12 +11,15 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import InstitutionContactForm from "@/components/audience/InstitutionContactForm";
 import {
   CohortBoardMock,
+  FounderRecord,
+  NetworkHub,
   ReportMini,
   StallAlerts,
   TeamProgressList,
   ToolFlow,
   VisibilitySplit,
 } from "@/components/enterprise/EnterpriseVisuals";
+import javierPhoto from "@/assets/team-javier-pena-profile.jpg";
 import { usePageAnalytics } from "@/hooks/usePageAnalytics";
 import { captureEvent } from "@/lib/analytics";
 import {
@@ -27,6 +30,7 @@ import {
   ENTERPRISE_HERO,
   ENTERPRISE_OUTCOMES,
   ENTERPRISE_PATH,
+  ENTERPRISE_PERKS,
   ENTERPRISE_SEO,
   ENTERPRISE_STEPS,
 } from "@/data/enterprisePage";
@@ -173,17 +177,17 @@ const Enterprise = () => {
               </section>
             </ScrollReveal>
 
-            {/* What the program gets, each shown with the product. */}
+            {/* The CRM, each feature shown with the product. */}
             <ScrollReveal variant="fade" amount={0.08}>
               <section className="ent-section ent-section--tint">
                 <div className="ent-container">
                   <SectionHead eyebrow={ENTERPRISE_FEATURES.eyebrow} title={ENTERPRISE_FEATURES.title} />
                   <div className="ent-bento">
-                    <article className="ent-tile ent-tile--dashboard">
+                    <article className="ent-tile ent-tile--pipeline">
                       <div className="ent-tile__text">
-                        <LayoutDashboard className="ent-tile__icon" aria-hidden="true" />
-                        <h3>{ENTERPRISE_FEATURES.dashboard.title}</h3>
-                        <p>{ENTERPRISE_FEATURES.dashboard.body}</p>
+                        <Kanban className="ent-tile__icon" aria-hidden="true" />
+                        <h3>{ENTERPRISE_FEATURES.pipeline.title}</h3>
+                        <p>{ENTERPRISE_FEATURES.pipeline.body}</p>
                       </div>
                       <TeamProgressList />
                     </article>
@@ -197,6 +201,15 @@ const Enterprise = () => {
                       <StallAlerts />
                     </article>
 
+                    <article className="ent-tile ent-tile--record">
+                      <div className="ent-tile__text">
+                        <FileCheck2 className="ent-tile__icon" aria-hidden="true" />
+                        <h3>{ENTERPRISE_FEATURES.record.title}</h3>
+                        <p>{ENTERPRISE_FEATURES.record.body}</p>
+                      </div>
+                      <FounderRecord />
+                    </article>
+
                     <article className="ent-tile ent-tile--report">
                       <div className="ent-tile__text">
                         <BarChart3 className="ent-tile__icon" aria-hidden="true" />
@@ -204,15 +217,6 @@ const Enterprise = () => {
                         <p>{ENTERPRISE_FEATURES.report.body}</p>
                       </div>
                       <ReportMini />
-                    </article>
-
-                    <article className="ent-tile ent-tile--workspace">
-                      <div className="ent-tile__text">
-                        <Layers className="ent-tile__icon" aria-hidden="true" />
-                        <h3>{ENTERPRISE_FEATURES.workspace.title}</h3>
-                        <p>{ENTERPRISE_FEATURES.workspace.body}</p>
-                      </div>
-                      <ToolFlow />
                     </article>
 
                     <article className="ent-tile ent-tile--privacy">
@@ -223,6 +227,26 @@ const Enterprise = () => {
                       </div>
                       <VisibilitySplit />
                     </article>
+                  </div>
+                </div>
+              </section>
+            </ScrollReveal>
+
+            {/* What every founder in the cohort gets for joining. */}
+            <ScrollReveal variant="fade" amount={0.08}>
+              <section className="ent-section">
+                <div className="ent-container">
+                  <SectionHead eyebrow={ENTERPRISE_PERKS.eyebrow} title={ENTERPRISE_PERKS.title} copy={ENTERPRISE_PERKS.copy} />
+                  <div className="ent-perks">
+                    <article className="ent-tile ent-perks__tools">
+                      <div className="ent-tile__text">
+                        <Layers className="ent-tile__icon" aria-hidden="true" />
+                        <h3>{ENTERPRISE_PERKS.tools.title}</h3>
+                        <p>{ENTERPRISE_PERKS.tools.body}</p>
+                      </div>
+                      <ToolFlow />
+                    </article>
+                    <NetworkHub nodes={ENTERPRISE_PERKS.network} />
                   </div>
                 </div>
               </section>
@@ -272,22 +296,58 @@ const Enterprise = () => {
               </section>
             </ScrollReveal>
 
+            {/* Contact: a brand panel with what the pilot includes and who
+                replies, and the form beside it. */}
             <section id={CONTACT_ID} className="ent-section ent-contact scroll-mt-24">
-              <div className="ent-container ent-contact__grid">
-                <div className="ent-contact__intro">
-                  <p className="ent-eyebrow">{ENTERPRISE_CONTACT.eyebrow}</p>
-                  <h2 className="ent-h2">{ENTERPRISE_CONTACT.title}</h2>
-                  <p className="ent-head__copy">{ENTERPRISE_CONTACT.copy}</p>
-                  <ol className="ent-contact__next">
-                    {ENTERPRISE_CONTACT.next.map((step, index) => (
-                      <li key={step}>
-                        <span aria-hidden="true">{index + 1}</span>
-                        {step}
-                      </li>
-                    ))}
-                  </ol>
+              <div className="ent-container">
+                <div className="ent-contact__card">
+                  <div className="ent-contact__panel">
+                    <div className="ent-contact__glow" aria-hidden="true" />
+                    <p className="ent-eyebrow ent-contact__eyebrow">{ENTERPRISE_CONTACT.eyebrow}</p>
+                    <h2 className="ent-contact__title">{ENTERPRISE_CONTACT.title}</h2>
+                    <p className="ent-contact__copy">{ENTERPRISE_CONTACT.copy}</p>
+
+                    <p className="ent-contact__label">Every pilot includes</p>
+                    <ul className="ent-contact__includes">
+                      {ENTERPRISE_CONTACT.pilotIncludes.map((item) => (
+                        <li key={item}>
+                          <Check aria-hidden="true" />
+                          {item}
+                        </li>
+                      ))}
+                    </ul>
+
+                    <div className="ent-contact__person">
+                      <img src={javierPhoto} alt="" width={56} height={56} loading="lazy" decoding="async" />
+                      <div>
+                        <p className="ent-contact__name">
+                          {ENTERPRISE_CONTACT.person.name}
+                          <span>{ENTERPRISE_CONTACT.person.role}</span>
+                        </p>
+                        <p className="ent-contact__line">{ENTERPRISE_CONTACT.person.line}</p>
+                        <a
+                          className="ent-contact__mail"
+                          href={`mailto:${ENTERPRISE_CONTACT.person.email}?subject=Pilot%20for%20our%20program`}
+                          onClick={() => track("email", "contact")}
+                        >
+                          <Mail aria-hidden="true" />
+                          {ENTERPRISE_CONTACT.person.email}
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="ent-contact__form">
+                    <p className="ent-contact__form-title">Tell us about your program</p>
+                    <p className="ent-contact__form-copy">Two minutes. No commitment.</p>
+                    <InstitutionContactForm
+                      audience="enterprise"
+                      defaultOrgType="accelerator"
+                      submitLabel="Request a pilot"
+                      variant="plain"
+                    />
+                  </div>
                 </div>
-                <InstitutionContactForm audience="enterprise" defaultOrgType="incubator" submitLabel="Request a pilot" />
               </div>
             </section>
           </main>

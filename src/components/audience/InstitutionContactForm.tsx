@@ -21,6 +21,8 @@ type InstitutionContactFormProps = {
   audience: string;
   defaultOrgType: InstitutionOrgType;
   submitLabel: string;
+  /** plain: no card of its own and no email line, for pages that frame the form themselves. */
+  variant?: "card" | "plain";
 };
 
 type Status = "idle" | "sending" | "sent" | "error";
@@ -48,7 +50,8 @@ function buildInstitutionMessage(fields: {
   ].join("\n");
 }
 
-const InstitutionContactForm = ({ audience, defaultOrgType, submitLabel }: InstitutionContactFormProps) => {
+const InstitutionContactForm = ({ audience, defaultOrgType, submitLabel, variant = "card" }: InstitutionContactFormProps) => {
+  const framed = variant === "card";
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [organization, setOrganization] = useState("");
@@ -93,7 +96,7 @@ const InstitutionContactForm = ({ audience, defaultOrgType, submitLabel }: Insti
 
   if (status === "sent") {
     return (
-      <div className="surface-panel trust-outline rounded-3xl p-8 text-center" role="status">
+      <div className={framed ? "surface-panel trust-outline rounded-3xl p-8 text-center" : "py-10 text-center"} role="status">
         <CheckCircle2 className="mx-auto mb-4 h-10 w-10 text-success" aria-hidden="true" />
         <h3 className="audience-card__title mb-2">Thanks, we’ve got it.</h3>
         <p className="audience-card__body">
@@ -104,7 +107,7 @@ const InstitutionContactForm = ({ audience, defaultOrgType, submitLabel }: Insti
   }
 
   return (
-    <form onSubmit={handleSubmit} className="surface-panel trust-outline space-y-5 rounded-3xl p-6 sm:p-8">
+    <form onSubmit={handleSubmit} className={framed ? "surface-panel trust-outline space-y-5 rounded-3xl p-6 sm:p-8" : "space-y-5"}>
       <div className="grid gap-5 sm:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="institution-name">Your name *</Label>
@@ -203,13 +206,15 @@ const InstitutionContactForm = ({ audience, defaultOrgType, submitLabel }: Insti
         )}
       </Button>
 
-      <p className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-        <Mail className="h-4 w-4" aria-hidden="true" />
-        Prefer email?{" "}
-        <a href={`mailto:${FALLBACK_EMAIL}?subject=Programs%20and%20partnerships`} className="font-medium text-primary hover:underline">
-          {FALLBACK_EMAIL}
-        </a>
-      </p>
+      {framed ? (
+        <p className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+          <Mail className="h-4 w-4" aria-hidden="true" />
+          Prefer email?{" "}
+          <a href={`mailto:${FALLBACK_EMAIL}?subject=Programs%20and%20partnerships`} className="font-medium text-primary hover:underline">
+            {FALLBACK_EMAIL}
+          </a>
+        </p>
+      ) : null}
     </form>
   );
 };
