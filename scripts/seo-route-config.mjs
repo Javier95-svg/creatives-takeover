@@ -195,7 +195,7 @@ export const INDEXABLE_ROUTES = [
       },
       {
         heading: "What your founders get for joining",
-        copy: "A tool for every stage, plus access to mentors, service providers, investors and other founders on the platform.",
+        copy: "A tool for every stage, plus access to experts, service providers, investors and other founders on the platform.",
       },
       {
         heading: "Impact report",

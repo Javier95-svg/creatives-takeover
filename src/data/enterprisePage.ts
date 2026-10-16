@@ -12,8 +12,8 @@
  *
  * Rules: no public prices ("talk to us"), no customer logos or testimonials
  * until they exist, every product visual is labelled as an example, and no
- * promise of investment to founders. Mentor sessions are paid separately, so
- * the cohort gets access to mentors, not free sessions.
+ * promise of investment to founders. Perks only name what exists on the
+ * platform today (checked 2026-10-16).
  *
  * Pure data with no imports, so node tests can read it. The SEO title and
  * description are mirrored in scripts/seo-route-config.mjs.
@@ -44,7 +44,7 @@ export const ENTERPRISE_HERO = {
 export const ENTERPRISE_OUTCOMES = [
   { value: 'Real progress', label: 'Stages move when founders do the work, not when they say they did.' },
   { value: 'Week 3, not week 10', label: 'Founders who go quiet or stay stuck are flagged while there is time to help.' },
-  { value: 'Perks for every founder', label: 'Tools for every stage and a network of mentors, providers and investors.' },
+  { value: 'Perks for every founder', label: 'Tools for every stage and a network of experts, service providers and investors.' },
 ];
 
 export const ENTERPRISE_COMPARISON = {
@@ -86,16 +86,16 @@ export const ENTERPRISE_FEATURES = {
 export const ENTERPRISE_PERKS = {
   eyebrow: 'Included for your cohort',
   title: 'What your founders get just for joining',
-  copy: 'Your program gets the CRM. Every founder in it gets the full platform: the tools to do the work and the people who can help.',
+  copy: 'Your program gets the CRM. Every founder in it gets the platform: the tools to do the work and the people who can help.',
   tools: {
     title: 'A tool for every stage',
-    body: 'The same path for every team, from defining the customer to the first paying ones.',
+    body: 'The same path for every team, from defining the customer to early traction.',
   },
   network: [
-    { key: 'mentors', title: 'Mentors', body: 'Startup experts founders can book for 1:1 working sessions.' },
-    { key: 'providers', title: 'Service providers', body: 'Design, marketing and technology help, vetted for early-stage teams.' },
+    { key: 'mentors', title: 'Mentors', body: 'Founders can find experts in specific fields.' },
+    { key: 'providers', title: 'Service providers', body: 'Services for sales, marketing, operations, automation and technical support.' },
     { key: 'investors', title: 'Investors', body: 'Founders can choose to be visible to investors on the platform.' },
-    { key: 'founders', title: 'Other founders', body: 'Rooms, launches and co-founder matching with builders at the same stage.' },
+    { key: 'founders', title: 'Other founders', body: 'Rooms, launches and co-founder matching with other builders.' },
   ],
 };
 
@@ -103,7 +103,7 @@ export const ENTERPRISE_STEPS = {
   eyebrow: 'How a pilot works',
   title: 'Start with one cohort',
   items: [
-    { when: 'Before kickoff', title: 'Set up', body: 'We set up the CRM around your program: your cohort, your calendar and the milestones you track.' },
+    { when: 'Before kickoff', title: 'Set up', body: 'We set up the CRM for your program: your cohort and your calendar. Your founders join with their own accounts.' },
     { when: 'During the cohort', title: 'Run', body: 'Founders work in the platform alongside your sessions. Your staff follow the pipeline and step in where founders stall.' },
     { when: 'Cohort end', title: 'Report', body: 'You receive the anonymized impact report, ready for your funders or your university.' },
   ],
@@ -127,10 +127,6 @@ export const ENTERPRISE_FAQS = [
     answer: 'Each founder’s stage, the evidence behind it, how long they have been in that stage and recent activity. Not the content of their ideas, files or messages.',
   },
   {
-    question: 'Are mentor sessions included?',
-    answer: 'Founders get access to the mentor network and can book sessions. Mentors set their own prices, so sessions are paid separately unless your program covers them.',
-  },
-  {
     question: 'What happens to founders when the program ends?',
     answer: 'They keep their account and their work. They can carry on with the free plan or choose a paid one.',
   },
@@ -142,8 +138,8 @@ export const ENTERPRISE_CONTACT = {
   copy: 'Tell us about your program and we’ll shape a pilot around your cohort size and calendar.',
   pilotIncludes: [
     'The founder CRM for one cohort',
-    'Full platform access for every founder',
-    'Access to our mentor and provider network',
+    'Platform access for every founder',
+    'Access to our network of experts and service providers',
     'An impact report when the cohort ends',
   ],
   person: {
