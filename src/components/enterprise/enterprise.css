@@ -95,6 +95,12 @@
   margin-bottom: 44px;
 }
 
+/* Post-program support: title and copy each fit on one line on desktop. */
+.ent-head--wide .ent-h2,
+.ent-head--wide .ent-head__copy {
+  max-width: none;
+}
+
 .ent-head__copy {
   max-width: 560px;
   margin-top: 14px;

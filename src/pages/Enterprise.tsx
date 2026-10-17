@@ -96,8 +96,8 @@ const ADAPT_ICONS: Record<string, typeof Users> = {
   length: CalendarDays,
 };
 
-const SectionHead = ({ eyebrow, title, copy }: { eyebrow: string; title: string; copy?: string }) => (
-  <header className="ent-head">
+const SectionHead = ({ eyebrow, title, copy, wide = false }: { eyebrow: string; title: string; copy?: string; wide?: boolean }) => (
+  <header className={wide ? 'ent-head ent-head--wide' : 'ent-head'}>
     <p className="ent-eyebrow">{eyebrow}</p>
     <h2 className="ent-h2">{title}</h2>
     {copy ? <p className="ent-head__copy">{copy}</p> : null}
@@ -312,7 +312,7 @@ const Enterprise = () => {
             <ScrollReveal variant="fade" amount={0.08}>
               <section className="ent-section ent-section--tint">
                 <div className="ent-container">
-                  <SectionHead eyebrow={ENTERPRISE_AFTER.eyebrow} title={ENTERPRISE_AFTER.title} copy={ENTERPRISE_AFTER.copy} />
+                  <SectionHead eyebrow={ENTERPRISE_AFTER.eyebrow} title={ENTERPRISE_AFTER.title} copy={ENTERPRISE_AFTER.copy} wide />
                   <AfterProgramFlow
                     programStages={ENTERPRISE_HERO.cycle.pilotStages}
                     duringLabel={ENTERPRISE_AFTER.duringLabel}
