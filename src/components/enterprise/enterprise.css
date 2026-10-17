@@ -1165,12 +1165,16 @@
 }
 
 /* Real product screens */
+/* Each screen has a light and a dark capture; the page theme picks one. */
 .ent-shot {
   margin: 0;
+  background: #ffffff;
+}
+
+.dark .ent-shot {
   background: #14161b;
 }
 
-/* The frame stays dark for the screen; the title bar follows the theme. */
 .ent-shot .ent-window__bar {
   background: var(--ent-card);
 }
@@ -1179,6 +1183,15 @@
   display: block;
   width: 100%;
   height: auto;
+}
+
+.ent-shot img.is-dark,
+.dark .ent-shot img.is-light {
+  display: none;
+}
+
+.dark .ent-shot img.is-dark {
+  display: block;
 }
 
 .ent-shot.is-faded img {
@@ -2525,6 +2538,53 @@
 
   .ent-btn,
   .ent-btn svg {
+    transition: none;
+  }
+}
+
+/* ---------- Scroll reveals ----------
+   Elements marked data-reveal animate in once as they scroll into view
+   (useScrollReveal in Enterprise.tsx adds .is-in). Nothing is hidden until
+   the script arms the page with .is-reveal-ready, so the page is complete
+   without it, and reduced motion turns the whole thing off. */
+.ent.is-reveal-ready [data-reveal] {
+  opacity: 0;
+  transform: translate3d(0, 32px, 0);
+  transition:
+    opacity 0.75s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+
+.ent.is-reveal-ready [data-reveal="left"] {
+  transform: translate3d(-56px, 0, 0);
+}
+
+.ent.is-reveal-ready [data-reveal="right"] {
+  transform: translate3d(56px, 0, 0);
+}
+
+.ent.is-reveal-ready [data-reveal="zoom"] {
+  transform: translate3d(0, 48px, 0) scale(0.94);
+}
+
+.ent.is-reveal-ready [data-reveal].is-in {
+  opacity: 1;
+  transform: none;
+}
+
+/* Phones: vertical motion only, so nothing slides in from beyond the screen edge. */
+@media (max-width: 767px) {
+  .ent.is-reveal-ready [data-reveal="left"],
+  .ent.is-reveal-ready [data-reveal="right"] {
+    transform: translate3d(0, 28px, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ent.is-reveal-ready [data-reveal] {
+    opacity: 1;
+    transform: none;
     transition: none;
   }
 }

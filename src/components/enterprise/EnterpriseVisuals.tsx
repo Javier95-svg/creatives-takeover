@@ -13,6 +13,7 @@ import {
   TrendingUp,
   Users,
 } from "lucide-react";
+import type { CSSProperties } from "react";
 
 import { BIZMAP_STAGES } from "@/lib/bizmapStages";
 import { cn } from "@/lib/utils";
@@ -188,9 +189,14 @@ export const CycleStrip = ({ label, pilotStages, pilotLabel }: { label: string; 
   </div>
 );
 
-/** A real product screen from the platform tour, framed as an app window. */
+/**
+ * A real product screen from the platform tour, framed as an app window.
+ * `src` is the dark capture and `lightSrc` the same screen in light theme;
+ * CSS shows the one that matches the page.
+ */
 export const ProductShot = ({
   src,
+  lightSrc,
   width,
   height,
   title,
@@ -198,6 +204,7 @@ export const ProductShot = ({
   fade = true,
 }: {
   src: string;
+  lightSrc: string;
   width: number;
   height: number;
   title: string;
@@ -213,7 +220,8 @@ export const ProductShot = ({
         Real product<span className="ent-example__more"> · sample data</span>
       </span>
     </div>
-    <img src={src} width={width} height={height} alt={alt} loading="lazy" decoding="async" />
+    <img className="is-light" src={lightSrc} width={width} height={height} alt={alt} loading="lazy" decoding="async" />
+    <img className="is-dark" src={src} width={width} height={height} alt="" aria-hidden="true" loading="lazy" decoding="async" />
   </figure>
 );
 
@@ -570,10 +578,10 @@ const KEEP_ICONS: Record<string, LucideIcon> = {
 /** Post-program support: what founders keep once the program ends. */
 export const AfterProgramKeeps = ({ items }: { items: Array<{ key: string; title: string; body: string }> }) => (
   <ul className="ent-keeps">
-    {items.map((item) => {
+    {items.map((item, index) => {
       const Icon = KEEP_ICONS[item.key] ?? Users;
       return (
-        <li key={item.key}>
+        <li key={item.key} data-reveal="up" style={{ "--reveal-delay": `${index * 90}ms` } as CSSProperties}>
           <span className="ent-icon" aria-hidden="true">
             <Icon />
           </span>
