@@ -36,10 +36,11 @@ export const ENTERPRISE_HERO = {
   eyebrow: '30-day founder validation pilot',
   titleLead: 'Measure your program impact',
   titleAccent: 'with evidence.',
-  // Javier's wording (2026-10-16): who it's for and that it adapts. Programs
+  // Javier's wording (2026-10-16): engagement and accountability, and that it
+  // adapts (weekly check-ins and stage results are how). Programs
   // don't all last 30 days, so the 30 days is the pilot, not the program.
   lede:
-    'Your accountability partner for accelerators, incubators and university programs. Start with a 30-day pilot, then we shape it around your program’s length, size and founders.',
+    'We keep your cohort engaged and accountable throughout the program. Start with a 30-day pilot, then we shape it around your program’s length, size and founders.',
   // The pilot's outcomes come from stages I to III: the ideal customer
   // (Identity), the demand test (Prototype) and the evidence (Validation).
   cycle: {
