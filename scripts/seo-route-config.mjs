@@ -190,10 +190,6 @@ export const INDEXABLE_ROUTES = [
       "Your accountability partner for accelerators, incubators and university programs. Start with a 30-day pilot, then we shape it around your program’s length, size and founders.",
     sections: [
       {
-        heading: "You don’t need another platform to teach entrepreneurship",
-        copy: "You need founders to act on what you teach. Your program teaches; in our Startup Development Cycle founders do the work, and a stage only counts when its result is complete.",
-      },
-      {
         heading: "What you have after the 30-day pilot",
         copy: "A validation plan for every startup, every interview and experiment on record, a cohort report ready for your funders with next steps per startup, and weekly updates without chasing anyone.",
       },

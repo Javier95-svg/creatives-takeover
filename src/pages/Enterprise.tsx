@@ -3,11 +3,8 @@ import { Link, useLocation } from "react-router-dom";
 import {
   ArrowRight,
   ArrowUpRight,
-  BadgeCheck,
   CalendarDays,
   Check,
-  GraduationCap,
-  Hammer,
   Info,
   Mail,
   Target,
@@ -47,7 +44,6 @@ import {
   ENTERPRISE_OUTCOMES,
   ENTERPRISE_PATH,
   ENTERPRISE_PILOT,
-  ENTERPRISE_PURPOSE,
   ENTERPRISE_SEO,
 } from "@/data/enterprisePage";
 import "@/components/enterprise/enterprise.css";
@@ -98,12 +94,6 @@ const ADAPT_ICONS: Record<string, typeof Users> = {
   size: Users,
   focus: Target,
   length: CalendarDays,
-};
-
-const PURPOSE_ICONS: Record<string, typeof Users> = {
-  teach: GraduationCap,
-  do: Hammer,
-  done: BadgeCheck,
 };
 
 const SectionHead = ({ eyebrow, title, copy }: { eyebrow: string; title: string; copy?: string }) => (
@@ -207,40 +197,6 @@ const Enterprise = () => {
                 </div>
               </div>
             </section>
-
-            {/* Purpose: not another way to teach, a way to make sure teaching turns into action. */}
-            <ScrollReveal variant="fade" amount={0.15}>
-              <section className="ent-section ent-section--tint ent-purpose">
-                <div className="ent-container">
-                  <p className="ent-eyebrow">{ENTERPRISE_PURPOSE.eyebrow}</p>
-                  <h2 className="ent-purpose__statement">
-                    {ENTERPRISE_PURPOSE.statement} <span>{ENTERPRISE_PURPOSE.accent}</span>
-                  </h2>
-                  <ol className="ent-purpose__steps">
-                    {ENTERPRISE_PURPOSE.steps.map((step, index) => {
-                      const Icon = PURPOSE_ICONS[step.key] ?? Check;
-                      return (
-                        <li key={step.key} className={index > 0 ? "is-ours" : undefined}>
-                          {index > 0 ? (
-                            <span className="ent-purpose__arrow" aria-hidden="true">
-                              <ArrowRight />
-                            </span>
-                          ) : null}
-                          <span className="ent-purpose__top">
-                            <span className="ent-icon" aria-hidden="true">
-                              <Icon />
-                            </span>
-                            <span className="ent-purpose__tag">{step.tag}</span>
-                          </span>
-                          <h3>{step.title}</h3>
-                          <p>{step.body}</p>
-                        </li>
-                      );
-                    })}
-                  </ol>
-                </div>
-              </section>
-            </ScrollReveal>
 
             {/* The four outcomes, each with the screen or document that delivers it. */}
             <section className="ent-section">
