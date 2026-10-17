@@ -79,7 +79,7 @@ export const PLAN_PACKAGE_PRESENTATION: Record<Plan, PlanPackagePresentation> = 
   pro: {
     bestFor: 'Fundraising and scale',
     outcome: 'Build at full pace and research freely.',
-    outcomeDetail: 'Open every angel investor, VC and accelerator profile to build your fundraising shortlist.',
+    outcomeDetail: 'Find your Angel full access to build your fundraising outbound shortlist.',
     usageLabel: `${PLAN_MONTHLY_CREDITS.pro} credits / month`,
     perksTitle: 'Everything in Rising, plus:',
     perks: [
