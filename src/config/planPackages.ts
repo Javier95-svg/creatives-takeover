@@ -32,15 +32,17 @@ const quota = (value: number, noun: string) =>
  * MONTHLY_FREE_QUOTAS:
  * - Starter: dashboard_mode PROVE, vc/accelerator profiles, custom_domain
  *   (an MVP on the founder's own domain, without CT branding).
- * - Rising: MVP Builder without freeModelsOnly, first_customer_proof full,
- *   profiles and directory visits.
+ * - Rising: dashboard_mode SELL + GROW (core metrics, decision sprint,
+ *   routine), first_customer_proof full, profiles and directory visits.
+ * Plans are sold by the framework they unlock, never by the AI model behind
+ * a tool (Javier, 2026-10-17).
  * - Pro: angels_community, unlimited profiles and directory visits.
  */
 export const PLAN_PACKAGE_PRESENTATION: Record<Plan, PlanPackagePresentation> = {
   rookie: {
     bestFor: 'Testing an idea',
     outcome: 'Know who your customer is.',
-    outcomeDetail: 'Define your ideal customer and put a first demand test in front of people.',
+    outcomeDetail: 'Free tools to define your customer and test your idea.',
     usageLabel: `${PLAN_MONTHLY_CREDITS.rookie} credits / month`,
     perksTitle: 'Includes:',
     perks: [
@@ -52,7 +54,7 @@ export const PLAN_PACKAGE_PRESENTATION: Record<Plan, PlanPackagePresentation> = 
   starter: {
     bestFor: 'Validating demand',
     outcome: 'Prove people want it.',
-    outcomeDetail: 'Collect evidence from real customers before you build.',
+    outcomeDetail: 'Run customer interviews and keep every answer as proof.',
     usageLabel: `${PLAN_MONTHLY_CREDITS.starter} credits / month`,
     perksTitle: 'Everything in Rookie, plus:',
     perks: [
@@ -65,11 +67,11 @@ export const PLAN_PACKAGE_PRESENTATION: Record<Plan, PlanPackagePresentation> = 
   rising: {
     bestFor: 'Building and first sales',
     outcome: 'Build it and reach your first buyers.',
-    outcomeDetail: 'Ship your MVP with advanced models, then run a real sales cycle.',
+    outcomeDetail: 'Build your product, then follow a guided plan to reach your first buyers.',
     usageLabel: `${PLAN_MONTHLY_CREDITS.rising} credits / month`,
     perksTitle: 'Everything in Starter, plus:',
     perks: [
-      'Advanced AI models in MVP Builder',
+      'A sales and growth workspace with metrics and routines',
       'First Customer Proof: 10 prospects, 10 messages, a decision',
       `${quota(MONTHLY_FREE_QUOTAS.vc_profiles.rising, 'investor')} and ${quota(MONTHLY_FREE_QUOTAS.accelerator_profiles.rising, 'accelerator')} profiles, ${quota(MONTHLY_FREE_QUOTAS.directory_visits.rising, 'directory visits')}`,
     ],
@@ -77,7 +79,7 @@ export const PLAN_PACKAGE_PRESENTATION: Record<Plan, PlanPackagePresentation> = 
   pro: {
     bestFor: 'Fundraising and scale',
     outcome: 'Build at full pace and research freely.',
-    outcomeDetail: 'The most credits, and no limits on investor or program research.',
+    outcomeDetail: 'The most credits and unlimited investor research.',
     usageLabel: `${PLAN_MONTHLY_CREDITS.pro} credits / month`,
     perksTitle: 'Everything in Rising, plus:',
     perks: [

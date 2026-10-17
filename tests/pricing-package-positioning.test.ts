@@ -28,6 +28,8 @@ test('each plan leads with a short outcome and at most three short unlocks', () 
   assert.equal(Object.values(PLAN_PACKAGE_PRESENTATION).filter((plan) => plan.recommended).length, 1);
   // Outcomes describe what a plan lets you do, never a promised result.
   assert.doesNotMatch(JSON.stringify(PLAN_PACKAGE_PRESENTATION), /guarantee|get funded|raise money|investment/i);
+  // Plans sell the framework they unlock, not AI models (Javier, 2026-10-17).
+  assert.doesNotMatch(JSON.stringify(PLAN_PACKAGE_PRESENTATION), /\bAI\b|models?\b/i);
 });
 
 test('unlock numbers come from the quotas the product enforces', () => {

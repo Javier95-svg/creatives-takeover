@@ -47,7 +47,7 @@ const faqs: Array<{ question: string; answer: string; link?: { label: string; to
   },
   {
     question: `What's included in ${PLAN_LABELS.rookie}?`,
-    answer: `${PLAN_LABELS.rookie} is free forever with ${PLAN_MONTHLY_CREDITS.rookie} credits a month: the core founder tools with standard AI models, the mentor marketplace and discovery call requests, and free co-founder posts. VC Search and Accelerator Hunt are browse only, and you get ${MONTHLY_FREE_QUOTAS.directory_visits.rookie} directory visits a month. Mentor services are paid separately.`,
+    answer: `${PLAN_LABELS.rookie} is free forever with ${PLAN_MONTHLY_CREDITS.rookie} credits a month: the core founder tools, the mentor marketplace and discovery call requests, and free co-founder posts. VC Search and Accelerator Hunt are browse only, and you get ${MONTHLY_FREE_QUOTAS.directory_visits.rookie} directory visits a month. Mentor services are paid separately.`,
   },
   {
     question: "How does billing work?",
