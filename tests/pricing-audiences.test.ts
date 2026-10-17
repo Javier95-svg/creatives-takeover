@@ -48,3 +48,12 @@ test('the pricing page and its prerendered shell agree on title and description'
   assert.ok(pricing.PRICING_SEO.title.length <= 60, `title is ${pricing.PRICING_SEO.title.length} chars`);
   assert.ok(pricing.PRICING_SEO.description.length <= 160, `description is ${pricing.PRICING_SEO.description.length} chars`);
 });
+
+test('the institutions timeline animates once in view and respects reduced motion', () => {
+  // 2026-10-17: the line draws between the steps and each step appears as it
+  // is reached; visitors who prefer reduced motion see it finished.
+  assert.match(institutionView, /whileInView="shown"/);
+  assert.match(institutionView, /viewport=\{\{ once: true/);
+  assert.match(institutionView, /useReducedMotion\(\)/);
+  assert.match(institutionView, /initial=\{reduceMotion \? "shown" : "hidden"\}/);
+});

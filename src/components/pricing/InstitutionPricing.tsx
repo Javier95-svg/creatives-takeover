@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { motion, useReducedMotion } from "framer-motion";
 import {
   ArrowRight,
   CalendarCheck,
@@ -17,6 +18,11 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import InstitutionContactForm from "@/components/audience/InstitutionContactForm";
 import { captureEvent } from "@/lib/analytics";
 import { INSTITUTION_PRICING, SALES_DIALOG } from "@/data/pricingPage";
+
+// Timeline timing: each step appears as the drawing line reaches its marker.
+const STEP_DELAY = 0.7;
+const LINE_DURATION = STEP_DELAY * (INSTITUTION_PRICING.steps.length - 1);
+const EASE_OUT = [0.22, 1, 0.36, 1] as const;
 
 // One icon per inclusion, so the list reads as distinct things a program gets.
 const INCLUDE_ICONS: Record<string, LucideIcon> = {
@@ -38,6 +44,7 @@ const INCLUDE_ICONS: Record<string, LucideIcon> = {
  */
 const InstitutionPricing = () => {
   const [salesOpen, setSalesOpen] = useState(false);
+  const reduceMotion = useReducedMotion();
 
   const openSales = (placement: string) => {
     captureEvent("sales_cta_clicked", { placement });
@@ -111,28 +118,71 @@ const InstitutionPricing = () => {
 
         <div className="mx-auto mt-14 max-w-5xl">
           <p className="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">{INSTITUTION_PRICING.stepsTitle}</p>
-          {/* A connected timeline: the line runs between the step markers. */}
-          <ol className="relative mt-6 grid gap-7 sm:grid-cols-3 sm:gap-6">
+          {/* A connected timeline that plays once in view: a blue line draws
+              over the grey track, each step pops in as the line reaches it,
+              and the pilot step keeps a soft pulse. Reduced motion shows it
+              finished, with no pulse. */}
+          <motion.ol
+            className="relative mt-6 grid gap-7 sm:grid-cols-3 sm:gap-6"
+            initial={reduceMotion ? "shown" : "hidden"}
+            whileInView="shown"
+            viewport={{ once: true, amount: 0.5 }}
+          >
             <span aria-hidden="true" className="absolute bottom-5 left-5 top-5 w-px bg-border sm:hidden" />
             <span aria-hidden="true" className="absolute left-5 top-5 hidden h-px w-[calc(66.667%+1rem)] bg-border sm:block" />
+            <motion.span
+              aria-hidden="true"
+              className="absolute bottom-5 left-5 top-5 w-px origin-top bg-primary sm:hidden"
+              variants={{ hidden: { scaleY: 0 }, shown: { scaleY: 1, transition: { duration: LINE_DURATION, ease: "easeInOut" } } }}
+            />
+            <motion.span
+              aria-hidden="true"
+              className="absolute left-5 top-5 hidden h-px w-[calc(66.667%+1rem)] origin-left bg-primary sm:block"
+              variants={{ hidden: { scaleX: 0 }, shown: { scaleX: 1, transition: { duration: LINE_DURATION, ease: "easeInOut" } } }}
+            />
             {INSTITUTION_PRICING.steps.map((step, index) => (
-              <li key={step.title} className="relative flex gap-4 sm:block">
-                <span
+              <motion.li
+                key={step.title}
+                className="relative flex gap-4 sm:block"
+                variants={{
+                  hidden: { opacity: 0, y: 14 },
+                  shown: { opacity: 1, y: 0, transition: { delay: index * STEP_DELAY, duration: 0.5, ease: EASE_OUT } },
+                }}
+              >
+                <motion.span
                   className={
                     index === lastStep
                       ? "relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary font-space-grotesk text-sm font-semibold tabular-nums text-primary-foreground"
                       : "relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border bg-background font-space-grotesk text-sm font-semibold tabular-nums text-foreground"
                   }
+                  variants={{
+                    hidden: { scale: 0.4 },
+                    shown: { scale: 1, transition: { delay: index * STEP_DELAY, type: "spring", stiffness: 380, damping: 18 } },
+                  }}
                 >
-                  {index + 1}
-                </span>
+                  {index === lastStep && !reduceMotion ? (
+                    <motion.span
+                      aria-hidden="true"
+                      className="absolute inset-0 rounded-full bg-primary"
+                      variants={{
+                        hidden: { opacity: 0, scale: 1 },
+                        shown: {
+                          opacity: [0, 0.55, 0],
+                          scale: [1, 1.9, 1.9],
+                          transition: { delay: LINE_DURATION + 0.3, duration: 1.6, ease: "easeOut", repeat: Infinity, repeatDelay: 1.8 },
+                        },
+                      }}
+                    />
+                  ) : null}
+                  <span className="relative">{index + 1}</span>
+                </motion.span>
                 <div className="pt-1.5 sm:mt-4 sm:pt-0">
                   <p className="font-space-grotesk text-lg font-semibold text-foreground">{step.title}</p>
                   <p className="mt-1 text-sm text-muted-foreground">{step.body}</p>
                 </div>
-              </li>
+              </motion.li>
             ))}
-          </ol>
+          </motion.ol>
         </div>
       </div>
 
