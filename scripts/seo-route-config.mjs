@@ -190,6 +190,10 @@ export const INDEXABLE_ROUTES = [
       "A 30-day founder validation pilot for accelerators, incubators and universities. Stop chasing founders for updates. Our Startup Development Cycle records progress as they work, so you spot stalled teams early and get a funder-ready report.",
     sections: [
       {
+        heading: "You don’t need another platform to teach entrepreneurship",
+        copy: "You need founders to act on what you teach. Your program teaches; in our Startup Development Cycle founders do the work, and a stage only counts when its result is complete.",
+      },
+      {
         heading: "What your program has after 30 days",
         copy: "A validation plan for every startup, every interview and experiment on record, a cohort report ready for your funders with next steps per startup, and weekly updates without chasing anyone.",
       },

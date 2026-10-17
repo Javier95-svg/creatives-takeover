@@ -64,6 +64,22 @@ export const ENTERPRISE_HERO = {
 
 // The four outcomes, in the order the 30 days produce them. `includes` lists
 // what each one contains, shown as chips instead of sentences.
+// Purpose (Javier, 2026-10-16): programs don't need another platform to teach
+// entrepreneurship; they need what they teach to turn into action. The cycle
+// is how: every stage ends in a result, and a stage only counts when that
+// result is complete (src/lib/founderProgress.ts). It works alongside the
+// program's teaching, never instead of it.
+export const ENTERPRISE_PURPOSE = {
+  eyebrow: 'What we’re for',
+  statement: 'You don’t need another platform to teach entrepreneurship.',
+  accent: 'You need founders to act on what you teach.',
+  steps: [
+    { key: 'teach', tag: 'Your program', title: 'You teach', body: 'Sessions, mentors and curriculum, run your way.' },
+    { key: 'do', tag: 'Startup Development Cycle', title: 'Founders do the work', body: 'Each stage ends in a real result: a customer profile, a demand test, an evidence log.' },
+    { key: 'done', tag: 'Startup Development Cycle', title: 'You see it done', body: 'A stage only counts when its result is complete.' },
+  ],
+};
+
 // Written for program managers (2026-10-16): each title says what the
 // program gets, not what the founder does.
 export const ENTERPRISE_OUTCOMES = {

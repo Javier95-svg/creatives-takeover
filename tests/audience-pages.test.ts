@@ -89,6 +89,14 @@ test('the pilot promises a process and evidence, and adapts to each program', ()
     ['size', 'focus', 'length'],
   );
   assert.match(JSON.stringify(enterprise.ENTERPRISE_ADAPT), /[Ff]intech/);
+  // The purpose (2026-10-16): not another way to teach, a way to make sure
+  // founders act on what the program teaches. It sits right after the hero.
+  assert.match(enterprise.ENTERPRISE_PURPOSE.statement, /teach entrepreneurship/);
+  assert.ok(
+    enterprisePage.indexOf('ent-purpose') > enterprisePage.indexOf('className="ent-hero"')
+      && enterprisePage.indexOf('ent-purpose') < enterprisePage.indexOf('ent-outcomes'),
+    'purpose band sits between the hero and the outcomes',
+  );
 });
 
 test('the institution form reuses the contact function with known roles', () => {
