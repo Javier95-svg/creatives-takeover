@@ -36,11 +36,14 @@ export const ENTERPRISE_HERO = {
   eyebrow: '30-day founder validation pilot',
   titleLead: 'Every founder tests their idea.',
   titleAccent: 'You see the evidence.',
-  // The difference, in the product's own terms: a stage only completes when
-  // its result is complete (drafts never count; src/lib/founderProgress.ts).
-  // Tools are not locked, so never say a stage "opens" or "unlocks".
+  // Attacks the program manager's three biggest time sinks (research,
+  // 2026-10-16): chasing founders for updates, stalled teams found too late,
+  // and funder reports built by hand. Progress is recorded because a stage only
+  // completes when its result is complete (src/lib/founderProgress.ts); tools
+  // are not locked, so never say a stage "opens" or "unlocks". Stalled teams
+  // are flagged by our weekly check-ins and the report is written by our team.
   lede:
-    'Our Startup Development Cycle moves founders up a stage only when the work is done. You see results, not status updates.',
+    'Stop chasing founders for updates. Our Startup Development Cycle records progress as they work, so you spot stalled teams early and get a funder-ready report.',
   // The pilot's outcomes come from stages I to III: the ideal customer
   // (Identity), the demand test (Prototype) and the evidence (Validation).
   cycle: {
