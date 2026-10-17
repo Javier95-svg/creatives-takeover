@@ -39,7 +39,7 @@ export const ENTERPRISE_HERO = {
   lede:
     'For accelerators, incubators and universities. Your startups follow a structured validation workflow for 30 days, and you get the evidence behind every team.',
   primaryCta: 'Book a pilot call',
-  secondaryCta: { label: 'See the platform', href: '/demo?panel=for-institutions' },
+  secondaryCta: { label: 'See the platform', href: '/demo' },
   facts: [
     { value: '30', label: 'days' },
     { value: '5–10', label: 'startups' },
