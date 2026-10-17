@@ -187,7 +187,7 @@ export const INDEXABLE_ROUTES = [
     priority: 0.9,
     heroHeading: "Every founder tests their idea. You see the evidence.",
     heroCopy:
-      "A 30-day founder validation pilot. Your accountability partner for accelerators, incubators and universities. Shaped around your program’s size, founders and calendar.",
+      "A 30-day founder validation pilot. Your accountability partner for accelerators, incubators and university programs. Shaped around your program’s size, founders and calendar.",
     sections: [
       {
         heading: "You don’t need another platform to teach entrepreneurship",

@@ -39,7 +39,7 @@ export const ENTERPRISE_HERO = {
   // Javier's wording (2026-10-16): who it's for and that it adapts. It also
   // carries what the note under the buttons used to say, so there is no note.
   lede:
-    'Your accountability partner for accelerators, incubators and universities. Shaped around your program’s size, founders and calendar.',
+    'Your accountability partner for accelerators, incubators and university programs. Shaped around your program’s size, founders and calendar.',
   // The pilot's outcomes come from stages I to III: the ideal customer
   // (Identity), the demand test (Prototype) and the evidence (Validation).
   cycle: {
