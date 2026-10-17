@@ -196,7 +196,7 @@ export const INDEXABLE_ROUTES = [
       "A 30-day founder validation pilot for accelerators, incubators and university programs. We keep your cohort engaged and accountable throughout the program. Start with a 30-day pilot, then we shape it around your program’s length, size and founders.",
     sections: [
       {
-        heading: "A unified system to measure your cohort progress and outcomes",
+        heading: "A unified system to measure your cohort progress and outcomes.",
         copy: "A validation plan for every startup, every interview and experiment on record, a cohort report ready for your funders with next steps per startup, and weekly updates without chasing anyone.",
       },
       {

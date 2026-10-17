@@ -95,10 +95,12 @@
   margin-bottom: 44px;
 }
 
-/* Post-program support: title and copy each fit on one line on desktop. */
+/* Wide heads use the full container: lines fill the width instead of being
+   balanced into two short halves (outcomes, post-program support). */
 .ent-head--wide .ent-h2,
 .ent-head--wide .ent-head__copy {
   max-width: none;
+  text-wrap: pretty;
 }
 
 .ent-head__copy {

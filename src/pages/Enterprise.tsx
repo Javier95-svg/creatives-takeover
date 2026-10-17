@@ -238,7 +238,7 @@ const Enterprise = () => {
             {/* The four outcomes, each with the screen or document that delivers it. */}
             <section className="ent-section">
               <div className="ent-container">
-                <SectionHead eyebrow={ENTERPRISE_OUTCOMES.eyebrow} title={ENTERPRISE_OUTCOMES.title} />
+                <SectionHead eyebrow={ENTERPRISE_OUTCOMES.eyebrow} title={ENTERPRISE_OUTCOMES.title} wide />
                 <ol className="ent-outcomes">
                   {ENTERPRISE_OUTCOMES.items.map((outcome, index) => (
                     <li key={outcome.key} className="ent-outcome">
