@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 
 import {
   containsUrl,
@@ -105,4 +106,12 @@ test('generation errors collapse into a small queryable set', () => {
   assert.equal(resolveOutputErrorType(new Error('Failed to fetch')), 'NETWORK');
   assert.equal(resolveOutputErrorType(new Error('something odd')), 'UNKNOWN');
   assert.equal(resolveOutputErrorType(null), 'UNKNOWN');
+});
+
+test('the hero field never refills a past idea on load', () => {
+  // 2026-10-17: the last submitted idea came back in the field on every
+  // refresh for a week. Only a result restored beside the field may fill it.
+  const source = readFileSync(new URL('../src/components/hero/StartingExperiences.tsx', import.meta.url), 'utf8');
+  assert.match(source, /const \[value, setValue\] = useState\(\(\) => run\?\.description \?\? ''\)/);
+  assert.doesNotMatch(source, /useState\(initial\?\.description/);
 });

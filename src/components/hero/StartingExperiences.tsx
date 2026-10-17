@@ -30,7 +30,10 @@ export default function StartingExperiences() {
     initial?.mode === 'product' || new URLSearchParams(location.search).has('resume') ? initial : null);
   const [restoring, setRestoring] = useState(Boolean(initial));
   const [mode, setMode] = useState<StartingMode>(initial?.mode ?? DEFAULT_HERO_MODE);
-  const [value, setValue] = useState(initial?.description ?? '');
+  // The field starts empty unless a result is restored beside it. Idea runs
+  // hand off to ICP Builder, so prefilling the last stored idea (kept for a
+  // week) put text in the hero on every visit that the visitor never typed.
+  const [value, setValue] = useState(() => run?.description ?? '');
   const [busy, setBusy] = useState(false);
   const busyMode = useRef<StartingMode | null>(null);
   const inputRef = useRef<HeroIdeaInputHandle>(null);
