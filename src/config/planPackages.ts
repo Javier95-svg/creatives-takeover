@@ -54,7 +54,7 @@ export const PLAN_PACKAGE_PRESENTATION: Record<Plan, PlanPackagePresentation> = 
   starter: {
     bestFor: 'Validating demand',
     outcome: 'Prove people want it.',
-    outcomeDetail: 'Run customer interviews and keep every answer as proof.',
+    outcomeDetail: 'Interview real customers, then design your first sales test in GTM Strategist.',
     usageLabel: `${PLAN_MONTHLY_CREDITS.starter} credits / month`,
     perksTitle: 'Everything in Rookie, plus:',
     perks: [
@@ -79,7 +79,7 @@ export const PLAN_PACKAGE_PRESENTATION: Record<Plan, PlanPackagePresentation> = 
   pro: {
     bestFor: 'Fundraising and scale',
     outcome: 'Build at full pace and research freely.',
-    outcomeDetail: 'The most credits and unlimited investor research.',
+    outcomeDetail: 'Open every angel investor, VC and accelerator profile to build your fundraising shortlist.',
     usageLabel: `${PLAN_MONTHLY_CREDITS.pro} credits / month`,
     perksTitle: 'Everything in Rising, plus:',
     perks: [
