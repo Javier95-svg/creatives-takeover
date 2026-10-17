@@ -71,7 +71,7 @@ const faqs: Array<{ question: string; answer: string; link?: { label: string; to
 const PricingFAQ = () => (
   <section className="relative overflow-hidden py-section-mobile lg:py-section-desktop">
     <div className="container relative z-10 mx-auto px-4 sm:px-6">
-      <PricingSectionHeader eyebrow="Questions" title="Pricing FAQ" lede="Billing, credits and switching plans." />
+      <PricingSectionHeader title="Pricing FAQ" lede="Billing, credits and switching plans." />
 
       <div className="mx-auto max-w-3xl rounded-2xl border border-border/60 bg-card/70 px-6 py-2 sm:px-8">
         <Accordion type="single" collapsible className="w-full">

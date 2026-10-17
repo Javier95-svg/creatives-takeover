@@ -52,7 +52,6 @@ const SubscriptionFeatures = () => (
     <div className="container relative z-10 mx-auto px-4 sm:px-6">
       <ScrollReveal>
         <PricingSectionHeader
-          eyebrow="Credits"
           title="What your credits cover"
           lede="Credits pay for the AI work. Many tools are free to start, and your credits renew each month."
         />

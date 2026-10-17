@@ -138,7 +138,6 @@ const PricingComparison = () => {
     <section className="relative overflow-hidden py-section-mobile lg:py-section-desktop">
       <div className="container relative z-10 mx-auto px-4 sm:px-6">
         <PricingSectionHeader
-          eyebrow="Compare"
           title="Compare plans"
           lede="What changes as you move up. Everything below the table is included on every plan."
         />
