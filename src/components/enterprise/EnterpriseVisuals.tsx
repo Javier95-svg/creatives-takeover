@@ -4,17 +4,16 @@ import {
   Check,
   CheckCircle2,
   Circle,
+  Flag,
+  FolderCheck,
   GraduationCap,
-  Landmark,
+  Layers,
   Lock,
   type LucideIcon,
   TrendingUp,
   Users,
-  Wrench,
 } from "lucide-react";
 
-import { getCoreFounderToolsForStage, type FounderJourneyStage } from "@/config/founderToolCatalog";
-import { BIZMAP_STAGE_ORDER, FOUNDER_STAGE_LABELS } from "@/lib/bizmapStageOrder";
 import { BIZMAP_STAGES } from "@/lib/bizmapStages";
 import { cn } from "@/lib/utils";
 
@@ -513,67 +512,77 @@ export const PilotSetupMock = () => (
   </div>
 );
 
-// The core tool for each operating stage, read from the catalog so the page
-// never names a tool the product doesn't have.
-const TOOL_FLOW = BIZMAP_STAGE_ORDER.slice(0, 6).map((stage, index) => ({
-  stage: FOUNDER_STAGE_LABELS[index],
-  tool: getCoreFounderToolsForStage(stage as FounderJourneyStage)[0]?.name ?? "",
-}));
+const StageChip = ({ stage }: { stage: (typeof BIZMAP_STAGES)[number] }) => (
+  <li>
+    <span className="ent-after__num">{stage.numeral}</span>
+    <span className="ent-after__stage">{titleCase(stage.title)}</span>
+    {/* The stage's core tool, from the product's catalog. */}
+    <span className="ent-after__tool">{stage.tools[0]?.name}</span>
+  </li>
+);
 
-/** The same tool path every founder follows, one tool per stage. */
-export const ToolFlow = () => (
-  <div className="ent-flow-wrap">
-    <ol className="ent-flow">
-      {TOOL_FLOW.map((step, index) => (
-        <li key={step.stage}>
-          <span className="ent-flow__stage">{step.stage}</span>
-          <span className="ent-flow__tool">{step.tool}</span>
-          {index < TOOL_FLOW.length - 1 ? <ArrowRight className="ent-flow__arrow" aria-hidden="true" /> : null}
-        </li>
-      ))}
-    </ol>
+/** Post-program support: the stages founders work through with the program, then the ones they carry on with alone. */
+export const AfterProgramFlow = ({
+  programStages,
+  duringLabel,
+  endLabel,
+  afterLabel,
+}: {
+  programStages: number;
+  duringLabel: string;
+  endLabel: string;
+  afterLabel: string;
+}) => (
+  <div className="ent-after">
+    <div className="ent-after__phase is-during" style={{ flexGrow: programStages }}>
+      <p className="ent-after__label">{duringLabel}</p>
+      <span className="ent-after__bar" aria-hidden="true" />
+      <ol className="ent-after__stages">
+        {BIZMAP_STAGES.slice(0, programStages).map((stage) => (
+          <StageChip key={stage.id} stage={stage} />
+        ))}
+      </ol>
+    </div>
+    <div className="ent-after__phase is-after" style={{ flexGrow: BIZMAP_STAGES.length - programStages }}>
+      <p className="ent-after__label">{afterLabel}</p>
+      <span className="ent-after__bar">
+        <span className="ent-after__end">
+          <Flag aria-hidden="true" />
+          {endLabel}
+        </span>
+      </span>
+      <ol className="ent-after__stages" start={programStages + 1}>
+        {BIZMAP_STAGES.slice(programStages).map((stage) => (
+          <StageChip key={stage.id} stage={stage} />
+        ))}
+      </ol>
+    </div>
   </div>
 );
 
-const NETWORK_ICONS: Record<string, LucideIcon> = {
+const KEEP_ICONS: Record<string, LucideIcon> = {
+  work: FolderCheck,
+  tools: Layers,
   mentors: GraduationCap,
-  providers: Wrench,
-  investors: Landmark,
   founders: Users,
 };
 
-type NetworkNode = { key: string; title: string; body: string };
-
-/** Ecosystem: the cohort in the middle, the network around it. */
-export const NetworkHub = ({ nodes }: { nodes: NetworkNode[] }) => {
-  const half = Math.ceil(nodes.length / 2);
-  const renderNode = (node: NetworkNode) => {
-    const Icon = NETWORK_ICONS[node.key] ?? Users;
-    return (
-      <li key={node.key} className="ent-hub__node">
-        <span className="ent-hub__icon" aria-hidden="true">
-          <Icon />
-        </span>
-        <div>
-          <p className="ent-hub__title">{node.title}</p>
-          <p className="ent-hub__body">{node.body}</p>
-        </div>
-      </li>
-    );
-  };
-  return (
-    <div className="ent-hub">
-      <ul className="ent-hub__side ent-hub__side--left">{nodes.slice(0, half).map(renderNode)}</ul>
-      <div className="ent-hub__core" aria-hidden="true">
-        <span className="ent-hub__ring" />
-        <span className="ent-hub__ring ent-hub__ring--2" />
-        <span className="ent-hub__label">
-          Your
-          <br />
-          cohort
-        </span>
-      </div>
-      <ul className="ent-hub__side ent-hub__side--right">{nodes.slice(half).map(renderNode)}</ul>
-    </div>
-  );
-};
+/** Post-program support: what founders keep once the program ends. */
+export const AfterProgramKeeps = ({ items }: { items: Array<{ key: string; title: string; body: string }> }) => (
+  <ul className="ent-keeps">
+    {items.map((item) => {
+      const Icon = KEEP_ICONS[item.key] ?? Users;
+      return (
+        <li key={item.key}>
+          <span className="ent-icon" aria-hidden="true">
+            <Icon />
+          </span>
+          <span>
+            <span className="ent-keeps__title">{item.title}</span>
+            <span className="ent-keeps__body">{item.body}</span>
+          </span>
+        </li>
+      );
+    })}
+  </ul>
+);

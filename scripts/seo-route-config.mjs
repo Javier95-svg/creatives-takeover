@@ -202,8 +202,8 @@ export const INDEXABLE_ROUTES = [
         copy: "The pilot is set up around your cohort size, your founders’ sector, such as fintech, and your program’s length.",
       },
       {
-        heading: "More support for your founders, no extra work for your team",
-        copy: "A tool for every stage, experts in specific fields, services for sales, marketing, operations, automation and technical support, visibility to investors on the platform, and rooms, launches and co-founder matching with other builders.",
+        heading: "Your founders keep going after the program ends",
+        copy: "Post-program support: founders keep their account, their work and the free plan, with the stage tools, mentors, and rooms, launches and co-founder matching with other founders. No extra work for your team.",
       },
     ],
   },

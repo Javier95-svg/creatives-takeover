@@ -124,19 +124,26 @@ export const ENTERPRISE_ADAPT = {
   ],
 };
 
-export const ENTERPRISE_PERKS = {
-  eyebrow: 'Included for every founder',
-  title: 'More support for your founders, no extra work for your team',
-  tools: {
-    title: 'A tool for every stage',
-    body: 'From defining the customer to early traction.',
-  },
-  network: [
-    { key: 'mentors', title: 'Mentors', body: 'Founders can find experts in specific fields.' },
-    { key: 'providers', title: 'Service providers', body: 'Services for sales, marketing, operations, automation and technical support.' },
-    { key: 'investors', title: 'Investors', body: 'Founders can choose to be visible to investors on the platform.' },
-    { key: 'founders', title: 'Other founders', body: 'Rooms, launches and co-founder matching with other builders.' },
+// Post-program support (Javier, 2026-10-16): founders keep their account,
+// their work and the free plan (Rookie, 50 monthly credits) after the program,
+// so alumni keep getting support without the program team. Only what the free
+// plan keeps open is named (src/config/planPermissions.ts): the angels
+// community and First Customer Proof need paid plans, so investors and
+// providers are not promised here.
+export const ENTERPRISE_AFTER = {
+  eyebrow: 'Post-program support',
+  title: 'Your founders keep going after the program ends',
+  copy: 'They keep their account, their work and the free plan, with no extra work for your team.',
+  duringLabel: 'With your program',
+  endLabel: 'Program ends',
+  afterLabel: 'On their own, with the platform',
+  keeps: [
+    { key: 'work', title: 'Their account and work', body: 'Everything they built stays theirs.' },
+    { key: 'tools', title: 'The stage tools', body: 'On the free plan, with monthly credits.' },
+    { key: 'mentors', title: 'Mentors', body: 'Experts in specific fields.' },
+    { key: 'founders', title: 'Other founders', body: 'Rooms, launches and co-founder matching.' },
   ],
+  note: 'Paid plans add more credits and features.',
 };
 
 // The questions a program manager asks first: cost, their team's time, what

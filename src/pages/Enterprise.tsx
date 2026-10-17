@@ -1,6 +1,6 @@
 import { useEffect, type MouseEvent, type ReactNode } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { ArrowRight, ArrowUpRight, CalendarDays, Check, Info, Layers, Mail, Target, Users } from "lucide-react";
+import { ArrowRight, ArrowUpRight, CalendarDays, Check, Info, Mail, Target, Users } from "lucide-react";
 
 import SEO, { createBreadcrumbSchema, createFAQSchema, createWebPageSchema } from "@/components/SEO";
 import Navigation from "@/components/Navigation";
@@ -10,15 +10,15 @@ import { ScrollReveal } from "@/components/animations/ScrollReveal";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import InstitutionContactForm from "@/components/audience/InstitutionContactForm";
 import {
+  AfterProgramFlow,
+  AfterProgramKeeps,
   CheckInCard,
   CohortReportMock,
   CycleStrip,
   EvidenceCallouts,
-  NetworkHub,
   PilotBoardMock,
   PilotSetupMock,
   ProductShot,
-  ToolFlow,
 } from "@/components/enterprise/EnterpriseVisuals";
 import javierPhoto from "@/assets/team-javier-pena-profile.jpg";
 import icpBuilderShot from "@/assets/enterprise/icp-builder.webp";
@@ -28,12 +28,12 @@ import { usePageAnalytics } from "@/hooks/usePageAnalytics";
 import { captureEvent } from "@/lib/analytics";
 import {
   ENTERPRISE_ADAPT,
+  ENTERPRISE_AFTER,
   ENTERPRISE_CONTACT,
   ENTERPRISE_FAQS,
   ENTERPRISE_HERO,
   ENTERPRISE_OUTCOMES,
   ENTERPRISE_PATH,
-  ENTERPRISE_PERKS,
   ENTERPRISE_PILOT,
   ENTERPRISE_SEO,
 } from "@/data/enterprisePage";
@@ -281,7 +281,7 @@ const Enterprise = () => {
                         const Icon = ADAPT_ICONS[item.key] ?? Users;
                         return (
                           <li key={item.key}>
-                            <span className="ent-hub__icon" aria-hidden="true">
+                            <span className="ent-icon" aria-hidden="true">
                               <Icon />
                             </span>
                             <div>
@@ -300,22 +300,19 @@ const Enterprise = () => {
               </section>
             </ScrollReveal>
 
-            {/* The ecosystem every founder in the pilot joins. */}
+            {/* Post-program support: founders keep going on their own once the program ends. */}
             <ScrollReveal variant="fade" amount={0.08}>
               <section className="ent-section ent-section--tint">
                 <div className="ent-container">
-                  <SectionHead eyebrow={ENTERPRISE_PERKS.eyebrow} title={ENTERPRISE_PERKS.title} />
-                  <div className="ent-perks">
-                    <article className="ent-tile ent-perks__tools">
-                      <div className="ent-tile__text">
-                        <Layers className="ent-tile__icon" aria-hidden="true" />
-                        <h3>{ENTERPRISE_PERKS.tools.title}</h3>
-                        <p>{ENTERPRISE_PERKS.tools.body}</p>
-                      </div>
-                      <ToolFlow />
-                    </article>
-                    <NetworkHub nodes={ENTERPRISE_PERKS.network} />
-                  </div>
+                  <SectionHead eyebrow={ENTERPRISE_AFTER.eyebrow} title={ENTERPRISE_AFTER.title} copy={ENTERPRISE_AFTER.copy} />
+                  <AfterProgramFlow
+                    programStages={ENTERPRISE_HERO.cycle.pilotStages}
+                    duringLabel={ENTERPRISE_AFTER.duringLabel}
+                    endLabel={ENTERPRISE_AFTER.endLabel}
+                    afterLabel={ENTERPRISE_AFTER.afterLabel}
+                  />
+                  <AfterProgramKeeps items={ENTERPRISE_AFTER.keeps} />
+                  <p className="ent-after__note">{ENTERPRISE_AFTER.note}</p>
                 </div>
               </section>
             </ScrollReveal>
