@@ -131,13 +131,38 @@ const useScrollReveal = (root: RefObject<HTMLElement>) => {
   }, [root]);
 };
 
-const SectionHead = ({ eyebrow, title, copy, wide = false }: { eyebrow: string; title: string; copy?: string; wide?: boolean }) => (
-  <header className={wide ? 'ent-head ent-head--wide' : 'ent-head'} data-reveal="up">
-    <p className="ent-eyebrow">{eyebrow}</p>
-    <h2 className="ent-h2">{title}</h2>
-    {copy ? <p className="ent-head__copy">{copy}</p> : null}
-  </header>
-);
+const SectionHead = ({
+  eyebrow,
+  title,
+  accent,
+  copy,
+  wide = false,
+}: {
+  eyebrow: string;
+  title: string;
+  /** The end of the title to set in silver; must be how the title ends. */
+  accent?: string;
+  copy?: string;
+  wide?: boolean;
+}) => {
+  const lead = accent && title.endsWith(accent) ? title.slice(0, -accent.length) : null;
+  return (
+    <header className={wide ? 'ent-head ent-head--wide' : 'ent-head'} data-reveal="up">
+      <p className="ent-eyebrow">{eyebrow}</p>
+      <h2 className="ent-h2">
+        {lead !== null ? (
+          <>
+            {lead}
+            <span className="ent-h2__silver">{accent}</span>
+          </>
+        ) : (
+          title
+        )}
+      </h2>
+      {copy ? <p className="ent-head__copy">{copy}</p> : null}
+    </header>
+  );
+};
 
 const Enterprise = () => {
   const location = useLocation();
@@ -238,7 +263,12 @@ const Enterprise = () => {
             {/* The four outcomes, each with the screen or document that delivers it. */}
             <section className="ent-section">
               <div className="ent-container">
-                <SectionHead eyebrow={ENTERPRISE_OUTCOMES.eyebrow} title={ENTERPRISE_OUTCOMES.title} wide />
+                <SectionHead
+                  eyebrow={ENTERPRISE_OUTCOMES.eyebrow}
+                  title={ENTERPRISE_OUTCOMES.title}
+                  accent={ENTERPRISE_OUTCOMES.titleAccent}
+                  wide
+                />
                 <ol className="ent-outcomes">
                   {ENTERPRISE_OUTCOMES.items.map((outcome, index) => (
                     <li key={outcome.key} className="ent-outcome">

@@ -95,6 +95,22 @@
   margin-bottom: 44px;
 }
 
+/* A silver end to a section title (outcomes). Brushed-metal gradient, darker
+   in light mode so it keeps 3:1 contrast at heading size; clone gives each
+   wrapped line its own sheen. */
+.ent-h2__silver {
+  background: linear-gradient(180deg, #4b5360 0%, #7c8592 48%, #5a626e 72%, #3f4651 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
+.dark .ent-h2__silver {
+  background-image: linear-gradient(180deg, #f6f7f9 0%, #c9ced6 42%, #8e96a2 68%, #dde1e6 100%);
+}
+
 /* Wide heads use the full container: lines fill the width instead of being
    balanced into two short halves (outcomes, post-program support). */
 .ent-head--wide .ent-h2,
