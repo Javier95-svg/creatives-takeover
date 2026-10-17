@@ -1,209 +1,99 @@
-import { useState } from "react";
+import { Link } from "react-router-dom";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { ThumbsDown, ThumbsUp } from "lucide-react";
+import { MONTHLY_FREE_QUOTAS, PLAN_LABELS, PLAN_MONTHLY_CREDITS, PLAN_SEQUENCE } from "@/config/planPermissions";
+import { PLAN_PRICING } from "@/config/pricing";
+import { PLAN_PACKAGE_PRESENTATION } from "@/config/planPackages";
+import { GTM_STRATEGIST_PRICING } from "@/config/gtmStrategist";
+import PricingSectionHeader from "@/components/pricing/PricingSectionHeader";
 
-const PricingFAQ = () => {
-  const [helpfulVotes, setHelpfulVotes] = useState<Record<number, "up" | "down" | null>>({});
-  const [openItem, setOpenItem] = useState<string | undefined>();
+// Every number in these answers comes from config, so the FAQ cannot drift from
+// the plan cards (2026-10-17). The refund answer follows Terms section 7.6.
 
-  const faqs = [
-    {
-      question: "Can I change plans later?",
-      answer: `Yes. You can move between Rookie, Starter, Rising, and Pro whenever your workflow changes.
+const credits = PLAN_SEQUENCE.map((plan) => `${PLAN_LABELS[plan]} ${PLAN_MONTHLY_CREDITS[plan]}`).join(", ");
+const paidPrices = PLAN_SEQUENCE.filter((plan) => PLAN_PRICING[plan].monthly > 0)
+  .map((plan) => `${PLAN_LABELS[plan]} $${PLAN_PRICING[plan].monthly}/month or $${PLAN_PRICING[plan].yearly}/year`)
+  .join("; ");
+const planFit = PLAN_SEQUENCE.map((plan) => `${PLAN_LABELS[plan]} for ${PLAN_PACKAGE_PRESENTATION[plan].bestFor.toLowerCase()}`).join(", ");
 
-    Upgrades unlock the new plan immediately. Downgrades take effect on the next billing cycle so you keep the access, credits, and limits you already paid for until that cycle ends.`,
-      relatedQuestions: [1, 3],
-    },
-    {
-      question: "What are credits and how do they work?",
-      answer: `Credits are the usage currency for the AI-powered parts of the platform. Every plan includes a monthly credit grant: Rookie gets 50, Starter 100, Rising 250, and Pro 600.
+const faqs: Array<{ question: string; answer: string; link?: { label: string; to: string } }> = [
+  {
+    question: "How should I choose a plan?",
+    answer: `Pick the plan for where you are now: ${planFit}. You can move up or down whenever your work changes.`,
+  },
+  {
+    question: "What are credits?",
+    answer: `Credits pay for the AI work in the platform. Every plan includes a monthly amount: ${credits}. ICP Builder is free on every plan, and PMF Lab, Tech Stack and the Pitch Deck Analyzer each give you the first one free. GTM Strategist uses ${GTM_STRATEGIST_PRICING.creditsPerResearchGeneration} credits per researched generation. The credits section above lists every cost.`,
+  },
+  {
+    question: "Do unused credits roll over?",
+    answer: "No. Included credits reset at the start of each billing cycle. If you often run out early, move up a plan or add a top-up pack for that month.",
+  },
+  {
+    question: "Can I change plans later?",
+    answer: "Yes. Upgrades apply immediately. Downgrades apply at the next billing cycle, so you keep what you paid for until then.",
+  },
+  {
+    question: "Can I cancel anytime?",
+    answer: `Yes, with no lock-in. Your paid access stays active until the end of the current billing period, then your account moves to ${PLAN_LABELS.rookie}.`,
+  },
+  {
+    question: "What happens to my work if I downgrade?",
+    answer: "Your work stays. Saved workspaces and past results remain available; only what you can create next follows the limits of your new plan.",
+  },
+  {
+    question: `What's included in ${PLAN_LABELS.rookie}?`,
+    answer: `${PLAN_LABELS.rookie} is free forever with ${PLAN_MONTHLY_CREDITS.rookie} credits a month: the core founder tools with standard AI models, the mentor marketplace and discovery call requests, and free co-founder posts. VC Search and Accelerator Hunt are browse only, and you get ${MONTHLY_FREE_QUOTAS.directory_visits.rookie} directory visits a month. Mentor services are paid separately.`,
+  },
+  {
+    question: "How does billing work?",
+    answer: `${PLAN_LABELS.starter}, ${PLAN_LABELS.rising} and ${PLAN_LABELS.pro} are billed monthly or yearly: ${paidPrices}. Subscriptions renew automatically until you cancel, and credits and monthly limits reset on your billing date.`,
+  },
+  {
+    question: "Is my payment information secure?",
+    answer: "Yes. Payments are processed by Stripe; we never store your card details.",
+  },
+  {
+    question: "Do you offer refunds?",
+    answer: "Refunds are provided where the law requires them or where we agree to one. If a charge looks wrong, contact us and we'll review it.",
+    link: { label: "Read the Terms of Service", to: "/terms" },
+  },
+  {
+    question: "Do you offer pricing for programs or teams?",
+    answer: "Yes. Accelerators, incubators, university programs and other institutions get custom pricing based on the number of startups and the program's length, starting with a 30-day pilot. Switch to Institutions at the top of this page and choose Talk with sales; we reply within 1–2 business days.",
+  },
+];
 
-    GTM Strategist is available on every plan and uses 6 credits per researched generation; manual edits and weekly reviews are included. The comparison table shows model levels, first-use allowances, and monthly quotas.
+const PricingFAQ = () => (
+  <section className="relative overflow-hidden py-section-mobile lg:py-section-desktop">
+    <div className="container relative z-10 mx-auto px-4 sm:px-6">
+      <PricingSectionHeader eyebrow="Questions" title="Pricing FAQ" lede="Billing, credits and switching plans." />
 
-    ICP Builder stays free across all four plans. Mentor marketplace access and Discovery Call requests are available on every plan; any mentor service is priced and paid separately.`,
-      relatedQuestions: [0, 5],
-    },
-    {
-      question: "How should I choose the right plan?",
-      answer: `Think about your founder stage, not just the credit number.
-
-Rookie lets you start building and testing for free. Starter adds more validation capacity, the PROVE workspace, and five VC Search and five Accelerator Hunt profiles each month. Rising adds advanced MVP models, the complete First Customer Proof workflow, and broader acquisition capacity. Pro provides the largest credit runway, Find Your Angel, and unlimited VC, accelerator, and directory research.`,
-      relatedQuestions: [1, 6],
-    },
-    {
-      question: "Do unused credits roll over to the next month?",
-      answer: `No. Included monthly credits reset on your billing-cycle boundary and do not roll over.
-
-If you routinely run out before the cycle ends, that usually means you should move up a plan or add credit packs for heavier execution windows.`,
-      relatedQuestions: [0, 1],
-    },
-    {
-      question: "Do you offer refunds?",
-      answer: `Paid subscriptions are covered by our standard refund policy. If you need help with a charge or believe something is wrong with billing, contact support and we will review it quickly.
-
-The important operational detail is that plan upgrades, renewals, and billing-cycle timing all flow through Stripe.`,
-      relatedQuestions: [3, 4],
-    },
-    {
-      question: "Can I cancel anytime?",
-      answer: `Yes. There is no long-term lock-in.
-
-If you cancel, your paid access stays active until the end of the current billing period and then your account falls back to Rookie.`,
-      relatedQuestions: [0, 2],
-    },
-    {
-      question: "Is my payment information secure?",
-      answer: `Yes. Payments are processed through Stripe and we do not store raw card details on our servers.
-
-That means billing, renewals, and checkout security all run on Stripe's infrastructure rather than custom payment handling inside the product.`,
-      relatedQuestions: [6],
-    },
-    {
-      question: "What's included in the Rookie plan?",
-      answer: `Rookie is free forever and includes 50 credits per month. You get the core founder tools, standard AI models for MVP Builder and Prompt Library, Insighta Test, Newspaper, mentor marketplace access and Discovery Call requests, and free Find a Co-Founder posting. Mentor services are priced and paid separately.
-
-    VC Search and Accelerator Hunt are browse only on Rookie, and Directories includes 3 visits per month. AI actions use credits where noted. Find Your Angel is not included.`,
-      relatedQuestions: [0, 1],
-    },
-    {
-      question: "What happens to my data if I downgrade?",
-      answer: `Downgrading changes what you can create next, not whether your existing work still exists.
-
-    You keep your prior data, but model access and quota-limited actions follow the limits of your new tier. Credit-metered core tools remain accessible, and saved workspaces stay available.`,
-      relatedQuestions: [0, 3],
-    },
-    {
-      question: "How does billing work?",
-      answer: `You can choose monthly or yearly billing on Starter, Rising, and Pro. The current prices are Starter at $9/month or $79/year, Rising at $29/month or $239/year, and Pro at $65/month or $589/year.
-
-    Your subscription renews automatically until you cancel. Included credits, profile-view limits, and quota-limited actions reset on the same billing-cycle anchor rather than a generic calendar month.`,
-      relatedQuestions: [4, 0],
-    },
-    {
-      question: "Can I get a custom plan for my team?",
-      answer: `Yes. If your team needs custom credit allocations, more seats, or a different support model, contact us directly.
-
-The default self-serve offering now centers on Rookie, Starter, Rising, and Pro, but larger team setups can still be scoped separately.`,
-      relatedQuestions: [0, 10],
-    },
-    {
-      question: "Do you offer pricing for accelerators, incubators or universities?",
-      answer: `Yes. Programs don't pay a single fee: pricing depends on the number of startups and the length of the program, starting with a 30-day pilot.
-
-Switch to Institutions at the top of this page and choose Talk with sales. We reply within 1–2 business days.`,
-      relatedQuestions: [9],
-    },
-  ];
-
-  const handleVote = (index: number, vote: "up" | "down") => {
-    setHelpfulVotes((prev) => ({
-      ...prev,
-      [index]: prev[index] === vote ? null : vote,
-    }));
-  };
-
-  const handleRelatedQuestionClick = (relatedIndex: number) => {
-    setOpenItem(`item-${relatedIndex}`);
-
-    if (typeof document !== "undefined") {
-      requestAnimationFrame(() => {
-        document
-          .getElementById(`pricing-faq-item-${relatedIndex}`)
-          ?.scrollIntoView({ behavior: "smooth", block: "nearest" });
-      });
-    }
-  };
-
-  return (
-    <section className="relative py-section-mobile lg:py-section-desktop overflow-hidden">
-      <div className="container mx-auto px-4 sm:px-6 relative z-10">
-        <div className="text-center mb-12 animate-fade-in">
-          <h2 className="text-4xl lg:text-5xl font-semibold tracking-tight mb-8 pb-2 gradient-text font-space-grotesk">
-            Pricing FAQ
-          </h2>
-          <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
-            Clear answers on pricing, billing cycles, credits, and what changes between Rookie, Starter, Rising, and Pro.
-          </p>
-        </div>
-
-        <Card className="max-w-4xl mx-auto rounded-2xl bg-card/80 backdrop-blur-sm border-border/60 p-8 animate-fade-in shadow-xl">
-          <Accordion type="single" collapsible value={openItem} onValueChange={setOpenItem} className="w-full">
-            {faqs.map((faq, index) => {
-              const vote = helpfulVotes[index];
-
-              return (
-                <AccordionItem
-                  key={index}
-                  value={`item-${index}`}
-                  id={`pricing-faq-item-${index}`}
-                  className="border-border/60"
-                >
-                  <AccordionTrigger className="text-left text-foreground hover:text-primary font-space-grotesk text-base sm:text-lg">
-                    {faq.question}
-                  </AccordionTrigger>
-                  <AccordionContent className="text-muted-foreground space-y-4">
-                    <div className="space-y-3">
-                      {faq.answer.split("\n\n").map((paragraph, pIndex) => (
-                        <p key={pIndex}>{paragraph.trim()}</p>
-                      ))}
-                    </div>
-
-                    <div className="flex items-center gap-4 pt-4 border-t border-border/50">
-                      <span className="text-sm text-muted-foreground">Was this helpful?</span>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleVote(index, "up")}
-                          className={`h-9 w-9 rounded-full border border-border/60 ${vote === "up" ? "text-success" : ""}`}
-                        >
-                          <ThumbsUp className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleVote(index, "down")}
-                          className={`h-9 w-9 rounded-full border border-border/60 ${vote === "down" ? "text-destructive" : ""}`}
-                        >
-                          <ThumbsDown className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </div>
-
-                    {faq.relatedQuestions && faq.relatedQuestions.length > 0 && (
-                      <div className="pt-4">
-                        <p className="text-sm font-medium text-foreground mb-2">Related questions:</p>
-                        <div className="flex flex-wrap gap-2">
-                          {faq.relatedQuestions.map((relatedIndex) => (
-                            <button
-                              key={relatedIndex}
-                              type="button"
-                              onClick={() => handleRelatedQuestionClick(relatedIndex)}
-                              className="inline-flex items-center rounded-full bg-background/70 border border-border/60 px-2.5 py-0.5 text-xs font-medium text-foreground transition-colors hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-                            >
-                              {faqs[relatedIndex].question}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </AccordionContent>
-                </AccordionItem>
-              );
-            })}
-          </Accordion>
-        </Card>
+      <div className="mx-auto max-w-3xl rounded-2xl border border-border/60 bg-card/70 px-6 py-2 sm:px-8">
+        <Accordion type="single" collapsible className="w-full">
+          {faqs.map((faq, index) => (
+            <AccordionItem key={faq.question} value={`item-${index}`} id={`pricing-faq-item-${index}`} className="border-border/60 last:border-b-0">
+              <AccordionTrigger className="text-left font-space-grotesk text-base text-foreground hover:text-primary sm:text-lg">
+                {faq.question}
+              </AccordionTrigger>
+              <AccordionContent className="text-[15px] leading-relaxed text-muted-foreground">
+                <p>{faq.answer}</p>
+                {faq.link ? (
+                  <Link to={faq.link.to} className="mt-3 inline-block font-medium text-primary underline-offset-4 hover:underline">
+                    {faq.link.label}
+                  </Link>
+                ) : null}
+              </AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
       </div>
-    </section>
-  );
-};
+    </div>
+  </section>
+);
 
 export default PricingFAQ;

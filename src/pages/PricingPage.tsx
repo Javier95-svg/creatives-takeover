@@ -13,6 +13,9 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { captureEvent, trackPricingViewed } from "@/lib/analytics";
 import { ScrollReveal } from "@/components/animations/ScrollReveal";
 import { PRICING_AUDIENCES, PRICING_HEADER, PRICING_SEO, type PricingAudience } from "@/data/pricingPage";
+import { PLAN_LABELS, PLAN_MONTHLY_CREDITS, PLAN_SEQUENCE } from "@/config/planPermissions";
+import { PLAN_PRICING } from "@/config/pricing";
+import { PLAN_PACKAGE_PRESENTATION } from "@/config/planPackages";
 
 // /pricing sells to two audiences (2026-10-17). Founders and builders get the
 // four self-serve plans; institutions get custom pricing and "Talk with
@@ -39,32 +42,17 @@ const PricingPage = () => {
     setSearchParams(params, { replace: true });
   };
 
-  // Structured data for pricing tiers
+  // Structured data for pricing tiers, built from the same copy and numbers as
+  // the plan cards so the two never disagree.
   const structuredData = [
-    createProductSchema({
-      name: "Creatives Takeover Rookie Plan",
-      description: "Start building and testing for free with 50 monthly credits and standard AI models.",
-      price: 0,
-      currency: "USD"
-    }),
-    createProductSchema({
-      name: "Creatives Takeover Starter Plan",
-      description: "Validate faster with 100 monthly credits, the PROVE workspace, and five VC Search and five Accelerator Hunt profiles each month.",
-      price: 9,
-      currency: "USD"
-    }),
-    createProductSchema({
-      name: "Creatives Takeover Rising Plan",
-      description: "Turn evidence into products and customer acquisition with 250 monthly credits and advanced MVP models.",
-      price: 29,
-      currency: "USD"
-    }),
-    createProductSchema({
-      name: "Creatives Takeover Pro Plan",
-      description: "Gain maximum execution runway with 600 monthly credits, Find Your Angel, and unlimited research.",
-      price: 65,
-      currency: "USD"
-    }),
+    ...PLAN_SEQUENCE.map((plan) =>
+      createProductSchema({
+        name: `Creatives Takeover ${PLAN_LABELS[plan]} Plan`,
+        description: `${PLAN_PACKAGE_PRESENTATION[plan].outcome} ${PLAN_PACKAGE_PRESENTATION[plan].outcomeDetail} ${PLAN_MONTHLY_CREDITS[plan]} credits a month.`,
+        price: PLAN_PRICING[plan].monthly,
+        currency: "USD",
+      }),
+    ),
     createBreadcrumbSchema([
       { name: 'Home', url: '/' },
       { name: 'Pricing', url: '/pricing' }

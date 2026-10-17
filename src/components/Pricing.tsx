@@ -2,7 +2,7 @@ import { useState, useTransition } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Check, Crown, Star } from "lucide-react";
+import { CalendarX2, Check, CreditCard, Crown, DollarSign, Lock, type LucideIcon } from "lucide-react";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -18,60 +18,45 @@ import { RevealGroup } from "@/components/animations/ScrollReveal";
 type BillingCycle = "monthly" | "yearly";
 type PlanKey = Plan;
 
-const PLAN_CONFIG: Array<{
-  key: PlanKey;
-  title: string;
-  valueStatement: string;
-  usageLabel: string;
-  perksTitle: string;
-  perks: readonly [string, string, string, string];
-  monthlyPrice: number;
-  yearlyPrice: number;
-  yearlyEquivalent: string;
-  savings: string | null;
-  recommended: boolean;
-}> = PLAN_SEQUENCE.map((key) => ({
+/** Yearly price as a share of twelve monthly payments, rounded down so it never overstates. */
+const yearlySavingsPercent = (key: PlanKey) => {
+  const { monthly, yearly } = PLAN_PRICING[key];
+  return monthly > 0 ? Math.floor((1 - yearly / (monthly * 12)) * 100) : 0;
+};
+
+const PLAN_CONFIG = PLAN_SEQUENCE.map((key) => ({
   key,
   title: PLAN_LABELS[key],
-  valueStatement: PLAN_PACKAGE_PRESENTATION[key].valueStatement,
+  bestFor: PLAN_PACKAGE_PRESENTATION[key].bestFor,
+  outcome: PLAN_PACKAGE_PRESENTATION[key].outcome,
+  outcomeDetail: PLAN_PACKAGE_PRESENTATION[key].outcomeDetail,
   usageLabel: PLAN_PACKAGE_PRESENTATION[key].usageLabel,
   perksTitle: PLAN_PACKAGE_PRESENTATION[key].perksTitle,
   perks: PLAN_PACKAGE_PRESENTATION[key].perks,
   monthlyPrice: PLAN_PRICING[key].monthly,
   yearlyPrice: PLAN_PRICING[key].yearly,
-  yearlyEquivalent: key === "starter" ? "$6.58/mo" : key === "rising" ? "$19.92/mo" : key === "pro" ? "$49.08/mo" : "Free forever",
-  savings: key === "starter" ? "Save 27%" : key === "rising" ? "Save 31%" : key === "pro" ? "Save 25%" : null,
+  yearlyEquivalent: `$${(PLAN_PRICING[key].yearly / 12).toFixed(2)}/mo`,
+  savings: yearlySavingsPercent(key) > 0 ? `Save ${yearlySavingsPercent(key)}%` : null,
   recommended: PLAN_PACKAGE_PRESENTATION[key].recommended === true,
 }));
 
-const PLAN_CARD_STYLES: Record<PlanKey, { border: string; ring: string; button: string; buttonVariant: "default" | "outline" }> = {
-  // Per-tier border colour identity (token-based, theme-aware); the recommended
-  // tier (starter) still carries the strongest emphasis via its glow + scale.
-  rookie: {
-    border: "border-success/55",
-    ring: "ring-border",
-    button: "bg-success text-success-foreground hover:bg-success/90",
-    buttonVariant: "default",
-  },
-  starter: {
-    border: "border-2 border-primary/70",
-    ring: "ring-primary/30",
-    button: "bg-primary text-primary-foreground hover:bg-primary/90",
-    buttonVariant: "default",
-  },
-  rising: {
-    border: "border-warning/55",
-    ring: "ring-border",
-    button: "bg-warning text-warning-foreground hover:bg-warning/90",
-    buttonVariant: "default",
-  },
-  pro: {
-    border: "border-destructive/50",
-    ring: "ring-border",
-    button: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
-    buttonVariant: "default",
-  },
+const MAX_YEARLY_SAVINGS = Math.max(...PLAN_SEQUENCE.map(yearlySavingsPercent));
+
+// Neutral cards with one highlight (2026-10-17): the recommended plan carries
+// the only filled button; the others share one calm outline style.
+const PLAN_CARD_STYLES: Record<"recommended" | "standard", { buttonVariant: "default" | "outline" }> = {
+  recommended: { buttonVariant: "default" },
+  standard: { buttonVariant: "outline" },
 };
+
+// Facts shown under the cards. Each is verified: Rookie signup never reaches
+// Stripe, cancellation is in the FAQ, and checkout runs on Stripe.
+const TRUST_POINTS: Array<{ icon: LucideIcon; label: string }> = [
+  { icon: CreditCard, label: "Free plan, no card needed" },
+  { icon: CalendarX2, label: "Cancel anytime" },
+  { icon: Lock, label: "Secure checkout by Stripe" },
+  { icon: DollarSign, label: "Prices in USD" },
+];
 
 const normalizeTierName = (tierName?: string | null): PlanKey => {
   const normalized = (tierName || "").trim().toLowerCase();
@@ -89,6 +74,9 @@ const formatPrice = (value: number) => {
 /**
  * The four founder plans. showHeading=false drops the h1 and the top padding
  * for pages that render their own header (the /pricing audience switch).
+ *
+ * Each card leads with the outcome the plan gets a founder (2026-10-17), then
+ * the credits and at most three unlocks, so the value reads at a glance.
  */
 export default function Pricing({ showHeading = true }: { showHeading?: boolean }) {
   const { loading, subscriptionData, createCheckout } = useSubscription();
@@ -158,13 +146,10 @@ export default function Pricing({ showHeading = true }: { showHeading?: boolean 
       <div className="container mx-auto px-4 sm:px-6 relative z-10">
         <div className="text-center mb-10 animate-fade-in">
           {showHeading ? (
-            <h1 className="text-4xl lg:text-6xl font-semibold tracking-tight mb-6 pb-2 gradient-text font-space-grotesk">
+            <h1 className="text-4xl lg:text-6xl font-semibold tracking-tight mb-8 pb-2 gradient-text font-space-grotesk">
               Pricing
             </h1>
           ) : null}
-          <p className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
-            Every plan keeps your project evidence and pivot decisions on track as you progress.
-          </p>
 
           <Tabs value={billingCycle} onValueChange={(value) => setBillingCycle(value as BillingCycle)} className="inline-block">
             <TabsList className="grid w-full grid-cols-2 rounded-full border border-border/60 bg-background/70 p-1 shadow-sm backdrop-blur">
@@ -174,14 +159,14 @@ export default function Pricing({ showHeading = true }: { showHeading?: boolean 
               <TabsTrigger className="rounded-full text-sm font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" value="yearly">
                 Yearly
                 <Badge variant="secondary" className="ml-2 rounded-full bg-success-subtle text-success border-success/30 text-xs px-2.5">
-                  Save up to 31%
+                  Save up to {MAX_YEARLY_SAVINGS}%
                 </Badge>
               </TabsTrigger>
             </TabsList>
           </Tabs>
         </div>
 
-        <RevealGroup className="mx-auto grid max-w-[124rem] grid-cols-1 items-start justify-items-center gap-5 md:grid-cols-2 xl:grid-cols-4 xl:gap-6" variant="card">
+        <RevealGroup className="mx-auto grid max-w-[80rem] grid-cols-1 items-stretch gap-5 md:grid-cols-2 xl:grid-cols-4" variant="card">
           {PLAN_CONFIG.map((plan, index) => {
             // Until the subscription resolves we do not know the tier, and
             // normalizeTierName() defaults to "rookie" — so without this guard
@@ -191,22 +176,19 @@ export default function Pricing({ showHeading = true }: { showHeading?: boolean 
             const isPlanPending = pendingPlan === plan.key;
             const price = billingCycle === "yearly" ? plan.yearlyPrice : plan.monthlyPrice;
             const period = billingCycle === "yearly" ? "/year" : plan.monthlyPrice === 0 ? "" : "/month";
-            const cardStyle = PLAN_CARD_STYLES[plan.key];
+            const cardStyle = PLAN_CARD_STYLES[isPopular ? "recommended" : "standard"];
 
             return (
               <div
                 key={plan.key}
                 aria-label={`${plan.title} plan${isPopular ? ", recommended" : ""}`}
-                className={`group relative flex w-full max-w-[516px] flex-col rounded-3xl border ${cardStyle.border} p-6 backdrop-blur transition-all duration-300 hover:-translate-y-1 ${
+                className={`relative mx-auto flex h-full w-full max-w-[516px] flex-col rounded-3xl border p-6 sm:p-7 ${
                   isPopular
-                    ? "z-10 bg-gradient-to-b from-primary/[0.09] to-card shadow-[0_28px_64px_-28px_hsl(var(--primary)/0.45)] xl:-translate-y-2"
-                    : "bg-card/70 shadow-[0_1px_2px_rgb(2_6_23/0.04),0_14px_32px_-20px_rgb(2_6_23/0.20)]"
+                    ? "border-primary/60 bg-card shadow-[0_28px_64px_-32px_hsl(var(--primary)/0.5)] ring-1 ring-primary/25"
+                    : "border-border/70 bg-card/70 shadow-[0_1px_2px_rgb(2_6_23/0.04),0_14px_32px_-24px_rgb(2_6_23/0.2)]"
                 }`}
                 style={{ animationDelay: `${index * 0.08}s` }}
               >
-                {isPopular && (
-                  <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary to-transparent" />
-                )}
                 {isCurrentPlan && user ? (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                     <Badge className="border border-success/30 bg-success-subtle px-3 py-1 text-xs font-medium text-success">
@@ -214,65 +196,64 @@ export default function Pricing({ showHeading = true }: { showHeading?: boolean 
                       Your Plan
                     </Badge>
                   </div>
-                ) : isPopular ? (
-                  <span
-                    className="absolute -top-4 left-1/2 flex h-8 w-8 -translate-x-1/2 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg ring-4 ring-background"
-                    role="img"
-                    aria-label="Recommended plan"
-                    title="Recommended plan"
-                  >
-                    <Star className="h-4 w-4 fill-current" aria-hidden="true" />
-                  </span>
                 ) : null}
 
-                <div>
-                  <h3 className="font-space-grotesk text-2xl font-semibold tracking-tight sm:text-3xl">
-                    {plan.title}
-                  </h3>
-                  <div className="mt-3">
-                    <div className="flex items-baseline gap-1">
-                      <span className="text-5xl sm:text-6xl font-bold tracking-tight font-space-grotesk tabular-nums">
-                        ${formatPrice(price)}
-                      </span>
-                      {period && (
-                        <span className="text-muted-foreground text-base">{period}</span>
-                      )}
-                    </div>
-                    {billingCycle === "yearly" && plan.key !== "rookie" && (
-                      <div className="text-sm text-success mt-1">
-                        {plan.yearlyEquivalent} billed annually
-                      </div>
-                    )}
-                    {plan.savings && billingCycle === "yearly" && (
-                      <div className="text-xs text-muted-foreground mt-1">{plan.savings}</div>
-                    )}
+                <div className="flex items-center justify-between gap-3">
+                  <h3 className="font-space-grotesk text-2xl font-semibold tracking-tight">{plan.title}</h3>
+                  {isPopular ? (
+                    <span className="rounded-full border border-primary/30 bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
+                      Recommended
+                    </span>
+                  ) : null}
+                </div>
+                <p className="mt-1 text-sm text-muted-foreground">Best for {plan.bestFor.toLowerCase()}</p>
+
+                <div className="mt-5">
+                  <div className="flex items-baseline gap-1">
+                    <span className="font-space-grotesk text-5xl font-bold tracking-tight tabular-nums">
+                      ${formatPrice(price)}
+                    </span>
+                    {period && <span className="text-base text-muted-foreground">{period}</span>}
                   </div>
-                  <p className="mt-4 min-h-[3.25rem] font-space-grotesk text-lg font-semibold leading-snug text-foreground">
-                    {plan.valueStatement}
+                  <p className="mt-1 min-h-[1.25rem] text-sm text-muted-foreground">
+                    {billingCycle === "yearly" && plan.savings
+                      ? `${plan.yearlyEquivalent} billed annually · ${plan.savings}`
+                      : plan.monthlyPrice === 0
+                        ? "Free forever"
+                        : billingCycle === "monthly"
+                          ? "Billed monthly"
+                          : null}
                   </p>
                 </div>
 
+                {/* Fixed heights for the longest outcome (2 lines) and detail
+                    (3 lines), so chips, dividers and lists line up across cards. */}
+                <div className="mt-6">
+                  <p className="font-space-grotesk text-xl font-semibold leading-snug text-foreground md:min-h-[3.5rem]">{plan.outcome}</p>
+                  <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground md:min-h-[4.3rem]">{plan.outcomeDetail}</p>
+                </div>
+
                 <div className="mt-5 flex flex-wrap gap-2" aria-label={`${plan.title} plan context`}>
-                  <Badge variant="secondary" className="rounded-full border border-primary/15 bg-primary/10 px-3 py-1 text-xs font-medium text-foreground">
+                  <Badge variant="secondary" className="rounded-full border border-border/70 bg-muted/60 px-3 py-1 text-xs font-medium text-foreground">
                     {plan.usageLabel}
                   </Badge>
                 </div>
 
-                <div className="my-5 flex-1 border-t border-border/60 pt-5">
-                  <p className="mb-4 text-sm font-medium text-foreground">{plan.perksTitle}</p>
-                  <div className="space-y-4">
+                <div className="my-6 flex-1 border-t border-border/60 pt-5">
+                  <p className="mb-3 text-sm font-medium text-foreground">{plan.perksTitle}</p>
+                  <ul className="space-y-2.5">
                     {plan.perks.map((perk) => (
-                      <div key={perk} className="flex items-start gap-3">
+                      <li key={perk} className="flex items-start gap-2.5">
                         <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" strokeWidth={2.5} aria-hidden="true" />
-                        <span className="text-sm leading-relaxed text-foreground/85">{perk}</span>
-                      </div>
+                        <span className="text-sm leading-snug text-foreground/90">{perk}</span>
+                      </li>
                     ))}
-                  </div>
+                  </ul>
                 </div>
 
                 <Button
                   size="lg"
-                  className={`w-full ${cardStyle.button}`}
+                  className="w-full font-semibold"
                   disabled={Boolean(pendingPlan)}
                   onClick={(event) => {
                     event.stopPropagation();
@@ -283,13 +264,22 @@ export default function Pricing({ showHeading = true }: { showHeading?: boolean 
                   {isPlanPending
                     ? "Opening..."
                     : plan.key === "rookie"
-                      ? "Start Free"
-                      : `Go ${plan.title}`}
+                      ? "Start free"
+                      : `Get ${plan.title}`}
                 </Button>
               </div>
             );
           })}
         </RevealGroup>
+
+        <ul className="mx-auto mt-8 flex max-w-4xl flex-wrap items-center justify-center gap-x-7 gap-y-2 text-sm text-muted-foreground">
+          {TRUST_POINTS.map(({ icon: Icon, label }) => (
+            <li key={label} className="inline-flex items-center gap-2">
+              <Icon className="h-4 w-4" aria-hidden="true" />
+              {label}
+            </li>
+          ))}
+        </ul>
       </div>
     </section>
   );

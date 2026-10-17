@@ -5,65 +5,84 @@ import {
 } from './planPermissions.ts';
 
 export interface PlanPackagePresentation {
-  valueStatement: string;
+  /** The founder stage the plan fits, shown as "Best for …". */
+  bestFor: string;
+  /** What the plan lets a founder get done, in a few words. Never a promised result. */
+  outcome: string;
+  /** One sentence on how the plan gets there. */
+  outcomeDetail: string;
   usageLabel: string;
   perksTitle: string;
-  perks: readonly [string, string, string, string];
+  /** At most three short unlocks, each backed by an entitlement or quota. */
+  perks: readonly string[];
   recommended?: boolean;
 }
 
-const quotaLabel = (value: number, noun: string) =>
+const quota = (value: number, noun: string) =>
   Number.isFinite(value) ? `${value} ${noun}` : `Unlimited ${noun}`;
 
 /**
  * Pricing-page merchandising copy. Prices and numeric limits remain owned by
  * pricing.ts and planPermissions.ts; this catalog only explains why a founder
- * would choose each verified package.
+ * would choose each plan.
+ *
+ * Outcome first (2026-10-17): a visitor asks "why should I pay for this?", so
+ * each card leads with what the plan lets them get done and keeps the unlocks
+ * to three short lines. Every unlock maps to FEATURE_ENTITLEMENTS or
+ * MONTHLY_FREE_QUOTAS:
+ * - Starter: dashboard_mode PROVE, vc/accelerator profiles, custom_domain
+ *   (an MVP on the founder's own domain, without CT branding).
+ * - Rising: MVP Builder without freeModelsOnly, first_customer_proof full,
+ *   profiles and directory visits.
+ * - Pro: angels_community, unlimited profiles and directory visits.
  */
 export const PLAN_PACKAGE_PRESENTATION: Record<Plan, PlanPackagePresentation> = {
   rookie: {
-    valueStatement: 'Start your journey.',
+    bestFor: 'Testing an idea',
+    outcome: 'Know who your customer is.',
+    outcomeDetail: 'Define your ideal customer and put a first demand test in front of people.',
     usageLabel: `${PLAN_MONTHLY_CREDITS.rookie} credits / month`,
-    perksTitle: 'Start with the founder essentials:',
+    perksTitle: 'Includes:',
     perks: [
-      `Turn an early idea into a clearer customer, problem, and first test with ${PLAN_MONTHLY_CREDITS.rookie} monthly credits.`,
-      'Create a simple demand test and start collecting evidence before paying for a larger plan.',
-      'Full access to our mentor database (free discovery call bookings) + marketplace.',
-      'Full access to Content section, with weekly podcast episodes and curated industry articles that keep you informed on the market trends.',
+      'ICP Builder, free on every plan',
+      'Demand pages, PMF Lab and MVP Builder on credits',
+      'Mentor marketplace and co-founder posts',
     ],
   },
   starter: {
-    valueStatement: 'Test your assumptions.',
+    bestFor: 'Validating demand',
+    outcome: 'Prove people want it.',
+    outcomeDetail: 'Collect evidence from real customers before you build.',
     usageLabel: `${PLAN_MONTHLY_CREDITS.starter} credits / month`,
     perksTitle: 'Everything in Rookie, plus:',
     perks: [
-      `Get ${PLAN_MONTHLY_CREDITS.starter} monthly credits and a dedicated validation workspace to keep your assumptions, customer evidence, and next actions in one place.`,
-      'Run a more deliberate customer-validation loop, so each conversation can move you closer to a real commitment.',
-      `Access to ${quotaLabel(MONTHLY_FREE_QUOTAS.vc_profiles.starter, 'VC Search profiles')} and ${quotaLabel(MONTHLY_FREE_QUOTAS.accelerator_profiles.starter, 'Accelerator Hunt profiles')} each month to begin your fundraising research.`,
-      'Publish an interactive demand-capture page, so your next decision rests on real signups instead of opinions.',
+      'A validation workspace for interviews and evidence',
+      `${quota(MONTHLY_FREE_QUOTAS.vc_profiles.starter, 'investor')} and ${quota(MONTHLY_FREE_QUOTAS.accelerator_profiles.starter, 'accelerator')} profiles a month`,
+      'Your MVP on your own domain, unbranded',
     ],
     recommended: true,
   },
   rising: {
-    valueStatement: 'Turn evidence into growth.',
+    bestFor: 'Building and first sales',
+    outcome: 'Build it and reach your first buyers.',
+    outcomeDetail: 'Ship your MVP with advanced models, then run a real sales cycle.',
     usageLabel: `${PLAN_MONTHLY_CREDITS.rising} credits / month`,
     perksTitle: 'Everything in Starter, plus:',
     perks: [
-      `Get ${PLAN_MONTHLY_CREDITS.rising} monthly credits and advanced product-building capacity to turn validated learning into something customers can actually use.`,
-      'Unlock the full First Customer Proof workflow to run a measurable acquisition cycle and decide what to improve next.',
-      `Open ${quotaLabel(MONTHLY_FREE_QUOTAS.vc_profiles.rising, 'investor profiles')} each month to build a stronger, better-researched fundraising shortlist.`,
-      `Review ${quotaLabel(MONTHLY_FREE_QUOTAS.accelerator_profiles.rising, 'accelerator profiles')} and use ${quotaLabel(MONTHLY_FREE_QUOTAS.directory_visits.rising, 'directory visits')} each month to expand the opportunities behind your growth plan.`,
+      'Advanced AI models in MVP Builder',
+      'First Customer Proof: 10 prospects, 10 messages, a decision',
+      `${quota(MONTHLY_FREE_QUOTAS.vc_profiles.rising, 'investor')} and ${quota(MONTHLY_FREE_QUOTAS.accelerator_profiles.rising, 'accelerator')} profiles, ${quota(MONTHLY_FREE_QUOTAS.directory_visits.rising, 'directory visits')}`,
     ],
   },
   pro: {
-    valueStatement: 'Execute without limits.',
+    bestFor: 'Fundraising and scale',
+    outcome: 'Build at full pace and research freely.',
+    outcomeDetail: 'The most credits, and no limits on investor or program research.',
     usageLabel: `${PLAN_MONTHLY_CREDITS.pro} credits / month`,
     perksTitle: 'Everything in Rising, plus:',
     perks: [
-      `Get ${PLAN_MONTHLY_CREDITS.pro} monthly credits and the platform's broadest build capacity to keep validating, shipping, and improving without a tight monthly runway.`,
-      'Unlock Find Your Angel to focus your fundraising research on investors who better match your company.',
-      `Research ${quotaLabel(MONTHLY_FREE_QUOTAS.vc_profiles.pro, 'investor profiles')}, so promising opportunities never get cut off by a monthly viewing limit.`,
-      `Research ${quotaLabel(MONTHLY_FREE_QUOTAS.accelerator_profiles.pro, 'accelerator profiles')} and ${quotaLabel(MONTHLY_FREE_QUOTAS.directory_visits.pro, 'directory profiles')} to pursue the strongest programs, people, and opportunities as your strategy evolves.`,
+      'Find Your Angel',
+      'Unlimited investor, accelerator and directory research',
     ],
   },
 };

@@ -1,237 +1,127 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import {
-  Bot,
-  Users,
-  TrendingUp,
-} from "lucide-react";
+import { Coins, Gift } from "lucide-react";
 import { CREDIT_COSTS, getCreditCostForPlan } from "@/config/constants";
 import { GTM_STRATEGIST_PRICING } from "@/config/gtmStrategist";
+import { PLAN_LABELS, PLAN_MONTHLY_CREDITS, PLAN_SEQUENCE, type Plan } from "@/config/planPermissions";
+import { TOP_UP_PACKS } from "@/config/pricing";
 import { RevealGroup, ScrollReveal } from "@/components/animations/ScrollReveal";
+import PricingSectionHeader from "@/components/pricing/PricingSectionHeader";
 
-type CreditBreakdownItem = {
-  name: string;
-  description: string;
-  badge: string;
-  badgeVariant?: "secondary" | "outline";
-  badgeClassName?: string;
+/**
+ * "What your credits cover" (2026-10-17): what a month of credits buys on each
+ * plan, then one plain list of what is free and what each action costs. Every
+ * number comes from CREDIT_COSTS, PLAN_MONTHLY_CREDITS and TOP_UP_PACKS, so the
+ * section cannot drift from what the product charges.
+ */
+
+const demandPageCost = (plan: Plan) => getCreditCostForPlan("WAITLIST_GENERATION", plan) ?? CREDIT_COSTS.WAITLIST_GENERATION;
+
+// What the whole month's credits buy if spent on one kind of action.
+const monthCovers = (plan: Plan) => {
+  const credits = PLAN_MONTHLY_CREDITS[plan];
+  return [
+    { label: "demand pages", count: Math.floor(credits / demandPageCost(plan)) },
+    { label: "PMF scores", count: Math.floor(credits / CREDIT_COSTS.PMF_SCORING) },
+    { label: "MVP builds", count: Math.floor(credits / CREDIT_COSTS.APP_BUILDER_GENERATE) },
+  ];
 };
 
-const creditBreakdown: {
-  bizmap: CreditBreakdownItem[];
-  insighta: CreditBreakdownItem[];
-  community: CreditBreakdownItem[];
-} = {
-  bizmap: [
-    {
-      name: "ICP Builder",
-      description: "Free on every plan, so you can define your ideal customer profile without spending credits.",
-      badge: "FREE",
-      badgeVariant: "outline",
-      badgeClassName: "bg-success-subtle dark:bg-success/30",
-    },
-    {
-      name: "Demo Studio",
-      description: `Unlocked on every plan. Publishing or generating a waitlist costs ${getCreditCostForPlan('WAITLIST_GENERATION', 'rookie')} credits on Rookie and ${CREDIT_COSTS.WAITLIST_GENERATION} credits on paid plans.`,
-      badge: `${getCreditCostForPlan('WAITLIST_GENERATION', 'rookie')} / ${CREDIT_COSTS.WAITLIST_GENERATION} credits`,
-      badgeVariant: "outline",
-      badgeClassName: "bg-info-subtle dark:bg-info/30",
-    },
-    {
-      name: "Product-Market Fit Lab",
-      description: `Included on every plan. Your first evidence score is free; after that each score costs ${CREDIT_COSTS.PMF_SCORING} credits. Re-scores of an existing analysis are always free.`,
-      badge: "First score free",
-      badgeVariant: "outline",
-      badgeClassName: "bg-info-subtle dark:bg-info/30",
-    },
-    {
-      name: "MVP Builder",
-      description: `Available on every plan using the user's regular account credit balance: ${CREDIT_COSTS.APP_BUILDER_GENERATE} credits for a React app, ${CREDIT_COSTS.APP_BUILDER_REFINE} for targeted edits, ${CREDIT_COSTS.APP_BUILDER_DEBUG} for bug fixes, and ${CREDIT_COSTS.APP_BUILDER_DEPLOY} to publish.`,
-      badge: "All plans",
-      badgeVariant: "outline",
-      badgeClassName: "bg-info-subtle dark:bg-info/30",
-    },
-    {
-      name: "Tech Stack Builder",
-      description: `Included on every plan. Your first build is free; after that each generation costs ${CREDIT_COSTS.TECH_STACK_GENERATION} credits.`,
-      badge: "First build free",
-      badgeVariant: "outline",
-      badgeClassName: "bg-info-subtle dark:bg-info/30",
-    },
-    {
-      name: "GTM Strategist",
-      description: `Available on every plan. A researched generation costs ${GTM_STRATEGIST_PRICING.creditsPerResearchGeneration} credits; manual edits and weekly reviews are included.`,
-      badge: "All plans",
-      badgeVariant: "outline",
-      badgeClassName: "bg-info-subtle dark:bg-info/30",
-    },
-    {
-      name: "Directories",
-      description: "Every plan can open directory records. Rookie gets 3 visits monthly, Starter 10, Rising 15, and Pro has unlimited visits.",
-      badge: "3 to unlimited visits",
-      badgeVariant: "outline",
-      badgeClassName: "bg-info-subtle dark:bg-info/30",
-    },
-  ],
-  insighta: [
-    {
-      name: "VC Search",
-      description: "Rookie can browse only. Starter gets 2 profile views/monthly, Rising 10 profile views/monthly, and Pro unlimited profile views.",
-      badge: "View limits",
-      badgeVariant: "outline",
-      badgeClassName: "bg-info-subtle dark:bg-info/30",
-    },
-    {
-      name: "Accelerator Hunt",
-      description: "Rookie can browse only. Starter gets 2 profile views/monthly, Rising 10 profile views/monthly, and Pro unlimited profile views.",
-      badge: "View limits",
-      badgeVariant: "outline",
-      badgeClassName: "bg-info-subtle dark:bg-info/30",
-    },
-    {
-      name: "Email Templates",
-      description: "Starter, Rising, and Pro have full plan-gated access. Rookie does not include it.",
-      badge: "Included on Starter+",
-      badgeVariant: "outline",
-      badgeClassName: "bg-info-subtle dark:bg-info/30",
-    },
-    {
-      name: "Pitch Deck Analyzer",
-      description: `Available on every plan. The anonymous Quick Score is free, and each signed in deep analysis costs ${CREDIT_COSTS.PITCH_DECK_ANALYZER} credits.`,
-      badge: `${CREDIT_COSTS.PITCH_DECK_ANALYZER} credits`,
-      badgeVariant: "outline",
-      badgeClassName: "bg-info-subtle dark:bg-info/30",
-    },
-    {
-      name: "Insighta Test",
-      description: "Included on every plan.",
-      badge: "Included",
-      badgeVariant: "outline",
-      badgeClassName: "bg-success-subtle dark:bg-success/30",
-    },
-  ],
-  community: [
-    {
-      name: "Find a Co-Founder Posting",
-      description: "Available on every plan. Publishing, renewing, and responding are free.",
-      badge: "Free",
-      badgeVariant: "outline",
-      badgeClassName: "bg-info-subtle dark:bg-info/30",
-    },
-    {
-      name: "Find Your Angel",
-      description: "Pro only. Rookie, Starter, and Rising do not include investor access here.",
-      badge: "PRO ONLY",
-      badgeVariant: "outline",
-      badgeClassName: "bg-destructive-subtle dark:bg-destructive/30",
-    },
-  ],
-};
+const FREE_ACTIONS = [
+  "ICP Builder",
+  "Your first PMF score",
+  "Your first tech stack",
+  "Your first pitch deck analysis",
+  "Traction Engine weekly logs",
+  "Co-founder posts and mentor discovery calls",
+];
 
-const SubscriptionFeatures = () => {
-  const renderFeatureBadge = (feature: CreditBreakdownItem) => {
-    const badgeClassName = feature.badgeClassName ? `shrink-0 ${feature.badgeClassName}` : "shrink-0";
+const CREDIT_ACTIONS: Array<{ label: string; cost: string }> = [
+  {
+    label: "Demand page in Demo Studio",
+    cost: `${CREDIT_COSTS.WAITLIST_GENERATION} (${getCreditCostForPlan("WAITLIST_GENERATION", "rookie")} on Rookie)`,
+  },
+  { label: "PMF score", cost: String(CREDIT_COSTS.PMF_SCORING) },
+  { label: "MVP Builder: new app", cost: String(CREDIT_COSTS.APP_BUILDER_GENERATE) },
+  { label: "MVP Builder: edit, fix, publish", cost: `${CREDIT_COSTS.APP_BUILDER_REFINE}, ${CREDIT_COSTS.APP_BUILDER_DEBUG}, ${CREDIT_COSTS.APP_BUILDER_DEPLOY}` },
+  { label: "Tech stack", cost: String(CREDIT_COSTS.TECH_STACK_GENERATION) },
+  { label: "GTM Strategist research", cost: String(GTM_STRATEGIST_PRICING.creditsPerResearchGeneration) },
+  { label: "Pitch deck analysis", cost: String(CREDIT_COSTS.PITCH_DECK_ANALYZER) },
+];
 
-    return (
-      <Badge variant={feature.badgeVariant ?? "secondary"} className={badgeClassName}>
-        {feature.badge}
-      </Badge>
-    );
-  };
+const SubscriptionFeatures = () => (
+  <section className="relative overflow-hidden py-section-mobile lg:py-section-desktop" id="features">
+    <div className="container relative z-10 mx-auto px-4 sm:px-6">
+      <ScrollReveal>
+        <PricingSectionHeader
+          eyebrow="Credits"
+          title="What your credits cover"
+          lede="Credits pay for the AI work. Many tools are free to start, and your credits renew each month."
+        />
+      </ScrollReveal>
 
-  return (
-    <section className="relative py-section-mobile lg:py-section-desktop overflow-hidden" id="features">
-      <div className="container mx-auto px-4 sm:px-6 relative z-10">
-        {/* Section Header */}
-        <ScrollReveal className="text-center mb-16 animate-fade-in">
-          <h2 className="text-4xl lg:text-5xl font-semibold tracking-tight mb-6 pb-2 gradient-text font-space-grotesk">
-            How Our Credit System Works
-          </h2>
-          <p className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto">
-            Every tool has a transparent access model, so you can see what is included on your plan and what still uses credits before spending anything.
-          </p>
-        </ScrollReveal>
+      {/* A month of credits, translated into things a founder gets done. */}
+      <RevealGroup className="mx-auto grid max-w-6xl gap-4 sm:grid-cols-2 lg:grid-cols-4" variant="card">
+        {PLAN_SEQUENCE.map((plan) => (
+          <div key={plan} className="rounded-2xl border border-border/60 bg-card/70 p-5">
+            <div className="flex items-baseline justify-between gap-3">
+              <p className="font-space-grotesk text-lg font-semibold text-foreground">{PLAN_LABELS[plan]}</p>
+              <p className="text-sm tabular-nums text-muted-foreground">{PLAN_MONTHLY_CREDITS[plan]} credits</p>
+            </div>
+            <p className="mt-3 text-xs text-muted-foreground">A month covers about</p>
+            <ul className="mt-2 space-y-1.5">
+              {monthCovers(plan).map((item, index) => (
+                <li key={item.label} className="flex items-baseline gap-2 text-sm text-foreground">
+                  {index > 0 ? <span className="w-5 shrink-0 text-xs text-muted-foreground">or</span> : <span className="w-5 shrink-0" />}
+                  <span className="font-semibold tabular-nums">{item.count}</span>
+                  {item.label}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </RevealGroup>
 
-        {/* Credit Breakdown Grid - wider cards for readability */}
-        <RevealGroup className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 items-start" variant="card">
-          {/* BizMap AI Card */}
-          <Card className="rounded-2xl border border-border/60 dark:border-border/40 bg-card/80 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md">
-            <CardHeader>
-              <div className="flex items-center gap-3 mb-2">
-                <div className="p-2 rounded-full bg-primary/10">
-                  <Bot className="h-6 w-6 text-primary" />
+      <ScrollReveal>
+        <div className="mx-auto mt-6 grid max-w-6xl overflow-hidden rounded-2xl border border-border/60 bg-card/70 md:grid-cols-2">
+          <div className="p-6 sm:p-7">
+            <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+              <Gift className="h-4 w-4 text-success" aria-hidden="true" />
+              Free on every plan
+            </p>
+            <ul className="mt-4 space-y-2.5">
+              {FREE_ACTIONS.map((action) => (
+                <li key={action} className="text-sm text-foreground">{action}</li>
+              ))}
+            </ul>
+          </div>
+          <div className="border-t border-border/60 p-6 sm:p-7 md:border-l md:border-t-0">
+            <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+              <Coins className="h-4 w-4 text-primary" aria-hidden="true" />
+              Uses credits
+            </p>
+            <dl className="mt-4 space-y-2.5">
+              {CREDIT_ACTIONS.map((action) => (
+                <div key={action.label} className="flex items-baseline justify-between gap-4 text-sm">
+                  <dt className="text-foreground">{action.label}</dt>
+                  <dd className="shrink-0 tabular-nums text-muted-foreground">{action.cost}</dd>
                 </div>
-                <CardTitle className="text-xl font-space-grotesk">BizMap AI</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {creditBreakdown.bizmap.map((feature, idx) => (
-                  <div key={idx} className="flex justify-between items-start gap-3 pb-3 border-b border-border/50 last:border-0">
-                    <div className="flex-1">
-                      <p className="font-medium text-sm">{feature.name}</p>
-                      <p className="text-xs text-muted-foreground mt-1">{feature.description}</p>
-                    </div>
-                    {renderFeatureBadge(feature)}
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+              ))}
+            </dl>
+          </div>
+        </div>
+      </ScrollReveal>
 
-          {/* Insighta Card */}
-          <Card className="rounded-2xl border border-border/60 dark:border-border/40 bg-card/80 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md">
-            <CardHeader>
-              <div className="flex items-center gap-3 mb-2">
-                <div className="p-2 rounded-full bg-primary/10">
-                  <TrendingUp className="h-6 w-6 text-primary" />
-                </div>
-                <CardTitle className="text-xl font-space-grotesk">Insighta</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {creditBreakdown.insighta.map((feature, idx) => (
-                  <div key={idx} className="flex justify-between items-start gap-3 pb-3 border-b border-border/50 last:border-0">
-                    <div className="flex-1">
-                      <p className="font-medium text-sm">{feature.name}</p>
-                      <p className="text-xs text-muted-foreground mt-1">{feature.description}</p>
-                    </div>
-                    {renderFeatureBadge(feature)}
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Community Card */}
-          <Card className="rounded-2xl border border-border/60 dark:border-border/40 bg-card/80 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md">
-            <CardHeader>
-              <div className="flex items-center gap-3 mb-2">
-                <div className="p-2 rounded-full bg-primary/10">
-                  <Users className="h-6 w-6 text-primary" />
-                </div>
-                <CardTitle className="text-xl font-space-grotesk">Community</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {creditBreakdown.community.map((feature, idx) => (
-                  <div key={idx} className="flex justify-between items-start gap-3 pb-3 border-b border-border/50 last:border-0">
-                    <div className="flex-1">
-                      <p className="font-medium text-sm">{feature.name}</p>
-                      <p className="text-xs text-muted-foreground mt-1">{feature.description}</p>
-                    </div>
-                    {renderFeatureBadge(feature)}
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </RevealGroup>
-      </div>
-    </section>
-  );
-};
+      <p className="mx-auto mt-6 max-w-6xl text-center text-sm text-muted-foreground">
+        Need more in a busy month? Top-up packs:{" "}
+        {TOP_UP_PACKS.map((pack, index) => (
+          <span key={pack.id}>
+            {index > 0 ? " · " : null}
+            <span className="font-medium text-foreground">{pack.credits} credits for ${pack.priceUsd}</span>
+          </span>
+        ))}
+        . Monthly credits don't roll over.
+      </p>
+    </div>
+  </section>
+);
 
 export default SubscriptionFeatures;
