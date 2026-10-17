@@ -4,9 +4,11 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   Building2,
   ChevronDown,
+  Compass,
   DollarSign,
   Handshake,
   Info,
+  Lightbulb,
   type LucideIcon,
   Menu,
   Mic,
@@ -30,7 +32,7 @@ import { usePageAnalytics } from "@/hooks/usePageAnalytics";
 import { useCTAAttribution } from "@/hooks/useCTAAttribution";
 
 type VisitorLink = { label: string; href: string; icon: LucideIcon; sectionId?: string; exact?: boolean };
-type VisitorMenu = { label: string; links: VisitorLink[] };
+type VisitorMenu = { label: string; links: VisitorLink[]; icon: LucideIcon };
 type VisitorEntry = VisitorLink | VisitorMenu;
 
 const isMenu = (entry: VisitorEntry): entry is VisitorMenu => "links" in entry;
@@ -54,9 +56,9 @@ const visitorEntries: VisitorEntry[] = [
   // exact, because /demo-studio and /demo-calls both start with /demo and would
   // otherwise light this entry up while the visitor is somewhere else entirely.
   { label: "How it works", href: "/demo", icon: PlayCircle, exact: true },
-  { label: "For founders", links: founderLinks },
+  { label: "For founders", links: founderLinks, icon: Lightbulb },
   { label: "Enterprise", href: "/enterprise", icon: Building2 },
-  { label: "Explore", links: exploreLinks },
+  { label: "Explore", links: exploreLinks, icon: Compass },
   { label: "About", href: "/about", icon: Info },
   { label: "Pricing", href: "/pricing", icon: DollarSign },
 ];
@@ -187,16 +189,19 @@ const LegacyVisitorNavbar = () => {
             </Link>
 
             <div className="hidden min-w-0 flex-1 items-center justify-center gap-1 lg:flex">
+              {/* Each entry keeps its icon on the left. Six entries only fit with
+                  icons from 2xl; below that the labels carry it. */}
               {visitorEntries.map((entry) =>
                 isMenu(entry) ? (
                   <DropdownMenu key={entry.label} modal={false}>
                     <DropdownMenuTrigger
                       className={cn(
                         navItemClass(entry.links.some((item) => isActive(item.href, item.sectionId, item.exact))),
-                        "group inline-flex items-center gap-1 whitespace-nowrap"
+                        "group inline-flex items-center gap-1 whitespace-nowrap 2xl:gap-2"
                       )}
                       onClick={() => trackNavClick(entry.label)}
                     >
+                      <entry.icon className="hidden h-4 w-4 shrink-0 2xl:block" aria-hidden="true" />
                       {entry.label}
                       <ChevronDown
                         className="h-3.5 w-3.5 opacity-70 transition-transform group-data-[state=open]:rotate-180"
@@ -221,9 +226,10 @@ const LegacyVisitorNavbar = () => {
                   <Link
                     key={entry.label}
                     to={entry.href}
-                    className={cn(linkClassName(entry.href, entry.sectionId, entry.exact), "inline-flex items-center whitespace-nowrap")}
+                    className={cn(linkClassName(entry.href, entry.sectionId, entry.exact), "inline-flex items-center gap-2 whitespace-nowrap")}
                     onClick={(event) => handleNavClick(event, entry)}
                   >
+                    <entry.icon className="hidden h-4 w-4 shrink-0 2xl:block" aria-hidden="true" />
                     {entry.label}
                   </Link>
                 )

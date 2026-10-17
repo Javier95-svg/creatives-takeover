@@ -40,6 +40,16 @@ test('the bar runs How it works, For founders, Enterprise, Explore, About, Prici
   assert.equal(source.match(/<DropdownMenuTrigger/g)?.length, 1, 'one dropdown trigger, rendered for each menu entry');
 });
 
+test('every bar entry keeps its icon on the left', () => {
+  // Requested 2026-10-17: the icons were lost in the redesign. Menus carry one
+  // too, and the desktop bar shows them from 2xl, where six entries fit.
+  const { table } = linkTable('visitorEntries');
+  const entries = table.split('\n').filter((line) => line.includes('label: "'));
+  assert.equal(entries.length, 6);
+  for (const line of entries) assert.match(line, /icon: [A-Z]\w+/, line.trim());
+  assert.equal(source.match(/<entry\.icon className="hidden h-4 w-4 shrink-0 2xl:block"/g)?.length, 2, 'icon on links and on menu triggers');
+});
+
 test('For founders holds Build and Collab', () => {
   const { table, labels } = linkTable('founderLinks');
   assert.deepEqual(labels, ['Build', 'Collab']);
