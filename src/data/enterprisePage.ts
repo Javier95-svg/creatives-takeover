@@ -40,7 +40,7 @@ export const ENTERPRISE_HERO = {
   // its result is complete (drafts never count; src/lib/founderProgress.ts).
   // Tools are not locked, so never say a stage "opens" or "unlocks".
   lede:
-    'Your founders follow our Startup Development Cycle: seven stages, each with its own tool and result. A team only moves up when that result is complete, so you see finished work, not status updates.',
+    'Our Startup Development Cycle moves founders up a stage only when the work is done. You see results, not status updates.',
   // The pilot's outcomes come from stages I to III: the ideal customer
   // (Identity), the demand test (Prototype) and the evidence (Validation).
   cycle: {

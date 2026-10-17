@@ -187,7 +187,7 @@ export const INDEXABLE_ROUTES = [
     priority: 0.9,
     heroHeading: "Every founder tests their idea. You see the evidence.",
     heroCopy:
-      "A 30-day founder validation pilot for accelerators, incubators and universities. Your founders follow our Startup Development Cycle: seven stages, each with its own tool and result. A team only moves up when that result is complete, so you see finished work, not status updates.",
+      "A 30-day founder validation pilot for accelerators, incubators and universities. Our Startup Development Cycle moves founders up a stage only when the work is done. You see results, not status updates.",
     sections: [
       {
         heading: "Four outcomes in 30 days",
