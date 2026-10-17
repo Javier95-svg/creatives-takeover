@@ -33,20 +33,29 @@ export const PRICING_HEADER = {
   lede: 'Plans for founders and builders. Custom pricing for programs.',
 };
 
+// Laid out as a quote sheet (2026-10-17): the terms that set the price on the
+// left, what every program gets on the right. The reply time is the one the
+// sales pop-up promises.
 export const INSTITUTION_PRICING = {
-  eyebrow: 'For accelerators, incubators, university programs and other institutions',
+  eyebrow: 'Institutions',
   title: 'Custom pricing',
-  copy: 'Priced per program, based on the number of startups and the program’s length.',
+  audience: 'Accelerators, incubators, university programs and other institutions.',
+  terms: [
+    { label: 'Priced', value: 'Per program' },
+    { label: 'Based on', value: 'Number of startups and program length' },
+    { label: 'Starts with', value: 'A 30-day validation pilot' },
+    { label: 'Reply', value: 'Within 1–2 business days' },
+  ],
   cta: 'Talk with sales',
   secondary: { label: 'How the pilot works', href: '/enterprise' },
   includesTitle: 'Every program includes',
   includes: [
-    'A 30-day validation pilot to start',
-    'Platform access for every founder',
-    'Weekly check-ins run by our team',
-    'A final cohort report, in your funder’s format',
-    'Setup around your program’s length, size and founders',
-    'Founders keep the free plan after the program',
+    { key: 'pilot', text: 'A 30-day validation pilot to start' },
+    { key: 'access', text: 'Platform access for every founder' },
+    { key: 'checkins', text: 'Weekly check-ins run by our team' },
+    { key: 'report', text: 'A final cohort report, in your funder’s format' },
+    { key: 'setup', text: 'Setup around your program’s length, size and founders' },
+    { key: 'after', text: 'Founders keep the free plan after the program' },
   ],
   stepsTitle: 'How it works',
   steps: [
