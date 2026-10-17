@@ -63,7 +63,7 @@ export const ENTERPRISE_HERO = {
 // program gets, not what the founder does.
 export const ENTERPRISE_OUTCOMES = {
   eyebrow: 'What you get',
-  title: 'What you have after the 30-day pilot',
+  title: 'A unified system to measure your cohort progress and outcomes',
   items: [
     {
       key: 'plan',
