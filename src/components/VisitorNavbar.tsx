@@ -45,7 +45,7 @@ const founderLinks: VisitorLink[] = [
 
 // The Explore menu's contents.
 const exploreLinks: VisitorLink[] = [
-  { label: "News", href: "/newspaper", icon: Newspaper },
+  { label: "Newspaper", href: "/newspaper", icon: Newspaper },
   { label: "Podcast", href: "/podcast", icon: Mic },
 ];
 

@@ -24,7 +24,7 @@ const linkTable = (name: string) => {
 };
 
 test('visitor navigation keeps the intended public destinations', () => {
-  for (const label of ['How it works', 'For founders', 'Explore', 'Enterprise', 'Build', 'Collab', 'News', 'Podcast', 'About', 'Pricing']) {
+  for (const label of ['How it works', 'For founders', 'Explore', 'Enterprise', 'Build', 'Collab', 'Newspaper', 'Podcast', 'About', 'Pricing']) {
     assert.match(source, new RegExp(`label: "${label}"`));
   }
 });
@@ -58,9 +58,9 @@ test('For founders holds Build and Collab', () => {
   assert.doesNotMatch(table, /Guidance|Compass|Connect/);
 });
 
-test('Explore holds News and Podcast', () => {
+test('Explore holds Newspaper and Podcast', () => {
   const { labels } = linkTable('exploreLinks');
-  assert.deepEqual(labels, ['News', 'Podcast']);
+  assert.deepEqual(labels, ['Newspaper', 'Podcast']);
 });
 
 test('Join Today goes to signup on desktop and mobile', () => {
