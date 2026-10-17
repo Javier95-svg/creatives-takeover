@@ -62,7 +62,7 @@ test('the enterprise page lands the pilot offer in the hero', () => {
   // pilot, its terms at a glance, a way to talk to us, and the pilot itself.
   assert.deepEqual(
     enterprise.ENTERPRISE_HERO.facts.map((fact) => fact.label),
-    ['days', 'startups', 'check-ins', 'cohort report'],
+    ['day pilot', 'startups', 'check-ins', 'cohort report'],
   );
   const heroStart = enterprisePage.indexOf('className="ent-hero"');
   const hero = enterprisePage.slice(heroStart, enterprisePage.indexOf('</section>', heroStart));

@@ -36,10 +36,10 @@ export const ENTERPRISE_HERO = {
   eyebrow: '30-day founder validation pilot',
   titleLead: 'Every founder tests their idea.',
   titleAccent: 'You see the evidence.',
-  // Javier's wording (2026-10-16): who it's for and that it adapts. It also
-  // carries what the note under the buttons used to say, so there is no note.
+  // Javier's wording (2026-10-16): who it's for and that it adapts. Programs
+  // don't all last 30 days, so the 30 days is the pilot, not the program.
   lede:
-    'Your accountability partner for accelerators, incubators and university programs. Shaped around your program’s size, founders and calendar.',
+    'Your accountability partner for accelerators, incubators and university programs. Start with a 30-day pilot, then we shape it around your program’s length, size and founders.',
   // The pilot's outcomes come from stages I to III: the ideal customer
   // (Identity), the demand test (Prototype) and the evidence (Validation).
   cycle: {
@@ -50,7 +50,7 @@ export const ENTERPRISE_HERO = {
   primaryCta: 'Book a pilot call',
   secondaryCta: { label: 'See the platform', href: '/demo' },
   facts: [
-    { value: '30', label: 'days' },
+    { value: '30', label: 'day pilot' },
     { value: '5–10', label: 'startups' },
     { value: 'Weekly', label: 'check-ins' },
     { value: '1', label: 'cohort report' },
@@ -79,7 +79,7 @@ export const ENTERPRISE_PURPOSE = {
 // program gets, not what the founder does.
 export const ENTERPRISE_OUTCOMES = {
   eyebrow: 'What you get',
-  title: 'What your program has after 30 days',
+  title: 'What you have after the 30-day pilot',
   items: [
     {
       key: 'plan',
