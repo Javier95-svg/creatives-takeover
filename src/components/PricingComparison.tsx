@@ -158,7 +158,7 @@ const PricingComparison = () => {
             <CardContent className="space-y-6">
               {differingCategories.map((category) => (
                 <div key={category.category}>
-                  <h3 className="mb-3 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">{category.category}</h3>
+                  <h3 className="mb-3 text-xs font-semibold uppercase tracking-[0.12em] text-primary">{category.category}</h3>
                   <div className="space-y-3">
                     {category.items.map((item) => (
                       <div key={item.feature} className="flex items-center justify-between gap-4">
@@ -197,7 +197,7 @@ const PricingComparison = () => {
                 <tbody>
                   {differingCategories.map((category) => (
                     <React.Fragment key={category.category}>
-                      <tr><td colSpan={5} className="sticky left-0 z-10 border-b border-border/40 bg-muted/30 px-5 py-2.5 text-left"><h3 className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">{category.category}</h3></td></tr>
+                      <tr><td colSpan={5} className="sticky left-0 z-10 border-b border-border/40 bg-muted/30 px-5 py-2.5 text-left"><h3 className="text-xs font-semibold uppercase tracking-[0.12em] text-primary">{category.category}</h3></td></tr>
                       {category.items.map((item) => (
                         <tr key={item.feature} className="border-b border-border/40 last:border-b-0">
                           <td className="sticky left-0 z-10 bg-card px-5 py-3.5 text-sm font-medium text-foreground">{item.feature}</td>

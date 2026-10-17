@@ -42,11 +42,30 @@ const PLAN_CONFIG = PLAN_SEQUENCE.map((key) => ({
 
 const MAX_YEARLY_SAVINGS = Math.max(...PLAN_SEQUENCE.map(yearlySavingsPercent));
 
-// Neutral cards with one highlight (2026-10-17): the recommended plan carries
-// the only filled button; the others share one calm outline style.
-const PLAN_CARD_STYLES: Record<"recommended" | "standard", { buttonVariant: "default" | "outline" }> = {
-  recommended: { buttonVariant: "default" },
-  standard: { buttonVariant: "outline" },
+// Each tier keeps its colour identity (Javier, 2026-10-17: keep the colours):
+// green Rookie, blue Starter, amber Rising, red Pro. The recommended tier
+// (Starter) still carries the strongest emphasis via its glow.
+const PLAN_CARD_STYLES: Record<PlanKey, { border: string; button: string; buttonVariant: "default" | "outline" }> = {
+  rookie: {
+    border: "border-success/55",
+    button: "bg-success text-success-foreground hover:bg-success/90",
+    buttonVariant: "default",
+  },
+  starter: {
+    border: "border-2 border-primary/70",
+    button: "bg-primary text-primary-foreground hover:bg-primary/90",
+    buttonVariant: "default",
+  },
+  rising: {
+    border: "border-warning/55",
+    button: "bg-warning text-warning-foreground hover:bg-warning/90",
+    buttonVariant: "default",
+  },
+  pro: {
+    border: "border-destructive/50",
+    button: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+    buttonVariant: "default",
+  },
 };
 
 // Facts shown under the cards. Each is verified: Rookie signup never reaches
@@ -176,16 +195,16 @@ export default function Pricing({ showHeading = true }: { showHeading?: boolean 
             const isPlanPending = pendingPlan === plan.key;
             const price = billingCycle === "yearly" ? plan.yearlyPrice : plan.monthlyPrice;
             const period = billingCycle === "yearly" ? "/year" : plan.monthlyPrice === 0 ? "" : "/month";
-            const cardStyle = PLAN_CARD_STYLES[isPopular ? "recommended" : "standard"];
+            const cardStyle = PLAN_CARD_STYLES[plan.key];
 
             return (
               <div
                 key={plan.key}
                 aria-label={`${plan.title} plan${isPopular ? ", recommended" : ""}`}
-                className={`relative mx-auto flex h-full w-full max-w-[516px] flex-col rounded-3xl border p-6 sm:p-7 ${
+                className={`relative mx-auto flex h-full w-full max-w-[516px] flex-col rounded-3xl border ${cardStyle.border} p-6 sm:p-7 ${
                   isPopular
-                    ? "border-primary/60 bg-card shadow-[0_28px_64px_-32px_hsl(var(--primary)/0.5)] ring-1 ring-primary/25"
-                    : "border-border/70 bg-card/70 shadow-[0_1px_2px_rgb(2_6_23/0.04),0_14px_32px_-24px_rgb(2_6_23/0.2)]"
+                    ? "bg-gradient-to-b from-primary/[0.09] to-card shadow-[0_28px_64px_-28px_hsl(var(--primary)/0.45)]"
+                    : "bg-card/70 shadow-[0_1px_2px_rgb(2_6_23/0.04),0_14px_32px_-20px_rgb(2_6_23/0.20)]"
                 }`}
                 style={{ animationDelay: `${index * 0.08}s` }}
               >
@@ -253,7 +272,7 @@ export default function Pricing({ showHeading = true }: { showHeading?: boolean 
 
                 <Button
                   size="lg"
-                  className="w-full font-semibold"
+                  className={`w-full font-semibold ${cardStyle.button}`}
                   disabled={Boolean(pendingPlan)}
                   onClick={(event) => {
                     event.stopPropagation();

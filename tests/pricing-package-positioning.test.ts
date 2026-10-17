@@ -62,7 +62,7 @@ test('the plan cards do not render a shared-foundation band above them', () => {
   assert.doesNotMatch(pricing, /Included with every plan|SHARED_PLAN_FOUNDATION/);
 });
 
-test('cards are neutral with one highlight and compute the yearly maths', () => {
+test('cards keep their tier colours and compute the yearly maths', () => {
   const pricing = read('../src/components/Pricing.tsx');
   assert.match(pricing, /plan\.outcome/);
   assert.match(pricing, /plan\.bestFor/);
@@ -73,8 +73,10 @@ test('cards are neutral with one highlight and compute the yearly maths', () => 
   assert.equal(PLAN_PACKAGE_PRESENTATION.starter.perksTitle, 'Everything in Rookie, plus:');
   assert.equal(PLAN_PACKAGE_PRESENTATION.rising.perksTitle, 'Everything in Starter, plus:');
   assert.equal(PLAN_PACKAGE_PRESENTATION.pro.perksTitle, 'Everything in Rising, plus:');
-  // One calm style: no per-tier button colours, and a written "Recommended" label.
-  assert.doesNotMatch(pricing, /bg-success text-success-foreground|bg-warning text-warning-foreground|bg-destructive text-destructive-foreground/);
+  // Each tier keeps its colour (Javier, 2026-10-17): green, blue, amber, red.
+  for (const colour of ['bg-success text-success-foreground', 'bg-primary text-primary-foreground', 'bg-warning text-warning-foreground', 'bg-destructive text-destructive-foreground']) {
+    assert.ok(pricing.includes(colour), `missing tier colour ${colour}`);
+  }
   assert.match(pricing, />\s*Recommended\s*</);
   // Savings and yearly equivalents come from PLAN_PRICING, not typed strings.
   assert.match(pricing, /yearlySavingsPercent/);
