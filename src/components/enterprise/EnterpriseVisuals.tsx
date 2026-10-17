@@ -15,6 +15,7 @@ import {
 
 import { getCoreFounderToolsForStage, type FounderJourneyStage } from "@/config/founderToolCatalog";
 import { BIZMAP_STAGE_ORDER, FOUNDER_STAGE_LABELS } from "@/lib/bizmapStageOrder";
+import { BIZMAP_STAGES } from "@/lib/bizmapStages";
 import { cn } from "@/lib/utils";
 
 // Visuals for /enterprise. Product screens are real captures of the public
@@ -167,6 +168,26 @@ export const PilotBoardMock = () => {
     </div>
   );
 };
+
+const titleCase = (title: string) => title.charAt(0) + title.slice(1).toLowerCase();
+
+/** Hero: the seven stages of the Startup Development Cycle, from the product's own list, with the pilot's stages marked. */
+export const CycleStrip = ({ label, pilotStages, pilotLabel }: { label: string; pilotStages: number; pilotLabel: string }) => (
+  <div className="ent-cycle">
+    <p className="ent-cycle__label">{label}</p>
+    <ol className="ent-cycle__stages">
+      {BIZMAP_STAGES.map((stage, index) => (
+        <li key={stage.id} className={cn(index < pilotStages && "is-pilot")}>
+          <span className="ent-cycle__num">{stage.numeral}</span>
+          <span className="ent-cycle__name">{titleCase(stage.title)}</span>
+        </li>
+      ))}
+    </ol>
+    <div className="ent-cycle__bracket">
+      <span style={{ gridColumn: `1 / span ${pilotStages}` }}>{pilotLabel}</span>
+    </div>
+  </div>
+);
 
 /** A real product screen from the platform tour, framed as an app window. */
 export const ProductShot = ({

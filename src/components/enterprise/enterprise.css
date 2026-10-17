@@ -1047,6 +1047,102 @@
   font-size: 13px;
 }
 
+/* ---------- Hero: the Startup Development Cycle ---------- */
+
+.ent-cycle {
+  max-width: 520px;
+  margin-top: 26px;
+}
+
+.ent-cycle__label {
+  margin-bottom: 10px;
+  color: var(--ent-muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.ent-cycle__stages,
+.ent-cycle__bracket {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.ent-cycle__stages {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ent-cycle__stages li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  min-width: 0;
+  padding: 8px 2px;
+  border: 1px solid var(--ent-line);
+  border-radius: 10px;
+  background: hsl(var(--background) / 0.55);
+  text-align: center;
+}
+
+.ent-cycle__stages li.is-pilot {
+  border-color: var(--ent-blue);
+  background: var(--ent-blue-soft);
+}
+
+.ent-cycle__num {
+  color: var(--ent-muted);
+  font-family: var(--ent-display);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.ent-cycle__stages li.is-pilot .ent-cycle__num {
+  color: var(--ent-blue);
+}
+
+.ent-cycle__name {
+  max-width: 100%;
+  overflow: hidden;
+  color: var(--ent-ink);
+  font-size: clamp(9.5px, 0.78vw, 11px);
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ent-cycle__bracket {
+  margin-top: 6px;
+}
+
+.ent-cycle__bracket span {
+  position: relative;
+  padding-top: 13px;
+  color: var(--ent-blue);
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* A bracket under the stages the pilot covers. */
+.ent-cycle__bracket span::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 8px;
+  right: 8px;
+  height: 8px;
+  border: 1.5px solid var(--ent-blue);
+  border-top: 0;
+  border-radius: 0 0 8px 8px;
+  opacity: 0.7;
+}
+
 /* ---------- Windows: title with progress, tags ---------- */
 
 .ent-window__bar > .ent-example {
@@ -2288,6 +2384,37 @@
 
   .ent-hero__facts li {
     padding: 0 14px;
+  }
+
+  /* Two rows of stages on a phone; the bracket becomes a legend. */
+  .ent-cycle__stages {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .ent-cycle__name {
+    font-size: 10.5px;
+  }
+
+  .ent-cycle__bracket {
+    display: block;
+    margin-top: 10px;
+  }
+
+  .ent-cycle__bracket span {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding-top: 0;
+  }
+
+  .ent-cycle__bracket span::before {
+    position: static;
+    width: 10px;
+    height: 10px;
+    border-top: 1.5px solid var(--ent-blue);
+    border-radius: 3px;
+    background: var(--ent-blue-soft);
+    opacity: 1;
   }
 
   .ent-hero__facts strong {

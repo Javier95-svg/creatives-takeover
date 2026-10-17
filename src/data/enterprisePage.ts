@@ -36,8 +36,18 @@ export const ENTERPRISE_HERO = {
   eyebrow: '30-day founder validation pilot',
   titleLead: 'Every founder tests their idea.',
   titleAccent: 'You see the evidence.',
+  // The difference, in the product's own terms: a stage only completes when
+  // its result is complete (drafts never count; src/lib/founderProgress.ts).
+  // Tools are not locked, so never say a stage "opens" or "unlocks".
   lede:
-    'For accelerators, incubators and universities. Your startups follow a structured validation workflow for 30 days, and you get the evidence behind every team.',
+    'Your founders follow our Startup Development Cycle: seven stages, each with its own tool and result. A team only moves up when that result is complete, so you see finished work, not status updates.',
+  // The pilot's outcomes come from stages I to III: the ideal customer
+  // (Identity), the demand test (Prototype) and the evidence (Validation).
+  cycle: {
+    label: 'Startup Development Cycle',
+    pilotStages: 3,
+    pilotLabel: 'The 30-day pilot: stages I–III',
+  },
   primaryCta: 'Book a pilot call',
   secondaryCta: { label: 'See the platform', href: '/demo' },
   facts: [
@@ -46,7 +56,7 @@ export const ENTERPRISE_HERO = {
     { value: 'Weekly', label: 'check-ins' },
     { value: '1', label: 'cohort report' },
   ],
-  note: 'Shaped around your program’s size, founders and calendar.',
+  note: 'For accelerators, incubators and universities. Shaped around your program’s size, founders and calendar.',
 };
 
 // The four outcomes, in the order the 30 days produce them. `includes` lists

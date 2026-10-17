@@ -12,6 +12,7 @@ import InstitutionContactForm from "@/components/audience/InstitutionContactForm
 import {
   CheckInCard,
   CohortReportMock,
+  CycleStrip,
   EvidenceCallouts,
   NetworkHub,
   PilotBoardMock,
@@ -155,6 +156,7 @@ const Enterprise = () => {
                     {ENTERPRISE_HERO.titleLead} <span className="ent-hero__accent">{ENTERPRISE_HERO.titleAccent}</span>
                   </h1>
                   <p className="ent-hero__lede">{ENTERPRISE_HERO.lede}</p>
+                  <CycleStrip {...ENTERPRISE_HERO.cycle} />
 
                   <ul className="ent-hero__facts">
                     {ENTERPRISE_HERO.facts.map((fact) => (
