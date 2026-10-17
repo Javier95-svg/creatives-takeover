@@ -6,6 +6,7 @@ import {
   Circle,
   GraduationCap,
   Landmark,
+  Lock,
   type LucideIcon,
   TrendingUp,
   Users,
@@ -35,9 +36,12 @@ const WindowDots = () => (
 
 type Decision = "Build" | "Narrow" | "Pivot" | "Keep testing";
 
+// build, narrow, pivot or keep: the colour key shared by badges, bars and the donut.
+const decisionKey = (decision: Decision) => decision.split(" ")[0].toLowerCase();
+
 const DecisionBadge = ({ decision }: { decision?: Decision }) =>
   decision ? (
-    <span className={cn("ent-decision", `ent-decision--${decision.split(" ")[0].toLowerCase()}`)}>{decision}</span>
+    <span className={cn("ent-decision", `ent-decision--${decisionKey(decision)}`)}>{decision}</span>
   ) : (
     <span className="ent-decision ent-decision--none">—</span>
   );
@@ -171,14 +175,17 @@ export const ProductShot = ({
   height,
   title,
   alt,
+  fade = true,
 }: {
   src: string;
   width: number;
   height: number;
   title: string;
   alt: string;
+  /** Fade the bottom edge, for screens cropped mid-page. */
+  fade?: boolean;
 }) => (
-  <figure className="ent-window ent-shot">
+  <figure className={cn("ent-window ent-shot", fade && "is-faded")}>
     <div className="ent-window__bar">
       <WindowDots />
       <span className="ent-window__title">{title}</span>
@@ -190,11 +197,85 @@ export const ProductShot = ({
   </figure>
 );
 
-const REPORT_METRICS = [
-  { value: "8/8", label: "startups took part" },
-  { value: "47", label: "validation activities completed" },
-  { value: "61", label: "customer interviews" },
-  { value: "6", label: "decisions recorded" },
+// The numbers PMF Lab shows in the sample workspace (21 of 25 signals, verdict locked).
+const EVIDENCE_LOGGED = 21;
+const EVIDENCE_THRESHOLD = 25;
+const RING_RADIUS = 26;
+const RING_LENGTH = 2 * Math.PI * RING_RADIUS;
+
+/** Outcome 2: the threshold and the locked decision, called out over the PMF Lab screen. */
+export const EvidenceCallouts = () => (
+  <div className="ent-callout" aria-hidden="true">
+    <div className="ent-callout__part">
+      <span className="ent-ring">
+        <svg viewBox="0 0 64 64">
+          <defs>
+            <linearGradient id="ent-ring-gradient" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stopColor="#6aa6ff" />
+              <stop offset="100%" stopColor="#3ccf8e" />
+            </linearGradient>
+          </defs>
+          <circle className="ent-ring__track" cx="32" cy="32" r={RING_RADIUS} />
+          <circle
+            className="ent-ring__value"
+            cx="32"
+            cy="32"
+            r={RING_RADIUS}
+            strokeDasharray={`${(EVIDENCE_LOGGED / EVIDENCE_THRESHOLD) * RING_LENGTH} ${RING_LENGTH}`}
+            transform="rotate(-90 32 32)"
+          />
+        </svg>
+        <strong>
+          {EVIDENCE_LOGGED}
+          <small>/{EVIDENCE_THRESHOLD}</small>
+        </strong>
+      </span>
+      <span className="ent-callout__copy">
+        <span className="ent-callout__title">Signals logged</span>
+        <span className="ent-callout__text">{EVIDENCE_THRESHOLD - EVIDENCE_LOGGED} more unlock the decision</span>
+      </span>
+    </div>
+
+    <div className="ent-callout__part ent-callout__part--gate">
+      <span className="ent-callout__head">
+        <span className="ent-callout__title">The decision</span>
+        <span className="ent-callout__lock">
+          <Lock />
+          Locked
+        </span>
+      </span>
+      <span className="ent-gate">
+        {(["Build", "Narrow", "Pivot", "Stop"] as const).map((option) => (
+          <span key={option} className={`ent-gate__option is-${option.toLowerCase()}`}>
+            {option}
+          </span>
+        ))}
+      </span>
+    </div>
+  </div>
+);
+
+// Day 30 of the same fictional pilot.
+const REPORT_TEAMS: Array<{ name: string; interviews: number; decision: Decision }> = [
+  { name: "Delta", interviews: 16, decision: "Build" },
+  { name: "Fjord", interviews: 13, decision: "Narrow" },
+  { name: "Aurora", interviews: 11, decision: "Pivot" },
+  { name: "Lumen", interviews: 9, decision: "Narrow" },
+  { name: "Cedar", interviews: 8, decision: "Build" },
+  { name: "Iris", interviews: 6, decision: "Keep testing" },
+  { name: "Basalt", interviews: 4, decision: "Keep testing" },
+  { name: "Ember", interviews: 3, decision: "Keep testing" },
+];
+
+const REPORT_INTERVIEWS = REPORT_TEAMS.reduce((sum, team) => sum + team.interviews, 0);
+const REPORT_MOST = Math.max(...REPORT_TEAMS.map((team) => team.interviews));
+const REPORT_DECIDED = REPORT_TEAMS.filter((team) => team.decision !== "Keep testing").length;
+
+const REPORT_STATS = [
+  { value: `${REPORT_TEAMS.length}/${REPORT_TEAMS.length}`, label: "startups took part" },
+  { value: "47", label: "validation activities" },
+  { value: String(REPORT_INTERVIEWS), label: "customer interviews" },
+  { value: String(REPORT_DECIDED), label: "decisions recorded" },
 ];
 
 const REPORT_FINDINGS = [
@@ -202,50 +283,129 @@ const REPORT_FINDINGS = [
   "Setup cost, not price, was the most common objection",
 ];
 
-const REPORT_TEAMS: Array<{ name: string; decision: Decision; next: string }> = [
+const REPORT_NEXT: Array<{ name: string; decision: Decision; next: string }> = [
   { name: "Delta", decision: "Build", next: "Paid pilot with three schools" },
-  { name: "Fjord", decision: "Narrow", next: "Retest with agency owners" },
   { name: "Aurora", decision: "Pivot", next: "Test the small-business segment" },
   { name: "Basalt", decision: "Keep testing", next: "Five more interviews" },
 ];
 
-/** Outcome 3: the final cohort report, as a document. */
+const DONUT_RADIUS = 40;
+const DONUT_LENGTH = 2 * Math.PI * DONUT_RADIUS;
+const DONUT_GAP = 2.5;
+
+// One arc per decision, in a fixed order, each as long as its share of teams.
+const DONUT_SEGMENTS = (["Build", "Narrow", "Pivot", "Keep testing"] as Decision[]).reduce<
+  Array<{ decision: Decision; count: number; dash: string; offset: number }>
+>((segments, decision) => {
+  const count = REPORT_TEAMS.filter((team) => team.decision === decision).length;
+  const start = segments.reduce((sum, segment) => sum + (segment.count / REPORT_TEAMS.length) * DONUT_LENGTH, 0);
+  const length = (count / REPORT_TEAMS.length) * DONUT_LENGTH;
+  return [...segments, { decision, count, dash: `${Math.max(length - DONUT_GAP, 0)} ${DONUT_LENGTH}`, offset: -start }];
+}, []);
+
+/** Outcome 3: the final cohort report, as a designed document. */
 export const CohortReportMock = () => (
-  <div className="ent-window ent-doc" role="img" aria-label="Example final cohort report with fictional startups">
-    <div className="ent-window__bar">
-      <WindowDots />
-      <span className="ent-window__title">Final cohort report · Day 30</span>
-      <ExampleTag />
-    </div>
-    <div className="ent-doc__body">
-      <div className="ent-doc__metrics">
-        {REPORT_METRICS.map((metric) => (
-          <div key={metric.label}>
-            <strong>{metric.value}</strong>
-            <span>{metric.label}</span>
-          </div>
-        ))}
+  <div className="ent-paper-stack" role="img" aria-label="Example final cohort report with fictional startups">
+    <div className="ent-paper">
+      <div className="ent-paper__cover">
+        <div className="ent-paper__cover-top">
+          <span>
+            <span className="ent-paper__kicker">Final cohort report · Day 30</span>
+            <span className="ent-paper__title">Validation pilot, spring cohort</span>
+          </span>
+          <ExampleTag className="ent-example--on-dark" />
+        </div>
+        <div className="ent-paper__stats">
+          {REPORT_STATS.map((stat) => (
+            <span key={stat.label}>
+              <strong>{stat.value}</strong>
+              <small>{stat.label}</small>
+            </span>
+          ))}
+        </div>
       </div>
 
-      <p className="ent-doc__label">Key findings</p>
-      <ul className="ent-doc__findings">
-        {REPORT_FINDINGS.map((finding) => (
-          <li key={finding}>{finding}</li>
-        ))}
-      </ul>
+      <div className="ent-paper__body">
+        <div className="ent-paper__panel">
+          <p className="ent-paper__label">Customer interviews per startup</p>
+          <ul className="ent-bars">
+            {REPORT_TEAMS.map((team) => (
+              <li key={team.name}>
+                <span className="ent-bars__name">{team.name}</span>
+                <span className="ent-bars__track">
+                  <i
+                    className={`is-${decisionKey(team.decision)}`}
+                    style={{ width: `${(team.interviews / REPORT_MOST) * 100}%` }}
+                  />
+                </span>
+                <span className="ent-bars__value">{team.interviews}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
 
-      <p className="ent-doc__label">Each startup and the next step we recommend</p>
-      <div className="ent-doc__teams">
-        {REPORT_TEAMS.map((team) => (
-          <div key={team.name} className="ent-doc__team">
-            <span className="ent-doc__name">{team.name}</span>
-            <DecisionBadge decision={team.decision} />
-            <span className="ent-doc__next">
-              <ArrowRight aria-hidden="true" />
-              {team.next}
+        <div className="ent-paper__panel">
+          <p className="ent-paper__label">Decisions</p>
+          <div className="ent-donut">
+            <svg viewBox="0 0 100 100">
+              <circle className="ent-donut__track" cx="50" cy="50" r={DONUT_RADIUS} />
+              {DONUT_SEGMENTS.map((segment) => (
+                <circle
+                  key={segment.decision}
+                  className={`ent-donut__arc is-${decisionKey(segment.decision)}`}
+                  cx="50"
+                  cy="50"
+                  r={DONUT_RADIUS}
+                  strokeDasharray={segment.dash}
+                  strokeDashoffset={segment.offset}
+                  transform="rotate(-90 50 50)"
+                />
+              ))}
+            </svg>
+            <span className="ent-donut__center">
+              <strong>
+                {REPORT_DECIDED}/{REPORT_TEAMS.length}
+              </strong>
+              <small>decided</small>
             </span>
           </div>
-        ))}
+          <ul className="ent-legend">
+            {DONUT_SEGMENTS.map((segment) => (
+              <li key={segment.decision}>
+                <i className={`is-${decisionKey(segment.decision)}`} />
+                {segment.decision}
+                <b>{segment.count}</b>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="ent-paper__panel">
+          <p className="ent-paper__label">Key findings</p>
+          <ul className="ent-findings">
+            {REPORT_FINDINGS.map((finding) => (
+              <li key={finding}>{finding}</li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="ent-paper__panel">
+          <p className="ent-paper__label">Next step we recommend</p>
+          <ul className="ent-next">
+            {REPORT_NEXT.map((team) => (
+              <li key={team.name}>
+                <span className="ent-next__head">
+                  <strong>{team.name}</strong>
+                  <DecisionBadge decision={team.decision} />
+                </span>
+                <span className="ent-next__step">
+                  <ArrowRight aria-hidden="true" />
+                  {team.next}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
     </div>
   </div>

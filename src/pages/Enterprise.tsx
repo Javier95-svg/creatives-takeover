@@ -12,6 +12,7 @@ import InstitutionContactForm from "@/components/audience/InstitutionContactForm
 import {
   CheckInCard,
   CohortReportMock,
+  EvidenceCallouts,
   NetworkHub,
   PilotBoardMock,
   PilotSetupMock,
@@ -52,13 +53,17 @@ const OUTCOME_VISUALS: Record<string, ReactNode> = {
     />
   ),
   evidence: (
-    <ProductShot
-      src={pmfLabShot}
-      width={1171}
-      height={1280}
-      title="PMF Lab"
-      alt="PMF Lab in the sample workspace: calls, replies and objections logged as evidence, 21 of 25 signals, with the verdict locked until the threshold is met."
-    />
+    <div className="ent-outcome__stack ent-outcome__stack--evidence">
+      <ProductShot
+        src={pmfLabShot}
+        width={1400}
+        height={1178}
+        title="PMF Lab · Evidence"
+        fade={false}
+        alt="PMF Lab's evidence log in the sample workspace: calls, newsletter replies, an objection and an out-of-segment signal, 21 of 25 signals logged, with the verdict locked until the threshold is met."
+      />
+      <EvidenceCallouts />
+    </div>
   ),
   report: <CohortReportMock />,
   admin: (
