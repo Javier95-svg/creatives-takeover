@@ -57,7 +57,7 @@ const SubscriptionFeatures = () => (
       {/* A month of credits, translated into things a founder gets done. */}
       <RevealGroup className="mx-auto grid max-w-6xl gap-4 sm:grid-cols-2 lg:grid-cols-4" variant="card">
         {PLAN_SEQUENCE.map((plan) => (
-          <div key={plan} className="rounded-2xl border border-border/60 bg-card/70 p-5">
+          <div key={plan} className="rounded-2xl border border-foreground/25 dark:border-white/60 bg-card/70 p-5">
             <div className="flex items-baseline justify-between gap-3">
               <p className="font-space-grotesk text-lg font-semibold text-foreground">{PLAN_LABELS[plan]}</p>
               <p className="text-sm tabular-nums text-muted-foreground">{PLAN_MONTHLY_CREDITS[plan]} credits</p>
@@ -77,7 +77,7 @@ const SubscriptionFeatures = () => (
       </RevealGroup>
 
       <ScrollReveal>
-        <div className="mx-auto mt-6 grid max-w-6xl overflow-hidden rounded-2xl border border-border/60 bg-card/70 md:grid-cols-2">
+        <div className="mx-auto mt-6 grid max-w-6xl overflow-hidden rounded-2xl border border-foreground/25 dark:border-white/60 bg-card/70 md:grid-cols-2">
           <div className="p-6 sm:p-7">
             <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
               <Gift className="h-4 w-4 text-success" aria-hidden="true" />
@@ -89,7 +89,7 @@ const SubscriptionFeatures = () => (
               ))}
             </ul>
           </div>
-          <div className="border-t border-border/60 p-6 sm:p-7 md:border-l md:border-t-0">
+          <div className="border-t border-foreground/25 dark:border-white/60 p-6 sm:p-7 md:border-l md:border-t-0">
             <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
               <Coins className="h-4 w-4 text-primary" aria-hidden="true" />
               Uses credits

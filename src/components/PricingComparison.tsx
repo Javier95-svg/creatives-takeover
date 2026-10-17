@@ -146,7 +146,7 @@ const PricingComparison = () => {
             <button type="button" onClick={() => handleMobileNavigation("next")} disabled={currentMobileIndex === plans.length - 1} className="flex min-h-11 min-w-11 touch-manipulation items-center justify-center rounded-full border border-border/60 bg-background/70 p-2 shadow-sm disabled:cursor-not-allowed disabled:opacity-30" aria-label="Next plan"><ChevronRight className="h-5 w-5" /></button>
           </div>
 
-          <Card className={`rounded-2xl bg-card/80 shadow-sm backdrop-blur ${plans[currentMobileIndex].isRecommended ? "border-2 border-primary/60" : "border-border/60"}`}>
+          <Card className={`rounded-2xl bg-card/80 shadow-sm backdrop-blur ${plans[currentMobileIndex].isRecommended ? "border-2 border-primary/70" : "border-foreground/25 dark:border-white/60"}`}>
             <CardHeader>
               <CardTitle className="text-center font-space-grotesk text-2xl font-semibold tracking-tight">{plans[currentMobileIndex].name}</CardTitle>
               <div className="mt-2 text-center font-space-grotesk text-3xl font-semibold tabular-nums">{plans[currentMobileIndex].price}<span className="text-sm text-muted-foreground">{plans[currentMobileIndex].period}</span></div>
@@ -176,11 +176,11 @@ const PricingComparison = () => {
         </div>
 
         <div className="mx-auto hidden max-w-6xl lg:block">
-          <Card className="overflow-hidden rounded-2xl border border-border/60 bg-card/80 shadow-sm backdrop-blur">
+          <Card className="overflow-hidden rounded-2xl border border-foreground/25 dark:border-white/60 bg-card/80 shadow-sm backdrop-blur">
             <div className="overflow-x-auto">
               <table className="w-full border-collapse">
                 <thead>
-                  <tr className="border-b border-border/60">
+                  <tr className="border-b border-foreground/15 dark:border-white/25">
                     <th className="sticky left-0 z-10 min-w-[240px] bg-card p-5 text-left text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">Plan</th>
                     {plans.map((plan) => (
                       <th key={plan.key} className={`relative min-w-[170px] p-5 text-center font-space-grotesk text-base font-semibold text-foreground ${plan.isRecommended ? "bg-primary/[0.07]" : ""}`}>
@@ -193,9 +193,9 @@ const PricingComparison = () => {
                 <tbody>
                   {differingCategories.map((category) => (
                     <React.Fragment key={category.category}>
-                      <tr><td colSpan={5} className="sticky left-0 z-10 border-b border-border/40 bg-muted/30 px-5 py-2.5 text-left"><h3 className="text-xs font-semibold uppercase tracking-[0.12em] text-primary">{category.category}</h3></td></tr>
+                      <tr><td colSpan={5} className="sticky left-0 z-10 border-b border-foreground/15 dark:border-white/25 bg-muted/30 px-5 py-2.5 text-left"><h3 className="text-xs font-semibold uppercase tracking-[0.12em] text-primary">{category.category}</h3></td></tr>
                       {category.items.map((item) => (
-                        <tr key={item.feature} className="border-b border-border/40 last:border-b-0">
+                        <tr key={item.feature} className="border-b border-foreground/15 dark:border-white/25 last:border-b-0">
                           <td className="sticky left-0 z-10 bg-card px-5 py-3.5 text-sm font-medium text-foreground">{item.feature}</td>
                           <td className="px-5 py-3.5 text-center">{renderFeatureValue(item.rookie)}</td>
                           <td className="bg-primary/[0.07] px-5 py-3.5 text-center">{renderFeatureValue(item.starter)}</td>
@@ -211,7 +211,7 @@ const PricingComparison = () => {
           </Card>
         </div>
 
-        <div className="mx-auto mt-8 max-w-6xl rounded-2xl border border-border/60 bg-card/60 p-6 sm:p-7">
+        <div className="mx-auto mt-8 max-w-6xl rounded-2xl border border-foreground/25 dark:border-white/60 bg-card/60 p-6 sm:p-7">
           <h3 className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">Included on every plan</h3>
           <ul className="mt-4 grid gap-x-8 gap-y-3 sm:grid-cols-2 lg:grid-cols-3">
             {everyPlanItems.map((item) => {
