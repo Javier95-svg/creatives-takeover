@@ -282,12 +282,6 @@
   color: var(--ent-green);
 }
 
-.ent-hero__note {
-  margin-top: 14px;
-  color: var(--ent-muted);
-  font-size: 13.5px;
-}
-
 .ent-hero__visual {
   position: relative;
   min-width: 0;

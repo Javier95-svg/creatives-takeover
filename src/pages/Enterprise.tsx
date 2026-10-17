@@ -200,7 +200,6 @@ const Enterprise = () => {
                       <ArrowUpRight aria-hidden="true" />
                     </Link>
                   </div>
-                  <p className="ent-hero__note">{ENTERPRISE_HERO.note}</p>
                 </div>
 
                 <div className="ent-hero__visual">

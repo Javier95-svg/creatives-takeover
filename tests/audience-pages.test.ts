@@ -66,7 +66,7 @@ test('the enterprise page lands the pilot offer in the hero', () => {
   );
   const heroStart = enterprisePage.indexOf('className="ent-hero"');
   const hero = enterprisePage.slice(heroStart, enterprisePage.indexOf('</section>', heroStart));
-  for (const piece of ['ENTERPRISE_HERO.titleLead', 'ENTERPRISE_HERO.lede', 'ENTERPRISE_HERO.facts', 'ENTERPRISE_HERO.primaryCta', 'ENTERPRISE_HERO.note', '<CycleStrip', '<PilotBoardMock />']) {
+  for (const piece of ['ENTERPRISE_HERO.titleLead', 'ENTERPRISE_HERO.lede', 'ENTERPRISE_HERO.facts', 'ENTERPRISE_HERO.primaryCta', '<CycleStrip', '<PilotBoardMock />']) {
     assert.ok(hero.includes(piece), `hero is missing ${piece}`);
   }
 });
