@@ -175,7 +175,7 @@ export const ENTERPRISE_FAQS = [
   {
     question: 'Can the final report follow our funder’s format?',
     answer:
-      'Yes. We build it from each team’s recorded work and can follow your funder’s or university’s template, for example ProInnóvate milestone reports in Peru. Share the template with us at kickoff.',
+      'Yes. We build it from each team’s recorded work and can follow your funder’s or university’s template, including milestone reports for public grants. Share the template with us at kickoff.',
   },
   {
     question: 'Does it replace our curriculum or mentors?',
