@@ -156,7 +156,7 @@ const LegacyVisitorNavbar = () => {
       className="fixed left-0 right-0 z-50 transition-all duration-300"
       aria-label="Visitor navigation"
     >
-      <div className="mx-auto max-w-[1344px] px-3 pt-3 sm:px-5 lg:px-8">
+      <div className="mx-auto max-w-[1440px] px-3 pt-3 sm:px-5 lg:px-8">
         <div
           className={cn(
             "rounded-3xl border backdrop-blur-xl transition-all duration-300",
@@ -188,7 +188,7 @@ const LegacyVisitorNavbar = () => {
               </span>
             </Link>
 
-            <div className="hidden min-w-0 flex-1 items-center justify-center gap-1 lg:flex">
+            <div className="hidden min-w-0 flex-1 items-center justify-center gap-1 lg:flex xl:gap-2 2xl:gap-3">
               {/* Each entry keeps its icon on the left. Six entries only fit with
                   icons from 2xl; below that the labels carry it. */}
               {visitorEntries.map((entry) =>
