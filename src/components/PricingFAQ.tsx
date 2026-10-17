@@ -73,10 +73,10 @@ const PricingFAQ = () => (
     <div className="container relative z-10 mx-auto px-4 sm:px-6">
       <PricingSectionHeader title="Pricing FAQ" />
 
-      <div className="mx-auto max-w-3xl rounded-2xl border border-border/60 bg-card/70 px-6 py-2 sm:px-8">
+      <div className="mx-auto max-w-3xl rounded-2xl border border-foreground/25 bg-card/70 px-6 py-2 sm:px-8 dark:border-white/60">
         <Accordion type="single" collapsible className="w-full">
           {faqs.map((faq, index) => (
-            <AccordionItem key={faq.question} value={`item-${index}`} id={`pricing-faq-item-${index}`} className="border-border/60 last:border-b-0">
+            <AccordionItem key={faq.question} value={`item-${index}`} id={`pricing-faq-item-${index}`} className="border-foreground/15 last:border-b-0 dark:border-white/25">
               <AccordionTrigger className="text-left font-space-grotesk text-base text-foreground hover:text-primary sm:text-lg">
                 {faq.question}
               </AccordionTrigger>
