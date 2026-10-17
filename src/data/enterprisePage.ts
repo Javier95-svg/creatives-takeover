@@ -61,33 +61,35 @@ export const ENTERPRISE_HERO = {
 
 // The four outcomes, in the order the 30 days produce them. `includes` lists
 // what each one contains, shown as chips instead of sentences.
+// Written for program managers (2026-10-16): each title says what the
+// program gets, not what the founder does.
 export const ENTERPRISE_OUTCOMES = {
-  eyebrow: 'What the pilot delivers',
-  title: 'Four outcomes in 30 days',
+  eyebrow: 'What you get',
+  title: 'What your program has after 30 days',
   items: [
     {
       key: 'plan',
       when: 'Week 1',
-      title: 'A validation plan for every founder',
+      title: 'A validation plan for every startup',
       includes: ['Ideal customer', 'The customer’s problem', 'Assumptions to test', 'A 30-day demand test'],
     },
     {
       key: 'evidence',
       when: 'Weeks 1–4',
-      title: 'Customer research, documented',
+      title: 'Every interview and experiment on record',
       includes: ['Interviews', 'Experiments', 'Feedback', 'Findings and decisions'],
     },
     {
       key: 'report',
       when: 'Day 30',
-      title: 'A final cohort report',
+      title: 'A cohort report ready for your funders',
       includes: ['Participation', 'Completed activities', 'Key findings', 'Next steps per startup'],
     },
     {
       key: 'admin',
       when: 'Every week',
-      title: 'Less chasing for your team',
-      includes: ['One workflow for every founder', 'Weekly check-ins run by us', 'Updates collected for you'],
+      title: 'Updates without chasing anyone',
+      includes: ['One workflow for every startup', 'Weekly check-ins run by us', 'A weekly summary for your team'],
     },
   ],
 };
@@ -103,8 +105,8 @@ export const ENTERPRISE_PILOT = {
     { when: 'Week 4', label: 'Check-in' },
     { when: 'Day 30', label: 'Cohort report' },
   ],
-  weProvide: ['Platform access for every founder', 'A structured validation workflow', 'Weekly progress check-ins', 'The final cohort report'],
-  youProvide: ['5 to 10 startups', 'One program contact'],
+  weProvide: ['Platform access for every founder', 'A structured validation workflow', 'Weekly check-ins with every team', 'The final cohort report'],
+  youProvide: ['5 to 10 startups', 'One contact from your team'],
   honesty:
     'Thirty days won’t prove product-market fit, guarantee paying customers or make a startup investment-ready. They give every founder a disciplined process and documented evidence.',
 };
@@ -121,7 +123,7 @@ export const ENTERPRISE_ADAPT = {
 
 export const ENTERPRISE_PERKS = {
   eyebrow: 'Included for every founder',
-  title: 'The whole ecosystem comes with it',
+  title: 'More support for your founders, no extra work for your team',
   tools: {
     title: 'A tool for every stage',
     body: 'From defining the customer to early traction.',
@@ -134,26 +136,32 @@ export const ENTERPRISE_PERKS = {
   ],
 };
 
+// The questions a program manager asks first: cost, their team's time, what
+// they can report, and what they see.
 export const ENTERPRISE_FAQS = [
   {
     question: 'How much does the pilot cost?',
     answer: 'It depends on the number of startups. Tell us about your program and we’ll send a proposal. Founders don’t pay to join.',
   },
   {
-    question: 'Our founders are all in one sector. Does that work?',
-    answer: 'Yes. Tell us who your founders are, for example fintech, and we set up the check-ins and the report around them.',
+    question: 'How much of our team’s time does it take?',
+    answer: 'You name one contact. We run the validation workflow, the weekly check-ins and the final report.',
   },
   {
     question: 'Can the report follow our funder’s format?',
     answer: 'Yes. We can shape the final report to your funder’s template, for example ProInnóvate milestone reports in Peru.',
   },
   {
-    question: 'What can our staff see?',
-    answer: 'Each founder’s stage, the evidence behind it and recent activity. Not the content of their ideas, files or messages.',
+    question: 'What do we see during the pilot?',
+    answer: 'A weekly summary of every team: its stage, interviews logged, experiments run and decisions made. Founders’ files and messages are not shared.',
   },
   {
-    question: 'Does it replace our own mentors?',
-    answer: 'No. Your mentors stay. Founders also get experts in specific fields, service providers, investors and other founders on the platform.',
+    question: 'Our founders are all in one sector. Does that work?',
+    answer: 'Yes. Tell us who your founders are, for example fintech, and we set up the check-ins and the report around them.',
+  },
+  {
+    question: 'Does it replace our mentors or sessions?',
+    answer: 'No. It runs alongside your sessions and mentors. Founders also get experts in specific fields, service providers, investors and other founders on the platform.',
   },
   {
     question: 'What happens after the 30 days?',

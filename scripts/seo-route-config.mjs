@@ -190,8 +190,8 @@ export const INDEXABLE_ROUTES = [
       "A 30-day founder validation pilot for accelerators, incubators and universities. Our Startup Development Cycle moves founders up a stage only when the work is done. You see results, not status updates.",
     sections: [
       {
-        heading: "Four outcomes in 30 days",
-        copy: "A validation plan for every founder, documented customer research and experiments, a final cohort report with next steps per startup, and less chasing for your team.",
+        heading: "What your program has after 30 days",
+        copy: "A validation plan for every startup, every interview and experiment on record, a cohort report ready for your funders with next steps per startup, and weekly updates without chasing anyone.",
       },
       {
         heading: "We run it. You bring the founders.",
@@ -202,7 +202,7 @@ export const INDEXABLE_ROUTES = [
         copy: "The pilot is set up around your cohort size, your founders’ sector, such as fintech, and your program’s length.",
       },
       {
-        heading: "The whole ecosystem comes with it",
+        heading: "More support for your founders, no extra work for your team",
         copy: "A tool for every stage, experts in specific fields, services for sales, marketing, operations, automation and technical support, visibility to investors on the platform, and rooms, launches and co-founder matching with other builders.",
       },
     ],

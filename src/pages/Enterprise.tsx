@@ -325,7 +325,7 @@ const Enterprise = () => {
                 <div className="ent-container ent-faq">
                   <div className="ent-faq__intro">
                     <p className="ent-eyebrow">Questions</p>
-                    <h2 className="ent-h2">What programs ask us</h2>
+                    <h2 className="ent-h2">What program managers ask us</h2>
                     <p className="ent-head__copy">
                       Something else on your mind?{" "}
                       <a href="mailto:javier@creatives-takeover.com?subject=Programs%20and%20partnerships">Email us</a>.
