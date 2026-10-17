@@ -93,7 +93,7 @@ test('the pilot promises a process and evidence, and adapts to each program', ()
 
 test('the institution form reuses the contact function with known roles', () => {
   assert.match(form, /functions\.invoke\("contact-form-submission"/);
-  assert.match(form, /reason: "partnership"/);
+  assert.match(form, /reason = "partnership"/);
   for (const option of INSTITUTION_ORG_TYPES) assert.match(option.role, /^[a-z_]+$/);
   // Enterprise and investors get the form; founders get a sign-up CTA instead.
   assert.match(enterprisePage, /<InstitutionContactForm\s+audience="enterprise"/);

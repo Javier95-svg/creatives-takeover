@@ -92,7 +92,14 @@ That means billing, renewals, and checkout security all run on Stripe's infrastr
       answer: `Yes. If your team needs custom credit allocations, more seats, or a different support model, contact us directly.
 
 The default self-serve offering now centers on Rookie, Starter, Rising, and Pro, but larger team setups can still be scoped separately.`,
-      relatedQuestions: [0, 6],
+      relatedQuestions: [0, 10],
+    },
+    {
+      question: "Do you offer pricing for accelerators, incubators or universities?",
+      answer: `Yes. Programs don't pay a single fee: pricing depends on the number of startups and the length of the program, starting with a 30-day pilot.
+
+Switch to Institutions at the top of this page and choose Talk with sales. We reply within 1–2 business days.`,
+      relatedQuestions: [9],
     },
   ];
 

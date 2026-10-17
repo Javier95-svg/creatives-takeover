@@ -139,18 +139,24 @@ export const INDEXABLE_ROUTES = [
   },
   {
     path: "/pricing",
-    title: "Founder Outcomes and Pricing | Creatives Takeover",
+    // Mirrors src/data/pricingPage.ts (PRICING_SEO); tests/pricing-audiences.test.ts
+    // keeps them equal.
+    title: "Pricing for Founders and Programs | Creatives Takeover",
     description:
-      "Compare Rookie, Starter, Rising, and Pro by the founder outcome each plan enables, from customer clarity to expert backed fundraising.",
+      "Four plans for founders and builders, from free to Pro, and custom pricing for accelerators, incubators and university programs. Talk with sales.",
     changefreq: "weekly",
     priority: 0.9,
-    heroHeading: "Choose the outcome you need now",
+    heroHeading: "Pricing",
     heroCopy:
-      "Every plan keeps your evidence and decisions connected as you move from clarity to validation, launch, traction, and fundraising.",
+      "Plans for founders and builders. Custom pricing for programs.",
     sections: [
       {
-        heading: "Transparent credits and stable entitlements",
-        copy: "See the credit cost before every metered action and upgrade only when you need more capacity, expert accountability, or deeper fundraising support.",
+        heading: "Founders and builders: four plans",
+        copy: "Rookie is free. Starter, Rising and Pro add monthly credits and capacity, billed monthly or yearly. See the credit cost before every metered action.",
+      },
+      {
+        heading: "Institutions: custom pricing",
+        copy: "Accelerators, incubators, university programs and other institutions don’t pay a single fee. Pricing depends on the number of startups and the program’s length, starting with a 30-day pilot. Talk with sales.",
       },
     ],
   },

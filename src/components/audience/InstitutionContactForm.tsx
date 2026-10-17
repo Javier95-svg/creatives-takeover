@@ -23,6 +23,11 @@ type InstitutionContactFormProps = {
   submitLabel: string;
   /** plain: no card of its own and no email line, for pages that frame the form themselves. */
   variant?: "card" | "plain";
+  /**
+   * Sent as the contact reason. The edge function prints unknown reasons as
+   * they are, so "Sales request" shows in the admin email subject.
+   */
+  reason?: string;
 };
 
 type Status = "idle" | "sending" | "sent" | "error";
@@ -50,7 +55,13 @@ function buildInstitutionMessage(fields: {
   ].join("\n");
 }
 
-const InstitutionContactForm = ({ audience, defaultOrgType, submitLabel, variant = "card" }: InstitutionContactFormProps) => {
+const InstitutionContactForm = ({
+  audience,
+  defaultOrgType,
+  submitLabel,
+  variant = "card",
+  reason = "partnership",
+}: InstitutionContactFormProps) => {
   const framed = variant === "card";
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -73,7 +84,7 @@ const InstitutionContactForm = ({ audience, defaultOrgType, submitLabel, variant
           name: name.trim(),
           email: email.trim(),
           role: type.role,
-          reason: "partnership",
+          reason,
           message: buildInstitutionMessage({
             organization: organization.trim(),
             orgTypeLabel: type.label,

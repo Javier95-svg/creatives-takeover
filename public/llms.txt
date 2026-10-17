@@ -1,13 +1,13 @@
 # Creatives Takeover
 
-> Last updated: 2026-10-16
+> Last updated: 2026-10-17
 
 > Creatives Takeover is the startup ecosystem workspace. Founders test and build their ideas with AI tools that draft startup artifacts (ideal customer profile, MVP scope, go-to-market plan, pitch deck review) and a marketplace of reviewed human startup mentors who can be booked directly. Incubators, accelerators and universities use it to see how every team in a cohort is progressing, and VCs and family offices use it to meet founders who are executing. Founders can start free without applying and keep 100% equity.
 
 ## Who it is for
 
 - [For founders and builders](https://creatives-takeover.com/for-founders): Start and test a project with a tool for every stage, plus mentors, service providers, investors and other founders. Free to start, no equity.
-- [Enterprise: for accelerators, incubators and universities](https://creatives-takeover.com/enterprise): A 30-day founder validation pilot for 5 to 10 startups. Creatives Takeover provides platform access, a structured validation workflow, weekly progress check-ins and a final cohort report; the program provides the founders and one contact. Each founder ends with a validation plan and documented customer research; the program gets the report and spends less time chasing updates. The pilot promises a disciplined process and evidence, not product-market fit, paying customers or investment readiness. It is set up around the program's size, founder focus and length, and founders keep their account, their work and the free plan after the program ends. Pricing depends on the program; programs contact the team for a pilot.
+- [Enterprise: for accelerators, incubators and universities](https://creatives-takeover.com/enterprise): A 30-day founder validation pilot for 5 to 10 startups. Creatives Takeover provides platform access, a structured validation workflow, weekly progress check-ins and a final cohort report; the program provides the founders and one contact. Each founder ends with a validation plan and documented customer research; the program gets the report and spends less time chasing updates. The pilot promises a disciplined process and evidence, not product-market fit, paying customers or investment readiness. It is set up around the program's size, founder focus and length, and founders keep their account, their work and the free plan after the program ends. Pricing is custom per program; programs talk with sales from /pricing or /enterprise.
 - [For VCs and family offices](https://creatives-takeover.com/for-investors): Sponsor a founder cohort in a thesis area, or create an investor account and get matched with founders who opted in to be visible to investors. Visibility is always opt-in per founder.
 
 ## What it is
@@ -21,7 +21,7 @@ Two things distinguish it from general AI assistants and from single-purpose ide
 
 ## Pricing
 
-Founder plans are self-serve with no equity taken and no application required. Cohort pricing for programs and sponsors is quoted per cohort. Credits are consumed by AI tool runs and reset each billing period; they do not roll over.
+Founder plans are self-serve with no equity taken and no application required. Institutions (accelerators, incubators, university programs and others) don’t pay a single fee: pricing is custom per program, through Talk with sales on /pricing. Credits are consumed by AI tool runs and reset each billing period; they do not roll over.
 
 | Plan | Monthly | Yearly | Credits/month |
 |---|---:|---:|---:|
@@ -30,7 +30,7 @@ Founder plans are self-serve with no equity taken and no application required. C
 | Rising | $29 | $239 | 250 |
 | Pro | $65 | $589 | 600 |
 
-- [Pricing](https://creatives-takeover.com/pricing): Full plan comparison, credit allocations, and one-time credit top-up packs.
+- [Pricing](https://creatives-takeover.com/pricing): Founder plans with full comparison, credit allocations and credit top-up packs, and custom pricing for programs.
 
 ## AI startup tools
 

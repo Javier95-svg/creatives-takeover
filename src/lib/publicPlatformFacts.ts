@@ -41,7 +41,7 @@ export const PUBLIC_PULSE_LINKS: readonly PublicPulseLink[] = [
     reason: `${tool.description} Starts with a few quick questions.`,
     accountType: profile.id === 'pre_build' ? 'builder' as const : 'founder' as const,
   }))),
-  { route: '/pricing', destination: '/pricing', title: 'Pricing', reason: 'Compare the free plan and paid plans.' },
+  { route: '/pricing', destination: '/pricing', title: 'Pricing', reason: 'Founder plans, and custom pricing for programs.' },
   { route: '/mentorship', destination: '/mentorship', title: 'Mentorship', reason: 'Meet mentors who help people building a business.' },
   { route: '/marketplace', destination: '/marketplace', title: 'Marketplace', reason: 'Find help with design, marketing or technology.' },
   { route: '/signup', destination: '/signup', title: 'Create a free account', reason: 'Save your work and pick up where you left off.' },
@@ -155,7 +155,7 @@ Who it is for (account types):
 ${accounts}
 
 Programs and investors (they bring the platform to founders):
-- Accelerators, incubators and universities can start with a 30-day founder validation pilot for 5 to 10 startups: we provide platform access, a structured validation workflow, weekly progress check-ins and a final cohort report, and the program provides the founders and one contact. Founders end with a validation plan and documented customer research; it does not promise product-market fit, paying customers or investment readiness in 30 days. The pilot is set up around the program's size, founder focus and length, and founders keep their account, their work and the free plan after the program ends. Staff see progress, not the content of founders' work. Pricing depends on the program; they get in touch through /enterprise.
+- Accelerators, incubators and universities can start with a 30-day founder validation pilot for 5 to 10 startups: we provide platform access, a structured validation workflow, weekly progress check-ins and a final cohort report, and the program provides the founders and one contact. Founders end with a validation plan and documented customer research; it does not promise product-market fit, paying customers or investment readiness in 30 days. The pilot is set up around the program's size, founder focus and length, and founders keep their account, their work and the free plan after the program ends. Staff see progress, not the content of founders' work. Pricing is custom per program; they talk with sales from /pricing or /enterprise.
 - VCs and family offices can sponsor a cohort in their thesis area, or create an investor account and get matched with founders who opted in. Founders always decide who sees their progress, and nobody is promised investment. Details: /for-investors.
 
 The two founder paths:
