@@ -1,7 +1,7 @@
 import { Helmet } from 'react-helmet-async';
 import { useSearchParams } from 'react-router-dom';
 import { CheckCircle2 } from 'lucide-react';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import StartupHomeCommandCenter from '@/components/dashboard/StartupHomeCommandCenter';
 import DashboardTodayCockpit from '@/components/dashboard/DashboardTodaySnapshot';
@@ -30,6 +30,12 @@ import {
 } from '@/lib/activationState';
 import { normalizePlan } from '@/config/planPermissions';
 import { trackRetentionEvent, type ActivationIntent } from '@/lib/retentionSystem';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useCohortContext } from '@/hooks/useCohortContext';
+import { CohortModeSwitch } from '@/components/cohort/CohortModeSwitch';
+import { useCohortView } from '@/hooks/useCohortView';
+import FounderCohortView from '@/components/cohort/FounderCohortView';
+import ProgramDashboard from '@/components/cohort/ProgramDashboard';
 
 interface DashboardActivationState {
   loading: boolean;
@@ -193,11 +199,42 @@ const FounderDashboard = () => {
  * Founders and builders get exactly what they had. The other three get a page
  * about the work they actually do here, rather than a journey cockpit that
  * assumes they are building a startup.
+ *
+ * Cohort mode (2026-10-19) sits beside the account types: program staff open on
+ * the program dashboard and founders in a cohort open on their cohort view,
+ * with "My workspace" one click away for both.
  */
-const Dashboard = () => {
-  const { userType } = useAccountContext();
+const UsualDashboard = ({ userType }: { userType: ReturnType<typeof useAccountContext>['userType'] }) => {
   if (userType === 'mentor' || userType === 'marketplace' || userType === 'investor') return <AccountOverview />;
   return <FounderDashboard />;
+};
+
+const Dashboard = () => {
+  const { userType } = useAccountContext();
+  const { context: cohort, loading: cohortLoading } = useCohortContext();
+  const { workspace, setWorkspace } = useCohortView();
+  const [selectedStaffCohort, setSelectedStaffCohort] = useState<string | null>(null);
+
+  const usual = <UsualDashboard userType={userType} />;
+
+  if (cohortLoading) return <Skeleton className="mb-6 h-64 rounded-xl" />;
+  const isStaff = cohort.staff.length > 0;
+  if (!isStaff && !cohort.member) return usual;
+
+  const modeSwitch = (
+    <CohortModeSwitch cohortLabel={isStaff ? 'Program' : 'Cohort'} workspace={workspace} onChange={setWorkspace} />
+  );
+  if (workspace) return <>{modeSwitch}{usual}</>;
+  if (isStaff) {
+    const cohortId = selectedStaffCohort ?? cohort.staff[0].cohortId;
+    return (
+      <>
+        {modeSwitch}
+        <ProgramDashboard cohortId={cohortId} cohortOptions={cohort.staff} onSelectCohort={setSelectedStaffCohort} />
+      </>
+    );
+  }
+  return <>{modeSwitch}<FounderCohortView cohort={cohort.member!} /></>;
 };
 
 export default Dashboard;

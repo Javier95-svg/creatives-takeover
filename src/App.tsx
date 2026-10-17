@@ -89,6 +89,9 @@ const Onboarding = lazy(() => import("./pages/Onboarding"));
 const StartOnboarding = lazy(() => import("./pages/StartOnboarding"));
 const ProductStoryStart = lazy(() => import("./pages/ProductStoryStart"));
 const AdminFirstCustomerSprintPage = lazy(() => import("./pages/AdminFirstCustomerSprintPage"));
+const AdminCohortsPage = lazy(() => import("./pages/AdminCohortsPage"));
+const AdminCohortDetailPage = lazy(() => import("./pages/AdminCohortsPage").then((module) => ({ default: module.AdminCohortDetailPage })));
+const CohortJoinPage = lazy(() => import("./pages/CohortJoinPage"));
 
 const Login = lazy(() => import("./pages/Login"));
 const Auth = lazy(() => import("./pages/Auth"));
@@ -367,6 +370,7 @@ function App() {
                         <Route path="/pricing" element={<PricingPage />} />
                         <Route path="/for-founders" element={<ForFounders />} />
                         <Route path="/enterprise" element={<Enterprise />} />
+                        <Route path="/join/:code" element={<CohortJoinPage />} />
                         <Route path="/for-investors" element={<ForInvestors />} />
                         <Route path="/subscription-success" element={<SubscriptionSuccess />} />
                         <Route path="/purchase-history" element={<PurchaseHistory />} />
@@ -404,6 +408,8 @@ function App() {
                         <Route path="/first-customer-sprint" element={<LegacyFirstCustomerProofRedirect />} />
                         <Route path="/first-customer-sprint/apply" element={<LegacyFirstCustomerProofRedirect />} />
                         <Route path="/admin/first-customer-sprint" element={<AdminRoute><AdminFirstCustomerSprintPage /></AdminRoute>} />
+                        <Route path="/admin/cohorts" element={<AdminRoute><AdminCohortsPage /></AdminRoute>} />
+                        <Route path="/admin/cohorts/:cohortId" element={<AdminRoute><AdminCohortDetailPage /></AdminRoute>} />
                         <Route path="/marketplace" element={<ToolRouteWithCreditGate><ServiceMarketplaceHub /></ToolRouteWithCreditGate>} />
                         <Route path="/marketplace/admin/new" element={<AdminRoute><AdminServiceEditor /></AdminRoute>} />
                         <Route path="/marketplace/admin/edit/:id" element={<AdminRoute><AdminServiceEditor /></AdminRoute>} />
