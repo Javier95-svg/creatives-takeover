@@ -302,7 +302,7 @@ const Enterprise = () => {
             {/* How the pilot runs: the 30 days, who brings what, and what it won't do. */}
             <section className="ent-section ent-section--tint">
               <div className="ent-container">
-                <SectionHead eyebrow={ENTERPRISE_PILOT.eyebrow} title={ENTERPRISE_PILOT.title} />
+                <SectionHead eyebrow={ENTERPRISE_PILOT.eyebrow} title={ENTERPRISE_PILOT.title} accent={ENTERPRISE_PILOT.titleAccent} />
                 <ol className="ent-track">
                   {ENTERPRISE_PILOT.track.map((step, index) => (
                     <li

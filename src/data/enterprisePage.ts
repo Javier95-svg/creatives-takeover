@@ -98,6 +98,8 @@ export const ENTERPRISE_OUTCOMES = {
 export const ENTERPRISE_PILOT = {
   eyebrow: 'How the pilot works',
   title: 'We run it. You bring the founders.',
+  // The end of the title, set in the hero's accent gradient on the page.
+  titleAccent: 'You bring the founders.',
   track: [
     { when: 'Day 1', label: 'Kickoff' },
     { when: 'Week 1', label: 'Check-in' },
