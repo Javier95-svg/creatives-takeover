@@ -22,8 +22,9 @@ test('each audience page has a route; only Enterprise is in the navbar', () => {
   for (const page of pages) {
     assert.match(app, new RegExp(`<Route path="${page.path}" element=`), `${page.path} route`);
   }
-  // The navbar stays short (2026-10-16): founders are the obvious audience and
-  // investors wait for case studies.
+  // The navbar stays short (2026-10-16): its For founders entry (2026-10-17) is
+  // a menu of founder tools, not the /for-founders page, and investors wait
+  // for case studies.
   assert.equal(enterprise.ENTERPRISE_PATH, '/enterprise');
   assert.match(navbar, /label: "Enterprise", href: "\/enterprise"/);
   assert.doesNotMatch(navbar, /href: "\/for-founders"|href: "\/for-investors"|for-programs/);

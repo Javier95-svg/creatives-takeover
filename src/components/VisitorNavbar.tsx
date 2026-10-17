@@ -35,23 +35,28 @@ type VisitorEntry = VisitorLink | VisitorMenu;
 
 const isMenu = (entry: VisitorEntry): entry is VisitorMenu => "links" in entry;
 
-// The Explore menu's contents.
-const exploreLinks: VisitorLink[] = [
+// The For founders menu's contents: what founders build and who they work with.
+const founderLinks: VisitorLink[] = [
   { label: "Build", href: "/build", icon: Wrench },
   { label: "Collab", href: "/mentorship", icon: Handshake },
+];
+
+// The Explore menu's contents.
+const exploreLinks: VisitorLink[] = [
   { label: "News", href: "/newspaper", icon: Newspaper },
   { label: "Podcast", href: "/podcast", icon: Mic },
 ];
 
-// The bar in display order (2026-10-16). Home is covered by the brand lockup.
-// Enterprise is the programs page (B2B2C repositioning); founders are the
-// obvious audience, so they need no entry of their own.
+// The bar in display order (2026-10-17). Home is covered by the brand lockup.
+// For founders and Enterprise sit side by side, one per audience (B2B2C
+// repositioning); Enterprise is the programs page.
 const visitorEntries: VisitorEntry[] = [
   // exact, because /demo-studio and /demo-calls both start with /demo and would
   // otherwise light this entry up while the visitor is somewhere else entirely.
   { label: "How it works", href: "/demo", icon: PlayCircle, exact: true },
-  { label: "Explore", links: exploreLinks },
+  { label: "For founders", links: founderLinks },
   { label: "Enterprise", href: "/enterprise", icon: Building2 },
+  { label: "Explore", links: exploreLinks },
   { label: "About", href: "/about", icon: Info },
   { label: "Pricing", href: "/pricing", icon: DollarSign },
 ];
@@ -114,7 +119,7 @@ const LegacyVisitorNavbar = () => {
 
   const navItemClass = (active: boolean) =>
     cn(
-      "rounded-2xl px-3.5 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+      "rounded-2xl px-2 py-2 text-sm font-medium transition-colors xl:px-3.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
       active
         ? "bg-background text-foreground shadow-sm"
         : "text-muted-foreground hover:bg-background/80 hover:text-foreground"

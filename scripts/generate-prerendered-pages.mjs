@@ -12,8 +12,8 @@ const TEMPLATE_PATH = path.join(DIST_DIR, "index.html");
 // the lever a site actually has. /demo was in the footer only, which is why the
 // result showed /demo-studio/try in its place.
 //
-// Mirrors the visitor navbar since 2026-10-16: How it works, Build (first in
-// Explore), Enterprise, About, Pricing.
+// Mirrors the visitor navbar since 2026-10-17: How it works, Build (first in
+// For founders), Enterprise, About, Pricing.
 const SITELINK_NAV = [
   { href: "/demo", label: "How it works" },
   { href: "/build", label: "Build" },

@@ -24,27 +24,33 @@ const linkTable = (name: string) => {
 };
 
 test('visitor navigation keeps the intended public destinations', () => {
-  for (const label of ['How it works', 'Explore', 'Enterprise', 'Build', 'Collab', 'News', 'Podcast', 'About', 'Pricing']) {
+  for (const label of ['How it works', 'For founders', 'Explore', 'Enterprise', 'Build', 'Collab', 'News', 'Podcast', 'About', 'Pricing']) {
     assert.match(source, new RegExp(`label: "${label}"`));
   }
 });
 
-test('the bar runs How it works, Explore, Enterprise, About, Pricing', () => {
-  // Order requested 2026-10-16. Tour became "How it works" on the same route,
-  // and Enterprise is the programs page. Explore is the only menu.
+test('the bar runs How it works, For founders, Enterprise, Explore, About, Pricing', () => {
+  // Order requested 2026-10-17. Tour became "How it works" on the same route,
+  // and Enterprise is the programs page. For founders and Explore are menus.
   const { table, labels } = linkTable('visitorEntries');
-  assert.deepEqual(labels, ['How it works', 'Explore', 'Enterprise', 'About', 'Pricing']);
+  assert.deepEqual(labels, ['How it works', 'For founders', 'Enterprise', 'Explore', 'About', 'Pricing']);
+  assert.match(table, /label: "For founders", links: founderLinks/);
   assert.match(table, /label: "Explore", links: exploreLinks/);
   assert.match(table, /label: "Enterprise", href: "\/enterprise"/);
-  assert.equal(source.match(/<DropdownMenuTrigger/g)?.length, 1, 'one dropdown, rendered for the Explore entry');
+  assert.equal(source.match(/<DropdownMenuTrigger/g)?.length, 1, 'one dropdown trigger, rendered for each menu entry');
 });
 
-test('Explore holds Build, Collab, News and Podcast', () => {
-  const { table, labels } = linkTable('exploreLinks');
-  assert.deepEqual(labels, ['Build', 'Collab', 'News', 'Podcast']);
+test('For founders holds Build and Collab', () => {
+  const { table, labels } = linkTable('founderLinks');
+  assert.deepEqual(labels, ['Build', 'Collab']);
   // Collab replaced Guidance and keeps the same destination.
   assert.match(table, /label: "Collab", href: "\/mentorship", icon: Handshake/);
   assert.doesNotMatch(table, /Guidance|Compass|Connect/);
+});
+
+test('Explore holds News and Podcast', () => {
+  const { labels } = linkTable('exploreLinks');
+  assert.deepEqual(labels, ['News', 'Podcast']);
 });
 
 test('visitor navbar has no Content menu any more', () => {
