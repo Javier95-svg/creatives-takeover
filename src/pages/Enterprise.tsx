@@ -140,7 +140,7 @@ const SectionHead = ({
 }: {
   eyebrow: string;
   title: string;
-  /** The end of the title to set in silver; must be how the title ends. */
+  /** The end of the title to set in the hero's accent gradient; must be how the title ends. */
   accent?: string;
   copy?: string;
   wide?: boolean;
@@ -153,7 +153,7 @@ const SectionHead = ({
         {lead !== null ? (
           <>
             {lead}
-            <span className="ent-h2__silver">{accent}</span>
+            <span className="ent-h2__accent">{accent}</span>
           </>
         ) : (
           title

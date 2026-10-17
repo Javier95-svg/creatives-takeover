@@ -95,20 +95,19 @@
   margin-bottom: 44px;
 }
 
-/* A silver end to a section title (outcomes). Brushed-metal gradient, darker
-   in light mode so it keeps 3:1 contrast at heading size; clone gives each
-   wrapped line its own sheen. */
-.ent-h2__silver {
-  background: linear-gradient(180deg, #4b5360 0%, #7c8592 48%, #5a626e 72%, #3f4651 100%);
+/* The end of a section title (outcomes) in the hero's accent gradient, the
+   one on "with evidence.". The hero's gradient spans its whole block, about
+   1.5x the words, so the words show its blue-to-violet part; the 150% width
+   gives each wrapped line (clone) the same look. */
+.ent-h2__accent {
+  background: linear-gradient(100deg, var(--ent-blue) 10%, var(--ent-violet) 55%, var(--ent-red) 100%);
+  background-size: 150% 100%;
+  background-repeat: no-repeat;
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
   -webkit-box-decoration-break: clone;
   box-decoration-break: clone;
-}
-
-.dark .ent-h2__silver {
-  background-image: linear-gradient(180deg, #f6f7f9 0%, #c9ced6 42%, #8e96a2 68%, #dde1e6 100%);
 }
 
 /* Wide heads use the full container: lines fill the width instead of being

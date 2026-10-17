@@ -65,7 +65,7 @@ export const ENTERPRISE_HERO = {
 export const ENTERPRISE_OUTCOMES = {
   eyebrow: 'What you get',
   title: 'A unified system to measure your cohort progress and outcomes.',
-  // The end of the title, set in silver on the page.
+  // The end of the title, set in the hero's accent gradient on the page.
   titleAccent: 'cohort progress and outcomes.',
   items: [
     {
