@@ -47,8 +47,19 @@ ALTER TABLE public.cohort_members
   ADD COLUMN IF NOT EXISTS progress_shared_at timestamptz;
 
 -- Programs run longer than four weeks; one check-in per founder per week.
-ALTER TABLE public.cohort_checkins
-  DROP CONSTRAINT IF EXISTS cohort_checkins_week_number_check;
+-- Drop the old 1-4 limit whatever the database named it, then add 1-52.
+DO $$
+DECLARE v_name text;
+BEGIN
+  FOR v_name IN
+    SELECT con.conname FROM pg_constraint con
+    WHERE con.conrelid = 'public.cohort_checkins'::regclass
+      AND con.contype = 'c'
+      AND pg_get_constraintdef(con.oid) ILIKE '%week_number%'
+  LOOP
+    EXECUTE format('ALTER TABLE public.cohort_checkins DROP CONSTRAINT %I', v_name);
+  END LOOP;
+END $$;
 ALTER TABLE public.cohort_checkins
   ADD CONSTRAINT cohort_checkins_week_number_check CHECK (week_number BETWEEN 1 AND 52);
 CREATE UNIQUE INDEX IF NOT EXISTS cohort_checkins_one_per_week
