@@ -196,7 +196,7 @@ export const ENTERPRISE_FAQS = [
 
 export const ENTERPRISE_CONTACT = {
   eyebrow: 'Talk to us',
-  title: 'Book a pilot call',
+  title: 'Book a free pilot call',
   copy: 'Tell us about your program and we’ll shape the pilot around your founders and your calendar.',
   pilotIncludes: [
     'Platform access for 5 to 10 startups',
