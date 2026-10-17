@@ -185,7 +185,7 @@ export const INDEXABLE_ROUTES = [
       "A 30-day founder validation pilot for accelerators and incubators: a validation plan and documented evidence for every founder, and a cohort report.",
     changefreq: "monthly",
     priority: 0.9,
-    heroHeading: "Every founder tests their idea. You see the evidence.",
+    heroHeading: "Measure your program impact with evidence.",
     heroCopy:
       "Your accountability partner for accelerators, incubators and university programs. Start with a 30-day pilot, then we shape it around your program’s length, size and founders.",
     sections: [

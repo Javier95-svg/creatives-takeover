@@ -34,8 +34,8 @@ export const ENTERPRISE_SEO = {
 
 export const ENTERPRISE_HERO = {
   eyebrow: '30-day founder validation pilot',
-  titleLead: 'Every founder tests their idea.',
-  titleAccent: 'You see the evidence.',
+  titleLead: 'Measure your program impact',
+  titleAccent: 'with evidence.',
   // Javier's wording (2026-10-16): who it's for and that it adapts. Programs
   // don't all last 30 days, so the 30 days is the pilot, not the program.
   lede:
