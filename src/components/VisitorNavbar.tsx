@@ -244,7 +244,7 @@ const LegacyVisitorNavbar = () => {
                 </Link>
               </Button>
               <Button asChild size="sm" className="gap-2">
-                <Link to="/#get-started" onClick={() => { trackNavClick("Join Today"); setAttribution('navbar_join_today', location.pathname); }}>
+                <Link to="/signup" onClick={() => { trackNavClick("Join Today"); setAttribution('navbar_join_today', location.pathname); }}>
                   <Rocket className="h-4 w-4" aria-hidden="true" />
                   Join Today
                 </Link>
@@ -295,7 +295,7 @@ const LegacyVisitorNavbar = () => {
                     </Link>
                   </Button>
                   <Button asChild className="w-full">
-                    <Link to="/#get-started" onClick={() => { trackNavClick("Mobile Join Today"); setAttribution('navbar_join_today', location.pathname); }}>
+                    <Link to="/signup" onClick={() => { trackNavClick("Mobile Join Today"); setAttribution('navbar_join_today', location.pathname); }}>
                       <Rocket className="mr-2 h-4 w-4" aria-hidden="true" />
                       Join Today
                     </Link>

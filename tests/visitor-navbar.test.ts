@@ -63,6 +63,13 @@ test('Explore holds News and Podcast', () => {
   assert.deepEqual(labels, ['News', 'Podcast']);
 });
 
+test('Join Today goes to signup on desktop and mobile', () => {
+  // Restored 2026-10-17: the starting-experiences change (2026-10-13) had
+  // pointed it at /#get-started.
+  const joinLinks = [...source.matchAll(/<Link to="([^"]+)" onClick=\{\(\) => \{ trackNavClick\("(?:Mobile )?Join Today"\)/g)].map((match) => match[1]);
+  assert.deepEqual(joinLinks, ['/signup', '/signup']);
+});
+
 test('visitor navbar has no Content menu any more', () => {
   assert.doesNotMatch(source, /const contentMenu|label: "Content"/);
 });

@@ -127,7 +127,7 @@ test('generation failure retries with the description retained', async ({ page }
   expect(api.generations()).toBe(2);
 });
 
-test('original single input and toggle fit mobile, keyboard submits, and Join Today opens the same entry', async ({ page }) => {
+test('original single input and toggle fit mobile, keyboard submits, and Join Today opens signup', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await mocks(page);
   await page.goto('/');
@@ -136,17 +136,18 @@ test('original single input and toggle fit mobile, keyboard submits, and Join To
   await expect(page.locator('#hero-idea-input')).toHaveCount(1);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   await page.locator('.ct-hero__idea-card').screenshot({ path: '.cache/starting-experiences-mobile.png', animations: 'disabled' });
-  await page.getByRole('button', { name: 'Open navigation menu' }).click();
-  await page.getByRole('link', { name: 'Join Today', exact: true }).click();
-  await expect(page).toHaveURL(/#get-started$/);
-  await expect(page.getByRole('button', { name: 'Open navigation menu' })).toBeVisible();
   await page.getByRole('tab', { name: 'Product', exact: true }).click();
   await page.getByRole('textbox', { name: 'What are you building?', exact: true }).fill(description);
   await page.getByRole('textbox', { name: 'What are you building?', exact: true }).press('Enter');
   await expect(page.getByRole('heading', { name: draft.productName, exact: true })).toBeVisible();
+  // Join Today goes to signup, on mobile and desktop (restored 2026-10-17).
+  await page.getByRole('button', { name: 'Open navigation menu' }).click();
+  await page.getByRole('link', { name: 'Join Today', exact: true }).click();
+  await expect(page).toHaveURL(/\/signup$/);
+  await page.goto('/');
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.getByRole('link', { name: 'Join Today', exact: true }).first().click();
-  await expect(page).toHaveURL(/#get-started$/);
+  await expect(page).toHaveURL(/\/signup$/);
 });
 
 for (const authMethod of ['email', 'google'] as const) {
