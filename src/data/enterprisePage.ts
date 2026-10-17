@@ -142,36 +142,51 @@ export const ENTERPRISE_AFTER = {
   note: 'Paid plans add more credits and features.',
 };
 
-// The questions a program manager asks first: cost, their team's time, what
-// they can report, and what they see.
+// Written for program managers (2026-10-16), in the order they ask:
+// expectations, their team's time, cost, visibility, reporting, fit with their
+// curriculum, sector, and what comes next. Every promise here is delivered by
+// our team during the pilot (onboarding, weekly summary, report), or verified
+// in the product (founders keep account, work and the free plan).
 export const ENTERPRISE_FAQS = [
   {
-    question: 'How much does the pilot cost?',
-    answer: 'It depends on the number of startups. Tell us about your program and we’ll send a proposal. Founders don’t pay to join.',
+    question: 'What can we realistically expect from the pilot?',
+    answer:
+      'Every startup finishes with a validation plan, documented customer interviews and experiments, and a recommended next step. Thirty days won’t prove product-market fit or make a startup investment-ready. They give your cohort a disciplined process and evidence you can review.',
   },
   {
     question: 'How much of our team’s time does it take?',
-    answer: 'You name one contact. We run the validation workflow, the weekly check-ins and the final report.',
+    answer:
+      'One contact on your side, to introduce the pilot to your founders and receive the weekly summary. We onboard founders at kickoff, run the weekly check-ins and write the final report.',
   },
   {
-    question: 'Can the report follow our funder’s format?',
-    answer: 'Yes. We can shape the final report to your funder’s template, for example ProInnóvate milestone reports in Peru.',
+    question: 'How much does the pilot cost?',
+    answer:
+      'It depends on the number of startups. After a short call about your program, we send you a proposal. Founders don’t pay to take part.',
   },
   {
-    question: 'What do we see during the pilot?',
-    answer: 'A weekly summary of every team: its stage, interviews logged, experiments run and decisions made. Founders’ files and messages are not shared.',
+    question: 'What will we see during the pilot?',
+    answer:
+      'A weekly summary for every team: its current stage, interviews logged, experiments run, decisions made and whether it needs attention. Founders’ files and messages stay private.',
+  },
+  {
+    question: 'Can the final report follow our funder’s format?',
+    answer:
+      'Yes. We build it from each team’s recorded work and can follow your funder’s or university’s template, for example ProInnóvate milestone reports in Peru. Share the template with us at kickoff.',
+  },
+  {
+    question: 'Does it replace our curriculum or mentors?',
+    answer:
+      'No, it works alongside them. Your sessions and mentors teach; the Startup Development Cycle helps founders turn that into finished work, stage by stage. Founders can also find experts in specific fields and other founders on the platform.',
   },
   {
     question: 'Our founders are all in one sector. Does that work?',
-    answer: 'Yes. Tell us who your founders are, for example fintech, and we set up the check-ins and the report around them.',
+    answer:
+      'Yes. Whether your cohort is fintech, health, climate or mixed, we tailor the check-ins and the final report to your founders’ sector.',
   },
   {
-    question: 'Does it replace our mentors or sessions?',
-    answer: 'No. It runs alongside your sessions and mentors. Founders also get experts in specific fields, service providers, investors and other founders on the platform.',
-  },
-  {
-    question: 'What happens after the 30 days?',
-    answer: 'Founders keep their accounts and their work. If the pilot works for you, we set up your next cohort around your program’s calendar.',
+    question: 'What happens after the pilot?',
+    answer:
+      'Founders keep their accounts, their work and the free plan. If the pilot meets your goals, we extend it to your full cohort and set it up around your program’s calendar, from a few weeks to several months.',
   },
 ];
 
