@@ -2,7 +2,7 @@ import { useState, useTransition } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CalendarX2, Check, CreditCard, Crown, DollarSign, Lock, type LucideIcon } from "lucide-react";
+import { Check, Crown } from "lucide-react";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -67,15 +67,6 @@ const PLAN_CARD_STYLES: Record<PlanKey, { border: string; button: string; button
     buttonVariant: "default",
   },
 };
-
-// Facts shown under the cards. Each is verified: Rookie signup never reaches
-// Stripe, cancellation is in the FAQ, and checkout runs on Stripe.
-const TRUST_POINTS: Array<{ icon: LucideIcon; label: string }> = [
-  { icon: CreditCard, label: "Free plan, no card needed" },
-  { icon: CalendarX2, label: "Cancel anytime" },
-  { icon: Lock, label: "Secure checkout by Stripe" },
-  { icon: DollarSign, label: "Prices in USD" },
-];
 
 const normalizeTierName = (tierName?: string | null): PlanKey => {
   const normalized = (tierName || "").trim().toLowerCase();
@@ -290,15 +281,6 @@ export default function Pricing({ showHeading = true }: { showHeading?: boolean 
             );
           })}
         </RevealGroup>
-
-        <ul className="mx-auto mt-8 flex max-w-4xl flex-wrap items-center justify-center gap-x-7 gap-y-2 text-sm text-muted-foreground">
-          {TRUST_POINTS.map(({ icon: Icon, label }) => (
-            <li key={label} className="inline-flex items-center gap-2">
-              <Icon className="h-4 w-4" aria-hidden="true" />
-              {label}
-            </li>
-          ))}
-        </ul>
       </div>
     </section>
   );

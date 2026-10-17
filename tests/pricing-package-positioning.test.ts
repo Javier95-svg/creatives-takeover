@@ -81,7 +81,8 @@ test('cards keep their tier colours and compute the yearly maths', () => {
   // Savings and yearly equivalents come from PLAN_PRICING, not typed strings.
   assert.match(pricing, /yearlySavingsPercent/);
   assert.doesNotMatch(pricing, /"Save \d+%"|"\$\d+\.\d{2}\/mo"/);
-  assert.match(pricing, /Secure checkout by Stripe/);
+  // The trust line under the cards was removed at Javier's request (2026-10-17).
+  assert.doesNotMatch(pricing, /TRUST_POINTS/);
 });
 
 test('the FAQ matches the Terms, invents no seats and has no fake voting', () => {
