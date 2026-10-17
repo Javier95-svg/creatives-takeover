@@ -14,7 +14,7 @@
 
 /** The ?for= value that opens this view, e.g. /pricing?for=institutions. */
 export const PRICING_AUDIENCES = [
-  { value: 'founders', label: 'Founders & builders' },
+  { value: 'founders', label: 'Standard Accounts' },
   { value: 'institutions', label: 'Institutions' },
 ] as const;
 
@@ -30,7 +30,6 @@ export const PRICING_SEO = {
 
 export const PRICING_HEADER = {
   title: 'Pricing',
-  lede: 'Plans for founders and builders. Custom pricing for programs.',
 };
 
 // Laid out as a quote sheet (2026-10-17): the terms that set the price on the

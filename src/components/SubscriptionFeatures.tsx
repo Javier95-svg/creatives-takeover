@@ -51,10 +51,7 @@ const SubscriptionFeatures = () => (
   <section className="relative overflow-hidden py-section-mobile lg:py-section-desktop" id="features">
     <div className="container relative z-10 mx-auto px-4 sm:px-6">
       <ScrollReveal>
-        <PricingSectionHeader
-          title="What your credits cover"
-          lede="Credits pay for the AI work. Many tools are free to start, and your credits renew each month."
-        />
+        <PricingSectionHeader title="What your credits cover" />
       </ScrollReveal>
 
       {/* A month of credits, translated into things a founder gets done. */}

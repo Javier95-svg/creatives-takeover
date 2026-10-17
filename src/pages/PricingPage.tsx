@@ -74,26 +74,28 @@ const PricingPage = () => {
           <Navigation />
 
           <header className="container mx-auto px-4 pt-28 text-center sm:px-6 md:pt-32 lg:pt-36">
-            <h1 className="gradient-text mb-5 pb-2 font-space-grotesk text-4xl font-semibold tracking-tight lg:text-6xl">
+            <h1 className="gradient-text mb-8 pb-2 font-space-grotesk text-4xl font-semibold tracking-tight lg:text-6xl">
               {PRICING_HEADER.title}
             </h1>
-            <p className="mx-auto mb-8 max-w-2xl text-lg text-muted-foreground sm:text-xl">{PRICING_HEADER.lede}</p>
-            <Tabs value={audience} onValueChange={selectAudience} className="inline-block">
-              <TabsList
-                aria-label="Who is this pricing for"
-                className="grid h-auto w-full grid-cols-2 rounded-full border border-border/60 bg-background/70 p-1.5 shadow-sm backdrop-blur"
-              >
-                {PRICING_AUDIENCES.map((option) => (
-                  <TabsTrigger
-                    key={option.value}
-                    value={option.value}
-                    className="rounded-full px-5 py-2.5 text-sm font-semibold data-[state=active]:bg-foreground data-[state=active]:text-background sm:px-7 sm:text-base"
-                  >
-                    {option.label}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-            </Tabs>
+            {/* Its own block, so the switch sits below the title (gradient-text is inline). */}
+            <div>
+              <Tabs value={audience} onValueChange={selectAudience} className="inline-block">
+                <TabsList
+                  aria-label="Who is this pricing for"
+                  className="grid h-auto w-full grid-cols-2 rounded-full border border-border/60 bg-background/70 p-1.5 shadow-sm backdrop-blur"
+                >
+                  {PRICING_AUDIENCES.map((option) => (
+                    <TabsTrigger
+                      key={option.value}
+                      value={option.value}
+                      className="rounded-full px-5 py-2.5 text-sm font-semibold data-[state=active]:bg-foreground data-[state=active]:text-background sm:px-7 sm:text-base"
+                    >
+                      {option.label}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+              </Tabs>
+            </div>
           </header>
 
           {audience === "founders" ? (
