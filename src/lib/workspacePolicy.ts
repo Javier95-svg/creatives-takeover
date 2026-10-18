@@ -22,8 +22,12 @@ const exact = ['/pricing', '/files', '/tasks', '/routine', '/weekly-mission', '/
 // Admin pages keep the legacy layout, except the adoption report, which reads
 // like the workspace tools it measures and is used alongside them.
 const WORKSPACE_ADMIN_PAGES = ['/admin/adoption'];
+// The mentor, investor and Newspaper story editors open inside the workspace
+// frame like the sections they publish to (2026-10-18); /stories is the old
+// address of the story editor. Admin list pages keep the legacy layout.
+const WORKSPACE_ADMIN_EDITORS = /^\/(mentorship|investors|newspaper|stories)\/admin\/(new|edit\/[^/]+)$/;
 export function isWorkspaceRoute(path: string) {
-  if (WORKSPACE_ADMIN_PAGES.includes(path)) return true;
+  if (WORKSPACE_ADMIN_PAGES.includes(path) || WORKSPACE_ADMIN_EDITORS.test(path)) return true;
   if (/(^|\/)(admin|public|embed|share)(\/|$)/.test(path) || path === '/demo-studio/try' || path === '/newspaper/rss.xml') return false;
   return path === '/' || exact.includes(path) || roots.some(root => path === root || path.startsWith(`${root}/`));
 }

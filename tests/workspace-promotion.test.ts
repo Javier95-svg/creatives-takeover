@@ -58,6 +58,11 @@ test('application route catalog includes details and all dashboard destinations'
 test('public, authentication, onboarding, administration and callback routes retain legacy layouts', () => {
   for (const path of ['/build', '/about', '/login', '/signup', '/auth/callback', '/app-entry', '/onboarding', '/setup-quiz', '/reset-password', '/subscription-success', '/p/slug', '/demo/123', '/embed/demo/123', '/w/slug', '/icp/123/public', '/pmf-survey/slug', '/newspaper/rss.xml', '/newspaper/admin', '/demo-studio/try', '/creatives-takeover', '/prototypes/founder-guide', '/dashboard-unrelated']) assert.equal(isWorkspaceRoute(path), false, path);
 });
+test('the mentor, investor and story editors open inside the workspace frame', () => {
+  // 2026-10-18: they showed the old top bar. Admin list pages stay legacy.
+  for (const path of ['/mentorship/admin/new', '/mentorship/admin/edit/abc', '/investors/admin/new', '/investors/admin/edit/abc', '/newspaper/admin/new', '/newspaper/admin/edit/abc', '/stories/admin/edit/abc']) assert.ok(isWorkspaceRoute(path), path);
+  for (const path of ['/newspaper/admin', '/mentorship/admin', '/admin/cohorts', '/mentorship/admin/new/extra']) assert.equal(isWorkspaceRoute(path), false, path);
+});
 test('updates are real, supported, ordered, deduplicated, capped and internal', () => {
   const row = (id: string, route = '/newspaper/article', type = 'platform_update') => ({ id, notification_type: type, created_at: `2026-09-${id.padStart(2, '0')}T12:00:00Z`, metadata: { title: `Update ${id}`, message: 'Details', route } });
   const updates = platformUpdates([row('1'), row('3', '/marketplace/item'), row('2', '/mentorship/mentors/abc'), row('3', '/marketplace/item'), row('4', '//evil.example'), row('5', '/\\evil.example'), row('6', '/messages', 'message')]);
