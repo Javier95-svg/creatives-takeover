@@ -24,9 +24,20 @@ const ContactUs = () => {
     message: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // The role and reason dropdowns are not native inputs, so the browser does
+  // not enforce `required` on them. Checked here before sending: the edge
+  // function rejects an empty role or reason without saving it, so the
+  // inquiry would otherwise be lost (found 2026-10-18).
+  const [missing, setMissing] = useState<{ role: boolean; reason: boolean }>({ role: false, reason: false });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const nextMissing = { role: !formData.role, reason: !formData.reason };
+    if (nextMissing.role || nextMissing.reason) {
+      setMissing(nextMissing);
+      document.getElementById(nextMissing.role ? "role" : "reason")?.focus();
+      return;
+    }
     setIsSubmitting(true);
 
     try {
@@ -118,8 +129,9 @@ const ContactUs = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSelectChange = (name: string, value: string) => {
+  const handleSelectChange = (name: "role" | "reason", value: string) => {
     setFormData({ ...formData, [name]: value });
+    setMissing((current) => ({ ...current, [name]: false }));
   };
 
   return (
@@ -203,7 +215,12 @@ const ContactUs = () => {
                   onValueChange={(value) => handleSelectChange("role", value)}
                   required
                 >
-                  <SelectTrigger className="transition-all duration-300 focus:scale-[1.01]">
+                  <SelectTrigger
+                    id="role"
+                    aria-invalid={missing.role}
+                    aria-describedby={missing.role ? "role-error" : undefined}
+                    className={`transition-all duration-300 focus:scale-[1.01] ${missing.role ? "border-destructive" : ""}`}
+                  >
                     <SelectValue placeholder="Select your role" />
                   </SelectTrigger>
                   <SelectContent>
@@ -217,6 +234,11 @@ const ContactUs = () => {
                     <SelectItem value="other">Other</SelectItem>
                   </SelectContent>
                 </Select>
+                {missing.role ? (
+                  <p id="role-error" className="text-xs text-destructive" role="alert">
+                    Choose your role.
+                  </p>
+                ) : null}
               </div>
 
               {/* Reason for Contact */}
@@ -229,7 +251,12 @@ const ContactUs = () => {
                   onValueChange={(value) => handleSelectChange("reason", value)}
                   required
                 >
-                  <SelectTrigger className="transition-all duration-300 focus:scale-[1.01]">
+                  <SelectTrigger
+                    id="reason"
+                    aria-invalid={missing.reason}
+                    aria-describedby={missing.reason ? "reason-error" : undefined}
+                    className={`transition-all duration-300 focus:scale-[1.01] ${missing.reason ? "border-destructive" : ""}`}
+                  >
                     <SelectValue placeholder="What can we help you with?" />
                   </SelectTrigger>
                   <SelectContent>
@@ -243,6 +270,11 @@ const ContactUs = () => {
                     <SelectItem value="collaboration">Collaboration Request</SelectItem>
                   </SelectContent>
                 </Select>
+                {missing.reason ? (
+                  <p id="reason-error" className="text-xs text-destructive" role="alert">
+                    Choose a reason.
+                  </p>
+                ) : null}
               </div>
 
               {/* Message Textarea */}
