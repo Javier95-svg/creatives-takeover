@@ -248,7 +248,7 @@ const AdminStoryEditor = () => {
     <div className="min-h-screen bg-background">
       <Navigation />
 
-      <main className="pt-header-offset pb-16">
+      <main className="pt-header-offset nav-offset-roomy pb-16">
         <div className="container mx-auto px-6 max-w-[1600px]">
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
