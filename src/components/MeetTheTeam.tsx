@@ -2,7 +2,6 @@ import { Linkedin, Mail, Users } from "lucide-react";
 
 import danielaPhoto from "@/assets/team-daniela-hagg.webp";
 import javierPhoto from "@/assets/team-javier-pena-profile.jpg";
-import jelenaPhoto from "@/assets/team-jelena-dabovic.webp";
 import lindseyPhoto from "@/assets/team-lindsey-martin.jpg";
 import otiliaPhoto from "@/assets/team-otilia-dogaru.jpg";
 import rominaPhoto from "@/assets/team-romina-roshandel.jpg";
@@ -43,14 +42,6 @@ const teamMembers: TeamMember[] = [
     linkedin: "https://www.linkedin.com/in/otilia-dogaru/",
     email: "otiliadogaru.ldn@gmail.com",
     photo: otiliaPhoto,
-  },
-  {
-    id: "jelena-dabovic",
-    name: "Jelena Dabovic",
-    role: "Content Partner",
-    linkedin: "https://ba.linkedin.com/in/jelena-dabovic-b6847a38b",
-    email: "jdabovic58@gmail.com",
-    photo: jelenaPhoto,
   },
   {
     id: "lindsey-martin",
