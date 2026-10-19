@@ -1,0 +1,44 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { founderIdDisplay, founderIdPath, founderIdUrl, isFounderIdAccount } from '../src/lib/founderId.ts';
+
+const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8');
+
+test('Founder ID belongs to founders and builders only', () => {
+  assert.equal(isFounderIdAccount('founder'), true);
+  assert.equal(isFounderIdAccount('builder'), true);
+  assert.equal(isFounderIdAccount(null), true, 'accounts from before account types were founders');
+  for (const type of ['mentor', 'marketplace', 'investor']) assert.equal(isFounderIdAccount(type), false, type);
+});
+
+test('every Founder ID has a short link people can read and paste', () => {
+  assert.equal(founderIdPath('maya_lindqvist'), '/@maya_lindqvist');
+  assert.equal(founderIdUrl('maya_lindqvist', 'https://creatives-takeover.com'), 'https://creatives-takeover.com/@maya_lindqvist');
+  assert.equal(founderIdDisplay('maya_lindqvist', 'creatives-takeover.com'), 'creatives-takeover.com/@maya_lindqvist');
+});
+
+test('the short link redirects to the profile, which stays canonical', () => {
+  const vercel = JSON.parse(read('../vercel.json')) as { redirects: Array<{ source: string; destination: string; permanent: boolean }> };
+  const short = vercel.redirects.find((rule) => rule.source === '/@:username');
+  assert.ok(short, 'the /@username redirect exists');
+  assert.equal(short.destination, '/profile/:username');
+  assert.equal(short.permanent, false, 'temporary, so the short link can change target later without stale browser caches');
+  assert.ok(vercel.redirects.some((rule) => rule.source === '/%40:username'), 'an encoded @ is handled too');
+  assert.match(read('../api/public-entity.ts'), /const canonical = `\$\{SITE_ORIGIN\}\$\{path\}`/);
+});
+
+test('only Founder IDs get the Founder ID name, link, progress and support', () => {
+  const profile = read('../src/pages/Profile.tsx');
+  assert.match(profile, /const isFounderId = isFounderIdAccount\(profile\?\.user_type\)/);
+  assert.match(profile, /\{isFounderId && profile\.username && \(\s*<FounderIdHeader/);
+  assert.match(profile, /\{profile\.username && isFounderId && \(\s*<PublicProgressCard/);
+  assert.match(profile, /\| \$\{profileNoun\}/);
+  assert.match(profile, /founderId=\{isFounderId\}/);
+  const share = read('../src/components/profile/ProfileShareButton.tsx');
+  assert.match(share, /founderId \? founderIdUrl\(username\)/);
+  const card = read('../api/og-profile.tsx');
+  assert.match(card, /founderId: !row\.user_type \|\| row\.user_type === 'founder' \|\| row\.user_type === 'builder'/);
+  assert.match(card, /creatives-takeover\.com\/@\$\{profile\.username\}/);
+  assert.match(read('../api/public-entity.ts'), /'Founder ID' : 'Profile'/);
+});

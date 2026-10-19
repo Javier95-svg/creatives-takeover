@@ -19,6 +19,7 @@ import {
 import { ANGEL_SECTOR_OPTIONS } from "@/data/angelSectors";
 import { captureEvent } from "@/lib/analytics";
 import { SUPPORT_PROVIDER_LIST, supportLinkProvider, type SupportAsk } from "@/lib/supportLinks";
+import { isFounderIdAccount } from "@/lib/founderId";
 
 interface EditProfileModalProps {
   open: boolean;
@@ -83,7 +84,7 @@ export const EditProfileModal = ({ open, onClose, profile, onSuccess }: EditProf
   const [loading, setLoading] = useState(false);
   // "How you can support me" lives in profile_support. Null while it loads, and
   // when the table is not there yet, in which case the section stays hidden.
-  const acceptsSupport = !profile.user_type || profile.user_type === 'founder' || profile.user_type === 'builder';
+  const acceptsSupport = isFounderIdAccount(profile.user_type);
   const [support, setSupport] = useState<SupportSettings | null>(null);
   const supportProvider = support?.supportUrl.trim() ? supportLinkProvider(support.supportUrl.trim()) : null;
 
@@ -351,7 +352,7 @@ export const EditProfileModal = ({ open, onClose, profile, onSuccess }: EditProf
       <Dialog open={open} onOpenChange={onClose}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Edit Profile</DialogTitle>
+            <DialogTitle>{acceptsSupport ? "Edit Founder ID" : "Edit Profile"}</DialogTitle>
           </DialogHeader>
 
           <form onSubmit={handleSubmit} className="space-y-6">

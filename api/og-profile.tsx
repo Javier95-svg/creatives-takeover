@@ -18,7 +18,7 @@ const SUPABASE_KEY = process.env.VITE_SUPABASE_KEY ?? process.env.VITE_SUPABASE_
 // FOUNDER_STAGE_LABELS in src/lib/bizmapStageOrder.ts; api/ functions do not import from src/.
 const STAGE_LABELS = ['Identity', 'Prototyping', 'Validation', 'Building', 'Launch', 'Traction', 'Fundraise'];
 
-const BASE_SELECT = 'username,full_name,avatar_url,positioning_line,startup_name,startup_tagline';
+const BASE_SELECT = 'username,full_name,avatar_url,positioning_line,startup_name,startup_tagline,user_type';
 // Only the projection added together with the stage gate
 // (20261020090000_public_profile_story_fields) may carry a stage: before that
 // migration, assigned_stage is the private quiz placement.
@@ -32,6 +32,8 @@ interface CardProfile {
   startup_name: string | null;
   startup_tagline: string | null;
   stage: string | null;
+  /** Founder and builder profiles are Founder IDs (src/lib/founderId.ts). */
+  founderId: boolean;
 }
 
 async function fetchProfile(username: string): Promise<CardProfile | null> {
@@ -55,6 +57,7 @@ async function fetchProfile(username: string): Promise<CardProfile | null> {
         startup_name: row.startup_name ?? null,
         startup_tagline: row.startup_tagline ?? null,
         stage: stageNumber ? STAGE_LABELS[stageNumber - 1] ?? null : null,
+        founderId: !row.user_type || row.user_type === 'founder' || row.user_type === 'builder',
       };
     } catch {
       // Try the next projection, then fall back to the generic card.
@@ -69,9 +72,12 @@ export default async function handler(request: Request) {
 
   const profile = username && SUPABASE_KEY ? await fetchProfile(username) : null;
   const name = profile?.full_name?.trim() || profile?.username || 'A founder on Creatives Takeover';
+  const founderId = profile?.founderId ?? false;
   const building = profile?.startup_name?.trim()
     ? `Building ${profile.startup_name.trim()}`
-    : 'Founder profile';
+    : founderId ? 'Founder ID' : 'Profile';
+  // A Founder ID shows its short link, the one people type or paste.
+  const linkText = founderId && profile ? `creatives-takeover.com/@${profile.username}` : 'creatives-takeover.com';
   const line = truncate(profile?.startup_tagline?.trim() || profile?.positioning_line?.trim() || '', 140);
   const showAvatar = await isUsableImage(profile?.avatar_url);
   const nameSize = name.length > 28 ? 58 : 70;
@@ -93,6 +99,27 @@ export default async function handler(request: Request) {
       >
         <div style={{ position: 'absolute', top: '-90px', right: '-70px', width: '360px', height: '360px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(59,130,246,0.24) 0%, transparent 70%)', display: 'flex' }} />
         <div style={{ position: 'absolute', bottom: '-70px', left: '-50px', width: '280px', height: '280px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(16,185,129,0.16) 0%, transparent 70%)', display: 'flex' }} />
+
+        {founderId ? (
+          <div style={{ display: 'flex', marginBottom: '28px' }}>
+            <div
+              style={{
+                background: 'rgba(59,130,246,0.14)',
+                border: '1px solid rgba(96,165,250,0.32)',
+                borderRadius: '100px',
+                padding: '6px 18px',
+                color: '#93c5fd',
+                fontSize: '16px',
+                fontWeight: 700,
+                letterSpacing: '0.14em',
+                textTransform: 'uppercase',
+                display: 'flex',
+              }}
+            >
+              Founder ID
+            </div>
+          </div>
+        ) : null}
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '28px', marginBottom: '40px' }}>
           {showAvatar && profile?.avatar_url ? (
@@ -156,7 +183,7 @@ export default async function handler(request: Request) {
               </div>
             ) : null}
             <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: '18px', display: 'flex' }}>
-              creatives-takeover.com
+              {truncate(linkText, 52)}
             </div>
           </div>
           <div
@@ -170,7 +197,7 @@ export default async function handler(request: Request) {
               display: 'flex',
             }}
           >
-            Follow the progress →
+            {founderId ? 'Follow the progress →' : 'View profile →'}
           </div>
         </div>
       </div>

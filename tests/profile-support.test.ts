@@ -84,5 +84,5 @@ test('the profile section asks for support, never investment', () => {
   assert.match(section, /rel="noopener noreferrer nofollow ugc"/);
   assert.doesNotMatch(section, /\b(invest|investment|back this startup|fund my)\b/i);
   const profile = read('../src/pages/Profile.tsx');
-  assert.match(profile, /profile\.user_type === 'founder' \|\| profile\.user_type === 'builder'/);
+  assert.match(profile, /\{profile\.username && isFounderId && \(\s*<ProfileSupportSection/);
 });

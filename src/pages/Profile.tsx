@@ -27,6 +27,8 @@ import { currentFocusLabel } from "@/lib/currentFocus";
 import { ProfileShareButton } from "@/components/profile/ProfileShareButton";
 import { PublicProgressCard } from "@/components/profile/PublicProgressCard";
 import { ProfileSupportSection } from "@/components/profile/ProfileSupportSection";
+import { FounderIdHeader } from "@/components/profile/FounderIdHeader";
+import { isFounderIdAccount } from "@/lib/founderId";
 
 // Keep a stable projection that can still resolve an account while a newly
 // deployed optional profile field is waiting for its database migration. A
@@ -267,8 +269,10 @@ const Profile = () => {
     : null;
   const primaryIndustry = profile?.startup_industry?.find((industry) => industry.trim().length > 0) ?? null;
   const bioText = plainText(profile?.bio);
-  // Founders and builders ask for support; mentors, providers and investors do not.
-  const acceptsSupport = !profile?.user_type || profile.user_type === 'founder' || profile.user_type === 'builder';
+  // Founder and builder profiles are Founder IDs, with progress, support and a
+  // short link. Mentors, providers and investors keep a plain profile.
+  const isFounderId = isFounderIdAccount(profile?.user_type);
+  const profileNoun = isFounderId ? 'Founder ID' : 'Profile';
   const currentFocus = currentFocusLabel(profile?.current_focus);
 
   // What this account type was asked for, and only what it was asked for. A
@@ -544,7 +548,7 @@ const Profile = () => {
   return (
     <>
       <SEO
-        title={`${profile.full_name || profile.username || 'Founder'} | Founder Profile`}
+        title={`${profile.full_name || profile.username || 'Founder'} | ${profileNoun}`}
         description={
           profile.positioning_line
             ? `${profile.full_name || 'Founder'} — ${profile.positioning_line}`
@@ -568,7 +572,7 @@ const Profile = () => {
           }),
           createWebPageSchema({
             type: "ProfilePage",
-            name: `${profile.full_name || profile.username || 'Founder'} — Founder Profile`,
+            name: `${profile.full_name || profile.username || 'Founder'} — ${profileNoun}`,
             description: profile.positioning_line || profile.bio || "Public founder profile on Creatives Takeover.",
             url: `/profile/${profile.username}`,
             mainEntity: { "@id": `https://creatives-takeover.com/profile/${profile.username}#person` },
@@ -587,6 +591,9 @@ const Profile = () => {
             <div className="max-w-4xl mx-auto">
               {/* Founder-First Profile Hero */}
               <Card className="p-6 mb-6">
+                {isFounderId && profile.username && (
+                  <FounderIdHeader username={profile.username} isOwnProfile={isOwnProfile} />
+                )}
                 <div className="grid md:grid-cols-2 gap-6 mb-6">
                   {/* Left: Founder Info */}
                   <div className="flex gap-4">
@@ -760,7 +767,7 @@ const Profile = () => {
                   {isOwnProfile && (
                     <Button variant="outline" size="sm" onClick={() => setShowEditModal(true)}>
                       <Settings className="h-4 w-4 mr-2" />
-                      Edit Profile
+                      Edit {profileNoun}
                     </Button>
                   )}
                   {profile.username && (
@@ -769,6 +776,7 @@ const Profile = () => {
                       name={profile.full_name || profile.username}
                       startupName={profile.startup_name}
                       isOwnProfile={isOwnProfile}
+                      founderId={isFounderId}
                     />
                   )}
                 </div>
@@ -893,7 +901,7 @@ const Profile = () => {
                 )}
               </div>
 
-              {profile.username && (
+              {profile.username && isFounderId && (
                 <PublicProgressCard
                   username={profile.username}
                   name={profile.full_name || profile.username}
@@ -902,7 +910,7 @@ const Profile = () => {
                 />
               )}
 
-              {profile.username && acceptsSupport && (
+              {profile.username && isFounderId && (
                 <ProfileSupportSection
                   username={profile.username}
                   name={profile.full_name || profile.username}

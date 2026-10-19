@@ -156,6 +156,7 @@ export function ProfileSupportSection({ username, name, startupName, productUrl,
                     name={name}
                     startupName={startupName}
                     isOwnProfile={isOwnProfile}
+                    founderId
                   />
                 );
               }

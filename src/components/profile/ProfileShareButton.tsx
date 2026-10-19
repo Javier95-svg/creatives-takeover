@@ -9,13 +9,16 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { captureEvent } from '@/lib/analytics';
 import { canUseNativeShare, getShareIntentUrl } from '@/lib/demoStudio/share';
+import { founderIdUrl } from '@/lib/founderId';
 
 interface Props {
   username: string;
   name: string;
   startupName: string | null;
   isOwnProfile: boolean;
-  /** 'chip' renders the "Share this profile" ask in the support section. */
+  /** Founder and builder profiles are Founder IDs and share their short link. */
+  founderId: boolean;
+  /** 'chip' renders the "Share my Founder ID" ask in the support section. */
   variant?: 'button' | 'chip';
   className?: string;
 }
@@ -29,12 +32,13 @@ const XIcon = () => (
 );
 
 /**
- * Shares a founder profile. The link previews as the profile card served at
- * /og/profile/:username, so a post shows the founder and what they are
- * building rather than a bare avatar.
+ * Shares a profile. A Founder ID shares its short /@username link; either way
+ * the link previews as the card served at /og/profile/:username, so a post
+ * shows the founder and what they are building rather than a bare avatar.
  */
-export function ProfileShareButton({ username, name, startupName, isOwnProfile, variant = 'button', className }: Props) {
-  const url = `${window.location.origin}/profile/${encodeURIComponent(username)}`;
+export function ProfileShareButton({ username, name, startupName, isOwnProfile, founderId, variant = 'button', className }: Props) {
+  const url = founderId ? founderIdUrl(username) : `${window.location.origin}/profile/${encodeURIComponent(username)}`;
+  const noun = founderId ? 'Founder ID' : 'profile';
   const text = startupName
     ? (isOwnProfile ? `Follow what I'm building with ${startupName}.` : `${name} is building ${startupName}.`)
     : (isOwnProfile ? "Follow what I'm building." : `${name} on Creatives Takeover.`);
@@ -44,7 +48,7 @@ export function ProfileShareButton({ username, name, startupName, isOwnProfile, 
   const copyLink = async () => {
     try {
       await navigator.clipboard.writeText(url);
-      toast.success('Profile link copied.');
+      toast.success(founderId ? 'Founder ID link copied.' : 'Profile link copied.');
       track('copy');
     } catch {
       toast.error(`Copy this link: ${url}`);
@@ -71,12 +75,12 @@ export function ProfileShareButton({ username, name, startupName, isOwnProfile, 
         {variant === 'chip' ? (
           <button type="button" className={className}>
             <Share2 className="h-4 w-4 text-primary" aria-hidden="true" />
-            Share this profile
+            {founderId ? 'Share my Founder ID' : 'Share this profile'}
           </button>
         ) : (
           <Button variant="outline" size="sm" className={className}>
             <Share2 className="h-4 w-4 mr-2" />
-            Share profile
+            Share {noun}
           </Button>
         )}
       </DropdownMenuTrigger>
