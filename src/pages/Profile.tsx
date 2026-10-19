@@ -8,7 +8,7 @@ import ProfileWallpaper from "@/components/wallpapers/ProfileWallpaper";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ArrowLeft, Eye, Settings, Briefcase, Rocket } from "lucide-react";
+import { ArrowLeft, Eye, Settings, Briefcase, MapPin, Rocket } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { SocialButtons } from "@/components/social/SocialButtons";
@@ -640,13 +640,19 @@ const Profile = () => {
                       <h1 className="text-2xl font-bold mb-1 truncate">
                         {profile.full_name || 'Anonymous User'}
                       </h1>
+                      {profile.location && (
+                        <p className="mb-2 flex items-center gap-1 text-sm text-muted-foreground">
+                          <MapPin className="h-3 w-3" aria-hidden="true" />
+                          {profile.location}
+                        </p>
+                      )}
                       {profile.positioning_line && (
-                        <p className="mb-2 line-clamp-2 text-sm font-medium text-muted-foreground">
-                          {profile.positioning_line}
+                        <p className="mb-2 text-sm italic text-muted-foreground">
+                          "{profile.positioning_line}"
                         </p>
                       )}
                       {bioText && (
-                        <p className="mb-2 line-clamp-3 whitespace-pre-line text-sm leading-relaxed text-foreground/90">
+                        <p className="mb-2 whitespace-pre-line text-sm leading-relaxed text-foreground/90">
                           {bioText}
                         </p>
                       )}
@@ -679,14 +685,14 @@ const Profile = () => {
                               {profile.startup_name}
                             </h2>
                             {profile.startup_tagline && (
-                              <p className="text-sm text-muted-foreground line-clamp-2">
+                              <p className="text-sm text-muted-foreground">
                                 {profile.startup_tagline}
                               </p>
                             )}
                           </div>
                         </div>
                         {profile.startup_description && (
-                          <p className="mb-2 line-clamp-3 text-sm leading-relaxed text-muted-foreground">
+                          <p className="mb-2 text-sm leading-relaxed text-muted-foreground">
                             {profile.startup_description}
                           </p>
                         )}
