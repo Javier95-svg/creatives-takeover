@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useLocation, useSearchParams } from 'react-router-dom';
-import { CalendarClock, Loader2, MessageSquare, Pin, PinOff, Repeat2, Route, Trash2 } from 'lucide-react';
-import { orderProfilePosts } from '@/lib/profilePosts';
+import { CalendarClock, ImagePlus, Loader2, MessageSquare, Pencil, Pin, PinOff, Repeat2, Route, Trash2, X } from 'lucide-react';
+import { orderProfilePosts, POST_MAX_LENGTH, validatePost, validatePostImage } from '@/lib/profilePosts';
 import { useAuth } from '@/contexts/AuthContext';
 import { ProfilePostActions, type PostMetrics } from './ProfilePostActions';
 import { toast } from 'sonner';
@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { JourneyPostComposer, type PublishedJourneyPost } from './JourneyPostComposer';
+import { Textarea } from '@/components/ui/textarea';
 
 interface Props {
   userId: string;
@@ -70,6 +71,13 @@ export function ProfilePosts({ userId, name, avatarUrl, isOwnProfile }: Props) {
   const scrolledTo = useRef<string | null>(null);
   const [limit, setLimit] = useState(20);
   const [deleting, setDeleting] = useState<FeedPost | null>(null);
+  const [editing, setEditing] = useState<FeedPost | null>(null);
+  const [editContent, setEditContent] = useState('');
+  const [editPhoto, setEditPhoto] = useState<File | null>(null);
+  const [editPreview, setEditPreview] = useState<string | null>(null);
+  const [removeEditPhoto, setRemoveEditPhoto] = useState(false);
+  const [editBusy, setEditBusy] = useState(false);
+  const editFileInput = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [pinBusy, setPinBusy] = useState(false);
   const pinLock = useRef(false);
@@ -233,6 +241,59 @@ export function ProfilePosts({ userId, name, avatarUrl, isOwnProfile }: Props) {
     } finally { setBusy(false); }
   }
 
+  function startEditing(post: FeedPost) {
+    setEditing(post);
+    setEditContent(post.content);
+    setEditPhoto(null);
+    setEditPreview(post.image ?? null);
+    setRemoveEditPhoto(false);
+  }
+
+  function chooseEditPhoto(file: File | undefined) {
+    if (!file) return;
+    const error = validatePostImage(file);
+    if (error) { toast.error(error); return; }
+    setEditPhoto(file);
+    setRemoveEditPhoto(false);
+    setEditPreview(URL.createObjectURL(file));
+  }
+
+  async function savePostEdit() {
+    if (!editing || editBusy) return;
+    const keepsImage = Boolean(editing.imagePath && !removeEditPhoto) || Boolean(editPhoto);
+    const validation = validatePost(editContent, keepsImage, '');
+    if (validation) { toast.error(validation); return; }
+    setEditBusy(true);
+    let uploadedPath: string | null = null;
+    try {
+      let imagePath = removeEditPhoto ? null : editing.imagePath ?? null;
+      if (editPhoto) {
+        const extensions: Record<string, string> = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'image/gif': 'gif' };
+        uploadedPath = `${userId}/${crypto.randomUUID()}.${extensions[editPhoto.type]}`;
+        const { error: uploadError } = await supabase.storage.from('profile-posts').upload(uploadedPath, editPhoto);
+        if (uploadError) throw uploadError;
+        imagePath = uploadedPath;
+      }
+      const { error } = await supabase
+        .from('profile_posts')
+        .update({ content: editContent.trim(), image_path: imagePath })
+        .eq('id', editing.id)
+        .eq('user_id', userId);
+      if (error) throw error;
+      if (editing.imagePath && editing.imagePath !== imagePath) {
+        void supabase.storage.from('profile-posts').remove([editing.imagePath]);
+      }
+      setEditing(null);
+      toast.success('Post updated.');
+      void refetch();
+      void queryClient.invalidateQueries({ queryKey: ['profile-pinned-post', userId] });
+    } catch (error) {
+      if (uploadedPath) void supabase.storage.from('profile-posts').remove([uploadedPath]);
+      console.error('Unable to update post', error);
+      toast.error('Could not update your post. Please try again.');
+    } finally { setEditBusy(false); }
+  }
+
   function renderPost(post: FeedPost, scheduled = false) {
     const authorName = post.author_name || name;
     const authorAvatar = post.author_name ? post.author_avatar : avatarUrl;
@@ -252,6 +313,7 @@ export function ProfilePosts({ userId, name, avatarUrl, isOwnProfile }: Props) {
             <p className="truncate text-sm font-semibold">{post.author_username ? <Link to={`/profile/${encodeURIComponent(post.author_username)}`}>{authorName}</Link> : authorName}</p>
             <p className="text-xs text-muted-foreground">{scheduled ? 'Scheduled for ' : ''}<time dateTime={post.date}>{formatDate(post.date)}</time></p>
           </div>
+          {ownsPost && post.source === 'journey' && <Button variant="ghost" size="icon" disabled={editBusy} aria-label="Edit post" title="Edit post" onClick={() => startEditing(post)}><Pencil className="h-4 w-4 text-muted-foreground" /></Button>}
           {ownsPost && !scheduled && <Button variant="ghost" size="icon" disabled={pinBusy || !pinned.isSuccess} aria-label={isPinned ? 'Unpin post' : 'Pin post to your profile'} title={isPinned ? 'Unpin post' : 'Pin to top (replaces your current pin)'} aria-pressed={isPinned} onClick={() => void togglePin(post)}>{isPinned ? <PinOff className="h-4 w-4 text-primary" /> : <Pin className="h-4 w-4 text-muted-foreground" />}</Button>}
           {ownsPost && <Button variant="ghost" size="icon" disabled={pinBusy} aria-label={scheduled ? 'Cancel scheduled post' : 'Delete post'} onClick={() => setDeleting(post)}><Trash2 className="h-4 w-4 text-muted-foreground" /></Button>}
         </div>
@@ -296,6 +358,18 @@ export function ProfilePosts({ userId, name, avatarUrl, isOwnProfile }: Props) {
         <DialogContent>
           <DialogHeader><DialogTitle>Remove this post?</DialogTitle><DialogDescription>This removes the post from your profile. Scheduled posts will no longer be published.</DialogDescription></DialogHeader>
           <DialogFooter><Button variant="outline" disabled={busy} onClick={() => setDeleting(null)}>Keep post</Button><Button variant="destructive" disabled={busy} onClick={() => { void deletePost(); }}>{busy ? 'Removing…' : 'Remove post'}</Button></DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={!!editing} onOpenChange={(open) => { if (!open && !editBusy) setEditing(null); }}>
+        <DialogContent className="max-h-[90vh] max-w-xl overflow-y-auto">
+          <DialogHeader><DialogTitle>Edit post</DialogTitle><DialogDescription>Correct your update or replace its photo.</DialogDescription></DialogHeader>
+          <div className="space-y-4">
+            <Textarea value={editContent} onChange={(event) => setEditContent(event.target.value)} maxLength={POST_MAX_LENGTH} rows={6} aria-label="Post text" placeholder="What would you like to share?" />
+            {editPreview && !removeEditPhoto && <div className="relative overflow-hidden rounded-lg border border-border"><img src={editPreview} alt="Post photo to edit" className="max-h-80 w-full object-contain" /><Button type="button" variant="secondary" size="icon" className="absolute right-2 top-2" aria-label="Remove photo" onClick={() => { setRemoveEditPhoto(true); setEditPhoto(null); }}><X className="h-4 w-4" /></Button></div>}
+            <input ref={editFileInput} type="file" accept="image/jpeg,image/png,image/webp,image/gif" className="hidden" onChange={(event) => { chooseEditPhoto(event.target.files?.[0]); event.target.value = ''; }} />
+            <Button type="button" variant="outline" onClick={() => editFileInput.current?.click()}><ImagePlus className="mr-2 h-4 w-4" />{editPreview && !removeEditPhoto ? 'Replace photo' : 'Add photo'}</Button>
+          </div>
+          <DialogFooter><Button variant="outline" disabled={editBusy} onClick={() => setEditing(null)}>Cancel</Button><Button disabled={editBusy} onClick={() => void savePostEdit()}>{editBusy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}{editBusy ? 'Saving…' : 'Save changes'}</Button></DialogFooter>
         </DialogContent>
       </Dialog>
     </section>
