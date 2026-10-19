@@ -76,7 +76,7 @@ export function ProfileSupportSection({ username, name, startupName, productUrl,
   const tryHref = support.launchSlug ? `/p/${encodeURIComponent(support.launchSlug)}` : productUrl;
   const asks = support.asks.filter((ask) => ask !== 'try' || Boolean(tryHref));
   const hasLink = Boolean(support.supportUrl && support.supportProvider);
-  const showSupportCard = (hasLink && support.linkStatus !== 'reported') || (isOwnProfile && !fallback);
+  const canShowProviderLink = hasLink && (support.linkStatus !== 'reported' || isOwnProfile);
   const days = daysSince(support.lastUpdateAt);
 
   const askForMessage = (ask: SupportAsk) => {
@@ -206,42 +206,43 @@ export function ProfileSupportSection({ username, name, startupName, productUrl,
           </div>
         </div>
 
-        {showSupportCard && (
-          <div className="flex min-w-0 flex-col gap-3 rounded-lg border border-border/70 p-4 md:col-span-2">
-            {hasLink ? (
+        <div className="flex min-w-0 flex-col gap-4 rounded-xl border border-border/70 bg-muted/20 p-5 md:col-span-2">
+            {canShowProviderLink ? (
               <>
-                <p className="flex items-center gap-2 text-sm font-semibold">
-                  <Gift className="h-4 w-4 text-primary" aria-hidden="true" />
-                  Support {startupName || firstName} directly
-                </p>
-                <p className="text-xs font-medium text-muted-foreground">
-                  {support.fundingType === 'one_time' ? 'One-time contributions' :
-                    support.fundingType === 'recurring' ? 'Recurring support' :
-                    support.fundingType === 'both' ? 'One-time or recurring support' :
-                    `Choose an available support option on ${support.supportProvider}`}
-                </p>
+                <div>
+                  <p className="flex items-center gap-2 text-lg font-semibold">
+                    <Gift className="h-4 w-4 text-primary" aria-hidden="true" />
+                    Support {startupName || firstName}
+                  </p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {support.fundingType === 'one_time' ? 'One-time contributions' :
+                      support.fundingType === 'recurring' ? 'Recurring support' :
+                      support.fundingType === 'both' ? 'One-time or recurring support' :
+                      `Choose an available support option on ${support.supportProvider}`}
+                  </p>
+                </div>
                 {support.paysFor && (
-                  <div className="flex flex-col gap-0.5">
-                    <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">What support pays for</span>
-                    <span className="text-sm leading-relaxed">{support.paysFor}</span>
+                  <div className="rounded-lg border border-border/60 bg-background/70 p-3">
+                    <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Your support helps with</span>
+                    <p className="mt-1 text-sm leading-relaxed">{support.paysFor}</p>
                   </div>
                 )}
-                <Button asChild className="w-full">
+                <Button asChild className="min-h-12 w-full text-base font-semibold">
                   <a
                     href={support.supportUrl!}
                     target="_blank"
                     rel="noopener noreferrer nofollow ugc"
                     onClick={() => { if (!preview) captureEvent('support_link_clicked', { provider: support.supportProvider, is_owner: isOwnProfile }); }}
                   >
-                  Continue to {support.supportProvider}
+                    Support on {support.supportProvider}
                     <ExternalLink className="ml-2 h-4 w-4" aria-hidden="true" />
                   </a>
                 </Button>
-                <p className="text-xs leading-relaxed text-muted-foreground">
+                <p className="text-center text-xs leading-relaxed text-muted-foreground">
                   {support.supportProvider === 'Buy Me a Coffee'
-                    ? 'Choose your amount, leave a name or message if you like, and enter payment details on Buy Me a Coffee.'
-                    : `Choose an available support option and complete payment on ${support.supportProvider}.`}{' '}
-                  You don’t need a Creatives Takeover account.
+                    ? 'Choose an amount, leave your name and a message, then enter your card details on Buy Me a Coffee.'
+                    : `Choose a support option and complete payment on ${support.supportProvider}.`}{' '}
+                  No Creatives Takeover account is needed.
                 </p>
                 {isOwnProfile ? (
                   <p className={cn('text-xs', support.linkStatus === 'live' ? 'text-success' : 'text-warning')}>
@@ -263,20 +264,39 @@ export function ProfileSupportSection({ username, name, startupName, productUrl,
                   </button>
                 )}
               </>
-            ) : (
+            ) : isOwnProfile ? (
               <>
-                <p className="flex items-center gap-2 text-sm font-semibold">
+                <p className="flex items-center gap-2 text-lg font-semibold">
                   <Gift className="h-4 w-4 text-primary" aria-hidden="true" />
-                  Add a support link
+                  Set up support
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  Add a Ko-fi, Buy Me a Coffee, Patreon or other supported link so visitors can contribute directly to your project. The link appears as soon as you save it.
+                  Add your Buy Me a Coffee, Patreon, Ko-fi or another supported payment page. Visitors choose an amount and pay on that provider’s secure checkout.
                 </p>
                 {onEditProfile && <Button size="sm" className="w-fit" onClick={onEditProfile}>Add a funding link</Button>}
               </>
+            ) : support.linkStatus === 'reported' ? (
+              <>
+                <p className="flex items-center gap-2 text-lg font-semibold">
+                  <Gift className="h-4 w-4 text-primary" aria-hidden="true" />
+                  Support link under review
+                </p>
+                <p className="text-sm leading-relaxed text-muted-foreground">
+                  This payment page is temporarily hidden while the Creatives Takeover team reviews reports.
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="flex items-center gap-2 text-lg font-semibold">
+                  <Gift className="h-4 w-4 text-primary" aria-hidden="true" />
+                  Support {startupName || firstName}
+                </p>
+                <p className="text-sm leading-relaxed text-muted-foreground">
+                  This founder hasn’t added a support page yet. Once they link Buy Me a Coffee, Patreon or another provider, you’ll be able to choose a contribution and check out there without a Creatives Takeover account.
+                </p>
+              </>
             )}
-          </div>
-        )}
+        </div>
       </div>
 
       {signupIntent && (
