@@ -37,11 +37,16 @@ interface CardProfile {
 }
 
 async function fetchProfile(username: string): Promise<CardProfile | null> {
+  // Usernames keep their capitals and links arrive in any case, so match
+  // without case. Only username characters get here, with LIKE's _ escaped,
+  // so the filter is an exact match and never a pattern.
+  if (!/^[A-Za-z0-9_]{1,64}$/.test(username)) return null;
+  const filter = `ilike.${encodeURIComponent(username.replace(/_/g, '\\_'))}`;
   const headers = { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` };
   for (const [select, stageIsGated] of [[STORY_SELECT, true], [BASE_SELECT, false]] as const) {
     try {
       const res = await fetch(
-        `${SUPABASE_URL}/rest/v1/public_profiles?username=eq.${encodeURIComponent(username)}&select=${select}&limit=1`,
+        `${SUPABASE_URL}/rest/v1/public_profiles?username=${filter}&select=${select}&limit=1`,
         { headers },
       );
       if (!res.ok) continue;
@@ -68,7 +73,7 @@ async function fetchProfile(username: string): Promise<CardProfile | null> {
 
 export default async function handler(request: Request) {
   const url = new URL(request.url);
-  const username = (url.searchParams.get('username') ?? '').trim().toLowerCase();
+  const username = (url.searchParams.get('username') ?? '').trim();
 
   const profile = username && SUPABASE_KEY ? await fetchProfile(username) : null;
   const name = profile?.full_name?.trim() || profile?.username || 'A founder on Creatives Takeover';

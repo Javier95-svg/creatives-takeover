@@ -28,6 +28,19 @@ test('the short link redirects to the profile, which stays canonical', () => {
   assert.match(read('../api/public-entity.ts'), /const canonical = `\$\{SITE_ORIGIN\}\$\{path\}`/);
 });
 
+test('a Founder ID link previews correctly whatever the capitals in the username', () => {
+  // 108 Founder IDs had capitals on 2026-10-18; lowercasing the lookup turned
+  // their link previews into "Page not found".
+  const entity = read('../api/public-entity.ts');
+  assert.match(entity, /const profile = await findPublicProfile\(rawSlug\)/);
+  assert.match(entity, /username=ilike\.\$\{pattern\}/);
+  assert.ok(entity.includes("username.replace(/_/g, '\\\\_')"), 'LIKE underscore is escaped');
+  assert.match(entity, /\^\[A-Za-z0-9_\]\{1,64\}\$/, 'only username characters reach the pattern');
+  const card = read('../api/og-profile.tsx');
+  assert.doesNotMatch(card, /searchParams\.get\('username'\) \?\? ''\)\.trim\(\)\.toLowerCase\(\)/);
+  assert.ok(card.includes("ilike.${encodeURIComponent(username.replace(/_/g, '\\\\_'))}"), 'case-insensitive, underscore escaped');
+});
+
 test('only Founder IDs get the Founder ID name, link, progress and support', () => {
   const profile = read('../src/pages/Profile.tsx');
   assert.match(profile, /const isFounderId = isFounderIdAccount\(profile\?\.user_type\)/);

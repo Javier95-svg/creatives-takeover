@@ -202,7 +202,22 @@ function launchesDocument(projects: any[]): PublicSeoDocument {
   };
 }
 
-async function loadDocument(type: EntityType, slug: string): Promise<PublicSeoDocument | null> {
+/**
+ * Usernames keep their capitals (108 Founder IDs had some on 2026-10-18), and
+ * links arrive in whatever case they were typed, so the lookup ignores case.
+ * Exact match first; the case-insensitive match only accepts characters a
+ * username can hold, with LIKE's _ escaped, so it can never act as a pattern.
+ */
+async function findPublicProfile(username: string): Promise<any | null> {
+  if (!/^[A-Za-z0-9_]{1,64}$/.test(username)) return null;
+  const exact = await getJson(`public_profiles?username=eq.${encodeURIComponent(username)}&select=*&limit=1`);
+  if (Array.isArray(exact) && exact[0]) return exact[0];
+  const pattern = encodeURIComponent(username.replace(/_/g, '\\_'));
+  const loose = await getJson(`public_profiles?username=ilike.${pattern}&select=*&limit=1`);
+  return Array.isArray(loose) && loose[0] ? loose[0] : null;
+}
+
+async function loadDocument(type: EntityType, slug: string, rawSlug: string = slug): Promise<PublicSeoDocument | null> {
   if (type === 'marketplace') {
     const services = await getJson('services?is_active=eq.true&select=slug,name,description,category,delivered_by_name,banner_url&order=is_featured.desc,name.asc');
     return marketplaceDocument(Array.isArray(services) ? services : []);
@@ -226,8 +241,8 @@ async function loadDocument(type: EntityType, slug: string): Promise<PublicSeoDo
     return mentor ? mentorDocument(mentor) : null;
   }
   if (type === 'profile') {
-    const rows = await getJson(`public_profiles?username=eq.${encodeURIComponent(slug)}&select=*&limit=1`);
-    return Array.isArray(rows) && rows[0] ? profileDocument(rows[0]) : null;
+    const profile = await findPublicProfile(rawSlug);
+    return profile ? profileDocument(profile) : null;
   }
   const result = await postRpc('browse_cofounder_listings_v1', { p_filters: { listingId: slug, includeOwn: true }, p_limit: 1, p_cursor: null });
   const listing = result && Array.isArray(result.items) ? result.items[0] : null;
@@ -237,13 +252,14 @@ async function loadDocument(type: EntityType, slug: string): Promise<PublicSeoDo
 export default async function handler(request: Request): Promise<Response> {
   const url = new URL(request.url);
   const type = (url.searchParams.get('type') || '') as EntityType;
-  const slug = (url.searchParams.get('slug') || '').trim().toLowerCase();
+  const rawSlug = (url.searchParams.get('slug') || '').trim();
+  const slug = rawSlug.toLowerCase();
   const shellResponse = await fetch(`${url.origin}/index.html`, { headers: { 'x-public-entity': '1' } });
   const shell = await shellResponse.text();
   if (!SUPABASE_KEY || !['marketplace', 'service', 'mentor', 'cofounder', 'profile', 'launch', 'launches'].includes(type)) {
     return new Response(shell, { status: 500, headers: { 'content-type': 'text/html; charset=utf-8', 'x-robots-tag': 'noindex' } });
   }
-  const document = await loadDocument(type, slug);
+  const document = await loadDocument(type, slug, rawSlug);
   if (!document) {
     const notFound = renderSeoDocument(shell, {
       title: `Page not found | ${SITE_NAME}`,
