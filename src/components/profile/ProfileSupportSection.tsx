@@ -146,8 +146,8 @@ export function ProfileSupportSection({ username, name, startupName, productUrl,
         </div>
       </div>
 
-      <div className={cn('grid gap-5', showSupportCard && 'md:grid-cols-5')}>
-        <div className={cn('flex min-w-0 flex-col gap-4', showSupportCard && 'md:col-span-3')}>
+      <div className="grid gap-5 md:grid-cols-5">
+        <div className="flex min-w-0 flex-col gap-4 md:col-span-3">
           {currentFocus ? (
             <div className="flex flex-col gap-1">
               <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Now working on</span>
