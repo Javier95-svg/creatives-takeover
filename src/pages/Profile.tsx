@@ -813,6 +813,7 @@ const Profile = () => {
                   onOpenChange={setShowConnectionsDialog}
                   username={profile.username}
                   profileName={profile.full_name || profile.username || 'This founder'}
+                  canManage={isOwnProfile}
                 />
               )}
 
