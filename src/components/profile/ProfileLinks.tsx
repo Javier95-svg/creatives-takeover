@@ -30,11 +30,11 @@ const GitHubIcon = ({ className }: { className?: string }) => (
 );
 
 const STARTUP_LINKS: Array<[keyof StartupLinks, string, ComponentType<{ className?: string }>]> = [
+  ['website', 'Website', Globe],
+  ['demo', 'Demo', Rocket],
+  ['loom', 'Loom Presentation', ExternalLink],
   ['pitchDeck', 'Pitch Deck', FileText],
   ['waitlist', 'Waitlist', Users2],
-  ['demo', 'Demo', Rocket],
-  ['website', 'Website', Globe],
-  ['loom', 'Loom Presentation', ExternalLink],
 ];
 const linkLabel = (label: string) => label === 'Loom Presentation' ? 'Loom' : label;
 
@@ -45,9 +45,10 @@ const linkLabel = (label: string) => label === 'Loom Presentation' ? 'Loom' : la
 const webUrl = (url: string | null | undefined) => (url && /^https?:\/\//i.test(url.trim()) ? url.trim() : null);
 
 export function ProfileLinks({ startupLinks, social }: { startupLinks: StartupLinks | null; social: SocialLinks }) {
-  const startup = STARTUP_LINKS.filter(([key]) => Boolean(webUrl(startupLinks?.[key])));
+  const projectWebsite = webUrl(startupLinks?.website) ?? webUrl(social.website);
+  const startup = STARTUP_LINKS.filter(([key]) => key !== 'website' && Boolean(webUrl(startupLinks?.[key])));
+  if (projectWebsite) startup.unshift(['website', 'Website', Globe]);
   const candidates: Array<[string | null, string, ReactNode]> = [
-    [webUrl(social.website), 'Website', <Globe key="w" className="h-5 w-5" aria-hidden="true" />],
     [webUrl(social.linkedin), 'LinkedIn', <Linkedin key="l" className="h-5 w-5" aria-hidden="true" />],
     [webUrl(social.twitter), 'X', <XIcon key="x" className="h-5 w-5" />],
     [webUrl(social.github), 'GitHub', <GitHubIcon key="g" className="h-5 w-5" />],
@@ -64,7 +65,7 @@ export function ProfileLinks({ startupLinks, social }: { startupLinks: StartupLi
           <h3 className="border-b border-primary/25 pb-1.5 text-xs font-semibold uppercase tracking-wider text-primary">Project links</h3>
           <div className="flex flex-wrap content-start justify-start gap-2">
             {startup.map(([key, label, Icon]) => (
-              <a key={key} href={webUrl(startupLinks?.[key])!} target="_blank" rel="noopener noreferrer" title={label}
+              <a key={key} href={(key === 'website' ? projectWebsite : webUrl(startupLinks?.[key]))!} target="_blank" rel="noopener noreferrer" title={label}
                 aria-label={label}
                 className="inline-flex min-h-9 items-center gap-1.5 rounded-md border border-border/70 px-2.5 py-1.5 text-sm font-medium text-foreground transition-colors hover:border-primary/50 hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                 <Icon className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
