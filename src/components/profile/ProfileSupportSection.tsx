@@ -29,6 +29,8 @@ interface Props {
   /** The founder's own demo or website link, used for "Try" when there is no launch page. */
   productUrl: string | null;
   isOwnProfile: boolean;
+  /** The owner previewing as a visitor: show the visitor view, but act on nothing. */
+  preview?: boolean;
   onEditProfile?: () => void;
 }
 
@@ -45,7 +47,7 @@ const MESSAGE_ASKS: Partial<Record<SupportAsk, { icon: LucideIcon; label: (intro
  * passes through Creatives Takeover: the support link is the founder's own
  * page on an allowlisted provider, shown only while they keep posting updates.
  */
-export function ProfileSupportSection({ username, name, startupName, productUrl, isOwnProfile, onEditProfile }: Props) {
+export function ProfileSupportSection({ username, name, startupName, productUrl, isOwnProfile, preview = false, onEditProfile }: Props) {
   const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -76,11 +78,11 @@ export function ProfileSupportSection({ username, name, startupName, productUrl,
   const days = daysSince(support.lastUpdateAt);
 
   const askForMessage = (ask: SupportAsk) => {
-    captureEvent('help_ask_clicked', { ask, signed_in: Boolean(user), is_owner: isOwnProfile });
-    if (isOwnProfile) {
+    if (isOwnProfile || preview) {
       toast.info('Visitors who pick this open a message to you.');
       return;
     }
+    captureEvent('help_ask_clicked', { ask, signed_in: Boolean(user), is_owner: false });
     if (!user) {
       setSignupIntent(`message ${firstName}`);
       return;
@@ -89,6 +91,11 @@ export function ProfileSupportSection({ username, name, startupName, productUrl,
   };
 
   const report = async () => {
+    if (preview) {
+      setConfirmReport(false);
+      toast.info('Visitors can report your link here if it looks wrong.');
+      return;
+    }
     if (!user) {
       setSignupIntent('report this link');
       return;
@@ -208,7 +215,7 @@ export function ProfileSupportSection({ username, name, startupName, productUrl,
                     href={support.supportUrl!}
                     target="_blank"
                     rel="noopener noreferrer nofollow ugc"
-                    onClick={() => captureEvent('support_link_clicked', { provider: support.supportProvider, is_owner: isOwnProfile })}
+                    onClick={() => { if (!preview) captureEvent('support_link_clicked', { provider: support.supportProvider, is_owner: isOwnProfile }); }}
                   >
                     Support on {support.supportProvider}
                     <ExternalLink className="ml-2 h-4 w-4" aria-hidden="true" />

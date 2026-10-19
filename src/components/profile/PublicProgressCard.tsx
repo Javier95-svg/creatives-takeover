@@ -1,6 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
 import { Check, PenLine, Route, ShieldCheck, UserCheck } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -18,7 +17,6 @@ interface Props {
   username: string;
   name: string;
   isOwnProfile: boolean;
-  onEditProfile?: () => void;
 }
 
 const formatDate = (value: string) =>
@@ -108,11 +106,11 @@ function EvidenceTile({ value, label, verifiedLabel }: { value: PublicEvidenceCo
 
 /**
  * Opt-in progress on a founder profile: the Startup Development Cycle stages
- * and counts of customer evidence, labelled by who checked them. Visitors see
- * it only when the founder switched on "Show my progress publicly"; the owner
- * always sees it, marked as private until then.
+ * and counts of customer evidence, labelled by who checked them. Nobody sees
+ * it, the owner included, until the founder switches on "Show my progress
+ * publicly" in Edit Founder ID.
  */
-export function PublicProgressCard({ username, name, isOwnProfile, onEditProfile }: Props) {
+export function PublicProgressCard({ username, name, isOwnProfile }: Props) {
   const { user } = useAuth();
   const progress = useQuery({
     queryKey: ['public-founder-progress', username, user?.id ?? null],
@@ -127,7 +125,7 @@ export function PublicProgressCard({ username, name, isOwnProfile, onEditProfile
   });
 
   const data = progress.data;
-  if (!data || (!data.visible && !isOwnProfile)) return null;
+  if (!data || !data.visible) return null;
 
   const stages = buildPublicStages(data);
   const firstName = name.split(' ')[0] || name;
@@ -143,14 +141,9 @@ export function PublicProgressCard({ username, name, isOwnProfile, onEditProfile
           <p className="mt-0.5 text-sm text-muted-foreground">Startup Development Cycle</p>
         </div>
         {isOwnProfile && (
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">
-              {data.visible ? 'Visible to everyone' : 'Only you can see this'}
-            </span>
-            {!data.visible && onEditProfile && (
-              <Button variant="outline" size="sm" onClick={onEditProfile}>Show it on my profile</Button>
-            )}
-          </div>
+          <span className="rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">
+            Visible to everyone
+          </span>
         )}
       </div>
 

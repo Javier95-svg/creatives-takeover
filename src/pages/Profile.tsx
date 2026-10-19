@@ -8,8 +8,7 @@ import ProfileWallpaper from "@/components/wallpapers/ProfileWallpaper";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Calendar, Linkedin, Instagram, Globe, Settings, MapPin, Briefcase, Rocket, Users2, ExternalLink, FileText, Zap, Target } from "lucide-react";
+import { ArrowLeft, Calendar, Eye, Settings, MapPin, Briefcase, Rocket, Zap, Target } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { SocialButtons } from "@/components/social/SocialButtons";
@@ -25,6 +24,7 @@ import { founderStageLabel } from "@/lib/bizmapStageOrder";
 import { captureEvent } from "@/lib/analytics";
 import { currentFocusLabel } from "@/lib/currentFocus";
 import { ProfileShareButton } from "@/components/profile/ProfileShareButton";
+import { ProfileLinks } from "@/components/profile/ProfileLinks";
 import { PublicProgressCard } from "@/components/profile/PublicProgressCard";
 import { ProfileSupportSection } from "@/components/profile/ProfileSupportSection";
 import { FounderIdHeader } from "@/components/profile/FounderIdHeader";
@@ -250,12 +250,19 @@ const mapPublicProfile = (profile: PublicProfileRow, stageIsGated: boolean): Pro
 const Profile = () => {
   const { username } = useParams<{ username: string }>();
   const { user: currentUser } = useAuth();
-  const [profile, setProfile] = useState<Profile | null>(null);
+  const [loadedProfile, setProfile] = useState<Profile | null>(null);
+  // Exactly what the public projection returns, kept so the owner can preview
+  // their page as a signed-out visitor sees it.
+  const [publicProfile, setPublicProfile] = useState<Profile | null>(null);
+  const [previewAsVisitor, setPreviewAsVisitor] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showConnectionsDialog, setShowConnectionsDialog] = useState(false);
-  const isOwnProfile = currentUser?.id === profile?.id;
+  const viewerIsOwner = Boolean(currentUser?.id) && currentUser?.id === loadedProfile?.id;
+  const previewing = viewerIsOwner && previewAsVisitor && publicProfile !== null;
+  const profile = previewing ? publicProfile : loadedProfile;
+  const isOwnProfile = viewerIsOwner && !previewing;
   const profileId = profile?.id;
 
   // A visitor's copy of assigned_stage is null unless the founder made it
@@ -303,6 +310,7 @@ const Profile = () => {
         setLoading(true);
         setLoadError(null);
         setProfile(null);
+        setPublicProfile(null);
 
         let stageIsGated = false;
         const queryPublicProfile = async (value: string, caseInsensitive = false) => {
@@ -365,7 +373,8 @@ const Profile = () => {
           return;
         }
 
-        let finalProfileData = mapPublicProfile(publicProfileData, stageIsGated);
+        const visitorView = mapPublicProfile(publicProfileData, stageIsGated);
+        let finalProfileData = visitorView;
 
         if (currentUser?.id === finalProfileData.id) {
           const { data: ownProfileData, error: ownProfileError } = await supabase
@@ -385,6 +394,8 @@ const Profile = () => {
           }
         }
         
+        setPublicProfile(visitorView);
+        setPreviewAsVisitor(false);
         setProfile(finalProfileData);
 
 
@@ -451,6 +462,12 @@ const Profile = () => {
       void supabase.removeChannel(channel);
     };
   }, [profileId]);
+
+  const startVisitorPreview = () => {
+    setPreviewAsVisitor(true);
+    captureEvent('profile_visitor_preview_opened', { founder_id: isFounderId });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   // Persistent "back to the platform" CTA shown on every profile view — always
   // returns to the public home ("/").
@@ -589,6 +606,21 @@ const Profile = () => {
               there, which left the profile touching the search bar. */}
           <main className="container mx-auto px-4 pt-header-offset nav-offset-roomy pb-8">
             <div className="max-w-4xl mx-auto">
+              {previewing && (
+                <div className="mb-4 flex flex-col gap-3 rounded-lg border border-primary/40 bg-primary/10 p-4 sm:flex-row sm:items-center sm:justify-between" role="status">
+                  <div className="flex items-start gap-2.5">
+                    <Eye className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+                    <div>
+                      <p className="text-sm font-semibold">You are viewing your {profileNoun} as a visitor</p>
+                      <p className="text-xs text-muted-foreground">This is what people who open your link see when they are not signed in. Private details and your editing tools are hidden.</p>
+                    </div>
+                  </div>
+                  <Button size="sm" className="shrink-0" onClick={() => setPreviewAsVisitor(false)}>
+                    Back to my {profileNoun}
+                  </Button>
+                </div>
+              )}
+
               {/* Founder-First Profile Hero */}
               <Card className="p-6 mb-6">
                 {isFounderId && profile.username && (
@@ -642,7 +674,7 @@ const Profile = () => {
                       </div>
 
                       {/* Follow and Message CTAs */}
-                      {!isOwnProfile && profile.id && (
+                      {!isOwnProfile && !previewing && profile.id && (
                         <div className="mt-4">
                           <SocialButtons
                             userId={profile.id}
@@ -747,6 +779,18 @@ const Profile = () => {
                   </div>
                 )}
 
+                {/* Startup and social links, inside the hero rather than two extra cards */}
+                <ProfileLinks
+                  startupLinks={profile.startup_links}
+                  social={{
+                    website: profile.website_url,
+                    linkedin: profile.linkedin_url,
+                    twitter: profile.twitter_url,
+                    github: profile.github_url,
+                    instagram: profile.instagram_url,
+                  }}
+                />
+
                 {/* Action Buttons — centered under the stats banner, Platform first */}
                 <div className="flex flex-wrap items-center justify-center gap-2">
                   <Button asChild variant="outline" size="sm">
@@ -755,7 +799,7 @@ const Profile = () => {
                       Platform
                     </Link>
                   </Button>
-                  {!isOwnProfile && profile.id && (
+                  {!isOwnProfile && !previewing && profile.id && (
                     <>
                       <SocialButtons
                         userId={profile.id}
@@ -770,6 +814,12 @@ const Profile = () => {
                       Edit {profileNoun}
                     </Button>
                   )}
+                  {isOwnProfile && publicProfile && (
+                    <Button variant="outline" size="sm" onClick={startVisitorPreview}>
+                      <Eye className="h-4 w-4 mr-2" />
+                      View as visitor
+                    </Button>
+                  )}
                   {profile.username && (
                     <ProfileShareButton
                       username={profile.username}
@@ -782,131 +832,26 @@ const Profile = () => {
                 </div>
               </Card>
 
-              {/* Journey Modules */}
-              <div className="grid md:grid-cols-3 gap-4 mb-6">
-                {/* Now working on */}
-                {(currentFocus || isOwnProfile) && (
-                  <Card className="p-4">
-                    <h3 className="text-sm font-semibold mb-2 flex items-center gap-2">
-                      <Target className="h-4 w-4 text-primary" />
-                      Now working on
-                    </h3>
-                    {currentFocus ? (
-                      <p className="text-sm text-muted-foreground">{currentFocus}</p>
-                    ) : (
-                      <p className="text-sm text-muted-foreground/50 italic">Nothing added yet</p>
-                    )}
-                  </Card>
-                )}
-
-                {/* Startup Links */}
-                {(profile.startup_links || isOwnProfile) && (
-                  <Card className="p-4">
-                    <h3 className="text-sm font-semibold mb-2 flex items-center gap-2">
-                      <ExternalLink className="h-4 w-4 text-primary" />
-                      Startup Links
-                    </h3>
-                    {profile.startup_links && Object.keys(profile.startup_links).length > 0 ? (
-                      <div className="flex flex-wrap gap-2">
-                        {profile.startup_links.pitchDeck && (
-                          <a href={profile.startup_links.pitchDeck} target="_blank" rel="noopener noreferrer">
-                            <Badge variant="outline" className="text-xs cursor-pointer hover:bg-primary/10">
-                              <FileText className="h-3 w-3 mr-1" />
-                              Pitch Deck
-                            </Badge>
-                          </a>
-                        )}
-                        {profile.startup_links.waitlist && (
-                          <a href={profile.startup_links.waitlist} target="_blank" rel="noopener noreferrer">
-                            <Badge variant="outline" className="text-xs cursor-pointer hover:bg-primary/10">
-                              <Users2 className="h-3 w-3 mr-1" />
-                              Waitlist
-                            </Badge>
-                          </a>
-                        )}
-                        {profile.startup_links.demo && (
-                          <a href={profile.startup_links.demo} target="_blank" rel="noopener noreferrer">
-                            <Badge variant="outline" className="text-xs cursor-pointer hover:bg-primary/10">
-                              <Rocket className="h-3 w-3 mr-1" />
-                              Demo
-                            </Badge>
-                          </a>
-                        )}
-                        {profile.startup_links.website && (
-                          <a href={profile.startup_links.website} target="_blank" rel="noopener noreferrer">
-                            <Badge variant="outline" className="text-xs cursor-pointer hover:bg-primary/10">
-                              <Globe className="h-3 w-3 mr-1" />
-                              Website
-                            </Badge>
-                          </a>
-                        )}
-                        {profile.startup_links.loom && (
-                          <a href={profile.startup_links.loom} target="_blank" rel="noopener noreferrer">
-                            <Badge variant="outline" className="text-xs cursor-pointer hover:bg-primary/10">
-                              <ExternalLink className="h-3 w-3 mr-1" />
-                              Loom Presentation
-                            </Badge>
-                          </a>
-                        )}
-                      </div>
-                    ) : (
-                      <p className="text-sm text-muted-foreground/50 italic">No links added</p>
-                    )}
-                  </Card>
-                )}
-
-                {/* Social Links */}
-                {(profile.website_url || profile.twitter_url || profile.linkedin_url || profile.github_url || profile.instagram_url || isOwnProfile) && (
-                  <Card className="p-4">
-                    <h3 className="text-sm font-semibold mb-2 flex items-center gap-2">
-                      <Globe className="h-4 w-4 text-primary" />
-                      Social Links
-                    </h3>
-                    {(profile.website_url || profile.twitter_url || profile.linkedin_url || profile.github_url || profile.instagram_url) ? (
-                      <div className="flex gap-3">
-                        {profile.website_url && (
-                          <a href={profile.website_url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors hover:scale-110 transform duration-200">
-                            <Globe className="h-6 w-6" />
-                          </a>
-                        )}
-                        {profile.linkedin_url && (
-                          <a href={profile.linkedin_url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors hover:scale-110 transform duration-200">
-                            <Linkedin className="h-6 w-6" />
-                          </a>
-                        )}
-                        {profile.twitter_url && (
-                          <a href={profile.twitter_url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors hover:scale-110 transform duration-200">
-                            <svg className="h-6 w-6" viewBox="0 0 24 24" fill="currentColor">
-                              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-                            </svg>
-                          </a>
-                        )}
-                        {profile.github_url && (
-                          <a href={profile.github_url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors hover:scale-110 transform duration-200">
-                            <svg className="h-6 w-6" viewBox="0 0 24 24" fill="currentColor">
-                              <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
-                            </svg>
-                          </a>
-                        )}
-                        {profile.instagram_url && (
-                          <a href={profile.instagram_url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors hover:scale-110 transform duration-200">
-                            <Instagram className="h-6 w-6" />
-                          </a>
-                        )}
-                      </div>
-                    ) : (
-                      <p className="text-sm text-muted-foreground/50 italic">No social links added</p>
-                    )}
-                  </Card>
-                )}
-              </div>
+              {/* Now working on: the startup and social links moved into the hero */}
+              {(currentFocus || isOwnProfile) && (
+                <Card className="mb-6 p-4">
+                  <h3 className="text-sm font-semibold mb-2 flex items-center gap-2">
+                    <Target className="h-4 w-4 text-primary" />
+                    Now working on
+                  </h3>
+                  {currentFocus ? (
+                    <p className="text-sm text-muted-foreground">{currentFocus}</p>
+                  ) : (
+                    <p className="text-sm text-muted-foreground/50 italic">Nothing added yet</p>
+                  )}
+                </Card>
+              )}
 
               {profile.username && isFounderId && (
                 <PublicProgressCard
                   username={profile.username}
                   name={profile.full_name || profile.username}
                   isOwnProfile={isOwnProfile}
-                  onEditProfile={() => setShowEditModal(true)}
                 />
               )}
 
@@ -917,6 +862,7 @@ const Profile = () => {
                   startupName={profile.startup_name}
                   productUrl={profile.startup_links?.demo || profile.startup_links?.website || null}
                   isOwnProfile={isOwnProfile}
+                  preview={previewing}
                   onEditProfile={() => setShowEditModal(true)}
                 />
               )}

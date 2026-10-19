@@ -41,6 +41,34 @@ test('a Founder ID link previews correctly whatever the capitals in the username
   assert.ok(card.includes("ilike.${encodeURIComponent(username.replace(/_/g, '\\\\_'))}"), 'case-insensitive, underscore escaped');
 });
 
+test('Progress shows only when the founder switched it on, for the owner too', () => {
+  const card = read('../src/components/profile/PublicProgressCard.tsx');
+  assert.match(card, /if \(!data \|\| !data\.visible\) return null;/);
+  assert.doesNotMatch(card, /Only you can see this/);
+});
+
+test('startup and social links live in the hero instead of two extra cards', () => {
+  const profile = read('../src/pages/Profile.tsx');
+  assert.doesNotMatch(profile, />\s*Startup Links\s*</);
+  assert.doesNotMatch(profile, />\s*Social Links\s*</);
+  const hero = profile.slice(profile.indexOf('{roleDetails.length'), profile.indexOf('{/* Action Buttons'));
+  assert.match(hero, /<ProfileLinks/);
+  const links = read('../src/components/profile/ProfileLinks.tsx');
+  assert.match(links, /\^https\?:\\\/\\\//, 'only web addresses become links');
+  assert.match(links, /aria-label=\{label\}/);
+});
+
+test('the owner can see their profile exactly as a signed-out visitor does', () => {
+  const profile = read('../src/pages/Profile.tsx');
+  assert.match(profile, /const profile = previewing \? publicProfile : loadedProfile;/);
+  assert.match(profile, /const isOwnProfile = viewerIsOwner && !previewing;/);
+  assert.match(profile, /View as visitor/);
+  assert.match(profile, /Back to my \{profileNoun\}/);
+  assert.match(profile, /setPublicProfile\(visitorView\)/, 'the preview uses the public projection, not the owner row');
+  assert.match(profile, /!isOwnProfile && !previewing && profile\.id/, 'no message or connect buttons to yourself');
+  assert.match(read('../src/components/profile/ProfileSupportSection.tsx'), /if \(isOwnProfile \|\| preview\) \{/);
+});
+
 test('only Founder IDs get the Founder ID name, link, progress and support', () => {
   const profile = read('../src/pages/Profile.tsx');
   assert.match(profile, /const isFounderId = isFounderIdAccount\(profile\?\.user_type\)/);
