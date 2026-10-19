@@ -745,7 +745,7 @@ const Profile = () => {
 
                 {/* Profile actions */}
                 <div className="flex flex-wrap items-center justify-center gap-2">
-                  {!isOwnProfile && !previewing && profile.id && (
+                  {!isFounderId && !isOwnProfile && !previewing && profile.id && (
                     <>
                       <SocialButtons
                         userId={profile.id}

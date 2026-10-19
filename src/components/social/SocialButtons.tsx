@@ -200,8 +200,8 @@ export const SocialButtons = ({
         {friendStatus === 'friends' && username && <Button asChild variant="outline" size={buttonSize} className="bg-card/50 border-border/50 hover:bg-accent">
           <Link to={`/profile/${encodeURIComponent(username)}`}><UserRound className="h-4 w-4" /><span className={compact ? 'sr-only' : 'ml-2'}>Profile</span></Link>
         </Button>}
-        {messageButton}
         {(friendStatus !== 'friends' || username === undefined) && connectButton}
+        {messageButton}
       </div>
     );
   }
