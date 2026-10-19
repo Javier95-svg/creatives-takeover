@@ -1,7 +1,7 @@
 import { Helmet } from "react-helmet-async";
 import SEO, { createBreadcrumbSchema, createPersonSchema, createWebPageSchema } from "@/components/SEO";
 import { useParams, Link } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import ProfileWallpaper from "@/components/wallpapers/ProfileWallpaper";
@@ -9,7 +9,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Calendar, Linkedin, Instagram, Globe, Settings, MapPin, Briefcase, Rocket, Users2, ExternalLink, FileText, Zap, Lightbulb } from "lucide-react";
+import { ArrowLeft, Calendar, Linkedin, Instagram, Globe, Settings, MapPin, Briefcase, Rocket, Users2, ExternalLink, FileText, Zap, Target } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { SocialButtons } from "@/components/social/SocialButtons";
@@ -20,8 +20,12 @@ import { toast } from "sonner";
 import { logError } from "@/lib/logger";
 import { describeRoleProfile } from '@/lib/roleProfileSchema';
 import { isUserType } from '@/lib/accountTypes';
-import { getPublicStageLabel, shouldShowPublicStage } from "@/lib/accountabilityPreferences";
+import { getPublicStageLabel } from "@/lib/accountabilityPreferences";
 import { founderStageLabel } from "@/lib/bizmapStageOrder";
+import { captureEvent } from "@/lib/analytics";
+import { currentFocusLabel } from "@/lib/currentFocus";
+import { ProfileShareButton } from "@/components/profile/ProfileShareButton";
+import { PublicProgressCard } from "@/components/profile/PublicProgressCard";
 
 // Keep a stable projection that can still resolve an account while a newly
 // deployed optional profile field is waiting for its database migration. A
@@ -61,6 +65,24 @@ const PUBLIC_PROFILE_SELECT = [
   'role_profile',
 ].join(', ');
 
+// The founder's story, public since 20261020090000_public_profile_story_fields.
+// The same migration made assigned_stage null unless the founder made their
+// stage public, so a visitor may only see the stage when this projection loads.
+// Before it runs, assigned_stage is the raw quiz placement and stays hidden.
+const STORY_PUBLIC_PROFILE_SELECT = [
+  PUBLIC_PROFILE_SELECT,
+  'founder_role',
+  'startup_description',
+  'current_focus',
+  'startup_links',
+].join(', ');
+
+// LIKE treats _ and % as wildcards, and usernames contain underscores.
+const escapeLikePattern = (value: string) => value.replace(/[\\%_]/g, (character) => `\\${character}`);
+
+// Bios edited in the rich mode keep their tags in the plain column too.
+const plainText = (value: string | null | undefined) => value?.replace(/<[^>]*>/g, ' ').replace(/[ \t]+/g, ' ').trim() || null;
+
 interface PublicProfileRow {
   id: string | null;
   username: string | null;
@@ -88,7 +110,21 @@ interface PublicProfileRow {
   assigned_stage?: number | null;
   user_type?: string | null;
   role_profile?: Record<string, unknown> | null;
+  founder_role?: string | null;
+  startup_description?: string | null;
+  current_focus?: string | null;
+  startup_links?: unknown;
 }
+
+const asStartupLinks = (value: unknown): Profile['startup_links'] => {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  const links: NonNullable<Profile['startup_links']> = {};
+  for (const key of ['pitchDeck', 'waitlist', 'demo', 'website', 'github', 'loom'] as const) {
+    const url = (value as Record<string, unknown>)[key];
+    if (typeof url === 'string' && /^https?:\/\//i.test(url.trim())) links[key] = url.trim();
+  }
+  return Object.keys(links).length ? links : null;
+};
 
 interface Profile {
   id: string;
@@ -160,7 +196,7 @@ interface Profile {
   search_indexing_review_status?: 'not_requested' | 'pending' | 'approved' | 'rejected' | null;
 }
 
-const mapPublicProfile = (profile: PublicProfileRow): Profile => ({
+const mapPublicProfile = (profile: PublicProfileRow, stageIsGated: boolean): Profile => ({
   id: profile.id ?? '',
   username: profile.username,
   full_name: profile.full_name,
@@ -182,13 +218,13 @@ const mapPublicProfile = (profile: PublicProfileRow): Profile => ({
   friends_count: 0,
   creative_niche: profile.creative_niche,
   business_stage: null,
-  assigned_stage: profile.assigned_stage ?? null,
+  assigned_stage: stageIsGated ? profile.assigned_stage ?? null : null,
   user_type: profile.user_type ?? null,
   role_profile: profile.role_profile ?? null,
   role: null,
   updated_at: null,
   user_preferences: null,
-  founder_role: null,
+  founder_role: profile.founder_role ?? null,
   location: profile.location,
   positioning_line: profile.positioning_line,
   last_active_at: null,
@@ -197,10 +233,10 @@ const mapPublicProfile = (profile: PublicProfileRow): Profile => ({
   startup_logo_url: null,
   startup_stage: profile.startup_stage,
   startup_industry: profile.startup_industry,
-  startup_description: null,
-  current_focus: null,
+  startup_description: profile.startup_description ?? null,
+  current_focus: profile.current_focus ?? null,
   looking_for: null,
-  startup_links: null,
+  startup_links: asStartupLinks(profile.startup_links),
   traction_visible: false,
   traction_metrics: null,
   seo_indexable: profile.seo_indexable === true,
@@ -219,7 +255,9 @@ const Profile = () => {
   const isOwnProfile = currentUser?.id === profile?.id;
   const profileId = profile?.id;
 
-  const showPublicStage = profile ? shouldShowPublicStage(profile.user_preferences, isOwnProfile) : false;
+  // A visitor's copy of assigned_stage is null unless the founder made it
+  // public, so its presence is the opt-in. The owner always sees their own.
+  const showPublicStage = profile ? isOwnProfile || profile.assigned_stage !== null : false;
   // The quiz placement first. business_stage and startup_stage are free text and
   // hold ten unvalidated values in production, so they are only a fallback for
   // profiles that predate the quiz, and only where the text names a real stage.
@@ -227,6 +265,8 @@ const Profile = () => {
     ? founderStageLabel(profile.assigned_stage) ?? getPublicStageLabel(profile.business_stage, profile.startup_stage)
     : null;
   const primaryIndustry = profile?.startup_industry?.find((industry) => industry.trim().length > 0) ?? null;
+  const bioText = plainText(profile?.bio);
+  const currentFocus = currentFocusLabel(profile?.current_focus);
 
   // What this account type was asked for, and only what it was asked for. A
   // founder has no entries here, so nothing renders for them.
@@ -257,17 +297,20 @@ const Profile = () => {
         setLoadError(null);
         setProfile(null);
 
-        const queryPublicProfile = async (
-          column: 'username' | 'full_name',
-          value: string,
-          caseInsensitive = false,
-        ) => {
+        let stageIsGated = false;
+        const queryPublicProfile = async (value: string, caseInsensitive = false) => {
           const run = (select: string) => {
             const query = supabase.from('public_profiles').select(select);
             return caseInsensitive
-              ? query.ilike(column, value).maybeSingle()
-              : query.eq(column, value).maybeSingle();
+              ? query.ilike('username', escapeLikePattern(value)).maybeSingle()
+              : query.eq('username', value).maybeSingle();
           };
+
+          const story = await run(STORY_PUBLIC_PROFILE_SELECT);
+          if (!story.error) {
+            stageIsGated = true;
+            return story;
+          }
 
           const result = await run(PUBLIC_PROFILE_SELECT);
           if (!result.error) return result;
@@ -282,69 +325,32 @@ const Profile = () => {
 
         // Public profile pages read from a safe projection. Full profile rows
         // are only loaded when the viewed profile belongs to the signed-in user.
-        const { data: profileData, error: profileError } = await queryPublicProfile('username', username);
+        const { data: profileData, error: profileError } = await queryPublicProfile(username);
 
         if (profileError) {
           throw profileError;
         }
 
         let publicProfileData = profileData as PublicProfileRow | null;
-        
+
         if (!publicProfileData) {
-          console.error('Looking for username:', username);
-          
-          // Try to find if there's a similar username (case-insensitive fallback)
-          const { data: fallbackData, error: fallbackError } = await queryPublicProfile('username', username, true);
+          // A link typed with different capitals still reaches the account. It
+          // never falls back to a name search: a shared link must not open
+          // somebody else's profile.
+          const { data: fallbackData, error: fallbackError } = await queryPublicProfile(username, true);
 
           if (fallbackError) {
             throw fallbackError;
           }
-          
-          if (fallbackData) {
-            console.warn('Found profile with case-insensitive match:', fallbackData.id);
-            publicProfileData = fallbackData as PublicProfileRow;
-          } else {
-            // Additional fallback: Try to find profile by matching full_name
-            // This handles edge cases where username might not match exactly
-            // For example, if username is "aamirkhan", try to find profiles with "Aamir" or "Khan" in full_name
-            // Remove trailing numbers from username for better matching
-            const baseUsername = username.replace(/\d+$/, '');
-            
-            if (baseUsername && baseUsername.length > 2) {
-              // Try to find profiles where full_name contains parts of the username
-              // This is a best-effort fallback for edge cases
-              const { data: nameFallbackData, error: nameFallbackError } = await queryPublicProfile(
-                'full_name',
-                `%${baseUsername}%`,
-                true,
-              );
 
-              if (nameFallbackError) {
-                throw nameFallbackError;
-              }
-              
-              if (nameFallbackData) {
-                console.warn('Found profile by name pattern match:', nameFallbackData.id);
-                publicProfileData = nameFallbackData as PublicProfileRow;
-              } else {
-                // No profile found at all
-                console.error('No profile found for username:', username);
-                console.error('All fallback searches failed');
-                toast.error(`Profile "${username}" not found`);
-                setLoading(false);
-                return;
-              }
-            } else {
-              // No profile found at all
-              console.error('No profile found for username:', username);
-              console.error('Fallback search also failed:', fallbackError);
-              toast.error(`Profile "${username}" not found`);
-              setLoading(false);
-              return;
-            }
+          if (!fallbackData) {
+            toast.error(`Profile "${username}" not found`);
+            setLoading(false);
+            return;
           }
+          publicProfileData = fallbackData as PublicProfileRow;
         }
-        
+
         if (!publicProfileData?.id) {
           console.error('No profile found for username:', username);
           toast.error('Profile not found');
@@ -352,7 +358,7 @@ const Profile = () => {
           return;
         }
 
-        let finalProfileData = mapPublicProfile(publicProfileData);
+        let finalProfileData = mapPublicProfile(publicProfileData, stageIsGated);
 
         if (currentUser?.id === finalProfileData.id) {
           const { data: ownProfileData, error: ownProfileError } = await supabase
@@ -367,6 +373,7 @@ const Profile = () => {
             finalProfileData = {
               ...finalProfileData,
               ...(ownProfileData as Partial<Profile>),
+              startup_links: asStartupLinks((ownProfileData as { startup_links?: unknown }).startup_links),
             };
           }
         }
@@ -385,6 +392,25 @@ const Profile = () => {
 
     void loadProfile();
   }, [username, currentUser?.id]);
+
+  // One view per profile load. The referrer's domain shows where shared links
+  // bring people from; the username itself never leaves the page.
+  const viewedProfileRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!profileId || viewedProfileRef.current === profileId) return;
+    viewedProfileRef.current = profileId;
+    let referrerDomain: string | null = null;
+    try {
+      referrerDomain = document.referrer ? new URL(document.referrer).hostname : null;
+    } catch {
+      referrerDomain = null;
+    }
+    captureEvent('profile_viewed', {
+      is_owner: isOwnProfile,
+      signed_in: Boolean(currentUser),
+      referrer_domain: referrerDomain,
+    });
+  }, [profileId, isOwnProfile, currentUser]);
 
   // Real-time listener for profile updates
   useEffect(() => {
@@ -522,7 +548,7 @@ const Profile = () => {
             : (profile.bio || `View ${profile.full_name || 'this founder'}'s public founder profile on Creatives Takeover.`)
         }
         url={`/profile/${profile.username}`}
-        image={profile.avatar_url || "/og-founders-compass-2026-09.png"}
+        image={profile.username ? `https://creatives-takeover.com/og/profile/${encodeURIComponent(profile.username)}` : "/og-founders-compass-2026-09.png"}
         noindex={!profile.seo_indexable}
         structuredData={[
           createBreadcrumbSchema([
@@ -583,6 +609,11 @@ const Profile = () => {
                       {profile.positioning_line && (
                         <p className="text-sm text-muted-foreground italic mb-2">
                           "{profile.positioning_line}"
+                        </p>
+                      )}
+                      {bioText && (
+                        <p className="mb-2 whitespace-pre-line text-sm leading-relaxed text-foreground/90">
+                          {bioText}
                         </p>
                       )}
                       <div className="flex items-center gap-3 text-xs text-muted-foreground">
@@ -729,22 +760,30 @@ const Profile = () => {
                       Edit Profile
                     </Button>
                   )}
+                  {profile.username && (
+                    <ProfileShareButton
+                      username={profile.username}
+                      name={profile.full_name || profile.username}
+                      startupName={profile.startup_name}
+                      isOwnProfile={isOwnProfile}
+                    />
+                  )}
                 </div>
               </Card>
 
               {/* Journey Modules */}
               <div className="grid md:grid-cols-3 gap-4 mb-6">
-                {/* What Inspires You */}
-                {(profile.current_focus || isOwnProfile) && (
+                {/* Now working on */}
+                {(currentFocus || isOwnProfile) && (
                   <Card className="p-4">
                     <h3 className="text-sm font-semibold mb-2 flex items-center gap-2">
-                      <Lightbulb className="h-4 w-4 text-primary" />
-                      What Inspires You?
+                      <Target className="h-4 w-4 text-primary" />
+                      Now working on
                     </h3>
-                    {profile.current_focus ? (
-                      <p className="text-sm text-muted-foreground">{profile.current_focus}</p>
+                    {currentFocus ? (
+                      <p className="text-sm text-muted-foreground">{currentFocus}</p>
                     ) : (
-                      <p className="text-sm text-muted-foreground/50 italic">No inspiration shared yet</p>
+                      <p className="text-sm text-muted-foreground/50 italic">Nothing added yet</p>
                     )}
                   </Card>
                 )}
@@ -850,6 +889,15 @@ const Profile = () => {
                   </Card>
                 )}
               </div>
+
+              {profile.username && (
+                <PublicProgressCard
+                  username={profile.username}
+                  name={profile.full_name || profile.username}
+                  isOwnProfile={isOwnProfile}
+                  onEditProfile={() => setShowEditModal(true)}
+                />
+              )}
 
               <ProfilePosts
                 key={`${profile.id}-${isOwnProfile}`}

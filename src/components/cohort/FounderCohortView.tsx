@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowRight, CalendarDays, CheckCircle2, Lock, Send } from 'lucide-react';
 import { toast } from 'sonner';
@@ -18,6 +18,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { captureEvent } from '@/lib/analytics';
 import { BIZMAP_STAGES, STAGE_TASKS } from '@/lib/bizmapStages';
 import { cohortTotalWeeks, cohortWeek, linesToList, type CohortSummary } from '@/lib/cohorts';
+import { checkinUpdateDraft, ownProfileComposePath, stageJourneyDraft } from '@/lib/profileUpdateDraft';
 
 type CheckinRow = {
   week_number: number;
@@ -191,7 +192,9 @@ function WeeklyCheckin({
   existing: CheckinRow | null;
 }) {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [editing, setEditing] = useState(false);
+  const [openingProfile, setOpeningProfile] = useState(false);
   const [wins, setWins] = useState('');
   const [blockers, setBlockers] = useState('');
   const [goals, setGoals] = useState('');
@@ -242,6 +245,20 @@ function WeeklyCheckin({
     ];
   }, [existing]);
 
+  // The check-in goes to the program only. Sharing it publicly is a separate,
+  // explicit step: the founder gets a draft without the blockers and edits it.
+  const shareOnProfile = async () => {
+    if (!userId || !existing) return;
+    setOpeningProfile(true);
+    stageJourneyDraft(
+      userId,
+      checkinUpdateDraft(week, existing.wins ?? [], existing.next_week_goals ?? [], existing.help_needed),
+      'checkin',
+    );
+    captureEvent('profile_update_prompt_opened', { source: 'checkin', week });
+    navigate(await ownProfileComposePath(userId, 'checkin'));
+  };
+
   const onSubmit = (event: FormEvent) => {
     event.preventDefault();
     if (!linesToList(wins).length && !linesToList(blockers).length && !linesToList(goals).length && !help.trim()) {
@@ -273,9 +290,14 @@ function WeeklyCheckin({
                 </div>
               ))}
             </dl>
-            <Button variant="outline" size="sm" className="mt-4" onClick={() => setEditing(true)}>
-              Edit check-in
-            </Button>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
+                Edit check-in
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => void shareOnProfile()} disabled={openingProfile || !userId}>
+                Share on your profile
+              </Button>
+            </div>
           </div>
         ) : (
           <form onSubmit={onSubmit} className="mt-3 space-y-4">

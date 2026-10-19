@@ -17,6 +17,7 @@ import {
   normalizeAccountabilityPreferences,
 } from "@/lib/accountabilityPreferences";
 import { ANGEL_SECTOR_OPTIONS } from "@/data/angelSectors";
+import { captureEvent } from "@/lib/analytics";
 
 interface EditProfileModalProps {
   open: boolean;
@@ -97,7 +98,7 @@ export const EditProfileModal = ({ open, onClose, profile, onSuccess }: EditProf
     weekly_checkin_day: accountabilityPreferences.weekly_checkin_day,
     weekly_scorecard_local_hour: String(accountabilityPreferences.weekly_scorecard_local_hour),
     public_stage_visible: accountabilityPreferences.public_stage_visible,
-    auto_share_milestones: accountabilityPreferences.auto_share_milestones,
+    public_progress_visible: accountabilityPreferences.public_progress_visible,
     timezone: accountabilityPreferences.timezone,
     search_indexing_requested: profile.search_indexing_requested === true,
   });
@@ -197,7 +198,7 @@ export const EditProfileModal = ({ open, onClose, profile, onSuccess }: EditProf
           weekly_checkin_day: formData.weekly_checkin_day,
           weekly_scorecard_local_hour: Number(formData.weekly_scorecard_local_hour),
           public_stage_visible: formData.public_stage_visible,
-          auto_share_milestones: formData.auto_share_milestones,
+          public_progress_visible: formData.public_progress_visible,
           timezone: formData.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
           stage_last_updated_at:
             formData.business_stage !== (profile.business_stage || '')
@@ -251,6 +252,9 @@ export const EditProfileModal = ({ open, onClose, profile, onSuccess }: EditProf
 
       if (error) throw error;
 
+      if (formData.public_progress_visible !== accountabilityPreferences.public_progress_visible) {
+        captureEvent('profile_progress_visibility_changed', { visible: formData.public_progress_visible });
+      }
       toast.success("Profile updated successfully!");
       onSuccess(saved?.username);
       onClose();
@@ -441,13 +445,14 @@ export const EditProfileModal = ({ open, onClose, profile, onSuccess }: EditProf
                 </div>
 
                 <div className="flex items-center justify-between rounded-xl border border-border/60 bg-background/70 p-4">
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium text-foreground">Auto-share meaningful milestones</p>
-                    <p className="text-xs text-muted-foreground">When you add a milestone, create a simple progress post in the community feed automatically.</p>
+                  <div className="space-y-1 pr-4">
+                    <p className="text-sm font-medium text-foreground">Show my progress publicly</p>
+                    <p className="text-xs text-muted-foreground">Visitors see which Startup Development Cycle stages you completed and how many customer interviews, commitments and payments you recorded. Never the work itself or any amounts.</p>
                   </div>
                   <Switch
-                    checked={formData.auto_share_milestones}
-                    onCheckedChange={(checked) => setFormData({ ...formData, auto_share_milestones: checked })}
+                    checked={formData.public_progress_visible}
+                    onCheckedChange={(checked) => setFormData({ ...formData, public_progress_visible: checked })}
+                    aria-label="Show my progress publicly"
                   />
                 </div>
               </div>
@@ -539,12 +544,12 @@ export const EditProfileModal = ({ open, onClose, profile, onSuccess }: EditProf
               </div>
 
               <div>
-                <Label htmlFor="current_focus">What Inspires You?</Label>
+                <Label htmlFor="current_focus">Now working on</Label>
                 <Input
                   id="current_focus"
                   value={formData.current_focus}
                   onChange={(e) => setFormData({ ...formData, current_focus: e.target.value })}
-                  placeholder="Share what drives and motivates you..."
+                  placeholder="What you're working on right now, e.g. interviewing 10 customers"
                   maxLength={150}
                 />
               </div>

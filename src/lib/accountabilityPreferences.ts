@@ -14,6 +14,8 @@ export interface AccountabilityPreferences {
   timezone: string;
   weekly_scorecard_local_hour: number;
   public_stage_visible: boolean;
+  /** Completed stages and evidence counts on the public profile. */
+  public_progress_visible: boolean;
   auto_share_milestones: boolean;
   preferred_partner_checkin_mode: PartnerCheckInMode;
   stage_last_updated_at: string | null;
@@ -45,6 +47,7 @@ export const DEFAULT_ACCOUNTABILITY_PREFERENCES: AccountabilityPreferences = {
   timezone: 'UTC',
   weekly_scorecard_local_hour: 18,
   public_stage_visible: false,
+  public_progress_visible: false,
   auto_share_milestones: false,
   preferred_partner_checkin_mode: 'async',
   stage_last_updated_at: null,
@@ -157,6 +160,7 @@ export function normalizeAccountabilityPreferences(
     timezone,
     weekly_scorecard_local_hour: coerceHour(preferences.weekly_scorecard_local_hour),
     public_stage_visible: preferences.public_stage_visible === true,
+    public_progress_visible: preferences.public_progress_visible === true,
     auto_share_milestones: preferences.auto_share_milestones === true,
     preferred_partner_checkin_mode: isPartnerCheckInMode(preferences.preferred_partner_checkin_mode)
       ? preferences.preferred_partner_checkin_mode

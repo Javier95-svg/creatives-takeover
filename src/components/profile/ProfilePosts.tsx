@@ -63,6 +63,9 @@ export function ProfilePosts({ userId, name, avatarUrl, isOwnProfile }: Props) {
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const target = searchParams.get('post');
+  // ?compose=stage|checkin arrives from a "share this as an update" prompt
+  // with the draft already waiting in the composer.
+  const composeRequested = isOwnProfile && searchParams.has('compose');
   const validTarget = /^(journey|photo|community):[0-9a-f-]{36}$/i.test(target || '') ? target : null;
   const scrolledTo = useRef<string | null>(null);
   const [limit, setLimit] = useState(20);
@@ -257,7 +260,7 @@ export function ProfilePosts({ userId, name, avatarUrl, isOwnProfile }: Props) {
           {post.content && <p className="whitespace-pre-wrap break-words text-sm leading-relaxed [overflow-wrap:anywhere]">{post.content}</p>}
           {post.image && <img src={post.image} alt={`Photo shared by ${authorName}`} loading="lazy" className="max-h-96 w-full rounded-lg border border-border/50 bg-muted/20 object-contain" />}
           {post.imagePath && !post.image && <p className="text-sm text-muted-foreground">Photo temporarily unavailable.</p>}
-          {post.source === 'community' && <Button variant="link" className="h-auto p-0" asChild><Link to={`/mentorship/post/${post.id}`}>View conversation</Link></Button>}
+          {post.source === 'community' && <Button variant="link" className="h-auto p-0" asChild><Link to={`/rooms/posts/${post.id}`}>View conversation</Link></Button>}
         </div>
         {!scheduled && <ProfilePostActions key={user?.id || 'guest'} source={post.source} postId={post.id} shareUrl={shareUrl} metrics={metricsByPost.get(`${post.source}:${post.id}`)} refresh={() => queryClient.invalidateQueries({ queryKey: ['profile-post-metrics'] })} />}
       </Card>
@@ -271,7 +274,7 @@ export function ProfilePosts({ userId, name, avatarUrl, isOwnProfile }: Props) {
         <MessageSquare className="h-5 w-5 text-primary" />
       </div>
       <div className="mx-auto max-w-3xl space-y-5">
-        {isOwnProfile && !isLoading && data?.postingAvailable !== false && <JourneyPostComposer userId={userId} name={name} avatarUrl={avatarUrl} onPublished={showPublishedPost} />}
+        {isOwnProfile && !isLoading && data?.postingAvailable !== false && <JourneyPostComposer userId={userId} name={name} avatarUrl={avatarUrl} onPublished={showPublishedPost} focusOnOpen={composeRequested} />}
         {isOwnProfile && data?.postingAvailable === false && <Card className="p-5 text-sm text-muted-foreground">Posting is temporarily unavailable. Please try again shortly.</Card>}
         {isLoading && <div role="status" className="flex items-center justify-center gap-2 py-10 text-muted-foreground"><Loader2 className="h-5 w-5 animate-spin" />Loading posts…</div>}
         {isError && <Card className="p-6 text-center"><p className="mb-3 text-sm text-muted-foreground">We couldn’t load these posts. Please try again.</p><Button variant="outline" onClick={() => { void refetch(); }}>Try again</Button></Card>}

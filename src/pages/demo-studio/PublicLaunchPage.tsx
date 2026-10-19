@@ -15,6 +15,7 @@ import { trackDemoEvent } from '@/lib/demoStudio/events';
 import type { PublicLaunchPage as PublicLaunchPageData } from '@/lib/demoStudio/types';
 import { buildArtifactReferralPath, trackArtifactReferralClicked } from '@/lib/artifactReferral';
 import { buildShareText, canUseNativeShare } from '@/lib/demoStudio/share';
+import { supabase } from '@/integrations/supabase/client';
 
 /**
  * A launch page is reachable two ways: its canonical published address
@@ -39,6 +40,26 @@ export default function PublicLaunchPage() {
   const [email, setEmail] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [maker, setMaker] = useState<{ username: string; name: string } | null>(null);
+
+  // The founder behind the page, so a visitor can follow their progress.
+  const ownerId = data?.project.owner_id;
+  useEffect(() => {
+    if (!ownerId) return;
+    let active = true;
+    void supabase
+      .from('public_profiles')
+      .select('username, full_name')
+      .eq('id', ownerId)
+      .maybeSingle()
+      .then(({ data: row }) => {
+        if (!active || !row?.username) return;
+        setMaker({ username: row.username, name: row.full_name || row.username });
+      });
+    return () => {
+      active = false;
+    };
+  }, [ownerId]);
 
   useEffect(() => {
     if (!slug) return;
@@ -335,7 +356,21 @@ export default function PublicLaunchPage() {
             background === 'light' ? 'border-slate-200' : 'border-white/10'
           }`}
         >
-          <p className={`text-sm ${mutedText}`}>Share {data.project.name}</p>
+          <div className="space-y-1">
+            <p className={`text-sm ${mutedText}`}>Share {data.project.name}</p>
+            {maker && (
+              <p className={`text-sm ${mutedText}`}>
+                Built by{' '}
+                <a
+                  // A published subdomain has no /profile route of its own.
+                  href={`${slugParam ? '' : 'https://creatives-takeover.com'}/profile/${encodeURIComponent(maker.username)}`}
+                  className="font-medium underline underline-offset-4 hover:opacity-80"
+                >
+                  {maker.name}
+                </a>
+              </p>
+            )}
+          </div>
           {renderShareRow('page')}
         </section>
 

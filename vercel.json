@@ -50,6 +50,7 @@
     { "source": "/launches", "destination": "/api/public-entity?type=launches" },
     { "source": "/launches/", "destination": "/api/public-entity?type=launches" },
     { "source": "/og/p/:slug", "destination": "/api/og-launch?slug=:slug" },
+    { "source": "/og/profile/:username", "destination": "/api/og-profile?username=:username" },
     { "source": "/newspaper/:slug", "destination": "/api/newspaper-og?slug=:slug" },
     { "source": "/stories/:slug", "destination": "/api/newspaper-og?slug=:slug" },
     { "source": "/sitemap-articles.xml", "destination": "/api/sitemap-articles" },
@@ -60,6 +61,12 @@
   "headers": [
     {
       "source": "/og/p/:slug",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=3600, stale-while-revalidate=86400" }
+      ]
+    },
+    {
+      "source": "/og/profile/:username",
       "headers": [
         { "key": "Cache-Control", "value": "public, max-age=3600, stale-while-revalidate=86400" }
       ]

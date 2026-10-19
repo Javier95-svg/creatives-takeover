@@ -8,7 +8,9 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { supabase } from '@/integrations/supabase/client';
+import { captureEvent } from '@/lib/analytics';
 import { insertPostEmoji, POST_MAX_LENGTH, validatePost, validatePostImage } from '@/lib/profilePosts';
+import { clearDraftSource, journeyDraftKey, readDraftSource, readJourneyDraft, type ProfileUpdateSource } from '@/lib/profileUpdateDraft';
 
 const EMOJIS = [
   ['🚀', 'Rocket'], ['🎉', 'Celebration'], ['💡', 'Idea'], ['🛠️', 'Building'],
@@ -17,19 +19,26 @@ const EMOJIS = [
   ['😊', 'Smile'], ['🔥', 'Fire'], ['✅', 'Done'], ['🙏', 'Thanks'],
 ];
 
-// Keep unfinished text in this browser tab, isolated by account. Never send
-// drafts to analytics or the public post table. Photos and schedules are not restored.
-const draftKey = (userId: string) => `ct:journey-draft:v1:${userId}`;
-function readDraft(userId: string) {
-  try { return sessionStorage.getItem(draftKey(userId))?.slice(0, POST_MAX_LENGTH) ?? ''; }
-  catch { return ''; }
-}
+// A blank box is where updates die, so an empty composer offers three ways in.
+const UPDATE_PROMPTS = [
+  { key: 'shipped', label: 'What I shipped', starter: 'This week I shipped ' },
+  { key: 'learned', label: 'What I learned', starter: 'This week I learned ' },
+  { key: 'need', label: 'What I need', starter: 'I could use help with ' },
+] as const;
+type UpdatePrompt = (typeof UPDATE_PROMPTS)[number]['key'];
+
+const SOURCE_HINT: Record<ProfileUpdateSource, string> = {
+  stage: 'Started from the stage you completed. Edit it before you post.',
+  checkin: 'Started from your program check-in. Edit it before you post; the program still has the full version.',
+};
 
 interface Props {
   userId: string;
   name: string;
   avatarUrl: string | null;
   onPublished: (post: PublishedJourneyPost) => void;
+  /** Scroll to the composer and focus it, used when arriving from a share prompt. */
+  focusOnOpen?: boolean;
 }
 
 export interface PublishedJourneyPost {
@@ -46,8 +55,12 @@ export function JourneyPostComposer(props: Props) {
   return <JourneyPostEditor key={props.userId} {...props} />;
 }
 
-function JourneyPostEditor({ userId, name, avatarUrl, onPublished }: Props) {
-  const [content, setContent] = useState(() => readDraft(userId));
+function JourneyPostEditor({ userId, name, avatarUrl, onPublished, focusOnOpen = false }: Props) {
+  // Unfinished text stays in this browser tab, isolated by account, and never
+  // reaches analytics or the post table. Photos and schedules are not restored.
+  const [content, setContent] = useState(() => readJourneyDraft(userId));
+  const [draftSource, setDraftSource] = useState<ProfileUpdateSource | null>(() => readDraftSource(userId));
+  const [promptUsed, setPromptUsed] = useState<UpdatePrompt | null>(null);
   const [draftSaved, setDraftSaved] = useState(false);
   const [photo, setPhoto] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
@@ -63,8 +76,8 @@ function JourneyPostEditor({ userId, name, avatarUrl, onPublished }: Props) {
 
   useEffect(() => {
     try {
-      if (content) sessionStorage.setItem(draftKey(userId), content);
-      else sessionStorage.removeItem(draftKey(userId));
+      if (content) sessionStorage.setItem(journeyDraftKey(userId), content);
+      else sessionStorage.removeItem(journeyDraftKey(userId));
       setDraftSaved(Boolean(content));
     } catch { setDraftSaved(false); }
   }, [content, userId]);
@@ -75,6 +88,25 @@ function JourneyPostEditor({ userId, name, avatarUrl, onPublished }: Props) {
     field.style.height = 'auto';
     field.style.height = `${Math.min(field.scrollHeight, 320)}px`;
   }, [content]);
+
+  useEffect(() => {
+    if (!focusOnOpen) return;
+    const field = textarea.current;
+    if (!field) return;
+    field.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    field.focus({ preventScroll: true });
+    field.setSelectionRange(field.value.length, field.value.length);
+  }, [focusOnOpen]);
+
+  function startWith(prompt: (typeof UPDATE_PROMPTS)[number]) {
+    setContent(prompt.starter);
+    setPromptUsed(prompt.key);
+    selection.current = { start: prompt.starter.length, end: prompt.starter.length };
+    requestAnimationFrame(() => {
+      textarea.current?.focus();
+      textarea.current?.setSelectionRange(prompt.starter.length, prompt.starter.length);
+    });
+  }
 
   useEffect(() => {
     if (!photo) { setPreview(null); return; }
@@ -139,6 +171,15 @@ function JourneyPostEditor({ userId, name, avatarUrl, onPublished }: Props) {
         scheduled: Boolean(schedule),
       });
       uploadedPath = null;
+      captureEvent('profile_update_published', {
+        source: draftSource ?? (promptUsed ? 'prompt' : 'manual'),
+        prompt: promptUsed,
+        scheduled: Boolean(schedule),
+        has_photo: Boolean(insertedPost.image_path),
+      });
+      clearDraftSource(userId);
+      setDraftSource(null);
+      setPromptUsed(null);
       toast.success(schedule ? 'Post scheduled. Your journey update is on its way.' : 'Your journey update is live!');
       setContent('');
       setPhoto(null);
@@ -178,9 +219,25 @@ function JourneyPostEditor({ userId, name, avatarUrl, onPublished }: Props) {
                 rows={2}
                 className="min-h-20 max-h-80 resize-none overflow-y-auto border-0 bg-transparent px-0 shadow-none focus-visible:ring-0 text-base md:text-base"
               />
+              {draftSource && content.trim() && <p className="mb-1 text-xs text-muted-foreground">{SOURCE_HINT[draftSource]}</p>}
               {draftSaved && <p className="mb-2 text-xs text-muted-foreground" title="Text saved privately for your account in this browser tab">Draft saved</p>}
             </div>
           </div>
+          {!content.trim() && !photo && (
+            <div className="flex flex-wrap items-center gap-2 px-4 pb-3 sm:px-6">
+              <span className="text-xs text-muted-foreground">Start with</span>
+              {UPDATE_PROMPTS.map((prompt) => (
+                <button
+                  key={prompt.key}
+                  type="button"
+                  onClick={() => startWith(prompt)}
+                  className="rounded-full border border-border/70 bg-background px-3 py-1 text-xs font-medium text-foreground transition-colors hover:border-primary/50 hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none"
+                >
+                  {prompt.label}
+                </button>
+              ))}
+            </div>
+          )}
           {preview && (
             <div className="relative mx-4 mb-4 sm:mx-6 rounded-lg border border-border bg-muted/30">
               <img src={preview} alt="Photo attached to your update" className="max-h-80 w-full rounded-lg object-contain" />

@@ -1,5 +1,5 @@
-import { useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
 import {
   ArrowRight,
@@ -59,6 +59,9 @@ import { cn } from '@/lib/utils';
 import { useFeatureFlagEnabled } from '@/hooks/usePosthogFeatureFlag';
 import { isPMFPathwayEnvironmentEnabled, PMF_PATHWAY_FEATURE_FLAG } from '@/lib/pmfPathwayRollout';
 import { OUTCOME_JOURNEY_CONTRACTS, OUTCOME_JOURNEY_STAGE_KEYS } from '@/lib/outcomeJourney';
+import { BIZMAP_STAGE_ORDER, FOUNDER_STAGE_LABELS } from '@/lib/bizmapStageOrder';
+import { captureEvent } from '@/lib/analytics';
+import { ownProfileComposePath, stageJourneyDraft, stageUpdateDraft } from '@/lib/profileUpdateDraft';
 
 const TILE_ICONS: Record<string, LucideIcon> = {
   'icp-builder': Target,
@@ -198,6 +201,51 @@ function ToolTile({ tile }: { tile: JourneyToolTile }) {
   );
 }
 
+/**
+ * After a stage completes, offer to turn it into a profile update. The draft is
+ * a scaffold the founder fills in; nothing is posted until they press Post.
+ * Each stage is offered once per browser, whether they write it or not.
+ */
+function StageUpdatePrompt({ userId, stage, label }: { userId: string; stage: string; label: string }) {
+  const navigate = useNavigate();
+  const storageKey = `ct:stage-update-prompt:v1:${userId}:${stage}`;
+  const [done, setDone] = useState(() => {
+    try { return localStorage.getItem(storageKey) === '1'; } catch { return false; }
+  });
+  const [opening, setOpening] = useState(false);
+  if (done) return null;
+
+  const markDone = () => {
+    try { localStorage.setItem(storageKey, '1'); } catch { /* storage blocked */ }
+    setDone(true);
+  };
+
+  const writeUpdate = async () => {
+    setOpening(true);
+    stageJourneyDraft(userId, stageUpdateDraft(label), 'stage');
+    captureEvent('profile_update_prompt_opened', { source: 'stage', stage });
+    const path = await ownProfileComposePath(userId, 'stage');
+    markDone();
+    navigate(path);
+  };
+
+  return (
+    <div className="mt-4 flex flex-col gap-3 rounded-xl border border-border/60 bg-background/70 p-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex items-start gap-2.5">
+        <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-success" aria-hidden="true" />
+        <div>
+          <p className="text-sm font-semibold text-foreground">You completed {label}. Share it as an update?</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">A short post on your profile shows people what you are building and how far you have got.</p>
+        </div>
+      </div>
+      <div className="flex shrink-0 gap-2">
+        <Button type="button" size="sm" variant="ghost" onClick={markDone} disabled={opening}>Not now</Button>
+        <Button type="button" size="sm" onClick={() => void writeUpdate()} disabled={opening}>Write the update</Button>
+      </div>
+    </div>
+  );
+}
+
 export default function FounderJourneyPanel({ showRecommendedAction = false }: { showRecommendedAction?: boolean }) {
   const { user } = useAuth();
   const {
@@ -227,6 +275,7 @@ export default function FounderJourneyPanel({ showRecommendedAction = false }: {
       ),
     ),
   ) as FounderOperatingStageId;
+  const latestCompletedStage = [...snapshot.stages].reverse().find((node) => node.status === 'complete' && !node.optional) ?? null;
   const onboardingEvidence = onboarding?.answers.evidenceState || 'none';
   const evidenceAnswer = EVIDENCE_ANSWER_LABELS[onboardingEvidence];
   const customerCount = onboarding?.answers.customerCountBand
@@ -433,6 +482,15 @@ export default function FounderJourneyPanel({ showRecommendedAction = false }: {
             ))}
           </div>
         </div>
+
+        {user?.id && latestCompletedStage ? (
+          <StageUpdatePrompt
+            key={latestCompletedStage.stage}
+            userId={user.id}
+            stage={latestCompletedStage.stage}
+            label={FOUNDER_STAGE_LABELS[BIZMAP_STAGE_ORDER.indexOf(latestCompletedStage.stage)] ?? latestCompletedStage.title}
+          />
+        ) : null}
 
         {showRecommendedAction && primaryAction && recommendedRoute ? (
           <div className="mt-5 rounded-xl border border-primary/25 bg-primary/[0.05] p-4">

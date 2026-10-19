@@ -12,42 +12,10 @@
 export const config = { runtime: 'edge' };
 
 import { ImageResponse } from '@vercel/og';
+import { isUsableImage, monogram, truncate } from './_og-image';
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL ?? 'https://rcjlaybjnozqbsoxzboa.supabase.co';
 const SUPABASE_KEY = process.env.VITE_SUPABASE_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? '';
-
-const MAX_LOGO_BYTES = 1_000_000;
-
-function truncate(s: string, max: number): string {
-  return s.length > max ? `${s.slice(0, max - 1)}…` : s;
-}
-
-function monogram(name: string): string {
-  const letter = name.trim().charAt(0);
-  return letter ? letter.toUpperCase() : 'C';
-}
-
-/**
- * ImageResponse streams, so a try/catch around it will not reliably catch a bad
- * remote image — it emits a broken response and the founder's share card dies
- * silently. Validate the logo up front instead and fall back to a monogram.
- * Founders can paste arbitrary URLs, so this is not a theoretical case.
- */
-async function isUsableImage(candidate: string | null | undefined): Promise<boolean> {
-  if (!candidate) return false;
-  if (!/^https:\/\//i.test(candidate)) return false;
-  try {
-    const res = await fetch(candidate);
-    if (!res.ok) return false;
-    const type = res.headers.get('content-type') ?? '';
-    if (!type.toLowerCase().startsWith('image/')) return false;
-    const length = Number(res.headers.get('content-length') ?? '0');
-    if (length && length > MAX_LOGO_BYTES) return false;
-    return true;
-  } catch {
-    return false;
-  }
-}
 
 export default async function handler(request: Request) {
   const url = new URL(request.url);

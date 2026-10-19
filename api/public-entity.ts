@@ -121,6 +121,8 @@ function profileDocument(profile: any): PublicSeoDocument {
   const canonical = `${SITE_ORIGIN}${path}`;
   const name = profile.full_name || profile.username;
   const description = String(profile.positioning_line || profile.bio || `${name} is a founder on Creatives Takeover.`);
+  // The card served by api/og-profile.tsx; robots.txt keeps scrapers out of /api/.
+  const shareImage = `${SITE_ORIGIN}/og/profile/${encodeURIComponent(profile.username)}`;
   const person = {
     '@context': 'https://schema.org', '@type': 'Person', '@id': `${canonical}#person`, name, description,
     url: canonical, image: profile.avatar_url || DEFAULT_IMAGE,
@@ -128,12 +130,12 @@ function profileDocument(profile: any): PublicSeoDocument {
     ...(profile.startup_name ? { worksFor: { '@type': 'Organization', name: profile.startup_name } } : {}),
   };
   return {
-    title: `${name} | Founder Profile`, description, canonical, image: profile.avatar_url, indexable: profile.seo_indexable === true,
+    title: `${name} | Founder Profile`, description, canonical, image: shareImage, indexable: profile.seo_indexable === true,
     schema: [breadcrumb([{ name: 'Home', url: '/' }, { name, url: path }]), person, {
       '@context': 'https://schema.org', '@type': 'ProfilePage', '@id': `${canonical}#webpage`, name: `${name} — Founder Profile`,
       description, url: canonical, mainEntity: { '@id': `${canonical}#person` }, isPartOf: { '@id': `${SITE_ORIGIN}/#website` },
     }],
-    fallbackHtml: `<article><h1>${escapeHtml(name)}</h1>${profile.positioning_line ? `<p>${escapeHtml(profile.positioning_line)}</p>` : ''}${profile.bio ? `<h2>About</h2><p>${escapeHtml(profile.bio)}</p>` : ''}${profile.startup_name ? `<h2>Building</h2><p>${escapeHtml(profile.startup_name)}${profile.startup_tagline ? ` — ${escapeHtml(profile.startup_tagline)}` : ''}</p>` : ''}</article>`,
+    fallbackHtml: `<article><h1>${escapeHtml(name)}</h1>${profile.positioning_line ? `<p>${escapeHtml(profile.positioning_line)}</p>` : ''}${profile.bio ? `<h2>About</h2><p>${escapeHtml(profile.bio)}</p>` : ''}${profile.startup_name ? `<h2>Building</h2><p>${escapeHtml(profile.startup_name)}${profile.startup_tagline ? ` — ${escapeHtml(profile.startup_tagline)}` : ''}</p>` : ''}${profile.startup_description ? `<p>${escapeHtml(profile.startup_description)}</p>` : ''}</article>`,
   };
 }
 
