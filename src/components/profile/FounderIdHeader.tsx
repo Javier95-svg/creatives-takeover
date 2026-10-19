@@ -4,12 +4,13 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { captureEvent } from '@/lib/analytics';
 import { founderIdDisplay, founderIdUrl } from '@/lib/founderId';
+import { ProfileShareButton } from './ProfileShareButton';
 
 /**
  * The top of a Founder ID: the name of the thing and its short link, visible
  * and copyable by anyone, the way a Patreon page shows patreon.com/name.
  */
-export function FounderIdHeader({ username, isOwnProfile }: { username: string; isOwnProfile: boolean }) {
+export function FounderIdHeader({ username, name, startupName, isOwnProfile }: { username: string; name: string; startupName: string | null; isOwnProfile: boolean }) {
   const copy = async () => {
     const url = founderIdUrl(username);
     try {
@@ -28,6 +29,13 @@ export function FounderIdHeader({ username, isOwnProfile }: { username: string; 
         Founder ID
       </span>
       <div className="flex min-w-0 max-w-full flex-wrap items-center justify-end gap-2">
+        <ProfileShareButton
+          username={username}
+          name={name}
+          startupName={startupName}
+          isOwnProfile={isOwnProfile}
+          founderId
+        />
         <div className="flex min-w-0 max-w-full items-center gap-2 rounded-2xl border border-border/70 bg-muted/30 py-1 pl-3 pr-1 sm:rounded-full">
           <Link2 className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
           {/* Wraps on a phone rather than cutting off the handle people need to read. */}

@@ -520,7 +520,7 @@ export const EditProfileModal = ({ open, onClose, profile, onSuccess }: EditProf
                 <div className="flex items-center justify-between rounded-xl border border-border/60 bg-background/70 p-4">
                   <div className="space-y-1">
                     <p className="text-sm font-medium text-foreground">Show stage on public profile</p>
-                    <p className="text-xs text-muted-foreground">Off by default. Enable only if you want stage progress visible to the community.</p>
+                    <p className="text-xs text-muted-foreground">On by default. Turn this off any time to keep your stage private on your public profile.</p>
                   </div>
                   <Switch
                     checked={formData.public_stage_visible}

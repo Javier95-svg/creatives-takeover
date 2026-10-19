@@ -8,7 +8,7 @@ import ProfileWallpaper from "@/components/wallpapers/ProfileWallpaper";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ArrowLeft, Eye, Settings, Briefcase, MapPin, Rocket } from "lucide-react";
+import { Eye, Settings, Briefcase, MapPin, Rocket } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { SocialButtons } from "@/components/social/SocialButtons";
@@ -465,19 +465,6 @@ const Profile = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Persistent "back to the platform" CTA shown on every profile view — always
-  // returns to the public home ("/").
-  const platformHref = "/";
-  const platformBackCta = (
-    <Link
-      to={platformHref}
-      className="mb-4 inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-background/70 px-3.5 py-1.5 text-sm font-medium text-muted-foreground backdrop-blur-sm transition-colors hover:border-border hover:text-foreground"
-    >
-      <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-      Platform
-    </Link>
-  );
-
   if (loading) {
     return (
       <>
@@ -490,7 +477,6 @@ const Profile = () => {
             <Navigation />
             <main className="container mx-auto px-4 py-20">
               <div className="max-w-4xl mx-auto">
-                {platformBackCta}
                 <div className="animate-pulse space-y-4">
                   <div className="h-32 bg-muted rounded-lg" />
                   <div className="h-64 bg-muted rounded-lg" />
@@ -515,7 +501,6 @@ const Profile = () => {
           <div className="relative z-10">
             <Navigation />
             <main className="container mx-auto px-4 py-20">
-              {platformBackCta}
               <Card className="max-w-md mx-auto p-8 text-center">
                 <h2 className="text-2xl font-bold mb-4">Profile Temporarily Unavailable</h2>
                 <p className="text-muted-foreground mb-6">{loadError}</p>
@@ -540,7 +525,6 @@ const Profile = () => {
           <div className="relative z-10">
             <Navigation />
             <main className="container mx-auto px-4 py-20">
-              {platformBackCta}
               <Card className="max-w-md mx-auto p-8 text-center">
                 <h2 className="text-2xl font-bold mb-4">Profile Not Found</h2>
                 <p className="text-muted-foreground mb-6">
@@ -620,7 +604,12 @@ const Profile = () => {
               {/* Founder-First Profile Hero */}
               <Card className="p-6 mb-6">
                 {isFounderId && profile.username && (
-                  <FounderIdHeader username={profile.username} isOwnProfile={isOwnProfile} />
+                  <FounderIdHeader
+                    username={profile.username}
+                    name={profile.full_name || profile.username}
+                    startupName={profile.startup_name}
+                    isOwnProfile={isOwnProfile}
+                  />
                 )}
                 <div className="grid gap-5 md:grid-cols-2 md:gap-6 mb-6">
                   {/* Left: Founder Info */}
@@ -702,13 +691,9 @@ const Profile = () => {
                 <div className="mb-4 grid grid-cols-4 gap-2 rounded-lg bg-muted/30 px-2 py-4 sm:gap-4">
                   <div className="grid min-w-0 grid-rows-2 text-center">
                     <div className="flex min-h-8 items-end justify-center truncate px-1 pb-2 text-base font-semibold text-primary">
-                      {profile.founder_role === 'founder' ? 'Founder' :
-                       profile.founder_role === 'co-founder' ? 'Co-Founder' :
-                       profile.founder_role === 'cto' ? 'CTO' :
-                       profile.founder_role === 'cmo' ? 'CMO' :
-                       profile.founder_role === 'investor' ? 'Investor' : 'N/A'}
+                      {profile.user_type === 'builder' ? 'Builder' : 'Founder'}
                     </div>
-                    <div className="flex min-h-8 items-start justify-center pt-2 text-sm text-muted-foreground">Role</div>
+                    <div className="flex min-h-8 items-start justify-center pt-2 text-sm text-muted-foreground">Account Type</div>
                   </div>
                   <div className="grid min-w-0 grid-rows-2 text-center">
                     <div className="flex min-h-8 items-end justify-center truncate px-1 pb-2 text-base font-semibold text-primary">
@@ -765,14 +750,8 @@ const Profile = () => {
                   }}
                 />
 
-                {/* Action Buttons — centered under the stats banner, Platform first */}
+                {/* Profile actions */}
                 <div className="flex flex-wrap items-center justify-center gap-2">
-                  <Button asChild variant="outline" size="sm">
-                    <Link to={platformHref}>
-                      <ArrowLeft className="h-4 w-4 mr-2" />
-                      Platform
-                    </Link>
-                  </Button>
                   {!isOwnProfile && !previewing && profile.id && (
                     <>
                       <SocialButtons
@@ -794,7 +773,7 @@ const Profile = () => {
                       View as visitor
                     </Button>
                   )}
-                  {profile.username && (
+                  {profile.username && !isFounderId && (
                     <ProfileShareButton
                       username={profile.username}
                       name={profile.full_name || profile.username}

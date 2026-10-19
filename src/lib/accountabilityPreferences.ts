@@ -46,7 +46,7 @@ export const DEFAULT_ACCOUNTABILITY_PREFERENCES: AccountabilityPreferences = {
   weekly_checkin_day: 'monday',
   timezone: 'UTC',
   weekly_scorecard_local_hour: 18,
-  public_stage_visible: false,
+  public_stage_visible: true,
   public_progress_visible: false,
   auto_share_milestones: false,
   preferred_partner_checkin_mode: 'async',
@@ -159,7 +159,9 @@ export function normalizeAccountabilityPreferences(
       : DEFAULT_ACCOUNTABILITY_PREFERENCES.weekly_checkin_day,
     timezone,
     weekly_scorecard_local_hour: coerceHour(preferences.weekly_scorecard_local_hour),
-    public_stage_visible: preferences.public_stage_visible === true,
+    public_stage_visible: typeof preferences.public_stage_visible === 'boolean'
+      ? preferences.public_stage_visible
+      : DEFAULT_ACCOUNTABILITY_PREFERENCES.public_stage_visible,
     public_progress_visible: preferences.public_progress_visible === true,
     auto_share_milestones: preferences.auto_share_milestones === true,
     preferred_partner_checkin_mode: isPartnerCheckInMode(preferences.preferred_partner_checkin_mode)
