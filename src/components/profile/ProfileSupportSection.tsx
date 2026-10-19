@@ -1,4 +1,5 @@
 import { Suspense, lazy, useState } from 'react';
+import type { FormEvent } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { ChevronDown, ChevronUp, Clock, ExternalLink, Gift, Heart, Link2, MessageSquare, Rocket, Users } from 'lucide-react';
@@ -6,6 +7,9 @@ import type { LucideIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { captureEvent } from '@/lib/analytics';
@@ -14,6 +18,7 @@ import {
   defaultProfileSupport,
   lastUpdateLabel,
   normalizeProfileSupport,
+  supportLinkProvider,
   type ProfileSupport,
   type SupportAsk,
 } from '@/lib/supportLinks';
@@ -60,6 +65,9 @@ export function ProfileSupportSection({ username, name, startupName, productUrl,
   const [supporterName, setSupporterName] = useState('');
   const [supportMessage, setSupportMessage] = useState('');
   const [supportExpanded, setSupportExpanded] = useState(false);
+  const [fundingLinkOpen, setFundingLinkOpen] = useState(false);
+  const [fundingLink, setFundingLink] = useState('');
+  const [savingFundingLink, setSavingFundingLink] = useState(false);
 
   const query = useQuery({
     queryKey: ['profile-support', username, user?.id ?? null],
@@ -82,6 +90,41 @@ export function ProfileSupportSection({ username, name, startupName, productUrl,
   const hasLink = Boolean(support.supportUrl && support.supportProvider);
   const canShowProviderLink = hasLink && (support.linkStatus !== 'reported' || isOwnProfile);
   const days = daysSince(support.lastUpdateAt);
+
+  const openFundingLinkDialog = () => {
+    setFundingLink(support.supportUrl ?? '');
+    setFundingLinkOpen(true);
+  };
+
+  const saveFundingLink = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const url = fundingLink.trim();
+    if (!user) {
+      toast.error('Please sign in before adding a funding link.');
+      return;
+    }
+    if (!supportLinkProvider(url)) {
+      toast.error('Add a valid Patreon, Buy Me a Coffee, Ko-fi, Stripe, PayPal, GitHub Sponsors, or Open Collective link.');
+      return;
+    }
+
+    setSavingFundingLink(true);
+    const { error } = await (supabase as any).from('profile_support').upsert({
+      user_id: user.id,
+      support_url: url,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: 'user_id' });
+    setSavingFundingLink(false);
+
+    if (error) {
+      toast.error('We could not save your funding link. Please try again.');
+      return;
+    }
+
+    await query.refetch();
+    setFundingLinkOpen(false);
+    toast.success('Funding link added. Visitors can now donate through it.');
+  };
 
   const askForMessage = (ask: SupportAsk) => {
     if (isOwnProfile || preview) {
@@ -222,7 +265,7 @@ export function ProfileSupportSection({ username, name, startupName, productUrl,
               onClick={() => setSupportExpanded((expanded) => !expanded)}
               aria-expanded={supportExpanded}
             >
-              {supportExpanded ? 'Hide form' : 'Support'}
+              {supportExpanded ? 'Hide form' : 'Donate'}
               {supportExpanded ? <ChevronUp className="ml-2 h-4 w-4" /> : <ChevronDown className="ml-2 h-4 w-4" />}
             </Button>
           </div>
@@ -283,14 +326,14 @@ export function ProfileSupportSection({ username, name, startupName, productUrl,
                   if (!preview) captureEvent('support_link_clicked', { provider: support.supportProvider, is_owner: isOwnProfile, amount: Number(supportAmount) });
                 }}
               >
-                Support
+                Donate
                 <ExternalLink className="ml-2 h-4 w-4" aria-hidden="true" />
               </a>
             </Button>
           ) : (
             <>
-              <Button disabled className="min-h-12 w-full rounded-full text-base font-semibold">Support</Button>
-              {isOwnProfile && onEditProfile && <Button size="sm" variant="outline" className="w-full" onClick={onEditProfile}>Add a funding link</Button>}
+              <Button disabled className="min-h-12 w-full rounded-full text-base font-semibold">Donate</Button>
+              {isOwnProfile && <Button size="sm" variant="outline" className="w-full" onClick={openFundingLinkDialog}>Add a funding link</Button>}
             </>
           )}
           <p className="text-center text-xs leading-relaxed text-muted-foreground">
@@ -402,6 +445,38 @@ export function ProfileSupportSection({ username, name, startupName, productUrl,
           />
         </Suspense>
       )}
+      <Dialog open={fundingLinkOpen} onOpenChange={setFundingLinkOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add a funding link</DialogTitle>
+            <DialogDescription>
+              Add the page where visitors can donate directly to you.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={(event) => void saveFundingLink(event)} className="space-y-5">
+            <div className="space-y-2">
+              <Label htmlFor="funding-link">Funding page URL</Label>
+              <Input
+                id="funding-link"
+                type="url"
+                autoComplete="url"
+                autoFocus
+                required
+                placeholder="https://buymeacoffee.com/yourname"
+                value={fundingLink}
+                onChange={(event) => setFundingLink(event.target.value)}
+              />
+              <p className="text-xs leading-relaxed text-muted-foreground">
+                Patreon, Buy Me a Coffee, Ko-fi, Stripe, PayPal, GitHub Sponsors, and Open Collective are supported.
+              </p>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setFundingLinkOpen(false)} disabled={savingFundingLink}>Cancel</Button>
+              <Button type="submit" disabled={savingFundingLink}>{savingFundingLink ? 'Saving…' : 'Save funding link'}</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }
