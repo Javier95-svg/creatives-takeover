@@ -56,6 +56,9 @@ export function ProfileSupportSection({ username, name, startupName, productUrl,
   const [signupIntent, setSignupIntent] = useState<string | null>(null);
   const [confirmReport, setConfirmReport] = useState(false);
   const [reporting, setReporting] = useState(false);
+  const [supportAmount, setSupportAmount] = useState('');
+  const [supporterName, setSupporterName] = useState('');
+  const [supportMessage, setSupportMessage] = useState('');
 
   const query = useQuery({
     queryKey: ['profile-support', username, user?.id ?? null],
@@ -207,6 +210,85 @@ export function ProfileSupportSection({ username, name, startupName, productUrl,
         </div>
 
         <div className="flex min-w-0 flex-col gap-4 rounded-xl border border-border/70 bg-muted/20 p-5 md:col-span-2">
+          <p className="flex items-center gap-2 text-xl font-semibold">
+            <Gift className="h-5 w-5 text-primary" aria-hidden="true" />
+            Support {startupName || firstName}
+          </p>
+          <div className="flex items-center gap-2 rounded-xl bg-muted p-3">
+            <span className="text-lg font-semibold" aria-hidden="true">$</span>
+            <input
+              aria-label="Amount donated"
+              inputMode="decimal"
+              type="number"
+              min="1"
+              step="1"
+              placeholder="Enter amount"
+              value={supportAmount}
+              onChange={(event) => setSupportAmount(event.target.value)}
+              className="min-w-0 flex-1 bg-transparent text-base outline-none placeholder:text-muted-foreground"
+            />
+            {[10, 25, 50].map((amount) => (
+              <button
+                key={amount}
+                type="button"
+                onClick={() => setSupportAmount((current) => String((Number(current) || 0) + amount))}
+                className="rounded-lg border border-border bg-background px-2.5 py-2 text-sm font-medium hover:border-primary/50"
+              >
+                +{amount}
+              </button>
+            ))}
+          </div>
+          <input
+            aria-label="Your name or social handle"
+            type="text"
+            maxLength={80}
+            placeholder="Name or @yoursocial"
+            value={supporterName}
+            onChange={(event) => setSupporterName(event.target.value)}
+            className="h-14 rounded-xl bg-muted px-4 text-sm outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring"
+          />
+          <textarea
+            aria-label="Message for the founder"
+            maxLength={500}
+            placeholder="Say something nice..."
+            value={supportMessage}
+            onChange={(event) => setSupportMessage(event.target.value)}
+            className="min-h-32 resize-y rounded-xl bg-muted px-4 py-3 text-sm outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring"
+          />
+          {canShowProviderLink ? (
+            <Button asChild disabled={!supportAmount || Number(supportAmount) <= 0} className="min-h-12 w-full rounded-full text-base font-semibold">
+              <a
+                href={support.supportUrl!}
+                target="_blank"
+                rel="noopener noreferrer nofollow ugc"
+                aria-disabled={!supportAmount || Number(supportAmount) <= 0}
+                onClick={(event) => {
+                  if (!supportAmount || Number(supportAmount) <= 0) {
+                    event.preventDefault();
+                    return;
+                  }
+                  if (!preview) captureEvent('support_link_clicked', { provider: support.supportProvider, is_owner: isOwnProfile, amount: Number(supportAmount) });
+                }}
+              >
+                Support
+                <ExternalLink className="ml-2 h-4 w-4" aria-hidden="true" />
+              </a>
+            </Button>
+          ) : (
+            <>
+              <Button disabled className="min-h-12 w-full rounded-full text-base font-semibold">Support</Button>
+              <p className="text-xs leading-relaxed text-muted-foreground">
+                {isOwnProfile
+                  ? 'Add your Patreon, Buy Me a Coffee, Ko-fi or another support page to enable contributions.'
+                  : 'This founder has not added an external support page yet.'}
+              </p>
+              {isOwnProfile && onEditProfile && <Button size="sm" variant="outline" className="w-full" onClick={onEditProfile}>Add a funding link</Button>}
+            </>
+          )}
+          <p className="text-center text-xs leading-relaxed text-muted-foreground">
+            Payment is completed on the founder’s external support page. No Creatives Takeover account is needed.
+          </p>
+          {false && <>
             {canShowProviderLink ? (
               <>
                 <div>
@@ -296,6 +378,7 @@ export function ProfileSupportSection({ username, name, startupName, productUrl,
                 </p>
               </>
             )}
+          </>}
         </div>
       </div>
 
