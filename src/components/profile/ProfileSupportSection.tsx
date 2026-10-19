@@ -127,8 +127,8 @@ export function ProfileSupportSection({ username, name, startupName, productUrl,
   };
 
   return (
-    <Card className="mb-6 flex flex-col gap-5 p-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+    <Card className="mb-6 ml-auto w-full max-w-md overflow-hidden p-0">
+      <div className="hidden">
         <h2 className="flex items-center gap-2 text-base font-semibold">
           <Heart className="h-4 w-4 text-primary" aria-hidden="true" />
           Support my work
@@ -149,8 +149,8 @@ export function ProfileSupportSection({ username, name, startupName, productUrl,
         </div>
       </div>
 
-      <div className="grid gap-5 md:grid-cols-5">
-        <div className="flex min-w-0 flex-col gap-4 md:col-span-3">
+      <div className="block">
+        <div className="hidden">
           {currentFocus ? (
             <div className="flex flex-col gap-1">
               <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Now working on</span>
@@ -209,7 +209,7 @@ export function ProfileSupportSection({ username, name, startupName, productUrl,
           </div>
         </div>
 
-        <div className="flex min-w-0 flex-col gap-4 rounded-xl border border-border/70 bg-muted/20 p-5 md:col-span-2">
+        <div className="flex min-w-0 flex-col gap-4 bg-card p-6">
           <p className="flex items-center gap-2 text-xl font-semibold">
             <Gift className="h-5 w-5 text-primary" aria-hidden="true" />
             Support {startupName || firstName}
