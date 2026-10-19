@@ -78,7 +78,7 @@ test('settings are owner-only and read publicly through the function', () => {
 
 test('the profile section asks for support, never investment', () => {
   const section = read('../src/components/profile/ProfileSupportSection.tsx');
-  assert.match(section, /How you can support me/);
+  assert.match(section, /Support my work/);
   assert.match(section, /<Heart /);
   assert.match(section, /Support is a gift: it doesn't buy equity, returns or rewards\./);
   assert.match(section, /rel="noopener noreferrer nofollow ugc"/);

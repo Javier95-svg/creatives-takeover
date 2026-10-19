@@ -1,4 +1,4 @@
-// "How you can support me" on founder and builder profiles. The provider
+// "Support my work" on founder and builder profiles. The provider
 // allowlist mirrors public.support_link_provider() in
 // 20261020110000_profile_support.sql; keep the two in step.
 

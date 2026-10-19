@@ -41,7 +41,7 @@ const MESSAGE_ASKS: Partial<Record<SupportAsk, { icon: LucideIcon; label: (intro
 };
 
 /**
- * "How you can support me" on every founder and builder profile. Money never
+ * "Support my work" on every founder and builder profile. Money never
  * passes through Creatives Takeover: the support link is the founder's own
  * page on an allowlisted provider, shown only while they keep posting updates.
  */
@@ -119,7 +119,7 @@ export function ProfileSupportSection({ username, name, startupName, productUrl,
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="flex items-center gap-2 text-base font-semibold">
           <Heart className="h-4 w-4 text-primary" aria-hidden="true" />
-          How you can support me
+          Support my work
         </h2>
         <div className="flex flex-wrap items-center gap-2">
           {!fallback && (support.lastUpdateAt || isOwnProfile) && (
