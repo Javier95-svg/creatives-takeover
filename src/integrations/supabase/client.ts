@@ -21,6 +21,40 @@ function isRefreshTokenRequest(input: RequestInfo | URL): boolean {
   return url.includes('/auth/v1/token') && url.includes('grant_type=refresh_token');
 }
 
+function isRestRequest(input: RequestInfo | URL): boolean {
+  const url =
+    typeof input === 'string'
+      ? input
+      : input instanceof Request
+      ? input.url
+      : input.toString();
+  return url.includes('/rest/v1/');
+}
+
+async function isExpiredJwtResponse(response: Response): Promise<boolean> {
+  if (response.status !== 401) return false;
+  try {
+    const body = await response.clone().text();
+    return /PGRST303|JWT expired/i.test(body);
+  } catch {
+    return false;
+  }
+}
+
+let refreshInFlight: Promise<string | null> | null = null;
+
+async function refreshAccessToken(): Promise<string | null> {
+  if (!refreshInFlight) {
+    refreshInFlight = supabase.auth.refreshSession()
+      .then(({ data, error }) => {
+        if (error) return null;
+        return data.session?.access_token ?? null;
+      })
+      .finally(() => { refreshInFlight = null; });
+  }
+  return refreshInFlight;
+}
+
 async function clearInvalidRefreshTokenResponse(input: RequestInfo | URL, response: Response) {
   if (!isRefreshTokenRequest(input) || response.status !== 400) return;
 
@@ -35,8 +69,21 @@ async function clearInvalidRefreshTokenResponse(input: RequestInfo | URL, respon
 }
 
 const supabaseFetch: typeof fetch = async (input, init) => {
+  const retryInput = input instanceof Request ? input.clone() : input;
   const response = await fetch(input, init);
   void clearInvalidRefreshTokenResponse(input, response);
+
+  // A restored session can briefly expose an expired JWT while several
+  // protected queries begin. Refresh once for all of them and retry the
+  // original request with the fresh token instead of surfacing PGRST303.
+  if (isRestRequest(input) && await isExpiredJwtResponse(response)) {
+    const accessToken = await refreshAccessToken();
+    if (accessToken) {
+      const headers = new Headers(init?.headers ?? (input instanceof Request ? input.headers : undefined));
+      headers.set('Authorization', `Bearer ${accessToken}`);
+      return fetch(retryInput, { ...init, headers });
+    }
+  }
   return response;
 };
 
