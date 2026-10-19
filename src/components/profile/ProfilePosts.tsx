@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useLocation, useSearchParams } from 'react-router-dom';
-import { CalendarClock, Loader2, MessageSquare, Pin, PinOff, Repeat2, Trash2 } from 'lucide-react';
+import { CalendarClock, Loader2, MessageSquare, Pin, PinOff, Repeat2, Route, Trash2 } from 'lucide-react';
 import { orderProfilePosts } from '@/lib/profilePosts';
 import { useAuth } from '@/contexts/AuthContext';
 import { ProfilePostActions, type PostMetrics } from './ProfilePostActions';
@@ -270,8 +270,8 @@ export function ProfilePosts({ userId, name, avatarUrl, isOwnProfile }: Props) {
   return (
     <section aria-labelledby="profile-posts-heading" className="space-y-5">
       <div className="flex items-center gap-2 border-b border-border pb-3">
-        <h2 id="profile-posts-heading" className="text-lg font-semibold">Share your journey</h2>
-        <MessageSquare className="h-5 w-5 text-primary" />
+        <h2 id="profile-posts-heading" className="text-lg font-semibold">My journey</h2>
+        <Route className="h-5 w-5 text-primary" aria-hidden="true" />
       </div>
       <div className="mx-auto max-w-3xl space-y-5">
         {isOwnProfile && !isLoading && data?.postingAvailable !== false && <JourneyPostComposer userId={userId} name={name} avatarUrl={avatarUrl} onPublished={showPublishedPost} focusOnOpen={composeRequested} />}

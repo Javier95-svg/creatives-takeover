@@ -1,7 +1,7 @@
 import { Suspense, lazy, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Clock, ExternalLink, Gift, Heart, Link2, MessageSquare, Rocket, Users } from 'lucide-react';
+import { ChevronDown, ChevronUp, Clock, ExternalLink, Gift, Heart, Link2, MessageSquare, Rocket, Users } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -59,6 +59,7 @@ export function ProfileSupportSection({ username, name, startupName, productUrl,
   const [supportAmount, setSupportAmount] = useState('');
   const [supporterName, setSupporterName] = useState('');
   const [supportMessage, setSupportMessage] = useState('');
+  const [supportExpanded, setSupportExpanded] = useState(false);
 
   const query = useQuery({
     queryKey: ['profile-support', username, user?.id ?? null],
@@ -210,10 +211,22 @@ export function ProfileSupportSection({ username, name, startupName, productUrl,
         </div>
 
         <div className="flex min-w-0 flex-col gap-4 bg-card p-6">
-          <p className="flex items-center gap-2 text-xl font-semibold">
-            <Gift className="h-5 w-5 text-primary" aria-hidden="true" />
-            Support {startupName || firstName}
-          </p>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="flex items-center gap-2 text-xl font-semibold">
+              <Gift className="h-5 w-5 text-primary" aria-hidden="true" />
+              Support {startupName || firstName}
+            </p>
+            <Button
+              type="button"
+              variant={supportExpanded ? 'ghost' : 'default'}
+              onClick={() => setSupportExpanded((expanded) => !expanded)}
+              aria-expanded={supportExpanded}
+            >
+              {supportExpanded ? 'Hide form' : 'Support'}
+              {supportExpanded ? <ChevronUp className="ml-2 h-4 w-4" /> : <ChevronDown className="ml-2 h-4 w-4" />}
+            </Button>
+          </div>
+          {supportExpanded && <>
           <div className="flex items-center gap-2 rounded-xl bg-muted p-3">
             <span className="text-lg font-semibold" aria-hidden="true">$</span>
             <input
@@ -283,6 +296,7 @@ export function ProfileSupportSection({ username, name, startupName, productUrl,
           <p className="text-center text-xs leading-relaxed text-muted-foreground">
             Payment is completed on the user’s external support links.
           </p>
+          </>}
           {false && <>
             {canShowProviderLink ? (
               <>
