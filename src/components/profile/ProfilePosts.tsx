@@ -335,7 +335,7 @@ export function ProfilePosts({ userId, name, avatarUrl, isOwnProfile }: Props) {
         <h2 id="profile-posts-heading" className="text-lg font-semibold">My journey</h2>
         <Route className="h-5 w-5 text-primary" aria-hidden="true" />
       </div>
-      <div className="mx-auto max-w-3xl space-y-5">
+      <div className="w-full space-y-5">
         {isOwnProfile && !isLoading && data?.postingAvailable !== false && <JourneyPostComposer userId={userId} name={name} avatarUrl={avatarUrl} onPublished={showPublishedPost} focusOnOpen={composeRequested} />}
         {isOwnProfile && data?.postingAvailable === false && <Card className="p-5 text-sm text-muted-foreground">Posting is temporarily unavailable. Please try again shortly.</Card>}
         {isLoading && <div role="status" className="flex items-center justify-center gap-2 py-10 text-muted-foreground"><Loader2 className="h-5 w-5 animate-spin" />Loading posts…</div>}
