@@ -26,6 +26,7 @@ import { captureEvent } from "@/lib/analytics";
 import { currentFocusLabel } from "@/lib/currentFocus";
 import { ProfileShareButton } from "@/components/profile/ProfileShareButton";
 import { PublicProgressCard } from "@/components/profile/PublicProgressCard";
+import { ProfileSupportSection } from "@/components/profile/ProfileSupportSection";
 
 // Keep a stable projection that can still resolve an account while a newly
 // deployed optional profile field is waiting for its database migration. A
@@ -266,6 +267,8 @@ const Profile = () => {
     : null;
   const primaryIndustry = profile?.startup_industry?.find((industry) => industry.trim().length > 0) ?? null;
   const bioText = plainText(profile?.bio);
+  // Founders and builders ask for support; mentors, providers and investors do not.
+  const acceptsSupport = !profile?.user_type || profile.user_type === 'founder' || profile.user_type === 'builder';
   const currentFocus = currentFocusLabel(profile?.current_focus);
 
   // What this account type was asked for, and only what it was asked for. A
@@ -894,6 +897,17 @@ const Profile = () => {
                 <PublicProgressCard
                   username={profile.username}
                   name={profile.full_name || profile.username}
+                  isOwnProfile={isOwnProfile}
+                  onEditProfile={() => setShowEditModal(true)}
+                />
+              )}
+
+              {profile.username && acceptsSupport && (
+                <ProfileSupportSection
+                  username={profile.username}
+                  name={profile.full_name || profile.username}
+                  startupName={profile.startup_name}
+                  productUrl={profile.startup_links?.demo || profile.startup_links?.website || null}
                   isOwnProfile={isOwnProfile}
                   onEditProfile={() => setShowEditModal(true)}
                 />

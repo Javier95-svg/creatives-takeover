@@ -15,6 +15,9 @@ interface Props {
   name: string;
   startupName: string | null;
   isOwnProfile: boolean;
+  /** 'chip' renders the "Share this profile" ask in the support section. */
+  variant?: 'button' | 'chip';
+  className?: string;
 }
 
 type Channel = 'copy' | 'linkedin' | 'x' | 'native';
@@ -30,13 +33,13 @@ const XIcon = () => (
  * /og/profile/:username, so a post shows the founder and what they are
  * building rather than a bare avatar.
  */
-export function ProfileShareButton({ username, name, startupName, isOwnProfile }: Props) {
+export function ProfileShareButton({ username, name, startupName, isOwnProfile, variant = 'button', className }: Props) {
   const url = `${window.location.origin}/profile/${encodeURIComponent(username)}`;
   const text = startupName
     ? (isOwnProfile ? `Follow what I'm building with ${startupName}.` : `${name} is building ${startupName}.`)
     : (isOwnProfile ? "Follow what I'm building." : `${name} on Creatives Takeover.`);
 
-  const track = (channel: Channel) => captureEvent('profile_share_clicked', { channel, is_owner: isOwnProfile });
+  const track = (channel: Channel) => captureEvent('profile_share_clicked', { channel, is_owner: isOwnProfile, placement: variant === 'chip' ? 'support_section' : 'header' });
 
   const copyLink = async () => {
     try {
@@ -65,10 +68,17 @@ export function ProfileShareButton({ username, name, startupName, isOwnProfile }
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="sm">
-          <Share2 className="h-4 w-4 mr-2" />
-          Share profile
-        </Button>
+        {variant === 'chip' ? (
+          <button type="button" className={className}>
+            <Share2 className="h-4 w-4 text-primary" aria-hidden="true" />
+            Share this profile
+          </button>
+        ) : (
+          <Button variant="outline" size="sm" className={className}>
+            <Share2 className="h-4 w-4 mr-2" />
+            Share profile
+          </Button>
+        )}
       </DropdownMenuTrigger>
       <DropdownMenuContent align="center" className="w-48">
         <DropdownMenuItem onSelect={() => void copyLink()}>

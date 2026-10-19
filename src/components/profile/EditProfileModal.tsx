@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,6 +18,7 @@ import {
 } from "@/lib/accountabilityPreferences";
 import { ANGEL_SECTOR_OPTIONS } from "@/data/angelSectors";
 import { captureEvent } from "@/lib/analytics";
+import { SUPPORT_PROVIDER_LIST, supportLinkProvider, type SupportAsk } from "@/lib/supportLinks";
 
 interface EditProfileModalProps {
   open: boolean;
@@ -52,6 +53,7 @@ interface EditProfileModalProps {
     current_focus: string | null;
     looking_for: string[] | null;
     startup_links: any | null;
+    user_type?: string | null;
     user_preferences?: Record<string, unknown> | null;
     search_indexing_requested?: boolean | null;
     search_indexing_review_status?: 'not_requested' | 'pending' | 'approved' | 'rejected' | null;
@@ -60,9 +62,59 @@ interface EditProfileModalProps {
   onSuccess: (username?: string | null) => void;
 }
 
+const SUPPORT_ASK_OPTIONS: Array<[SupportAsk, string]> = [
+  ['feedback', 'Feedback'],
+  ['testers', 'Beta testers'],
+  ['intros', 'Introductions'],
+  ['try', 'Try the product'],
+  ['share', 'Share my profile'],
+];
+
+interface SupportSettings {
+  asks: SupportAsk[];
+  note: string;
+  introTarget: string;
+  paysFor: string;
+  supportUrl: string;
+}
+
 export const EditProfileModal = ({ open, onClose, profile, onSuccess }: EditProfileModalProps) => {
   const accountabilityPreferences = normalizeAccountabilityPreferences(profile.user_preferences);
   const [loading, setLoading] = useState(false);
+  // "How you can support me" lives in profile_support. Null while it loads, and
+  // when the table is not there yet, in which case the section stays hidden.
+  const acceptsSupport = !profile.user_type || profile.user_type === 'founder' || profile.user_type === 'builder';
+  const [support, setSupport] = useState<SupportSettings | null>(null);
+  const supportProvider = support?.supportUrl.trim() ? supportLinkProvider(support.supportUrl.trim()) : null;
+
+  useEffect(() => {
+    if (!open || !acceptsSupport) return;
+    let active = true;
+    void (supabase as any)
+      .from('profile_support')
+      .select('asks, note, intro_target, pays_for, support_url')
+      .eq('user_id', profile.id)
+      .maybeSingle()
+      .then(({ data, error }: { data: Record<string, any> | null; error: unknown }) => {
+        if (!active) return;
+        if (error) { setSupport(null); return; }
+        setSupport({
+          asks: Array.isArray(data?.asks) ? data.asks : ['feedback', 'try', 'share'],
+          note: data?.note ?? '',
+          introTarget: data?.intro_target ?? '',
+          paysFor: data?.pays_for ?? '',
+          supportUrl: data?.support_url ?? '',
+        });
+      });
+    return () => { active = false; };
+  }, [open, acceptsSupport, profile.id]);
+
+  const toggleSupportAsk = (ask: SupportAsk) => {
+    setSupport((current) => current && ({
+      ...current,
+      asks: current.asks.includes(ask) ? current.asks.filter((item) => item !== ask) : [...current.asks, ask],
+    }));
+  };
   const [formData, setFormData] = useState({
     full_name: profile.full_name || "",
     bio: profile.bio || "",
@@ -190,6 +242,10 @@ export const EditProfileModal = ({ open, onClose, profile, onSuccess }: EditProf
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (support?.supportUrl.trim() && !supportProvider) {
+      toast.error(`Use a support link from ${SUPPORT_PROVIDER_LIST}, starting with https://`);
+      return;
+    }
     setLoading(true);
 
     try {
@@ -254,6 +310,30 @@ export const EditProfileModal = ({ open, onClose, profile, onSuccess }: EditProf
 
       if (formData.public_progress_visible !== accountabilityPreferences.public_progress_visible) {
         captureEvent('profile_progress_visibility_changed', { visible: formData.public_progress_visible });
+      }
+
+      if (support) {
+        const supportUrl = support.supportUrl.trim();
+        const { error: supportError } = await (supabase as any).from('profile_support').upsert({
+          user_id: profile.id,
+          asks: support.asks,
+          note: support.note.trim() || null,
+          intro_target: support.asks.includes('intros') ? support.introTarget.trim() || null : null,
+          pays_for: supportUrl ? support.paysFor.trim() || null : null,
+          support_url: supportUrl || null,
+          updated_at: new Date().toISOString(),
+        }, { onConflict: 'user_id' });
+        if (supportError) {
+          console.error('Error saving support settings:', supportError);
+          toast.error('Your profile saved, but the support settings did not. Please try again.');
+        } else {
+          captureEvent('support_settings_saved', {
+            asks_count: support.asks.length,
+            has_note: Boolean(support.note.trim()),
+            has_link: Boolean(supportUrl),
+            provider: supportProvider,
+          });
+        }
       }
       toast.success("Profile updated successfully!");
       onSuccess(saved?.username);
@@ -601,6 +681,94 @@ export const EditProfileModal = ({ open, onClose, profile, onSuccess }: EditProf
                 </div>
               </div>
             </div>
+
+            {/* How you can support me */}
+            {acceptsSupport && support && (
+              <div className="space-y-4 border-t pt-4">
+                <div className="space-y-1">
+                  <h4 className="font-medium">How you can support me</h4>
+                  <p className="text-xs text-muted-foreground">Shown on your profile. People who pick feedback, testing or an introduction reach you by message.</p>
+                </div>
+                <div>
+                  <Label>Ways people can help</Label>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {SUPPORT_ASK_OPTIONS.map(([ask, label]) => {
+                      const selected = support.asks.includes(ask);
+                      return (
+                        <button
+                          key={ask}
+                          type="button"
+                          aria-pressed={selected}
+                          onClick={() => toggleSupportAsk(ask)}
+                          className={`min-h-10 rounded-md border px-3 py-2 text-left text-sm transition-colors ${
+                            selected
+                              ? 'border-primary bg-primary/10 text-primary'
+                              : 'border-border/60 bg-background hover:bg-muted'
+                          }`}
+                        >
+                          {label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+                {support.asks.includes('intros') && (
+                  <div>
+                    <Label htmlFor="support_intro_target">Who should people introduce you to?</Label>
+                    <Input
+                      id="support_intro_target"
+                      value={support.introTarget}
+                      onChange={(e) => setSupport({ ...support, introTarget: e.target.value })}
+                      placeholder="e.g. translation agency owners"
+                      maxLength={80}
+                    />
+                  </div>
+                )}
+                <div>
+                  <Label htmlFor="support_note">Note to visitors</Label>
+                  <Textarea
+                    id="support_note"
+                    value={support.note}
+                    onChange={(e) => setSupport({ ...support, note: e.target.value })}
+                    placeholder="What help would matter most right now?"
+                    rows={3}
+                    maxLength={280}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="support_url">Support link (optional)</Label>
+                  <Input
+                    id="support_url"
+                    type="url"
+                    inputMode="url"
+                    value={support.supportUrl}
+                    onChange={(e) => setSupport({ ...support, supportUrl: e.target.value })}
+                    placeholder="https://ko-fi.com/yourname"
+                    maxLength={300}
+                  />
+                  {support.supportUrl.trim() && (
+                    <p className={`mt-1 text-xs ${supportProvider ? 'text-success' : 'text-destructive'}`}>
+                      {supportProvider ? `${supportProvider} link.` : 'This link cannot be used. Use your page on one of the services below, starting with https://'}
+                    </p>
+                  )}
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Your own page on {SUPPORT_PROVIDER_LIST}. Payments go to you through that service, never through Creatives Takeover. Visitors see the button while you post at least one update every 30 days.
+                  </p>
+                </div>
+                {support.supportUrl.trim() && (
+                  <div>
+                    <Label htmlFor="support_pays_for">What support pays for</Label>
+                    <Input
+                      id="support_pays_for"
+                      value={support.paysFor}
+                      onChange={(e) => setSupport({ ...support, paysFor: e.target.value })}
+                      placeholder="e.g. three months of hosting while 20 testers try the beta"
+                      maxLength={140}
+                    />
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Social Links */}
             <div className="space-y-4 border-t pt-4">
