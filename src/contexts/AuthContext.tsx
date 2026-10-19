@@ -417,6 +417,33 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, currentSession) => {
+        const isInitialSessionNearExpiry = event === 'INITIAL_SESSION'
+          && currentSession
+          && currentSession.expires_at <= Math.floor(Date.now() / 1000) + 60;
+        if (isInitialSessionNearExpiry) {
+          // Do not expose an expired session to protected queries while the
+          // persisted refresh token is being exchanged.
+          void getSessionSafely()
+            .then((refreshedSession) => {
+              if (!isMountedRef.current) return;
+              setSession(refreshedSession);
+              setUser(refreshedSession?.user ?? null);
+              resolveInitialLoading();
+              if (refreshedSession?.user) {
+                initAmplitudeWithUser(refreshedSession.user.id);
+                void handleSignIn(refreshedSession.user, refreshedSession);
+              }
+            })
+            .catch((error) => {
+              if (!isMountedRef.current) return;
+              logError('Failed to refresh the initial Supabase session', error);
+              setSession(null);
+              setUser(null);
+              resolveInitialLoading();
+            });
+          return;
+        }
+
         // Synchronously update state — no async verification needed,
         // Supabase already verified the session before firing this callback.
         setSession(currentSession);

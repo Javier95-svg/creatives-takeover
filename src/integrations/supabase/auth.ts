@@ -8,6 +8,7 @@ const INVALID_REFRESH_TOKEN_PATTERNS = [
   /invalid refresh token/i,
   /refresh token not found/i,
 ];
+const SESSION_REFRESH_BUFFER_SECONDS = 60;
 
 function getErrorMessage(error: unknown): string {
   if (error instanceof Error) {
@@ -49,7 +50,21 @@ export async function getSessionSafely() {
       throw error;
     }
 
-    return data.session;
+    const session = data.session;
+    // getSession() can restore a persisted session before the background refresh
+    // completes. Refresh here so callers never start protected requests with an
+    // expired JWT and trigger a cascade of PGRST303 responses.
+    const expiresAt = session?.expires_at ?? 0;
+    const refreshBefore = Math.floor(Date.now() / 1000) + SESSION_REFRESH_BUFFER_SECONDS;
+    if (session && expiresAt <= refreshBefore) {
+      const { data: refreshed, error: refreshError } = await supabase.auth.refreshSession();
+      if (refreshError) {
+        throw refreshError;
+      }
+      return refreshed.session;
+    }
+
+    return session;
   } catch (error) {
     if (!isInvalidRefreshTokenError(error)) {
       throw error;
