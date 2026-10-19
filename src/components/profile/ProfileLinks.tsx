@@ -57,11 +57,11 @@ export function ProfileLinks({ startupLinks, social }: { startupLinks: StartupLi
   if (startup.length === 0 && socials.length === 0) return null;
 
   return (
-    <div className="mb-5 flex flex-wrap items-stretch justify-center gap-3">
+    <div className={`mb-5 grid items-stretch gap-3 ${startup.length > 0 && socials.length > 0 ? 'sm:grid-cols-2' : 'grid-cols-1'}`}>
       {startup.length > 0 && (
-        <section aria-label="Project links" className="flex flex-col gap-2 rounded-xl border border-primary/30 bg-primary/[0.06] px-3 py-2.5">
+        <section aria-label="Project links" className="flex min-w-0 flex-col gap-2 rounded-xl border border-primary/30 bg-primary/[0.06] px-3 py-2.5">
           <h3 className="text-center text-[10px] font-bold uppercase tracking-[0.14em] text-primary">Project links</h3>
-          <div className="flex flex-wrap justify-center gap-2">
+          <div className="flex flex-wrap content-start justify-center gap-2">
             {startup.map(([key, label, Icon]) => (
               <a key={key} href={webUrl(startupLinks?.[key])!} target="_blank" rel="noopener noreferrer"
                 className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-primary/25 bg-background px-3 text-sm font-semibold text-foreground shadow-sm transition-colors hover:border-primary hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
@@ -73,7 +73,7 @@ export function ProfileLinks({ startupLinks, social }: { startupLinks: StartupLi
         </section>
       )}
       {socials.length > 0 && (
-        <section aria-label="Social links" className="flex flex-col gap-2 rounded-xl border border-border bg-muted/35 px-3 py-2.5">
+        <section aria-label="Social links" className="flex min-w-0 flex-col gap-2 rounded-xl border border-border bg-muted/35 px-3 py-2.5">
           <h3 className="text-center text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">Social links</h3>
           <div className="flex flex-wrap items-center justify-center gap-2">
             {socials.map(([href, label, icon]) => (

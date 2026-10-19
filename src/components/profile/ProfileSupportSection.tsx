@@ -46,7 +46,8 @@ const MESSAGE_ASKS: Partial<Record<SupportAsk, { icon: LucideIcon; label: (intro
 /**
  * "Support my work" on every founder and builder profile. Money never
  * passes through Creatives Takeover: the support link is the founder's own
- * page on an allowlisted provider, shown only while they keep posting updates.
+ * page on an allowlisted provider. Updates add context but are not required
+ * before visitors can see the support link.
  */
 export function ProfileSupportSection({ username, name, startupName, productUrl, currentFocus, isOwnProfile, preview = false, onEditProfile }: Props) {
   const { user } = useAuth();
@@ -75,7 +76,7 @@ export function ProfileSupportSection({ username, name, startupName, productUrl,
   const tryHref = support.launchSlug ? `/p/${encodeURIComponent(support.launchSlug)}` : productUrl;
   const asks = support.asks.filter((ask) => ask !== 'try' || Boolean(tryHref));
   const hasLink = Boolean(support.supportUrl && support.supportProvider);
-  const showSupportCard = (hasLink && (support.linkStatus === 'live' || isOwnProfile)) || (isOwnProfile && !fallback);
+  const showSupportCard = (hasLink && support.linkStatus !== 'reported') || (isOwnProfile && !fallback);
   const days = daysSince(support.lastUpdateAt);
 
   const askForMessage = (ask: SupportAsk) => {
@@ -114,11 +115,11 @@ export function ProfileSupportSection({ username, name, startupName, productUrl,
   };
 
   const ownerLinkNote: Record<string, string> = {
-    live: 'Visitors see this while you keep posting. It hides 30 days after your last update.',
+    live: 'Your support link is visible to visitors.',
     stale: days === null
-      ? 'Hidden from visitors until you post your first update.'
-      : `Hidden from visitors: your last update was ${days} days ago. Post an update to show it again.`,
-    no_project: 'Hidden from visitors until you have an active project.',
+      ? 'Your support link is visible. Add a progress update to give visitors more context.'
+      : `Your support link is visible. Your last update was ${days} days ago; a fresh update can help visitors follow your progress.`,
+    no_project: 'Your support link is visible. Add your project details to give visitors more context.',
     reported: 'Hidden from visitors after several reports. The team will review it.',
   };
 
@@ -158,7 +159,7 @@ export function ProfileSupportSection({ username, name, startupName, productUrl,
           {support.note ? (
             <p className="max-w-prose border-l-2 border-border pl-3 text-sm leading-relaxed">{support.note}</p>
           ) : isOwnProfile && !fallback ? (
-            <p className="text-sm text-muted-foreground">Add a short note in Edit Profile saying what help matters most right now.</p>
+          <p className="text-sm text-muted-foreground">Tell visitors what kind of help would move your project forward.</p>
           ) : null}
           <div className="flex flex-wrap gap-2">
             {asks.map((ask) => {
@@ -211,7 +212,13 @@ export function ProfileSupportSection({ username, name, startupName, productUrl,
               <>
                 <p className="flex items-center gap-2 text-sm font-semibold">
                   <Gift className="h-4 w-4 text-primary" aria-hidden="true" />
-                  Support {firstName} directly
+                  Support {startupName || firstName} directly
+                </p>
+                <p className="text-xs font-medium text-muted-foreground">
+                  {support.fundingType === 'one_time' ? 'One-time contributions' :
+                    support.fundingType === 'recurring' ? 'Recurring support' :
+                    support.fundingType === 'both' ? 'One-time or recurring support' :
+                    'Choose a support option on the provider page'}
                 </p>
                 {support.paysFor && (
                   <div className="flex flex-col gap-0.5">
@@ -226,12 +233,12 @@ export function ProfileSupportSection({ username, name, startupName, productUrl,
                     rel="noopener noreferrer nofollow ugc"
                     onClick={() => { if (!preview) captureEvent('support_link_clicked', { provider: support.supportProvider, is_owner: isOwnProfile }); }}
                   >
-                    Support on {support.supportProvider}
+                  Support {startupName || firstName} on {support.supportProvider}
                     <ExternalLink className="ml-2 h-4 w-4" aria-hidden="true" />
                   </a>
                 </Button>
                 <p className="text-xs leading-relaxed text-muted-foreground">
-                  Payments are handled by {support.supportProvider}. Support is a gift: it doesn't buy equity, returns or rewards.
+                  Payments go through {support.supportProvider}. Check the provider page for payment details and any membership terms.
                 </p>
                 {isOwnProfile ? (
                   <p className={cn('text-xs', support.linkStatus === 'live' ? 'text-success' : 'text-warning')}>
@@ -260,9 +267,9 @@ export function ProfileSupportSection({ username, name, startupName, productUrl,
                   Add a support link
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  Link your Ko-fi, Buy Me a Coffee, Patreon or Stripe page. Visitors see it while you post at least one update a month.
+                  Add a Ko-fi, Buy Me a Coffee, Patreon or other supported link so visitors can contribute directly to your project. The link appears as soon as you save it.
                 </p>
-                {onEditProfile && <Button variant="outline" size="sm" className="w-fit" onClick={onEditProfile}>Add a link</Button>}
+                {onEditProfile && <Button size="sm" className="w-fit" onClick={onEditProfile}>Add a funding link</Button>}
               </>
             )}
           </div>

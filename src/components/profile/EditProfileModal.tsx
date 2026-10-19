@@ -18,7 +18,7 @@ import {
 } from "@/lib/accountabilityPreferences";
 import { ANGEL_SECTOR_OPTIONS } from "@/data/angelSectors";
 import { captureEvent } from "@/lib/analytics";
-import { SUPPORT_PROVIDER_LIST, supportLinkProvider, type SupportAsk } from "@/lib/supportLinks";
+import { SUPPORT_PROVIDER_LIST, supportLinkProvider, type SupportAsk, type SupportFundingType } from "@/lib/supportLinks";
 import { isFounderIdAccount } from "@/lib/founderId";
 
 interface EditProfileModalProps {
@@ -77,6 +77,7 @@ interface SupportSettings {
   introTarget: string;
   paysFor: string;
   supportUrl: string;
+  fundingType: SupportFundingType;
 }
 
 export const EditProfileModal = ({ open, onClose, profile, onSuccess }: EditProfileModalProps) => {
@@ -93,7 +94,7 @@ export const EditProfileModal = ({ open, onClose, profile, onSuccess }: EditProf
     let active = true;
     void (supabase as any)
       .from('profile_support')
-      .select('asks, note, intro_target, pays_for, support_url')
+      .select('asks, note, intro_target, pays_for, support_url, funding_type')
       .eq('user_id', profile.id)
       .maybeSingle()
       .then(({ data, error }: { data: Record<string, any> | null; error: unknown }) => {
@@ -105,6 +106,7 @@ export const EditProfileModal = ({ open, onClose, profile, onSuccess }: EditProf
           introTarget: data?.intro_target ?? '',
           paysFor: data?.pays_for ?? '',
           supportUrl: data?.support_url ?? '',
+          fundingType: data?.funding_type ?? 'provider_options',
         });
       });
     return () => { active = false; };
@@ -321,6 +323,7 @@ export const EditProfileModal = ({ open, onClose, profile, onSuccess }: EditProf
           note: support.note.trim() || null,
           intro_target: support.asks.includes('intros') ? support.introTarget.trim() || null : null,
           pays_for: supportUrl ? support.paysFor.trim() || null : null,
+          funding_type: support.fundingType,
           support_url: supportUrl || null,
           updated_at: new Date().toISOString(),
         }, { onConflict: 'user_id' });
@@ -753,19 +756,33 @@ export const EditProfileModal = ({ open, onClose, profile, onSuccess }: EditProf
                     </p>
                   )}
                   <p className="mt-1 text-xs text-muted-foreground">
-                    Your own page on {SUPPORT_PROVIDER_LIST}. Payments go to you through that service, never through Creatives Takeover. Visitors see the button while you post at least one update every 30 days.
+                  Add your own page on {SUPPORT_PROVIDER_LIST}. Payments go directly to you through that service, never through Creatives Takeover. Your link appears on your public profile as soon as you save it.
                   </p>
                 </div>
                 {support.supportUrl.trim() && (
-                  <div>
-                    <Label htmlFor="support_pays_for">What support pays for</Label>
-                    <Input
-                      id="support_pays_for"
-                      value={support.paysFor}
-                      onChange={(e) => setSupport({ ...support, paysFor: e.target.value })}
-                      placeholder="e.g. three months of hosting while 20 testers try the beta"
-                      maxLength={140}
-                    />
+                  <div className="space-y-4 rounded-lg border border-border/60 bg-muted/20 p-4">
+                    <div>
+                      <Label htmlFor="support_funding_type">Type of support</Label>
+                      <Select value={support.fundingType} onValueChange={(value: SupportFundingType) => setSupport({ ...support, fundingType: value })}>
+                        <SelectTrigger id="support_funding_type"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="provider_options">Options depend on the provider</SelectItem>
+                          <SelectItem value="one_time">One-time contributions</SelectItem>
+                          <SelectItem value="recurring">Recurring contributions</SelectItem>
+                          <SelectItem value="both">One-time or recurring</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="support_pays_for">What will contributions help pay for?</Label>
+                      <Input
+                        id="support_pays_for"
+                        value={support.paysFor}
+                        onChange={(e) => setSupport({ ...support, paysFor: e.target.value })}
+                        placeholder="e.g. hosting and beta testing costs"
+                        maxLength={140}
+                      />
+                    </div>
                   </div>
                 )}
               </div>

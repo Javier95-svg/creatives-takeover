@@ -8,7 +8,7 @@ import ProfileWallpaper from "@/components/wallpapers/ProfileWallpaper";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ArrowLeft, Calendar, Eye, Settings, MapPin, Briefcase, Rocket, Zap } from "lucide-react";
+import { ArrowLeft, Eye, Settings, Briefcase, Rocket } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { SocialButtons } from "@/components/social/SocialButtons";
@@ -626,7 +626,7 @@ const Profile = () => {
                 {isFounderId && profile.username && (
                   <FounderIdHeader username={profile.username} isOwnProfile={isOwnProfile} />
                 )}
-                <div className="grid md:grid-cols-2 gap-6 mb-6">
+                <div className="grid gap-5 md:grid-cols-2 md:gap-6 mb-6">
                   {/* Left: Founder Info */}
                   <div className="flex gap-4">
                     <Avatar className="h-20 w-20 ring-2 ring-primary/10">
@@ -640,38 +640,16 @@ const Profile = () => {
                       <h1 className="text-2xl font-bold mb-1 truncate">
                         {profile.full_name || 'Anonymous User'}
                       </h1>
-                      {profile.location && (
-                        <div className="mb-2">
-                          <span className="text-sm text-muted-foreground flex items-center gap-1">
-                            <MapPin className="h-3 w-3" />
-                            {profile.location}
-                          </span>
-                        </div>
-                      )}
                       {profile.positioning_line && (
-                        <p className="text-sm text-muted-foreground italic mb-2">
-                          "{profile.positioning_line}"
+                        <p className="mb-2 line-clamp-2 text-sm font-medium text-muted-foreground">
+                          {profile.positioning_line}
                         </p>
                       )}
                       {bioText && (
-                        <p className="mb-2 whitespace-pre-line text-sm leading-relaxed text-foreground/90">
+                        <p className="mb-2 line-clamp-3 whitespace-pre-line text-sm leading-relaxed text-foreground/90">
                           {bioText}
                         </p>
                       )}
-                      <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                        {profile.created_at && (
-                          <span className="flex items-center gap-1">
-                            <Calendar className="h-3 w-3" />
-                            Joined {new Date(profile.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
-                          </span>
-                        )}
-                        {profile.last_active_at && (
-                          <span className="flex items-center gap-1">
-                            <Zap className="h-3 w-3" />
-                            Active {new Date(profile.last_active_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                          </span>
-                        )}
-                      </div>
 
                       {/* Follow and Message CTAs */}
                       {!isOwnProfile && !previewing && profile.id && (
@@ -688,7 +666,7 @@ const Profile = () => {
                   </div>
 
                   {/* Right: Startup Info */}
-                  <div className="border-l border-border pl-6">
+                  <div className="border-t border-border pt-5 md:border-l md:border-t-0 md:pl-6 md:pt-0">
                     {profile.startup_name ? (
                       <>
                         <div className="flex items-start gap-3 mb-3">
@@ -708,7 +686,7 @@ const Profile = () => {
                           </div>
                         </div>
                         {profile.startup_description && (
-                          <p className="text-sm text-muted-foreground mb-2">
+                          <p className="mb-2 line-clamp-3 text-sm leading-relaxed text-muted-foreground">
                             {profile.startup_description}
                           </p>
                         )}

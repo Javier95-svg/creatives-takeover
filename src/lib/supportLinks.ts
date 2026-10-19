@@ -4,6 +4,8 @@
 
 export const SUPPORT_ASKS = ['feedback', 'testers', 'intros', 'try', 'share'] as const;
 export type SupportAsk = (typeof SUPPORT_ASKS)[number];
+export const SUPPORT_FUNDING_TYPES = ['provider_options', 'one_time', 'recurring', 'both'] as const;
+export type SupportFundingType = (typeof SUPPORT_FUNDING_TYPES)[number];
 
 /** Shown when a founder has not chosen their own asks. */
 export const DEFAULT_SUPPORT_ASKS: SupportAsk[] = ['feedback', 'share'];
@@ -39,6 +41,7 @@ export interface ProfileSupport {
   note: string | null;
   introTarget: string | null;
   paysFor: string | null;
+  fundingType: SupportFundingType;
   lastUpdateAt: string | null;
   launchSlug: string | null;
   linkStatus: SupportLinkStatus;
@@ -64,6 +67,9 @@ export function normalizeProfileSupport(raw: unknown): ProfileSupport | null {
     note: text(record.note),
     introTarget: text(record.intro_target),
     paysFor: text(record.pays_for),
+    fundingType: SUPPORT_FUNDING_TYPES.includes(record.funding_type as SupportFundingType)
+      ? record.funding_type as SupportFundingType
+      : 'provider_options',
     lastUpdateAt: text(record.last_update_at),
     launchSlug: text(record.launch_slug),
     // A link the client would not allow is never shown, whatever the server says.
@@ -81,6 +87,7 @@ export function defaultProfileSupport(): ProfileSupport {
     note: null,
     introTarget: null,
     paysFor: null,
+    fundingType: 'provider_options',
     lastUpdateAt: null,
     launchSlug: null,
     linkStatus: 'none',
