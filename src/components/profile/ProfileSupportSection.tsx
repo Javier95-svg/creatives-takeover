@@ -127,7 +127,7 @@ export function ProfileSupportSection({ username, name, startupName, productUrl,
   };
 
   return (
-    <Card className="mb-6 ml-auto w-full max-w-md overflow-hidden p-0">
+    <Card className="mb-6 w-full overflow-hidden p-0">
       <div className="hidden">
         <h2 className="flex items-center gap-2 text-base font-semibold">
           <Heart className="h-4 w-4 text-primary" aria-hidden="true" />
@@ -277,16 +277,11 @@ export function ProfileSupportSection({ username, name, startupName, productUrl,
           ) : (
             <>
               <Button disabled className="min-h-12 w-full rounded-full text-base font-semibold">Support</Button>
-              <p className="text-xs leading-relaxed text-muted-foreground">
-                {isOwnProfile
-                  ? 'Add your Patreon, Buy Me a Coffee, Ko-fi or another support page to enable contributions.'
-                  : 'This founder has not added an external support page yet.'}
-              </p>
               {isOwnProfile && onEditProfile && <Button size="sm" variant="outline" className="w-full" onClick={onEditProfile}>Add a funding link</Button>}
             </>
           )}
           <p className="text-center text-xs leading-relaxed text-muted-foreground">
-            Payment is completed on the founder’s external support page. No Creatives Takeover account is needed.
+            Payment is completed on the user’s external support links.
           </p>
           {false && <>
             {canShowProviderLink ? (
