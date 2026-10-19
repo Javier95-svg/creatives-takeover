@@ -83,9 +83,6 @@ const STORY_PUBLIC_PROFILE_SELECT = [
 // LIKE treats _ and % as wildcards, and usernames contain underscores.
 const escapeLikePattern = (value: string) => value.replace(/[\\%_]/g, (character) => `\\${character}`);
 
-// Bios edited in the rich mode keep their tags in the plain column too.
-const plainText = (value: string | null | undefined) => value?.replace(/<[^>]*>/g, ' ').replace(/[ \t]+/g, ' ').trim() || null;
-
 interface PublicProfileRow {
   id: string | null;
   username: string | null;
@@ -275,7 +272,6 @@ const Profile = () => {
     ? founderStageLabel(profile.assigned_stage) ?? getPublicStageLabel(profile.business_stage, profile.startup_stage)
     : null;
   const primaryIndustry = profile?.startup_industry?.find((industry) => industry.trim().length > 0) ?? null;
-  const bioText = plainText(profile?.bio);
   // Founder and builder profiles are Founder IDs, with progress, support and a
   // short link. Mentors, providers and investors keep a plain profile.
   const isFounderId = isFounderIdAccount(profile?.user_type);
@@ -651,12 +647,6 @@ const Profile = () => {
                           "{profile.positioning_line}"
                         </p>
                       )}
-                      {bioText && (
-                        <p className="mb-2 whitespace-pre-line text-sm leading-relaxed text-foreground/90">
-                          {bioText}
-                        </p>
-                      )}
-
                       {/* Follow and Message CTAs */}
                       {!isOwnProfile && !previewing && profile.id && (
                         <div className="mt-4">
