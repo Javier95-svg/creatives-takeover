@@ -28,6 +28,7 @@ interface Props {
   startupName: string | null;
   /** The founder's own demo or website link, used for "Try" when there is no launch page. */
   productUrl: string | null;
+  currentFocus: string | null;
   isOwnProfile: boolean;
   /** The owner previewing as a visitor: show the visitor view, but act on nothing. */
   preview?: boolean;
@@ -47,7 +48,7 @@ const MESSAGE_ASKS: Partial<Record<SupportAsk, { icon: LucideIcon; label: (intro
  * passes through Creatives Takeover: the support link is the founder's own
  * page on an allowlisted provider, shown only while they keep posting updates.
  */
-export function ProfileSupportSection({ username, name, startupName, productUrl, isOwnProfile, preview = false, onEditProfile }: Props) {
+export function ProfileSupportSection({ username, name, startupName, productUrl, currentFocus, isOwnProfile, preview = false, onEditProfile }: Props) {
   const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -146,6 +147,14 @@ export function ProfileSupportSection({ username, name, startupName, productUrl,
 
       <div className={cn('grid gap-5', showSupportCard && 'md:grid-cols-5')}>
         <div className={cn('flex min-w-0 flex-col gap-4', showSupportCard && 'md:col-span-3')}>
+          {currentFocus ? (
+            <div className="flex flex-col gap-1">
+              <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Now working on</span>
+              <p className="border-l-2 border-primary/40 pl-3 text-sm leading-relaxed text-foreground">{currentFocus}</p>
+            </div>
+          ) : isOwnProfile ? (
+            <p className="text-sm text-muted-foreground/70 italic">Add what you are working on in Edit Founder ID.</p>
+          ) : null}
           {support.note ? (
             <p className="max-w-prose border-l-2 border-border pl-3 text-sm leading-relaxed">{support.note}</p>
           ) : isOwnProfile && !fallback ? (

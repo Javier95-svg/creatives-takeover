@@ -1,6 +1,5 @@
 import type { ComponentType, ReactNode } from 'react';
 import { ExternalLink, FileText, Globe, Instagram, Linkedin, Rocket, Users2 } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
 
 interface StartupLinks {
   pitchDeck?: string;
@@ -39,8 +38,7 @@ const STARTUP_LINKS: Array<[keyof StartupLinks, string, ComponentType<{ classNam
 ];
 
 /**
- * Startup and social links in one row inside the profile's top card, instead
- * of two separate cards. Renders nothing when there are no links.
+ * Project resources and personal social profiles stay distinct in the hero.
  */
 // Founders type these links themselves; only web addresses become links.
 const webUrl = (url: string | null | undefined) => (url && /^https?:\/\//i.test(url.trim()) ? url.trim() : null);
@@ -59,36 +57,33 @@ export function ProfileLinks({ startupLinks, social }: { startupLinks: StartupLi
   if (startup.length === 0 && socials.length === 0) return null;
 
   return (
-    <div className="mb-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-3">
+    <div className="mb-5 flex flex-wrap items-stretch justify-center gap-3">
       {startup.length > 0 && (
-        <div className="flex flex-wrap justify-center gap-2">
-          {startup.map(([key, label, Icon]) => (
-            <a key={key} href={webUrl(startupLinks?.[key])!} target="_blank" rel="noopener noreferrer">
-              <Badge variant="outline" className="cursor-pointer text-xs hover:bg-primary/10">
-                <Icon className="mr-1 h-3 w-3" />
+        <section aria-label="Project links" className="flex flex-col gap-2 rounded-xl border border-primary/30 bg-primary/[0.06] px-3 py-2.5">
+          <h3 className="text-center text-[10px] font-bold uppercase tracking-[0.14em] text-primary">Project links</h3>
+          <div className="flex flex-wrap justify-center gap-2">
+            {startup.map(([key, label, Icon]) => (
+              <a key={key} href={webUrl(startupLinks?.[key])!} target="_blank" rel="noopener noreferrer"
+                className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-primary/25 bg-background px-3 text-sm font-semibold text-foreground shadow-sm transition-colors hover:border-primary hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                <Icon className="h-4 w-4 text-primary" aria-hidden="true" />
                 {label}
-              </Badge>
-            </a>
-          ))}
-        </div>
+              </a>
+            ))}
+          </div>
+        </section>
       )}
-      {startup.length > 0 && socials.length > 0 && <span className="hidden h-5 w-px bg-border sm:block" aria-hidden="true" />}
       {socials.length > 0 && (
-        <div className="flex items-center gap-3">
-          {socials.map(([href, label, icon]) => (
-            <a
-              key={label}
-              href={href}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label={label}
-              title={label}
-              className="text-muted-foreground transition-colors hover:text-primary"
-            >
-              {icon}
-            </a>
-          ))}
-        </div>
+        <section aria-label="Social links" className="flex flex-col gap-2 rounded-xl border border-border bg-muted/35 px-3 py-2.5">
+          <h3 className="text-center text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">Social links</h3>
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            {socials.map(([href, label, icon]) => (
+              <a key={label} href={href} target="_blank" rel="noopener noreferrer" aria-label={label} title={label}
+                className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-border/80 bg-background px-3 text-sm font-medium text-foreground transition-colors hover:border-primary/50 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                <span className="text-muted-foreground [&>svg]:h-4 [&>svg]:w-4">{icon}</span><span>{label}</span>
+              </a>
+            ))}
+          </div>
+        </section>
       )}
     </div>
   );

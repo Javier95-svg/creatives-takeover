@@ -8,7 +8,7 @@ import ProfileWallpaper from "@/components/wallpapers/ProfileWallpaper";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ArrowLeft, Calendar, Eye, Settings, MapPin, Briefcase, Rocket, Zap, Target } from "lucide-react";
+import { ArrowLeft, Calendar, Eye, Settings, MapPin, Briefcase, Rocket, Zap } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { SocialButtons } from "@/components/social/SocialButtons";
@@ -832,21 +832,6 @@ const Profile = () => {
                 </div>
               </Card>
 
-              {/* Now working on: the startup and social links moved into the hero */}
-              {(currentFocus || isOwnProfile) && (
-                <Card className="mb-6 p-4">
-                  <h3 className="text-sm font-semibold mb-2 flex items-center gap-2">
-                    <Target className="h-4 w-4 text-primary" />
-                    Now working on
-                  </h3>
-                  {currentFocus ? (
-                    <p className="text-sm text-muted-foreground">{currentFocus}</p>
-                  ) : (
-                    <p className="text-sm text-muted-foreground/50 italic">Nothing added yet</p>
-                  )}
-                </Card>
-              )}
-
               {profile.username && isFounderId && (
                 <PublicProgressCard
                   username={profile.username}
@@ -861,6 +846,7 @@ const Profile = () => {
                   name={profile.full_name || profile.username}
                   startupName={profile.startup_name}
                   productUrl={profile.startup_links?.demo || profile.startup_links?.website || null}
+                  currentFocus={currentFocus}
                   isOwnProfile={isOwnProfile}
                   preview={previewing}
                   onEditProfile={() => setShowEditModal(true)}
