@@ -259,17 +259,21 @@ export function ProfileSupportSection({ username, name, startupName, productUrl,
               <Gift className="h-5 w-5 text-primary" aria-hidden="true" />
               Support {startupName || firstName}
             </p>
-            <Button
-              type="button"
-              variant={supportExpanded ? 'ghost' : 'default'}
-              onClick={() => setSupportExpanded((expanded) => !expanded)}
-              aria-expanded={supportExpanded}
-            >
-              {supportExpanded ? 'Hide form' : 'Donate'}
-              {supportExpanded ? <ChevronUp className="ml-2 h-4 w-4" /> : <ChevronDown className="ml-2 h-4 w-4" />}
-            </Button>
+            {isOwnProfile ? (
+              <Button type="button" onClick={openFundingLinkDialog}>Add a funding link</Button>
+            ) : (
+              <Button
+                type="button"
+                variant={supportExpanded ? 'ghost' : 'default'}
+                onClick={() => setSupportExpanded((expanded) => !expanded)}
+                aria-expanded={supportExpanded}
+              >
+                {supportExpanded ? 'Hide form' : 'Donate'}
+                {supportExpanded ? <ChevronUp className="ml-2 h-4 w-4" /> : <ChevronDown className="ml-2 h-4 w-4" />}
+              </Button>
+            )}
           </div>
-          {supportExpanded && <>
+          {!isOwnProfile && supportExpanded && <>
           <div className="flex items-center gap-2 rounded-xl bg-muted p-3">
             <span className="text-lg font-semibold" aria-hidden="true">$</span>
             <input
@@ -333,7 +337,6 @@ export function ProfileSupportSection({ username, name, startupName, productUrl,
           ) : (
             <>
               <Button disabled className="min-h-12 w-full rounded-full text-base font-semibold">Donate</Button>
-              {isOwnProfile && <Button size="sm" variant="outline" className="w-full" onClick={openFundingLinkDialog}>Add a funding link</Button>}
             </>
           )}
           <p className="text-center text-xs leading-relaxed text-muted-foreground">
