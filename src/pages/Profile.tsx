@@ -8,7 +8,7 @@ import ProfileWallpaper from "@/components/wallpapers/ProfileWallpaper";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Eye, Settings, Briefcase, MapPin, Rocket } from "lucide-react";
+import { Eye, Settings, Briefcase, MapPin, MessageCircle, Rocket, UserPlus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { SocialButtons } from "@/components/social/SocialButtons";
@@ -645,6 +645,18 @@ const Profile = () => {
                             profileActionsOnly
                             showAccountabilityPartner={false}
                           />
+                        </div>
+                      )}
+                      {previewing && (
+                        <div className="mt-4 flex flex-wrap gap-2" aria-label="Visitor profile actions">
+                          <Button type="button" variant="outline" disabled className="bg-card/50 border-border/50">
+                            <UserPlus className="h-4 w-4" />
+                            <span className="ml-2">Connect</span>
+                          </Button>
+                          <Button type="button" variant="outline" disabled className="bg-card/50 border-border/50">
+                            <MessageCircle className="h-4 w-4" />
+                            <span className="ml-2">Message</span>
+                          </Button>
                         </div>
                       )}
                     </div>
