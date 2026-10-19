@@ -710,22 +710,15 @@ const Profile = () => {
                     </div>
                     <div className="flex min-h-8 items-start justify-center pt-2 text-sm text-muted-foreground">Industry</div>
                   </div>
-                  {isOwnProfile ? (
-                    <button
-                      type="button"
-                      onClick={() => setShowConnectionsDialog(true)}
-                      className="grid min-w-0 grid-rows-2 rounded-lg text-center transition-colors hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                      aria-label={`View your ${connectionCount ?? 0} connections`}
-                    >
-                      <span className="flex min-h-8 items-end justify-center pb-2 text-base font-semibold text-primary">{connectionCount ?? '—'}</span>
-                      <span className="flex min-h-8 items-start justify-center pt-2 text-sm text-muted-foreground">Connections</span>
-                    </button>
-                  ) : (
-                    <div className="grid min-w-0 grid-rows-2 text-center">
-                      <div className="flex min-h-8 items-end justify-center pb-2 text-base font-semibold text-primary">{connectionCount ?? '—'}</div>
-                      <div className="flex min-h-8 items-start justify-center pt-2 text-sm text-muted-foreground">Connections</div>
-                    </div>
-                  )}
+                  <button
+                    type="button"
+                    onClick={() => setShowConnectionsDialog(true)}
+                    className="grid min-w-0 grid-rows-2 rounded-lg text-center transition-colors hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    aria-label={`View ${profile.full_name || profile.username || 'this profile'}'s ${connectionCount ?? 0} connections`}
+                  >
+                    <span className="flex min-h-8 items-end justify-center pb-2 text-base font-semibold text-primary">{connectionCount ?? '—'}</span>
+                    <span className="flex min-h-8 items-start justify-center pt-2 text-sm text-muted-foreground">Connections</span>
+                  </button>
                 </div>
 
                 {roleDetails.length > 0 && (
@@ -814,13 +807,18 @@ const Profile = () => {
                 isOwnProfile={isOwnProfile}
               />
 
+              {profile && (
+                <ConnectionsDialog
+                  open={showConnectionsDialog}
+                  onOpenChange={setShowConnectionsDialog}
+                  username={profile.username}
+                  profileName={profile.full_name || profile.username || 'This founder'}
+                />
+              )}
+
               {/* Edit Profile Modal */}
               {isOwnProfile && profile && (
                 <>
-                  <ConnectionsDialog
-                    open={showConnectionsDialog}
-                    onOpenChange={setShowConnectionsDialog}
-                  />
                   <EditProfileModal
                     open={showEditModal}
                     onClose={() => setShowEditModal(false)}

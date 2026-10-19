@@ -24,9 +24,11 @@ interface ConnectionAccount {
 interface ConnectionsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  username: string | null;
+  profileName: string;
 }
 
-export function ConnectionsDialog({ open, onOpenChange }: ConnectionsDialogProps) {
+export function ConnectionsDialog({ open, onOpenChange, username, profileName }: ConnectionsDialogProps) {
   const [connections, setConnections] = useState<ConnectionAccount[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -39,7 +41,13 @@ export function ConnectionsDialog({ open, onOpenChange }: ConnectionsDialogProps
     setLoading(true);
     setError(null);
 
-    void supabase.rpc('my_connections' as never)
+    if (!username) {
+      setConnections([]);
+      setLoading(false);
+      return;
+    }
+
+    void supabase.rpc('public_profile_connections_v1' as never, { p_username: username } as never)
       .then(({ data, error: rpcError }) => {
         if (cancelled) return;
         if (rpcError) {
@@ -56,13 +64,13 @@ export function ConnectionsDialog({ open, onOpenChange }: ConnectionsDialogProps
       });
 
     return () => { cancelled = true; };
-  }, [open, reloadToken]);
+  }, [open, reloadToken, username]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="flex max-h-[min(680px,calc(100dvh-2rem))] max-w-md flex-col overflow-hidden">
         <DialogHeader>
-          <DialogTitle>Your connections</DialogTitle>
+          <DialogTitle>{profileName}'s connections</DialogTitle>
           <DialogDescription>
             Accounts connected after either person accepted the other's request.
           </DialogDescription>

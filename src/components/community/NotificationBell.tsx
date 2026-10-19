@@ -73,6 +73,11 @@ export const NotificationBell = () => {
       return;
     }
 
+    if (notification.notification_type === 'profile_post_published') {
+      navigateTo(metadataRoute || actorProfilePath || '/profile');
+      return;
+    }
+
     if (notification.notification_type === 'mentor_banner_created') {
       navigateTo('/mentorship');
       return;
@@ -217,6 +222,8 @@ export const NotificationBell = () => {
         return `${actor.name} shared your post`;
       case 'post_published':
         return metadata?.message || 'Your co-founder post is now live!';
+      case 'profile_post_published':
+        return typeof metadata?.message === 'string' ? metadata.message : `${actor.name} posted an update`;
       case 'mentor_banner_created':
         return metadata?.mentor_name
           ? `New consultant joins our network: ${metadata.mentor_name}`
