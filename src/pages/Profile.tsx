@@ -693,7 +693,7 @@ const Profile = () => {
                     <div className="flex min-h-8 items-end justify-center truncate px-1 pb-2 text-base font-semibold text-primary">
                       {profile.user_type === 'builder' ? 'Builder' : 'Founder'}
                     </div>
-                    <div className="flex min-h-8 items-start justify-center pt-2 text-sm text-muted-foreground">Account Type</div>
+                    <div className="flex min-h-8 items-start justify-center pt-2 text-sm text-muted-foreground">Role</div>
                   </div>
                   <div className="grid min-w-0 grid-rows-2 text-center">
                     <div className="flex min-h-8 items-end justify-center truncate px-1 pb-2 text-base font-semibold text-primary">

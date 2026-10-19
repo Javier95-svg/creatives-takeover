@@ -44,10 +44,10 @@ const MESSAGE_ASKS: Partial<Record<SupportAsk, { icon: LucideIcon; label: (intro
 };
 
 /**
- * "Support my work" on every founder and builder profile. Money never
- * passes through Creatives Takeover: the support link is the founder's own
- * page on an allowlisted provider. Updates add context but are not required
- * before visitors can see the support link.
+ * "Support my work" on every founder and builder profile. Creatives Takeover
+ * sends supporters to the founder's own page on an allowlisted provider; the
+ * provider collects the amount, supporter details and payment. Updates add
+ * context but are not required before visitors can see the support link.
  */
 export function ProfileSupportSection({ username, name, startupName, productUrl, currentFocus, isOwnProfile, preview = false, onEditProfile }: Props) {
   const { user } = useAuth();
@@ -218,7 +218,7 @@ export function ProfileSupportSection({ username, name, startupName, productUrl,
                   {support.fundingType === 'one_time' ? 'One-time contributions' :
                     support.fundingType === 'recurring' ? 'Recurring support' :
                     support.fundingType === 'both' ? 'One-time or recurring support' :
-                    'Choose a support option on the provider page'}
+                    `Choose an available support option on ${support.supportProvider}`}
                 </p>
                 {support.paysFor && (
                   <div className="flex flex-col gap-0.5">
@@ -233,12 +233,15 @@ export function ProfileSupportSection({ username, name, startupName, productUrl,
                     rel="noopener noreferrer nofollow ugc"
                     onClick={() => { if (!preview) captureEvent('support_link_clicked', { provider: support.supportProvider, is_owner: isOwnProfile }); }}
                   >
-                  Support {startupName || firstName} on {support.supportProvider}
+                  Continue to {support.supportProvider}
                     <ExternalLink className="ml-2 h-4 w-4" aria-hidden="true" />
                   </a>
                 </Button>
                 <p className="text-xs leading-relaxed text-muted-foreground">
-                  Payments go through {support.supportProvider}. Check the provider page for payment details and any membership terms.
+                  {support.supportProvider === 'Buy Me a Coffee'
+                    ? 'Choose your amount, leave a name or message if you like, and enter payment details on Buy Me a Coffee.'
+                    : `Choose an available support option and complete payment on ${support.supportProvider}.`}{' '}
+                  You don’t need a Creatives Takeover account.
                 </p>
                 {isOwnProfile ? (
                   <p className={cn('text-xs', support.linkStatus === 'live' ? 'text-success' : 'text-warning')}>
