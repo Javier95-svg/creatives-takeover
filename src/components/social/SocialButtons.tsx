@@ -1,11 +1,11 @@
 import { Button } from "@/components/ui/button";
-import { MessageCircle, UserPlus, UserCheck, UserX, Users, Handshake, UserRound } from "lucide-react";
+import { MessageCircle, UserPlus, UserCheck, UserX, Users, Handshake } from "lucide-react";
 import { useSocial } from "@/hooks/useSocial";
 import { useMessaging } from "@/hooks/useMessaging";
 import { useAccountabilityPartners } from "@/hooks/useAccountabilityPartners";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { 
   Dialog, 
@@ -197,10 +197,7 @@ export const SocialButtons = ({
   if (profileActionsOnly) {
     return (
       <div className={containerClass}>
-        {friendStatus === 'friends' && username && <Button asChild variant="outline" size={buttonSize} className="bg-card/50 border-border/50 hover:bg-accent">
-          <Link to={`/profile/${encodeURIComponent(username)}`}><UserRound className="h-4 w-4" /><span className={compact ? 'sr-only' : 'ml-2'}>Profile</span></Link>
-        </Button>}
-        {(friendStatus !== 'friends' || username === undefined) && connectButton}
+        {connectButton}
         {messageButton}
       </div>
     );

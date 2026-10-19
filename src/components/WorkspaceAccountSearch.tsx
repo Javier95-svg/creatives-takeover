@@ -64,22 +64,21 @@ export function AccountSearchField({ search, renderActions }: {
       <div role="status" className="text-sm text-muted-foreground">
         {!search ? 'Live account search requires local application configuration.' : term.length < 2 ? 'Type at least 2 characters to find accounts.' : searching ? 'Searching accounts…' : result?.error || (result?.accounts.length === 0 ? 'No matching accounts found.' : '')}
       </div>
-      {!searching && result?.query === term && term.length >= 2 && result.accounts.map(account => <div key={account.id} className="space-y-2 border-b border-border/60 py-3 last:border-0">
-        {(() => { const route = accountRoute(account); return <a href={route} aria-disabled={!route} onClick={(event) => {
-          if (route && event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey) { event.preventDefault(); enterWorkspaceRoute(route); }
-        }} className="flex items-center gap-3 rounded-lg p-1 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-          <Avatar className="h-9 w-9"><AvatarImage src={account.avatar_url ?? undefined} /><AvatarFallback>{(account.full_name || account.username || 'Founder').charAt(0)}</AvatarFallback></Avatar>
-          <span className="min-w-0 flex-1"><span className="block truncate text-sm font-medium">{account.full_name || account.username || 'Founder'}</span><span className="block truncate text-xs text-muted-foreground">{account.isConnection ? 'Connection · ' : ''}{account.headline || account.username || 'Founder'}</span></span>
-          {(() => {
-            // One tag per account. Mentors and marketplace providers are not
-            // regular users of the platform, so they are never also labelled
-            // Founder or Builder. Mentor wins over Marketplace for anyone who
-            // is both, since the mentorship profile is where they are booked.
-            const tag = accountTag(account);
-            return tag ? <Badge variant={tag.variant}>{tag.label}</Badge> : null;
-          })()}
-        </a>; })()}
-        {renderActions?.(account)}
+      {!searching && result?.query === term && term.length >= 2 && result.accounts.map(account => <div key={account.id} className="border-b border-border/60 py-2 last:border-0">
+        {(() => {
+          const route = accountRoute(account);
+          const tag = accountTag(account);
+          return <div className="group flex items-center gap-3 rounded-lg p-2 transition-colors hover:bg-muted/80 focus-within:bg-muted/80">
+            <a href={route} aria-disabled={!route} onClick={(event) => {
+              if (route && event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey) { event.preventDefault(); enterWorkspaceRoute(route); }
+            }} className="flex min-w-0 flex-1 items-center gap-3 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+              <Avatar className="h-9 w-9"><AvatarImage src={account.avatar_url ?? undefined} /><AvatarFallback>{(account.full_name || account.username || 'Founder').charAt(0)}</AvatarFallback></Avatar>
+              <span className="min-w-0"><span className="block truncate text-sm font-medium">{account.full_name || account.username || 'Founder'}</span><span className="block truncate text-xs text-muted-foreground">{account.isConnection ? 'Connection · ' : ''}{account.headline || account.username || 'Founder'}</span></span>
+            </a>
+            {renderActions && <div className="shrink-0">{renderActions(account)}</div>}
+            {tag ? <Badge className="shrink-0" variant={tag.variant}>{tag.label}</Badge> : null}
+          </div>;
+        })()}
       </div>)}
     </div>}
   </div>;
