@@ -77,7 +77,7 @@ test('only Founder IDs get the Founder ID name, link, progress and support', () 
   assert.match(profile, /\| \$\{profileNoun\}/);
   assert.match(profile, /founderId=\{isFounderId\}/);
   const share = read('../src/components/profile/ProfileShareButton.tsx');
-  assert.match(share, /founderId \? founderIdUrl\(username\)/);
+  assert.match(share, /founderId \? founderIdShareUrl\(username\)/);
   const card = read('../api/og-profile.tsx');
   assert.match(card, /founderId: !row\.user_type \|\| row\.user_type === 'founder' \|\| row\.user_type === 'builder'/);
   assert.match(card, /creatives-takeover\.com\/@\$\{profile\.username\}/);

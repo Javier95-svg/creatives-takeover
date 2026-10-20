@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { captureEvent } from '@/lib/analytics';
 import { canUseNativeShare, getShareIntentUrl } from '@/lib/demoStudio/share';
-import { founderIdUrl } from '@/lib/founderId';
+import { founderIdShareUrl } from '@/lib/founderId';
 
 interface Props {
   username: string;
@@ -37,7 +37,7 @@ const XIcon = () => (
  * shows the founder and what they are building rather than a bare avatar.
  */
 export function ProfileShareButton({ username, name, startupName, isOwnProfile, founderId, variant = 'button', className }: Props) {
-  const url = founderId ? founderIdUrl(username) : `${window.location.origin}/profile/${encodeURIComponent(username)}`;
+  const url = founderId ? founderIdShareUrl(username) : `${window.location.origin}/profile/${encodeURIComponent(username)}`;
   const noun = founderId ? 'Founder ID' : 'profile';
   const text = startupName
     ? (isOwnProfile ? `Follow what I'm building with ${startupName}.` : `${name} is building ${startupName}.`)

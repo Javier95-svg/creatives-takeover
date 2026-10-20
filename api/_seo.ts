@@ -44,6 +44,10 @@ export interface PublicSeoDocument {
   description: string;
   canonical: string;
   image?: string | null;
+  imageWidth?: number;
+  imageHeight?: number;
+  /** Social cache key, when distinct from the canonical search URL. */
+  shareUrl?: string;
   indexable?: boolean;
   schema: object | object[];
   fallbackHtml: string;
@@ -62,13 +66,18 @@ export function renderSeoDocument(shell: string, document: PublicSeoDocument): s
   html = setMeta(html, 'property', 'og:type', 'website');
   html = setMeta(html, 'property', 'og:title', document.title);
   html = setMeta(html, 'property', 'og:description', document.description.slice(0, 160));
-  html = setMeta(html, 'property', 'og:url', document.canonical);
+  html = setMeta(html, 'property', 'og:url', document.shareUrl || document.canonical);
   html = setMeta(html, 'property', 'og:image', image);
+  html = setMeta(html, 'property', 'og:image:secure_url', image);
+  html = setMeta(html, 'property', 'og:image:alt', document.title);
+  if (document.imageWidth) html = setMeta(html, 'property', 'og:image:width', String(document.imageWidth));
+  if (document.imageHeight) html = setMeta(html, 'property', 'og:image:height', String(document.imageHeight));
   html = setMeta(html, 'property', 'og:site_name', SITE_NAME);
   html = setMeta(html, 'name', 'twitter:card', 'summary_large_image');
   html = setMeta(html, 'name', 'twitter:title', document.title);
   html = setMeta(html, 'name', 'twitter:description', document.description.slice(0, 160));
   html = setMeta(html, 'name', 'twitter:image', image);
+  html = setMeta(html, 'name', 'twitter:image:alt', document.title);
   html = injectJsonLd(html, document.schema);
   return html.replace(
     /<main id="seo-fallback">[\s\S]*?<\/main>/i,

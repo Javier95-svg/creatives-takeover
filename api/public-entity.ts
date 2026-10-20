@@ -122,7 +122,7 @@ function profileDocument(profile: any): PublicSeoDocument {
   const name = profile.full_name || profile.username;
   const description = String(profile.positioning_line || profile.bio || `${name} is a founder on Creatives Takeover.`);
   // The card served by api/og-profile.tsx; robots.txt keeps scrapers out of /api/.
-  const shareImage = `${SITE_ORIGIN}/og/profile/${encodeURIComponent(profile.username)}?v=3`;
+  const shareImage = `${SITE_ORIGIN}/og/profile/${encodeURIComponent(profile.username)}?v=4`;
   // Founder and builder profiles are Founder IDs (src/lib/founderId.ts).
   const noun = !profile.user_type || profile.user_type === 'founder' || profile.user_type === 'builder' ? 'Founder ID' : 'Profile';
   const person = {
@@ -132,7 +132,7 @@ function profileDocument(profile: any): PublicSeoDocument {
     ...(profile.startup_name ? { worksFor: { '@type': 'Organization', name: profile.startup_name } } : {}),
   };
   return {
-    title: `${name} | ${noun}`, description, canonical, image: shareImage, indexable: profile.seo_indexable === true,
+    title: `${name} | ${noun}`, description, canonical, image: shareImage, imageWidth: 1200, imageHeight: 630, indexable: profile.seo_indexable === true,
     schema: [breadcrumb([{ name: 'Home', url: '/' }, { name, url: path }]), person, {
       '@context': 'https://schema.org', '@type': 'ProfilePage', '@id': `${canonical}#webpage`, name: `${name} — ${noun}`,
       description, url: canonical, mainEntity: { '@id': `${canonical}#person` }, isPartOf: { '@id': `${SITE_ORIGIN}/#website` },
@@ -270,6 +270,11 @@ export default async function handler(request: Request): Promise<Response> {
       fallbackHtml: '<article><h1>Page not found</h1><p>This public profile or listing is unavailable.</p></article>',
     });
     return new Response(notFound, { status: 404, headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'public, s-maxage=60', 'x-robots-tag': 'noindex,follow' } });
+  }
+  if (type === 'profile' && url.searchParams.get('card') === '4') {
+    // Keep the new share URL distinct from X's cached previous preview.
+    // Search engines still receive the normal, unversioned canonical URL.
+    document.shareUrl = `${document.canonical}?card=4`;
   }
   const html = renderSeoDocument(shell, document);
   return new Response(html, {

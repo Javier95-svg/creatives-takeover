@@ -18,6 +18,11 @@ export function founderIdUrl(username: string, origin: string = window.location.
   return `${origin}${founderIdPath(username)}`;
 }
 
+/** A fresh card URL for social scrapers that cached the earlier card design. */
+export function founderIdShareUrl(username: string, origin: string = window.location.origin): string {
+  return `${founderIdUrl(username, origin)}?card=4`;
+}
+
 /** The link as people read it: no protocol, so it fits on a slide or a bio. */
 export function founderIdDisplay(username: string, host: string = window.location.host): string {
   return `${host}/@${username}`;
