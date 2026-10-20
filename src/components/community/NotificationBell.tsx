@@ -78,6 +78,12 @@ export const NotificationBell = () => {
       return;
     }
 
+    if (['like', 'comment', 'repost'].includes(notification.notification_type)
+      && metadataRoute && /^\/profile(?:\/[A-Za-z0-9_.-]+)?\?post=(?:journey|photo):[0-9a-f-]{36}$/i.test(metadataRoute)) {
+      navigateTo(metadataRoute);
+      return;
+    }
+
     if (notification.notification_type === 'mentor_banner_created') {
       navigateTo('/mentorship');
       return;
@@ -203,6 +209,8 @@ export const NotificationBell = () => {
 
   const getNotificationText = (notification: CommunityNotification) => {
     const { notification_type, actor, metadata } = notification;
+    const preview = typeof metadata?.post_preview === 'string' ? metadata.post_preview.trim() : '';
+    const postLabel = preview ? `your post “${preview}”` : 'your post';
 
     switch (notification_type) {
       case 'message':
@@ -210,14 +218,14 @@ export const NotificationBell = () => {
       case 'message_group_invite':
         return metadata?.message || `${actor.name} added you to a founder workspace`;
       case 'comment':
-        return `${actor.name} commented on your post`;
+        return `${actor.name} commented on ${postLabel}`;
       case 'like':
-        return `${actor.name} upvoted your post`;
+        return `${actor.name} liked ${postLabel}`;
       case 'community_thread_awaiting_reply':
       case 'community_report':
         return typeof metadata?.message === 'string' ? metadata.message : `${actor.name} posted on Launchpad`;
       case 'repost':
-        return `${actor.name} reposted your post`;
+        return `${actor.name} reposted ${postLabel}`;
       case 'share':
         return `${actor.name} shared your post`;
       case 'post_published':
