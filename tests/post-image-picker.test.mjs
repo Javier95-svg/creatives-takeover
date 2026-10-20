@@ -59,8 +59,10 @@ test('selecting more images appends them, allows removal, and enforces four', as
     });
     const galleryModule = { exports: {} };
     new Function('require', 'module', 'exports', galleryBuild.outputFiles[0].text)(createRequire(import.meta.url), galleryModule, galleryModule.exports);
+    let galleryInteractions = 0;
     await act(async () => root.render(React.createElement(galleryModule.exports.PostImageGallery, {
       images: ['https://example.com/first.png', 'https://example.com/second.png'], authorName: 'Founder',
+      onInteraction: () => { galleryInteractions += 1; },
     })));
     assert.equal(document.querySelectorAll('[aria-label^="Show post image"]').length, 2);
     assert.equal(document.querySelector('img').src, 'https://example.com/first.png');
@@ -68,6 +70,20 @@ test('selecting more images appends them, allows removal, and enforces four', as
     assert.equal(document.querySelector('img').src, 'https://example.com/second.png');
     await act(async () => document.querySelector('[aria-label="Next image"]').click());
     assert.equal(document.querySelector('img').src, 'https://example.com/first.png');
+    const pointer = (type, x, y) => {
+      const event = new dom.window.Event(type, { bubbles: true });
+      Object.defineProperties(event, { clientX: { value: x }, clientY: { value: y } });
+      return event;
+    };
+    await act(async () => {
+      const imageButton = document.querySelector('[aria-label^="View image"]');
+      imageButton.dispatchEvent(pointer('pointerdown', 200, 50));
+      imageButton.dispatchEvent(pointer('pointerup', 100, 54));
+      imageButton.click();
+    });
+    assert.equal(document.querySelector('img').src, 'https://example.com/second.png');
+    assert.equal(document.querySelector('[role="dialog"]'), null, 'swiping must not open the image viewer');
+    assert.ok(galleryInteractions > 0, 'interacting with images pauses the outer carousel');
   } finally {
     if (root) await act(async () => root.unmount());
     dom.window.close();

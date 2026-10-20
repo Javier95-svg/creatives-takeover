@@ -364,7 +364,7 @@ export function ProfilePosts({ userId, name, avatarUrl, isOwnProfile }: Props) {
         <div className="space-y-3 px-4 pb-5 sm:px-6">
           {post.title && <h3 className="font-semibold">{post.title}</h3>}
           {post.content && <PostContent content={post.content} onPlayVideo={setPlayingVideo} />}
-          <PostImageGallery images={post.imageUrls?.length ? post.imageUrls : post.image ? [post.image] : []} authorName={authorName} onOpenChange={setImageViewerOpen} />
+          <PostImageGallery images={post.imageUrls?.length ? post.imageUrls : post.image ? [post.image] : []} authorName={authorName} onOpenChange={setImageViewerOpen} onInteraction={() => setRotationPaused(true)} />
           {post.source === 'community' && <Button variant="link" className="h-auto p-0" asChild><Link to={`/rooms/posts/${post.id}`}>View conversation</Link></Button>}
         </div>
         {!scheduled && <ProfilePostActions key={user?.id || 'guest'} source={post.source} postId={post.id} shareUrl={shareUrl} metrics={metricsByPost.get(`${post.source}:${post.id}`)} refresh={() => queryClient.invalidateQueries({ queryKey: ['profile-post-metrics'] })} />}
