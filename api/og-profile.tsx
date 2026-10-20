@@ -11,6 +11,7 @@ export const config = { runtime: 'edge' };
 
 import { ImageResponse } from '@vercel/og';
 import { isUsableImage, monogram, truncate } from './_og-image';
+import { FounderIdCard } from './_founder-id-card';
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL ?? 'https://rcjlaybjnozqbsoxzboa.supabase.co';
 const SUPABASE_KEY = process.env.VITE_SUPABASE_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? '';
@@ -86,6 +87,14 @@ export default async function handler(request: Request) {
   const line = truncate(profile?.startup_tagline?.trim() || profile?.positioning_line?.trim() || '', 140);
   const showAvatar = await isUsableImage(profile?.avatar_url);
   const nameSize = name.length > 28 ? 58 : 70;
+
+  if (founderId && profile) {
+    return new ImageResponse(
+      <FounderIdCard name={name} username={profile.username} projectName={profile.startup_name}
+        tagline={line} avatarUrl={showAvatar ? profile.avatar_url : null} stage={profile.stage} />,
+      { width: 1200, height: 630 },
+    );
+  }
 
   return new ImageResponse(
     (

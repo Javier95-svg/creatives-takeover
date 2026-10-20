@@ -42,6 +42,10 @@ export function ProfileShareButton({ username, name, startupName, isOwnProfile, 
   const text = startupName
     ? (isOwnProfile ? `Follow what I'm building with ${startupName}.` : `${name} is building ${startupName}.`)
     : (isOwnProfile ? "Follow what I'm building." : `${name} on Creatives Takeover.`);
+  const projectName = startupName?.trim();
+  const xText = founderId && isOwnProfile
+    ? (projectName ? `Follow my journey building ${projectName}.` : 'Follow my journey building in public.')
+    : text;
 
   const track = (channel: Channel) => captureEvent('profile_share_clicked', { channel, is_owner: isOwnProfile, placement: variant === 'chip' ? 'support_section' : 'header' });
 
@@ -56,7 +60,7 @@ export function ProfileShareButton({ username, name, startupName, isOwnProfile, 
   };
 
   const openIntent = (channel: 'linkedin' | 'x') => {
-    window.open(getShareIntentUrl(channel, url, text), '_blank', 'noopener,noreferrer');
+    window.open(getShareIntentUrl(channel, url, channel === 'x' ? xText : text), '_blank', 'noopener,noreferrer');
     track(channel);
   };
 
