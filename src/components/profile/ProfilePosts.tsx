@@ -69,7 +69,9 @@ export function ProfilePosts({ userId, name, avatarUrl, isOwnProfile }: Props) {
   const composeRequested = isOwnProfile && searchParams.has('compose');
   const validTarget = /^(journey|photo|community):[0-9a-f-]{36}$/i.test(target || '') ? target : null;
   const scrolledTo = useRef<string | null>(null);
-  const [limit, setLimit] = useState(20);
+  // A Founder ID keeps a focused, five-update journey rather than an archive.
+  const limit = 5;
+  const [activePostIndex, setActivePostIndex] = useState(0);
   const [deleting, setDeleting] = useState<FeedPost | null>(null);
   const [editing, setEditing] = useState<FeedPost | null>(null);
   const [editContent, setEditContent] = useState('');
@@ -168,6 +170,12 @@ export function ProfilePosts({ userId, name, avatarUrl, isOwnProfile }: Props) {
     if (shared.data && !shared.isError && !combined.some((post) => `${post.source}:${post.id}` === validTarget)) combined.push(shared.data);
     return orderProfilePosts(combined, pinned.data);
   }, [data?.feed, reposts.data, shared.data, shared.isError, validTarget, pinned.data]);
+  const carouselPosts = useMemo(
+    () => [...visiblePosts]
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      .slice(0, 5),
+    [visiblePosts],
+  );
   const metrics = useQuery({
     queryKey: ['profile-post-metrics', user?.id, visiblePosts.map((post) => `${post.source}:${post.id}`).sort()],
     enabled: visiblePosts.length > 0,
@@ -188,11 +196,16 @@ export function ProfilePosts({ userId, name, avatarUrl, isOwnProfile }: Props) {
   });
   const metricsByPost = new Map(metrics.data?.map((item) => [`${item.source}:${item.id}`, item]));
   useEffect(() => {
-    if (validTarget && scrolledTo.current !== validTarget && visiblePosts.some((post) => `${post.source}:${post.id}` === validTarget)) {
-      document.getElementById(`post-${validTarget}`)?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    const postIndex = carouselPosts.findIndex((post) => `${post.source}:${post.id}` === validTarget);
+    if (validTarget && scrolledTo.current !== validTarget && postIndex >= 0) {
+      setActivePostIndex(postIndex);
+      document.getElementById('profile-post-carousel')?.scrollIntoView({ block: 'center', behavior: 'smooth' });
       scrolledTo.current = validTarget;
     }
-  }, [validTarget, visiblePosts]);
+  }, [validTarget, carouselPosts]);
+  useEffect(() => {
+    setActivePostIndex((current) => Math.min(current, Math.max(0, carouselPosts.length - 1)));
+  }, [carouselPosts.length]);
 
   function showPublishedPost(post: PublishedJourneyPost) {
     const queryKey = ['profile-journey-posts', userId, isOwnProfile, limit];
@@ -351,8 +364,33 @@ export function ProfilePosts({ userId, name, avatarUrl, isOwnProfile }: Props) {
         {(metrics.isError || reposts.isError) && <p className="text-sm text-muted-foreground">Some post interactions could not load. <Button variant="link" onClick={() => { void metrics.refetch(); void reposts.refetch(); }}>Retry</Button></p>}
         {pinned.isError && <p className="text-sm text-muted-foreground">The pinned post could not load. <Button variant="link" onClick={() => void pinned.refetch()}>Retry</Button></p>}
         {shared.isError && <p role="status" className="text-sm text-muted-foreground">The shared post is unavailable or could not be loaded. <Button variant="link" onClick={() => void shared.refetch()}>Retry</Button></p>}
-        {visiblePosts.map((post) => renderPost(post))}
-        {(data?.hasMore || (reposts.data?.length === limit && limit < 200)) && <div className="text-center"><Button variant="outline" onClick={() => setLimit((value) => value + 20)}>Load more posts</Button></div>}
+        {carouselPosts.length > 0 && (
+          <div id="profile-post-carousel" className="space-y-4 scroll-mt-24" aria-roledescription="carousel" aria-label="Journey posts">
+            <div className="overflow-hidden">
+              <div
+                className="flex transition-transform duration-300 ease-out motion-reduce:transition-none"
+                style={{ transform: `translateX(-${activePostIndex * 100}%)` }}
+              >
+                {carouselPosts.map((post) => <div key={`${post.source}:${post.id}`} className="w-full shrink-0">{renderPost(post)}</div>)}
+              </div>
+            </div>
+            {carouselPosts.length > 1 && (
+              <div className="flex justify-center gap-2" role="tablist" aria-label="Choose a journey post">
+                {carouselPosts.map((post, index) => (
+                  <button
+                    key={`${post.source}:${post.id}`}
+                    type="button"
+                    role="tab"
+                    aria-selected={index === activePostIndex}
+                    aria-label={`Show post ${index + 1} of ${carouselPosts.length}`}
+                    onClick={() => setActivePostIndex(index)}
+                    className={`h-2.5 w-2.5 rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${index === activePostIndex ? 'bg-primary' : 'bg-muted-foreground/35 hover:bg-muted-foreground/60'}`}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
       <Dialog open={!!deleting} onOpenChange={(open) => { if (!open && !busy) setDeleting(null); }}>
         <DialogContent>
