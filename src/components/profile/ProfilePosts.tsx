@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useLocation, useSearchParams } from 'react-router-dom';
-import { CalendarClock, ImagePlus, Loader2, MessageSquare, Pencil, Pin, PinOff, Repeat2, Route, Trash2, X } from 'lucide-react';
+import { CalendarClock, ImagePlus, Loader2, Megaphone, MessageSquare, Pause, Pencil, Pin, PinOff, Play, Repeat2, Trash2, X } from 'lucide-react';
 import { orderProfilePosts, POST_MAX_LENGTH, validatePost, validatePostImage } from '@/lib/profilePosts';
 import { useAuth } from '@/contexts/AuthContext';
 import { ProfilePostActions, type PostMetrics } from './ProfilePostActions';
@@ -72,6 +72,10 @@ export function ProfilePosts({ userId, name, avatarUrl, isOwnProfile }: Props) {
   // A Founder ID keeps a focused, five-update journey rather than an archive.
   const limit = 5;
   const [activePostIndex, setActivePostIndex] = useState(0);
+  const [rotationPaused, setRotationPaused] = useState(false);
+  const [carouselHovered, setCarouselHovered] = useState(false);
+  const [carouselFocused, setCarouselFocused] = useState(false);
+  const [pageHidden, setPageHidden] = useState(() => document.hidden);
   const [deleting, setDeleting] = useState<FeedPost | null>(null);
   const [editing, setEditing] = useState<FeedPost | null>(null);
   const [editContent, setEditContent] = useState('');
@@ -206,6 +210,18 @@ export function ProfilePosts({ userId, name, avatarUrl, isOwnProfile }: Props) {
   useEffect(() => {
     setActivePostIndex((current) => Math.min(current, Math.max(0, carouselPosts.length - 1)));
   }, [carouselPosts.length]);
+  useEffect(() => {
+    const updateVisibility = () => setPageHidden(document.hidden);
+    document.addEventListener('visibilitychange', updateVisibility);
+    return () => document.removeEventListener('visibilitychange', updateVisibility);
+  }, []);
+  useEffect(() => {
+    if (carouselPosts.length < 2 || rotationPaused || carouselHovered || carouselFocused || pageHidden || editing || deleting) return;
+    const timer = window.setTimeout(() => {
+      setActivePostIndex((current) => (current + 1) % carouselPosts.length);
+    }, 8_000);
+    return () => window.clearTimeout(timer);
+  }, [activePostIndex, carouselPosts.length, rotationPaused, carouselHovered, carouselFocused, pageHidden, editing, deleting]);
 
   function showPublishedPost(post: PublishedJourneyPost) {
     const queryKey = ['profile-journey-posts', userId, isOwnProfile, limit];
@@ -345,8 +361,8 @@ export function ProfilePosts({ userId, name, avatarUrl, isOwnProfile }: Props) {
   return (
     <section aria-labelledby="profile-posts-heading" className="space-y-5">
       <div className="flex items-center gap-2 border-b border-border pb-3">
-        <h2 id="profile-posts-heading" className="text-lg font-semibold">My journey</h2>
-        <Route className="h-5 w-5 text-primary" aria-hidden="true" />
+        <h2 id="profile-posts-heading" className="text-lg font-semibold">Project Updates</h2>
+        <Megaphone className="h-5 w-5 text-primary" aria-hidden="true" />
       </div>
       <div className="w-full space-y-5">
         {isOwnProfile && !isLoading && data?.postingAvailable !== false && <JourneyPostComposer userId={userId} name={name} avatarUrl={avatarUrl} onPublished={showPublishedPost} focusOnOpen={composeRequested} />}
@@ -365,28 +381,59 @@ export function ProfilePosts({ userId, name, avatarUrl, isOwnProfile }: Props) {
         {pinned.isError && <p className="text-sm text-muted-foreground">The pinned post could not load. <Button variant="link" onClick={() => void pinned.refetch()}>Retry</Button></p>}
         {shared.isError && <p role="status" className="text-sm text-muted-foreground">The shared post is unavailable or could not be loaded. <Button variant="link" onClick={() => void shared.refetch()}>Retry</Button></p>}
         {carouselPosts.length > 0 && (
-          <div id="profile-post-carousel" className="space-y-4 scroll-mt-24" aria-roledescription="carousel" aria-label="Journey posts">
+          <div
+            id="profile-post-carousel"
+            className="space-y-4 scroll-mt-24"
+            role="region"
+            aria-roledescription="carousel"
+            aria-label="Project updates"
+            onMouseEnter={() => setCarouselHovered(true)}
+            onMouseLeave={() => setCarouselHovered(false)}
+            onFocusCapture={() => setCarouselFocused(true)}
+            onBlurCapture={(event) => {
+              if (!event.currentTarget.contains(event.relatedTarget)) setCarouselFocused(false);
+            }}
+          >
             <div className="overflow-hidden">
               <div
                 className="flex transition-transform duration-300 ease-out motion-reduce:transition-none"
                 style={{ transform: `translateX(-${activePostIndex * 100}%)` }}
               >
-                {carouselPosts.map((post) => <div key={`${post.source}:${post.id}`} className="w-full shrink-0">{renderPost(post)}</div>)}
+                {carouselPosts.map((post, index) => (
+                  <div
+                    key={`${post.source}:${post.id}`}
+                    className="w-full shrink-0"
+                    role="group"
+                    aria-roledescription="slide"
+                    aria-label={`${index + 1} of ${carouselPosts.length}`}
+                    ref={(element) => { if (element) element.inert = index !== activePostIndex; }}
+                  >{renderPost(post)}</div>
+                ))}
               </div>
             </div>
             {carouselPosts.length > 1 && (
-              <div className="flex justify-center gap-2" role="tablist" aria-label="Choose a journey post">
+              <div className="flex items-center justify-center gap-2" role="group" aria-label="Project update navigation">
                 {carouselPosts.map((post, index) => (
                   <button
                     key={`${post.source}:${post.id}`}
                     type="button"
-                    role="tab"
-                    aria-selected={index === activePostIndex}
+                    aria-pressed={index === activePostIndex}
                     aria-label={`Show post ${index + 1} of ${carouselPosts.length}`}
                     onClick={() => setActivePostIndex(index)}
                     className={`h-2.5 w-2.5 rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${index === activePostIndex ? 'bg-primary' : 'bg-muted-foreground/35 hover:bg-muted-foreground/60'}`}
                   />
                 ))}
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="ml-1 h-8 w-8 text-muted-foreground"
+                  aria-label={rotationPaused ? 'Resume automatic updates' : 'Pause automatic updates'}
+                  title={rotationPaused ? 'Resume automatic updates' : 'Pause automatic updates'}
+                  onClick={() => setRotationPaused((paused) => !paused)}
+                >
+                  {rotationPaused ? <Play className="h-3.5 w-3.5" /> : <Pause className="h-3.5 w-3.5" />}
+                </Button>
               </div>
             )}
           </div>

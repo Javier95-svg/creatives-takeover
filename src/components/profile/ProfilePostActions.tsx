@@ -108,7 +108,7 @@ export function ProfilePostActions({ source, postId, shareUrl, metrics, refresh 
 
   async function share() {
     try {
-      if (navigator.share) await navigator.share({ title: 'A journey update on Creatives Takeover', url: shareUrl });
+      if (navigator.share) await navigator.share({ title: 'A project update on Creatives Takeover', url: shareUrl });
       else { await navigator.clipboard.writeText(shareUrl); toast.success('Post link copied.'); }
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') return;
