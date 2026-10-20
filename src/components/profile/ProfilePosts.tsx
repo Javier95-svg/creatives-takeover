@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { CalendarClock, Loader2, Megaphone, MessageSquare, Pause, Pencil, Pin, PinOff, Play, Repeat2, Trash2 } from 'lucide-react';
@@ -94,6 +94,8 @@ export function ProfilePosts({ userId, name, avatarUrl, isOwnProfile }: Props) {
   // A Founder ID keeps a focused, five-update journey rather than an archive.
   const limit = 5;
   const [activePostIndex, setActivePostIndex] = useState(0);
+  const activeSlideRef = useRef<HTMLDivElement | null>(null);
+  const [activeSlideHeight, setActiveSlideHeight] = useState<number | null>(null);
   const [rotationPaused, setRotationPaused] = useState(false);
   const [carouselHovered, setCarouselHovered] = useState(false);
   const [carouselFocused, setCarouselFocused] = useState(false);
@@ -226,6 +228,15 @@ export function ProfilePosts({ userId, name, avatarUrl, isOwnProfile }: Props) {
   useEffect(() => {
     setActivePostIndex((current) => Math.min(current, Math.max(0, carouselPosts.length - 1)));
   }, [carouselPosts.length]);
+  useLayoutEffect(() => {
+    const slide = activeSlideRef.current;
+    if (!slide) return;
+    const updateHeight = () => setActiveSlideHeight(slide.offsetHeight);
+    updateHeight();
+    const observer = new ResizeObserver(updateHeight);
+    observer.observe(slide);
+    return () => observer.disconnect();
+  }, [activePostIndex, carouselPosts]);
   useEffect(() => {
     const updateVisibility = () => setPageHidden(document.hidden);
     document.addEventListener('visibilitychange', updateVisibility);
@@ -397,9 +408,9 @@ export function ProfilePosts({ userId, name, avatarUrl, isOwnProfile }: Props) {
               if (!event.currentTarget.contains(event.relatedTarget)) setCarouselFocused(false);
             }}
           >
-            <div className="overflow-hidden">
+            <div className="overflow-hidden transition-[height] duration-300 motion-reduce:transition-none" style={{ height: activeSlideHeight ?? undefined }}>
               <div
-                className="flex transition-transform duration-300 ease-out motion-reduce:transition-none"
+                className="flex items-start transition-transform duration-300 ease-out motion-reduce:transition-none"
                 style={{ transform: `translateX(-${activePostIndex * 100}%)` }}
               >
                 {carouselPosts.map((post, index) => (
@@ -409,7 +420,10 @@ export function ProfilePosts({ userId, name, avatarUrl, isOwnProfile }: Props) {
                     role="group"
                     aria-roledescription="slide"
                     aria-label={`${index + 1} of ${carouselPosts.length}`}
-                    ref={(element) => { if (element) element.inert = index !== activePostIndex; }}
+                    ref={(element) => {
+                      if (element) element.inert = index !== activePostIndex;
+                      if (index === activePostIndex) activeSlideRef.current = element;
+                    }}
                   >{renderPost(post)}</div>
                 ))}
               </div>
