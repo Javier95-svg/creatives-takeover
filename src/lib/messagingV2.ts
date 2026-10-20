@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import type { ApprovalStatus, UserType } from '@/lib/accountTypes';
 
 export type InboxSection = 'inbox' | 'requests' | 'archived';
 
@@ -18,6 +19,8 @@ export type MessageRecipient = {
   serviceSlug: string | null;
   /** 'founder' already has something live, 'builder' is starting from zero. */
   founderSegment: 'founder' | 'builder' | null;
+  userType: UserType | null;
+  approvalStatus: ApprovalStatus | null;
 };
 
 export type MessageContext = {
@@ -159,7 +162,15 @@ export const mapRecipient = (row: any): MessageRecipient => ({
   founderSegment: (() => {
     const segment = row.founderSegment ?? row.founder_segment ?? null;
     return segment === 'founder' || segment === 'builder' ? segment : null;
-  })()
+  })(),
+  userType: (() => {
+    const type = row.userType ?? row.user_type ?? null;
+    return ['founder', 'builder', 'mentor', 'marketplace', 'investor'].includes(type) ? type as UserType : null;
+  })(),
+  approvalStatus: (() => {
+    const status = row.approvalStatus ?? row.approval_status ?? null;
+    return ['pending', 'approved', 'rejected'].includes(status) ? status as ApprovalStatus : null;
+  })(),
 });
 
 export const mapQuote = (row: any): DirectMessageQuote => ({

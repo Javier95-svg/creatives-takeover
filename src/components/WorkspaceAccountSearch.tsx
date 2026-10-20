@@ -7,8 +7,9 @@ import { hasApplicationConfig } from '@/lib/hasApplicationConfig';
 import { enterWorkspaceRoute } from '@/lib/workspaceNavigation';
 import { accountRoute } from '@/lib/accountSearchRoute';
 import { accountTag } from '@/lib/accountSearchTag';
+import type { ApprovalStatus, UserType } from '@/lib/accountTypes';
 
-export type SearchAccount = { id: string; username: string | null; full_name: string | null; avatar_url: string | null; headline?: string | null; isMentor?: boolean; mentorName?: string | null; isMarketplace?: boolean; serviceSlug?: string | null; founderSegment?: 'founder' | 'builder' | null; isConnection?: boolean };
+export type SearchAccount = { id: string; username: string | null; full_name: string | null; avatar_url: string | null; headline?: string | null; isMentor?: boolean; mentorName?: string | null; isMarketplace?: boolean; serviceSlug?: string | null; founderSegment?: 'founder' | 'builder' | null; userType?: UserType | null; approvalStatus?: ApprovalStatus | null; isConnection?: boolean };
 const LiveAccountSearch = lazy(() => import('./WorkspaceAccountSearchLive'));
 
 export default function WorkspaceAccountSearch() {
@@ -76,7 +77,7 @@ export function AccountSearchField({ search, renderActions }: {
               <span className="min-w-0"><span className="block truncate text-sm font-medium">{account.full_name || account.username || 'Founder'}</span><span className="block truncate text-xs text-muted-foreground">{account.isConnection ? 'Connection · ' : ''}{account.headline || account.username || 'Founder'}</span></span>
             </a>
             {renderActions && <div className="shrink-0">{renderActions(account)}</div>}
-            {tag ? <Badge className="shrink-0" variant={tag.variant}>{tag.label}</Badge> : null}
+            {tag ? <Badge className={`shrink-0 ${tag.className}`} variant="outline">{tag.label}</Badge> : null}
           </div>;
         })()}
       </div>)}

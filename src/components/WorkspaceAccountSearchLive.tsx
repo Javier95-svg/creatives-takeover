@@ -17,6 +17,8 @@ async function searchAccounts(query: string, signal?: AbortSignal): Promise<Sear
     isMarketplace: recipient.isMarketplace,
     serviceSlug: recipient.serviceSlug,
     founderSegment: recipient.founderSegment,
+    userType: recipient.userType,
+    approvalStatus: recipient.approvalStatus,
     isConnection: recipient.isConnection,
   }));
 }

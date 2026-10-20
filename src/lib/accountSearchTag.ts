@@ -11,8 +11,16 @@ export type AccountTagTarget = {
 
 export type AccountTag = {
   label: 'Mentor' | 'Marketplace' | 'Investor' | 'Founder' | 'Builder';
-  variant: 'outline' | 'secondary';
+  className: string;
 };
+
+const ACCOUNT_TAG_STYLES = {
+  founder: 'border-blue-500/35 bg-blue-500/10 text-blue-800 dark:text-blue-200',
+  builder: 'border-cyan-500/35 bg-cyan-500/10 text-cyan-800 dark:text-cyan-200',
+  mentor: 'border-violet-500/35 bg-violet-500/10 text-violet-800 dark:text-violet-200',
+  marketplace: 'border-amber-500/35 bg-amber-500/10 text-amber-900 dark:text-amber-200',
+  investor: 'border-emerald-500/35 bg-emerald-500/10 text-emerald-800 dark:text-emerald-200',
+} as const;
 
 /**
  * The single tag an account carries in search.
@@ -31,20 +39,20 @@ export type AccountTag = {
  * appear to the network as a fact.
  */
 export function accountTag(account: AccountTagTarget): AccountTag | null {
-  if (account.isMentor) return { label: 'Mentor', variant: 'outline' };
-  if (account.isMarketplace) return { label: 'Marketplace', variant: 'outline' };
+  if (account.isMentor) return { label: 'Mentor', className: ACCOUNT_TAG_STYLES.mentor };
+  if (account.isMarketplace) return { label: 'Marketplace', className: ACCOUNT_TAG_STYLES.marketplace };
 
   const approved = account.approvalStatus == null || account.approvalStatus === 'approved';
   if (account.userType === 'investor') {
-    return approved ? { label: 'Investor', variant: 'outline' } : null;
+    return approved ? { label: 'Investor', className: ACCOUNT_TAG_STYLES.investor } : null;
   }
-  if (account.userType === 'mentor') return approved ? { label: 'Mentor', variant: 'outline' } : null;
-  if (account.userType === 'marketplace') return approved ? { label: 'Marketplace', variant: 'outline' } : null;
+  if (account.userType === 'mentor') return approved ? { label: 'Mentor', className: ACCOUNT_TAG_STYLES.mentor } : null;
+  if (account.userType === 'marketplace') return approved ? { label: 'Marketplace', className: ACCOUNT_TAG_STYLES.marketplace } : null;
 
   const segment = account.userType === 'founder' || account.userType === 'builder'
     ? account.userType
     : account.founderSegment;
-  if (segment === 'founder') return { label: 'Founder', variant: 'secondary' };
-  if (segment === 'builder') return { label: 'Builder', variant: 'secondary' };
+  if (segment === 'founder') return { label: 'Founder', className: ACCOUNT_TAG_STYLES.founder };
+  if (segment === 'builder') return { label: 'Builder', className: ACCOUNT_TAG_STYLES.builder };
   return null;
 }
