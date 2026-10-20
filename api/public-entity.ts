@@ -122,7 +122,7 @@ function profileDocument(profile: any): PublicSeoDocument {
   const name = profile.full_name || profile.username;
   const description = String(profile.positioning_line || profile.bio || `${name} is a founder on Creatives Takeover.`);
   // The card served by api/og-profile.tsx; robots.txt keeps scrapers out of /api/.
-  const shareImage = `${SITE_ORIGIN}/og/profile/${encodeURIComponent(profile.username)}?v=2`;
+  const shareImage = `${SITE_ORIGIN}/og/profile/${encodeURIComponent(profile.username)}?v=3`;
   // Founder and builder profiles are Founder IDs (src/lib/founderId.ts).
   const noun = !profile.user_type || profile.user_type === 'founder' || profile.user_type === 'builder' ? 'Founder ID' : 'Profile';
   const person = {

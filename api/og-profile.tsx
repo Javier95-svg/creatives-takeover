@@ -24,6 +24,7 @@ const BASE_SELECT = 'username,full_name,avatar_url,positioning_line,startup_name
 // (20261020090000_public_profile_story_fields) may carry a stage: before that
 // migration, assigned_stage is the private quiz placement.
 const STORY_SELECT = `${BASE_SELECT},assigned_stage,startup_description`;
+const NUMBER_SELECT = `${STORY_SELECT},founder_number`;
 
 interface CardProfile {
   username: string;
@@ -33,6 +34,7 @@ interface CardProfile {
   startup_name: string | null;
   startup_tagline: string | null;
   stage: string | null;
+  founder_number: number | null;
   /** Founder and builder profiles are Founder IDs (src/lib/founderId.ts). */
   founderId: boolean;
 }
@@ -44,7 +46,7 @@ async function fetchProfile(username: string): Promise<CardProfile | null> {
   if (!/^[A-Za-z0-9_]{1,64}$/.test(username)) return null;
   const filter = `ilike.${encodeURIComponent(username.replace(/_/g, '\\_'))}`;
   const headers = { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` };
-  for (const [select, stageIsGated] of [[STORY_SELECT, true], [BASE_SELECT, false]] as const) {
+  for (const [select, stageIsGated] of [[NUMBER_SELECT, true], [STORY_SELECT, true], [BASE_SELECT, false]] as const) {
     try {
       const res = await fetch(
         `${SUPABASE_URL}/rest/v1/public_profiles?username=${filter}&select=${select}&limit=1`,
@@ -63,6 +65,7 @@ async function fetchProfile(username: string): Promise<CardProfile | null> {
         startup_name: row.startup_name ?? null,
         startup_tagline: row.startup_tagline ?? null,
         stage: stageNumber ? STAGE_LABELS[stageNumber - 1] ?? null : null,
+        founder_number: typeof row.founder_number === 'number' ? row.founder_number : null,
         founderId: !row.user_type || row.user_type === 'founder' || row.user_type === 'builder',
       };
     } catch {
@@ -90,7 +93,7 @@ export default async function handler(request: Request) {
 
   if (founderId && profile) {
     return new ImageResponse(
-      <FounderIdCard name={name} username={profile.username} projectName={profile.startup_name}
+      <FounderIdCard name={name} username={profile.username} founderNumber={profile.founder_number}
         tagline={line} avatarUrl={showAvatar ? profile.avatar_url : null} stage={profile.stage} />,
       { width: 1200, height: 630 },
     );
