@@ -213,12 +213,13 @@ function JourneyPostEditor({ userId, name, avatarUrl, onPublished, focusOnOpen =
                 onSelect={(event) => {
                   selection.current = { start: event.currentTarget.selectionStart, end: event.currentTarget.selectionEnd };
                 }}
-                aria-label="Your journey update"
+                aria-label="Your project update"
                 placeholder="One small update is enough. What happened today?"
                 maxLength={POST_MAX_LENGTH}
                 rows={2}
                 className="min-h-20 max-h-80 resize-none overflow-y-auto border-0 bg-transparent px-0 shadow-none focus-visible:ring-0 text-base md:text-base"
               />
+              <p className="mb-2 text-xs text-muted-foreground">Paste a URL to share a link or YouTube video.</p>
               {draftSource && content.trim() && <p className="mb-1 text-xs text-muted-foreground">{SOURCE_HINT[draftSource]}</p>}
               {draftSaved && <p className="mb-2 text-xs text-muted-foreground" title="Text saved privately for your account in this browser tab">Draft saved</p>}
             </div>

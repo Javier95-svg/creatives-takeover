@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { CalendarClock, ImagePlus, Loader2, Megaphone, MessageSquare, Pause, Pencil, Pin, PinOff, Play, Repeat2, Trash2, X } from 'lucide-react';
@@ -13,6 +13,9 @@ import { Card } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { JourneyPostComposer, type PublishedJourneyPost } from './JourneyPostComposer';
 import { Textarea } from '@/components/ui/textarea';
+import { PostContent } from './PostContent';
+
+const PostVideoPlayer = lazy(() => import('@/components/podcast/PodcastPlayerModal'));
 
 interface Props {
   userId: string;
@@ -76,6 +79,7 @@ export function ProfilePosts({ userId, name, avatarUrl, isOwnProfile }: Props) {
   const [carouselHovered, setCarouselHovered] = useState(false);
   const [carouselFocused, setCarouselFocused] = useState(false);
   const [pageHidden, setPageHidden] = useState(() => document.hidden);
+  const [playingVideo, setPlayingVideo] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<FeedPost | null>(null);
   const [editing, setEditing] = useState<FeedPost | null>(null);
   const [editContent, setEditContent] = useState('');
@@ -216,12 +220,12 @@ export function ProfilePosts({ userId, name, avatarUrl, isOwnProfile }: Props) {
     return () => document.removeEventListener('visibilitychange', updateVisibility);
   }, []);
   useEffect(() => {
-    if (carouselPosts.length < 2 || rotationPaused || carouselHovered || carouselFocused || pageHidden || editing || deleting) return;
+    if (carouselPosts.length < 2 || rotationPaused || carouselHovered || carouselFocused || pageHidden || editing || deleting || playingVideo) return;
     const timer = window.setTimeout(() => {
       setActivePostIndex((current) => (current + 1) % carouselPosts.length);
     }, 8_000);
     return () => window.clearTimeout(timer);
-  }, [activePostIndex, carouselPosts.length, rotationPaused, carouselHovered, carouselFocused, pageHidden, editing, deleting]);
+  }, [activePostIndex, carouselPosts.length, rotationPaused, carouselHovered, carouselFocused, pageHidden, editing, deleting, playingVideo]);
 
   function showPublishedPost(post: PublishedJourneyPost) {
     const queryKey = ['profile-journey-posts', userId, isOwnProfile, limit];
@@ -348,7 +352,7 @@ export function ProfilePosts({ userId, name, avatarUrl, isOwnProfile }: Props) {
         </div>
         <div className="space-y-3 px-4 pb-5 sm:px-6">
           {post.title && <h3 className="font-semibold">{post.title}</h3>}
-          {post.content && <p className="whitespace-pre-wrap break-words text-sm leading-relaxed [overflow-wrap:anywhere]">{post.content}</p>}
+          {post.content && <PostContent content={post.content} onPlayVideo={setPlayingVideo} />}
           {post.image && <img src={post.image} alt={`Photo shared by ${authorName}`} loading="lazy" className="max-h-96 w-full rounded-lg border border-border/50 bg-muted/20 object-contain" />}
           {post.imagePath && !post.image && <p className="text-sm text-muted-foreground">Photo temporarily unavailable.</p>}
           {post.source === 'community' && <Button variant="link" className="h-auto p-0" asChild><Link to={`/rooms/posts/${post.id}`}>View conversation</Link></Button>}
@@ -439,6 +443,11 @@ export function ProfilePosts({ userId, name, avatarUrl, isOwnProfile }: Props) {
           </div>
         )}
       </div>
+      {playingVideo && (
+        <Suspense fallback={<div role="status" className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 text-white"><Loader2 className="mr-2 h-5 w-5 animate-spin" />Loading video...</div>}>
+          <PostVideoPlayer videoId={playingVideo} title="Shared project video" onClose={() => setPlayingVideo(null)} />
+        </Suspense>
+      )}
       <Dialog open={!!deleting} onOpenChange={(open) => { if (!open && !busy) setDeleting(null); }}>
         <DialogContent>
           <DialogHeader><DialogTitle>Remove this post?</DialogTitle><DialogDescription>This removes the post from your profile. Scheduled posts will no longer be published.</DialogDescription></DialogHeader>
