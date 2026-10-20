@@ -24,6 +24,8 @@ import {
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkBreaks from "remark-breaks";
+import { remarkPlatformMentions } from '@/lib/platformMentions';
+import { LinkedPostText } from '@/components/social/LinkedPostText';
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -616,7 +618,7 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
                 <>
                   <div className="text-foreground/90 prose prose-sm max-w-none dark:prose-invert [&_p]:mb-2 [&_p]:mt-0 [&_p]:leading-relaxed line-clamp-3">
                     <ReactMarkdown 
-                      remarkPlugins={[remarkGfm, remarkBreaks]} 
+                      remarkPlugins={[remarkGfm, remarkBreaks, remarkPlatformMentions]}
                     >
                       {post.content}
                     </ReactMarkdown>
@@ -632,7 +634,7 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
                 <>
                   <div className="text-foreground/90 prose prose-sm max-w-none dark:prose-invert [&_p]:mb-2 [&_p]:mt-0 [&_p]:leading-relaxed">
                     <ReactMarkdown 
-                      remarkPlugins={[remarkGfm, remarkBreaks]} 
+                      remarkPlugins={[remarkGfm, remarkBreaks, remarkPlatformMentions]}
                     >
                       {post.content}
                     </ReactMarkdown>
@@ -900,7 +902,7 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
                             <div className="text-sm whitespace-pre-wrap break-words text-foreground">
                               {comment.content ? (
                                 <span style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-                                  {comment.content}
+                                  <LinkedPostText content={comment.content} />
                                 </span>
                               ) : (
                                 comment.image_url && (

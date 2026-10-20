@@ -1,8 +1,8 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useLocation, useSearchParams } from 'react-router-dom';
-import { CalendarClock, ImagePlus, Loader2, Megaphone, MessageSquare, Pause, Pencil, Pin, PinOff, Play, Repeat2, Trash2, X } from 'lucide-react';
-import { orderProfilePosts, POST_MAX_LENGTH, validatePost, validatePostImage } from '@/lib/profilePosts';
+import { CalendarClock, Loader2, Megaphone, MessageSquare, Pause, Pencil, Pin, PinOff, Play, Repeat2, Trash2 } from 'lucide-react';
+import { orderProfilePosts, POST_MAX_LENGTH, validatePost } from '@/lib/profilePosts';
 import { useAuth } from '@/contexts/AuthContext';
 import { ProfilePostActions, type PostMetrics } from './ProfilePostActions';
 import { toast } from 'sonner';
@@ -13,6 +13,9 @@ import { Card } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { JourneyPostComposer, type PublishedJourneyPost } from './JourneyPostComposer';
 import { Textarea } from '@/components/ui/textarea';
+import { PostImagePicker, type PostImageAttachment } from './PostImagePicker';
+import { uploadPostImages } from '@/lib/postImageUploads';
+import { PostImageGallery } from './PostImageGallery';
 import { PostContent } from './PostContent';
 
 const PostVideoPlayer = lazy(() => import('@/components/podcast/PodcastPlayerModal'));
@@ -31,6 +34,8 @@ interface FeedPost {
   date: string;
   image?: string | null;
   imagePath?: string | null;
+  imagePaths?: string[];
+  imageUrls?: string[];
   title?: string;
   author_name?: string;
   author_avatar?: string | null;
@@ -42,14 +47,27 @@ interface FeedPost {
 interface SharedPost extends FeedPost { image_path?: string | null }
 
 async function resolvePostImages(posts: SharedPost[]): Promise<FeedPost[]> {
-  const paths = [...new Set(posts.flatMap((post) => post.image_path ? [post.image_path] : []))];
+  const journeyIds = posts.filter((post) => post.source === 'journey').map((post) => post.id);
+  const imageLists = new Map<string, string[]>();
+  if (journeyIds.length) {
+    const { data, error } = await supabase.from('profile_posts').select('id,image_paths').in('id', journeyIds);
+    if (error && !['42703', 'PGRST204'].includes(error.code)) throw error;
+    data?.forEach((post) => imageLists.set(post.id, post.image_paths));
+  }
+  const pathsFor = (post: SharedPost) => imageLists.get(post.id)?.length
+    ? imageLists.get(post.id)! : post.image_path ? [post.image_path] : [];
+  const paths = [...new Set(posts.flatMap(pathsFor))];
   const images = new Map<string, string>();
   if (paths.length) {
     const { data, error } = await supabase.storage.from('profile-posts').createSignedUrls(paths, 3600);
     if (error) throw error;
     data?.forEach((item) => { if (item.path && item.signedUrl) images.set(item.path, item.signedUrl); });
   }
-  return posts.map((post) => ({ ...post, imagePath: post.image_path, image: post.image_path ? images.get(post.image_path) : post.image }));
+  return posts.map((post) => {
+    const imagePaths = pathsFor(post);
+    const imageUrls = imagePaths.map((path) => images.get(path) || '');
+    return { ...post, imagePaths, imageUrls, imagePath: imagePaths[0], image: imagePaths.length ? imageUrls[0] : post.image };
+  });
 }
 
 interface ProfilePostsData {
@@ -80,14 +98,12 @@ export function ProfilePosts({ userId, name, avatarUrl, isOwnProfile }: Props) {
   const [carouselFocused, setCarouselFocused] = useState(false);
   const [pageHidden, setPageHidden] = useState(() => document.hidden);
   const [playingVideo, setPlayingVideo] = useState<string | null>(null);
+  const [imageViewerOpen, setImageViewerOpen] = useState(false);
   const [deleting, setDeleting] = useState<FeedPost | null>(null);
   const [editing, setEditing] = useState<FeedPost | null>(null);
   const [editContent, setEditContent] = useState('');
-  const [editPhoto, setEditPhoto] = useState<File | null>(null);
-  const [editPreview, setEditPreview] = useState<string | null>(null);
-  const [removeEditPhoto, setRemoveEditPhoto] = useState(false);
+  const [editImages, setEditImages] = useState<PostImageAttachment[]>([]);
   const [editBusy, setEditBusy] = useState(false);
-  const editFileInput = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [pinBusy, setPinBusy] = useState(false);
   const pinLock = useRef(false);
@@ -153,14 +169,8 @@ export function ProfilePosts({ userId, name, avatarUrl, isOwnProfile }: Props) {
       const rows = journey.data || [];
       const posts = rows.filter((post) => !post.is_scheduled);
       const scheduled = isOwnProfile ? rows.filter((post) => post.is_scheduled) : [];
-      const paths = rows.flatMap((post) => post.image_path ? [post.image_path] : []);
-      const images = new Map<string, string>();
-      if (paths.length) {
-        const { data: urls, error } = await supabase.storage.from('profile-posts').createSignedUrls(paths, 3600);
-        if (error) throw error;
-        urls?.forEach((url) => { if (url.path && url.signedUrl) images.set(url.path, url.signedUrl); });
-      }
-      const toPost = (post: typeof rows[number]): FeedPost => ({ id: post.id, source: 'journey', content: post.content, date: post.publish_at, imagePath: post.image_path, image: post.image_path ? images.get(post.image_path) : null });
+      const resolved = await resolvePostImages(rows.map((post): SharedPost => ({ id: post.id, source: 'journey', content: post.content, date: post.publish_at, image_path: post.image_path })));
+      const toPost = (post: typeof rows[number]): FeedPost => resolved.find((item) => item.id === post.id)!;
       const feed: FeedPost[] = [
         ...posts.map(toPost),
         ...(photos.data || []).map((photo): FeedPost => ({ id: photo.id, source: 'photo', content: photo.caption || '', image: photo.image_url, date: photo.created_at })),
@@ -220,12 +230,12 @@ export function ProfilePosts({ userId, name, avatarUrl, isOwnProfile }: Props) {
     return () => document.removeEventListener('visibilitychange', updateVisibility);
   }, []);
   useEffect(() => {
-    if (carouselPosts.length < 2 || rotationPaused || carouselHovered || carouselFocused || pageHidden || editing || deleting || playingVideo) return;
+    if (carouselPosts.length < 2 || rotationPaused || carouselHovered || carouselFocused || pageHidden || editing || deleting || playingVideo || imageViewerOpen) return;
     const timer = window.setTimeout(() => {
       setActivePostIndex((current) => (current + 1) % carouselPosts.length);
     }, 8_000);
     return () => window.clearTimeout(timer);
-  }, [activePostIndex, carouselPosts.length, rotationPaused, carouselHovered, carouselFocused, pageHidden, editing, deleting, playingVideo]);
+  }, [activePostIndex, carouselPosts.length, rotationPaused, carouselHovered, carouselFocused, pageHidden, editing, deleting, playingVideo, imageViewerOpen]);
 
   function showPublishedPost(post: PublishedJourneyPost) {
     const queryKey = ['profile-journey-posts', userId, isOwnProfile, limit];
@@ -238,6 +248,8 @@ export function ProfilePosts({ userId, name, avatarUrl, isOwnProfile }: Props) {
         date: post.publishAt,
         imagePath: post.imagePath,
         image: post.imageUrl,
+        imagePaths: post.imagePaths,
+        imageUrls: post.imageUrls,
       };
       if (post.scheduled) {
         return { ...current, scheduled: [optimistic, ...current.scheduled.filter((item) => item.id !== post.id)] };
@@ -257,8 +269,9 @@ export function ProfilePosts({ userId, name, avatarUrl, isOwnProfile }: Props) {
           ? await supabase.from('community_posts').delete().eq('id', deleting.id).eq('user_id', userId)
           : await supabase.from('profile_posts').delete().eq('id', deleting.id).eq('user_id', userId);
       if (error) throw error;
-      if (deleting.imagePath) {
-        const { error: storageError } = await supabase.storage.from('profile-posts').remove([deleting.imagePath]);
+      const pathsToRemove = deleting.imagePaths?.length ? deleting.imagePaths : deleting.imagePath ? [deleting.imagePath] : [];
+      if (pathsToRemove.length) {
+        const { error: storageError } = await supabase.storage.from('profile-posts').remove(pathsToRemove);
         if (storageError) console.warn('Post removed; attached photo cleanup failed', storageError);
       }
       if (pinned.data?.id === deleting.id && pinned.data.source === deleting.source) queryClient.setQueryData(pinKey, null);
@@ -277,51 +290,36 @@ export function ProfilePosts({ userId, name, avatarUrl, isOwnProfile }: Props) {
   function startEditing(post: FeedPost) {
     setEditing(post);
     setEditContent(post.content);
-    setEditPhoto(null);
-    setEditPreview(post.image ?? null);
-    setRemoveEditPhoto(false);
-  }
-
-  function chooseEditPhoto(file: File | undefined) {
-    if (!file) return;
-    const error = validatePostImage(file);
-    if (error) { toast.error(error); return; }
-    setEditPhoto(file);
-    setRemoveEditPhoto(false);
-    setEditPreview(URL.createObjectURL(file));
+    const paths = post.imagePaths?.length ? post.imagePaths : post.imagePath ? [post.imagePath] : [];
+    setEditImages(paths.map((path, index) => ({ path, url: post.imageUrls?.[index] || (index === 0 ? post.image || undefined : undefined) })));
   }
 
   async function savePostEdit() {
     if (!editing || editBusy) return;
-    const keepsImage = Boolean(editing.imagePath && !removeEditPhoto) || Boolean(editPhoto);
+    const keepsImage = editImages.length > 0;
     const validation = validatePost(editContent, keepsImage, '');
     if (validation) { toast.error(validation); return; }
     setEditBusy(true);
-    let uploadedPath: string | null = null;
+    let uploadedPaths: string[] = [];
     try {
-      let imagePath = removeEditPhoto ? null : editing.imagePath ?? null;
-      if (editPhoto) {
-        const extensions: Record<string, string> = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'image/gif': 'gif' };
-        uploadedPath = `${userId}/${crypto.randomUUID()}.${extensions[editPhoto.type]}`;
-        const { error: uploadError } = await supabase.storage.from('profile-posts').upload(uploadedPath, editPhoto);
-        if (uploadError) throw uploadError;
-        imagePath = uploadedPath;
-      }
+      const images = await uploadPostImages(userId, editImages);
+      uploadedPaths = images.uploaded;
+      const imagePaths = images.paths;
       const { error } = await supabase
         .from('profile_posts')
-        .update({ content: editContent.trim(), image_path: imagePath })
+        .update({ content: editContent.trim(), image_path: imagePaths[0] || null, image_paths: imagePaths })
         .eq('id', editing.id)
         .eq('user_id', userId);
       if (error) throw error;
-      if (editing.imagePath && editing.imagePath !== imagePath) {
-        void supabase.storage.from('profile-posts').remove([editing.imagePath]);
-      }
+      uploadedPaths = [];
+      const removedPaths = (editing.imagePaths || (editing.imagePath ? [editing.imagePath] : [])).filter((path) => !imagePaths.includes(path));
+      if (removedPaths.length) void supabase.storage.from('profile-posts').remove(removedPaths);
       setEditing(null);
       toast.success('Post updated.');
       void refetch();
       void queryClient.invalidateQueries({ queryKey: ['profile-pinned-post', userId] });
     } catch (error) {
-      if (uploadedPath) void supabase.storage.from('profile-posts').remove([uploadedPath]);
+      if (uploadedPaths.length) void supabase.storage.from('profile-posts').remove(uploadedPaths);
       console.error('Unable to update post', error);
       toast.error('Could not update your post. Please try again.');
     } finally { setEditBusy(false); }
@@ -353,8 +351,7 @@ export function ProfilePosts({ userId, name, avatarUrl, isOwnProfile }: Props) {
         <div className="space-y-3 px-4 pb-5 sm:px-6">
           {post.title && <h3 className="font-semibold">{post.title}</h3>}
           {post.content && <PostContent content={post.content} onPlayVideo={setPlayingVideo} />}
-          {post.image && <img src={post.image} alt={`Photo shared by ${authorName}`} loading="lazy" className="max-h-96 w-full rounded-lg border border-border/50 bg-muted/20 object-contain" />}
-          {post.imagePath && !post.image && <p className="text-sm text-muted-foreground">Photo temporarily unavailable.</p>}
+          <PostImageGallery images={post.imageUrls?.length ? post.imageUrls : post.image ? [post.image] : []} authorName={authorName} onOpenChange={setImageViewerOpen} />
           {post.source === 'community' && <Button variant="link" className="h-auto p-0" asChild><Link to={`/rooms/posts/${post.id}`}>View conversation</Link></Button>}
         </div>
         {!scheduled && <ProfilePostActions key={user?.id || 'guest'} source={post.source} postId={post.id} shareUrl={shareUrl} metrics={metricsByPost.get(`${post.source}:${post.id}`)} refresh={() => queryClient.invalidateQueries({ queryKey: ['profile-post-metrics'] })} />}
@@ -456,12 +453,10 @@ export function ProfilePosts({ userId, name, avatarUrl, isOwnProfile }: Props) {
       </Dialog>
       <Dialog open={!!editing} onOpenChange={(open) => { if (!open && !editBusy) setEditing(null); }}>
         <DialogContent className="max-h-[90vh] max-w-xl overflow-y-auto">
-          <DialogHeader><DialogTitle>Edit post</DialogTitle><DialogDescription>Correct your update or replace its photo.</DialogDescription></DialogHeader>
+          <DialogHeader><DialogTitle>Edit post</DialogTitle><DialogDescription>Correct your update and add or remove up to four images.</DialogDescription></DialogHeader>
           <div className="space-y-4">
             <Textarea value={editContent} onChange={(event) => setEditContent(event.target.value)} maxLength={POST_MAX_LENGTH} rows={6} aria-label="Post text" placeholder="What would you like to share?" />
-            {editPreview && !removeEditPhoto && <div className="relative overflow-hidden rounded-lg border border-border"><img src={editPreview} alt="Post photo to edit" className="max-h-80 w-full object-contain" /><Button type="button" variant="secondary" size="icon" className="absolute right-2 top-2" aria-label="Remove photo" onClick={() => { setRemoveEditPhoto(true); setEditPhoto(null); }}><X className="h-4 w-4" /></Button></div>}
-            <input ref={editFileInput} type="file" accept="image/jpeg,image/png,image/webp,image/gif" className="hidden" onChange={(event) => { chooseEditPhoto(event.target.files?.[0]); event.target.value = ''; }} />
-            <Button type="button" variant="outline" onClick={() => editFileInput.current?.click()}><ImagePlus className="mr-2 h-4 w-4" />{editPreview && !removeEditPhoto ? 'Replace photo' : 'Add photo'}</Button>
+            <PostImagePicker images={editImages} onChange={setEditImages} disabled={editBusy} />
           </div>
           <DialogFooter><Button variant="outline" disabled={editBusy} onClick={() => setEditing(null)}>Cancel</Button><Button disabled={editBusy} onClick={() => void savePostEdit()}>{editBusy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}{editBusy ? 'Saving…' : 'Save changes'}</Button></DialogFooter>
         </DialogContent>

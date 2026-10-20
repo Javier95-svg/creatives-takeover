@@ -20,6 +20,7 @@ export type Database = {
           user_id: string
           content: string
           image_path: string | null
+          image_paths: string[]
           publish_at: string
           created_at: string
         }
@@ -28,12 +29,14 @@ export type Database = {
           user_id: string
           content?: string
           image_path?: string | null
+          image_paths?: string[]
           publish_at?: string
           created_at?: string
         }
         Update: {
           content?: string
           image_path?: string | null
+          image_paths?: string[]
           publish_at?: string
         }
         Relationships: []

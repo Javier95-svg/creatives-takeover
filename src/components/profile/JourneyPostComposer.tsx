@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { CalendarClock, ImagePlus, Loader2, Smile, X } from 'lucide-react';
+import { CalendarClock, Loader2, Smile } from 'lucide-react';
 import { toast } from 'sonner';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -9,7 +9,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { supabase } from '@/integrations/supabase/client';
 import { captureEvent } from '@/lib/analytics';
-import { insertPostEmoji, POST_MAX_LENGTH, validatePost, validatePostImage } from '@/lib/profilePosts';
+import { insertPostEmoji, POST_MAX_LENGTH, validatePost } from '@/lib/profilePosts';
+import { PostImagePicker, type PostImageAttachment } from './PostImagePicker';
+import { uploadPostImages } from '@/lib/postImageUploads';
 import { clearDraftSource, journeyDraftKey, readDraftSource, readJourneyDraft, type ProfileUpdateSource } from '@/lib/profileUpdateDraft';
 
 const EMOJIS = [
@@ -47,6 +49,8 @@ export interface PublishedJourneyPost {
   publishAt: string;
   imagePath: string | null;
   imageUrl: string | null;
+  imagePaths: string[];
+  imageUrls: string[];
   scheduled: boolean;
 }
 
@@ -62,14 +66,12 @@ function JourneyPostEditor({ userId, name, avatarUrl, onPublished, focusOnOpen =
   const [draftSource, setDraftSource] = useState<ProfileUpdateSource | null>(() => readDraftSource(userId));
   const [promptUsed, setPromptUsed] = useState<UpdatePrompt | null>(null);
   const [draftSaved, setDraftSaved] = useState(false);
-  const [photo, setPhoto] = useState<File | null>(null);
-  const [preview, setPreview] = useState<string | null>(null);
+  const [images, setImages] = useState<PostImageAttachment[]>([]);
   const [showSchedule, setShowSchedule] = useState(false);
   const [schedule, setSchedule] = useState('');
   const [emojiOpen, setEmojiOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const submitting = useRef(false);
-  const fileInput = useRef<HTMLInputElement>(null);
   const textarea = useRef<HTMLTextAreaElement>(null);
   const selection = useRef({ start: 0, end: 0 });
   const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -108,13 +110,6 @@ function JourneyPostEditor({ userId, name, avatarUrl, onPublished, focusOnOpen =
     });
   }
 
-  useEffect(() => {
-    if (!photo) { setPreview(null); return; }
-    const url = URL.createObjectURL(photo);
-    setPreview(url);
-    return () => URL.revokeObjectURL(url);
-  }, [photo]);
-
   function addEmoji(emoji: string) {
     const result = insertPostEmoji(content, emoji, selection.current.start, selection.current.end);
     if (!result) return;
@@ -131,46 +126,43 @@ function JourneyPostEditor({ userId, name, avatarUrl, onPublished, focusOnOpen =
     event.preventDefault();
     if (submitting.current) return;
     if (showSchedule && !schedule) { toast.error('Choose a date and time for your post.'); return; }
-    const validation = validatePost(content, !!photo, schedule);
+    const validation = validatePost(content, images.length > 0, schedule);
     if (validation) { toast.error(validation); return; }
     submitting.current = true;
     setBusy(true);
-    let uploadedPath: string | null = null;
+    let uploadedPaths: string[] = [];
     try {
-      if (photo) {
-        const extensions: Record<string, string> = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'image/gif': 'gif' };
-        uploadedPath = `${userId}/${crypto.randomUUID()}.${extensions[photo.type]}`;
-        const { error } = await supabase.storage.from('profile-posts').upload(uploadedPath, photo);
-        if (error) { uploadedPath = null; throw error; }
-      }
+      const uploadedImages = await uploadPostImages(userId, images);
+      uploadedPaths = uploadedImages.uploaded;
+      const imagePaths = uploadedImages.paths;
       // Validate again after upload, in case the chosen time passed meanwhile.
-      const afterUpload = validatePost(content, !!photo, schedule);
+      const afterUpload = validatePost(content, images.length > 0, schedule);
       if (afterUpload) throw new Error(afterUpload);
       const { data: insertedPost, error } = await supabase.from('profile_posts').insert({
         user_id: userId,
         content: content.trim(),
-        image_path: uploadedPath,
+        image_path: imagePaths[0] || null,
+        image_paths: imagePaths,
         ...(schedule ? { publish_at: new Date(schedule).toISOString() } : {}),
-      }).select('id,content,image_path,publish_at').single();
+      }).select('id,content,image_path,image_paths,publish_at').single();
       if (error) throw error;
+      // The post owns these objects now, even if signing a preview fails.
+      uploadedPaths = [];
 
-      let imageUrl: string | null = null;
-      if (insertedPost.image_path) {
-        const { data: signedImage } = await supabase.storage
-          .from('profile-posts')
-          .createSignedUrl(insertedPost.image_path, 3600);
-        imageUrl = signedImage?.signedUrl ?? null;
-      }
-
+      const { data: signedImages } = imagePaths.length
+        ? await supabase.storage.from('profile-posts').createSignedUrls(imagePaths, 3600)
+        : { data: [] };
+      const imageUrls = imagePaths.map((path) => signedImages?.find((image) => image.path === path)?.signedUrl || '');
       onPublished({
         id: insertedPost.id,
         content: insertedPost.content,
         publishAt: insertedPost.publish_at,
         imagePath: insertedPost.image_path,
-        imageUrl,
+        imageUrl: imageUrls[0] || null,
+        imagePaths,
+        imageUrls,
         scheduled: Boolean(schedule),
       });
-      uploadedPath = null;
       captureEvent('profile_update_published', {
         source: draftSource ?? (promptUsed ? 'prompt' : 'manual'),
         prompt: promptUsed,
@@ -182,14 +174,14 @@ function JourneyPostEditor({ userId, name, avatarUrl, onPublished, focusOnOpen =
       setPromptUsed(null);
       toast.success(schedule ? 'Post scheduled. Your journey update is on its way.' : 'Your journey update is live!');
       setContent('');
-      setPhoto(null);
+      setImages([]);
       setSchedule('');
       setShowSchedule(false);
       selection.current = { start: 0, end: 0 };
     } catch (error) {
-      if (uploadedPath) await supabase.storage.from('profile-posts').remove([uploadedPath]);
+      if (uploadedPaths.length) await supabase.storage.from('profile-posts').remove(uploadedPaths);
       console.error('Unable to publish journey post', error);
-      toast.error('Could not save your post. Your text and photo are still here. Please try again.');
+      toast.error('Could not save your post. Your text and images are still here. Please try again.');
     } finally {
       submitting.current = false;
       setBusy(false);
@@ -224,7 +216,7 @@ function JourneyPostEditor({ userId, name, avatarUrl, onPublished, focusOnOpen =
               {draftSaved && <p className="mb-2 text-xs text-muted-foreground" title="Text saved privately for your account in this browser tab">Draft saved</p>}
             </div>
           </div>
-          {!content.trim() && !photo && (
+          {!content.trim() && images.length === 0 && (
             <div className="flex flex-wrap items-center gap-2 px-4 pb-3 sm:px-6">
               <span className="text-xs text-muted-foreground">Start with</span>
               {UPDATE_PROMPTS.map((prompt) => (
@@ -239,14 +231,7 @@ function JourneyPostEditor({ userId, name, avatarUrl, onPublished, focusOnOpen =
               ))}
             </div>
           )}
-          {preview && (
-            <div className="relative mx-4 mb-4 sm:mx-6 rounded-lg border border-border bg-muted/30">
-              <img src={preview} alt="Photo attached to your update" className="max-h-80 w-full rounded-lg object-contain" />
-              <Button type="button" variant="secondary" size="icon" aria-label="Remove photo" className="absolute right-2 top-2" onClick={() => setPhoto(null)}>
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-          )}
+          <div className="mx-4 mb-3 sm:mx-6"><PostImagePicker images={images} onChange={setImages} disabled={busy} /></div>
           {showSchedule && (
             <div className="mx-4 mb-4 rounded-lg border border-primary/20 bg-primary/5 p-3 sm:mx-6">
               <div className="flex items-center justify-between gap-2">
@@ -259,15 +244,6 @@ function JourneyPostEditor({ userId, name, avatarUrl, onPublished, focusOnOpen =
           )}
           <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border/60 px-4 py-3 sm:px-6">
             <div className="flex items-center gap-1">
-              <input ref={fileInput} type="file" accept="image/jpeg,image/png,image/webp,image/gif" aria-label="Attach a photo" className="hidden" onChange={(event) => {
-                const file = event.target.files?.[0];
-                event.target.value = '';
-                if (!file) return;
-                const error = validatePostImage(file);
-                if (error) { toast.error(error); return; }
-                setPhoto(file);
-              }} />
-              <Button type="button" variant="ghost" size="icon" onClick={() => fileInput.current?.click()} aria-label="Add photo" title="Add photo (up to 5 MB)"><ImagePlus className="h-4 w-4 text-primary" /></Button>
               <Popover open={emojiOpen} onOpenChange={setEmojiOpen}>
                 <PopoverTrigger asChild><Button type="button" variant="ghost" size="icon" aria-label="Add emoji" title="Add emoji"><Smile className="h-4 w-4 text-primary" /></Button></PopoverTrigger>
                 <PopoverContent align="start" className="w-64" onCloseAutoFocus={(event) => event.preventDefault()}>
@@ -281,7 +257,7 @@ function JourneyPostEditor({ userId, name, avatarUrl, onPublished, focusOnOpen =
             </div>
             <div className="flex items-center gap-3">
               {content.length >= POST_MAX_LENGTH - 500 && <span className="text-xs tabular-nums text-muted-foreground" aria-live="polite">{content.length.toLocaleString()}/5,000</span>}
-              <Button type="submit" size="sm" className="min-w-20 rounded-full" disabled={busy || (!content.trim() && !photo)}>
+              <Button type="submit" size="sm" className="min-w-20 rounded-full" disabled={busy || (!content.trim() && images.length === 0)}>
                 {busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {busy ? 'Saving…' : schedule ? 'Schedule' : 'Post'}
               </Button>

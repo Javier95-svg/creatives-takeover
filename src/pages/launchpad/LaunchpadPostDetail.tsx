@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { LinkedPostText } from '@/components/social/LinkedPostText';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
 import { ArrowLeft, ArrowRight, Bookmark, Flag, Link2, MessageSquare, Pencil, Trash2 } from 'lucide-react';
@@ -128,7 +129,7 @@ export default function LaunchpadPostDetail() {
                 </div>
               </div>
               {data.title && <h2 className="mt-4 font-space-grotesk text-2xl font-semibold leading-tight">{data.title}</h2>}
-              <p className="mt-3 whitespace-pre-line break-words text-body leading-7">{data.content}</p>
+              <p className="mt-3 whitespace-pre-line break-words text-body leading-7"><LinkedPostText content={data.content} /></p>
               <div className="mt-5 flex flex-wrap items-center gap-1 border-t border-border/60 pt-4 text-sm text-muted-foreground">
                 <UpvotePill post={data} onToggle={() => { if (requireAccount('upvote posts')) upvote.mutate({ postId: data.id, on: !data.voted }); }} />
                 <button type="button" onClick={() => { if (requireAccount('save posts')) save.mutate({ postId: data.id, on: !data.saved }); }} aria-pressed={data.saved}
@@ -191,7 +192,7 @@ export default function LaunchpadPostDetail() {
                           : <button type="button" onClick={() => { if (requireAccount('report a reply')) setReport({ commentId: comment.id }); }} className="rounded px-1.5 py-0.5 text-xs text-muted-foreground hover:bg-muted hover:text-foreground">Report</button>}
                       </span>
                     </div>
-                    <p className="mt-1 whitespace-pre-line break-words text-sm leading-6">{comment.content}</p>
+                    <p className="mt-1 whitespace-pre-line break-words text-sm leading-6"><LinkedPostText content={comment.content} /></p>
                   </div>
                 </li>;
               })}

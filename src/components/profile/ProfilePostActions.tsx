@@ -7,6 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { LinkedPostText } from '@/components/social/LinkedPostText';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 
@@ -137,7 +138,7 @@ export function ProfilePostActions({ source, postId, shareUrl, metrics, refresh 
         <div className="min-w-0 flex-1 text-sm">
           {comment.username ? <Link className="font-medium hover:underline" to={`/profile/${encodeURIComponent(comment.username)}`}>{comment.name}</Link> : <span className="font-medium">{comment.name}</span>}
           <time className="ml-2 text-xs text-muted-foreground" dateTime={comment.created_at}>{new Date(comment.created_at).toLocaleDateString()}</time>
-          <p className="whitespace-pre-wrap break-words [overflow-wrap:anywhere]">{comment.content}</p>
+          <p className="whitespace-pre-wrap break-words [overflow-wrap:anywhere]"><LinkedPostText content={comment.content} /></p>
         </div>
         {comment.user_id === user?.id && <Button variant="ghost" size="icon" disabled={!!pending} aria-label="Delete your comment" onClick={() => void removeComment(comment.id)}><Trash2 className="h-4 w-4" /></Button>}
       </div>)}

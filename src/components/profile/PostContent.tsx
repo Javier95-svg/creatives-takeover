@@ -1,6 +1,6 @@
-import { Fragment } from 'react';
 import { Play } from 'lucide-react';
 import { getPostLinks, getPostYouTubeId } from '@/lib/postLinks';
+import { LinkedPostText } from '@/components/social/LinkedPostText';
 
 interface Props {
   content: string;
@@ -10,19 +10,10 @@ interface Props {
 export function PostContent({ content, onPlayVideo }: Props) {
   const links = getPostLinks(content);
   const videoId = links.map((link) => getPostYouTubeId(link.href)).find(Boolean);
-  let cursor = 0;
 
   return <>
     <p className="whitespace-pre-wrap break-words text-sm leading-relaxed [overflow-wrap:anywhere]">
-      {links.map((link) => {
-        const preceding = content.slice(cursor, link.start);
-        cursor = link.end;
-        return <Fragment key={link.start}>
-          {preceding}
-          <a href={link.href} target="_blank" rel="noopener noreferrer ugc" className="text-primary underline decoration-primary/40 underline-offset-2 hover:decoration-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">{link.text}</a>
-        </Fragment>;
-      })}
-      {content.slice(cursor)}
+      <LinkedPostText content={content} />
     </p>
     {videoId && (
       <button

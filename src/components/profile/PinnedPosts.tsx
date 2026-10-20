@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { ProfilePostActions, type PostMetrics } from './ProfilePostActions';
 import { Button } from '@/components/ui/button';
+import { LinkedPostText } from '@/components/social/LinkedPostText';
 
 interface PinnedPost {
   id: string;
@@ -53,16 +54,15 @@ export const PinnedPosts = ({ posts }: PinnedPostsProps) => {
         <div className="grid gap-4 md:grid-cols-2">
           {posts.map((post) => (
               <Card key={post.id} className="h-full transition-all hover:shadow-md hover:border-primary/50">
-                <Link to={`/mentorship/post/${post.id}`} className="block group">
                 <CardContent className="p-4">
                   <div className="flex items-start gap-2 mb-2">
                     <Pin className="h-4 w-4 text-primary mt-1 flex-shrink-0" />
                     <h3 className="font-semibold group-hover:text-primary transition-colors line-clamp-2">
-                      {post.title}
+                      <Link to={`/mentorship/post/${post.id}`}>{post.title}</Link>
                     </h3>
                   </div>
                   <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
-                    {post.content}
+                    <LinkedPostText content={post.content} />
                   </p>
                   <div className="flex flex-wrap gap-2 mb-3">
                     {post.tags.slice(0, 3).map((tag) => (
@@ -72,7 +72,6 @@ export const PinnedPosts = ({ posts }: PinnedPostsProps) => {
                     ))}
                   </div>
                 </CardContent>
-                </Link>
                 <ProfilePostActions key={user?.id || 'guest'} source="community" postId={post.id}
                   shareUrl={`${window.location.origin}${location.pathname}?post=community:${post.id}`}
                   metrics={metrics.data?.find((item) => item.id === post.id)}

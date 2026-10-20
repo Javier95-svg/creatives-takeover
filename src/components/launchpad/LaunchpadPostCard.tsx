@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { LinkedPostText } from '@/components/social/LinkedPostText';
 import { formatDistanceToNow } from 'date-fns';
 import { ArrowBigUp, Bookmark, Flag, FolderKanban, Link2, MessageSquare, MoreHorizontal } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -100,9 +101,9 @@ export function LaunchpadPostCard({ post, isOwn, onUpvote, onSave, onReport }: {
         </div>
       </div>
       <Link to={href} className="mt-3 block rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-        {post.title && <h2 className="font-space-grotesk text-lg font-semibold leading-snug group-hover:text-primary">{post.title}</h2>}
-        <p className="mt-1 line-clamp-2 whitespace-pre-line text-sm text-muted-foreground">{post.content}</p>
+        <h2 className="font-space-grotesk text-lg font-semibold leading-snug group-hover:text-primary">{post.title || 'View update'}</h2>
       </Link>
+      <p className="mt-1 line-clamp-2 whitespace-pre-line text-sm text-muted-foreground"><LinkedPostText content={post.content} /></p>
       <div className="mt-3 flex items-center gap-1 text-sm text-muted-foreground">
         <UpvotePill post={post} onToggle={onUpvote} />
         <Link to={href} className="inline-flex h-8 items-center gap-1.5 rounded-full px-3 hover:bg-muted hover:text-foreground">

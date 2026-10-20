@@ -3,6 +3,7 @@ import { useTrendingPosts } from "@/hooks/useTrendingPosts";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TrendingUp, MessageSquare, ThumbsUp, Share2 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { LinkedPostText } from '@/components/social/LinkedPostText';
 
 const TrendingPostsCard = () => {
   const { trendingPosts, isLoading } = useTrendingPosts(5);
@@ -56,9 +57,8 @@ const TrendingPostsCard = () => {
       <CardContent>
         <div className="space-y-3">
           {trendingPosts.map((post, index) => (
-            <Link
+            <div
               key={post.id}
-              to={`/rooms/posts/${post.id}`}
               className="block p-3 rounded-lg border hover:border-primary/50 transition-colors"
             >
               <div className="flex items-start gap-3">
@@ -66,9 +66,9 @@ const TrendingPostsCard = () => {
                   {index + 1}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h4 className="font-medium line-clamp-1 mb-1">{post.title}</h4>
+                  <h4 className="font-medium line-clamp-1 mb-1"><Link to={`/rooms/posts/${post.id}`}>{post.title}</Link></h4>
                   <p className="text-sm text-muted-foreground line-clamp-2 mb-2">
-                    {post.content}
+                    <LinkedPostText content={post.content} />
                   </p>
                   <div className="flex items-center gap-4 text-xs text-muted-foreground">
                     <span className="flex items-center gap-1">
@@ -86,7 +86,7 @@ const TrendingPostsCard = () => {
                   </div>
                 </div>
               </div>
-            </Link>
+            </div>
           ))}
         </div>
       </CardContent>
