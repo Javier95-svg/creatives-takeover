@@ -10,7 +10,7 @@ export function LinkedPostText({ content }: { content: string }) {
     const preceding = content.slice(cursor, link.start);
     cursor = link.end;
     return <Fragment key={link.start}>{preceding}{link.href.startsWith('/')
-      ? <Link to={link.href} className={style}>{link.text}</Link>
+      ? <Link to={link.href} className="text-primary no-underline hover:no-underline hover:text-primary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">{link.text}</Link>
       : <a href={link.href} target="_blank" rel="noopener noreferrer ugc" className={style}>{link.text}</a>}
     </Fragment>;
   })}{content.slice(cursor)}</>;

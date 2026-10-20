@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, type ReactNode } from 'react';
 import { ImagePlus, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { validatePostImage } from '@/lib/profilePosts';
@@ -6,10 +6,11 @@ import { toast } from 'sonner';
 
 export interface PostImageAttachment { file?: File; path?: string; url?: string }
 
-export function PostImagePicker({ images, onChange, disabled = false }: {
+export function PostImagePicker({ images, onChange, disabled = false, actions }: {
   images: PostImageAttachment[];
   onChange: (images: PostImageAttachment[]) => void;
   disabled?: boolean;
+  actions?: ReactNode;
 }) {
   const input = useRef<HTMLInputElement>(null);
   const previews = useMemo(() => images.map((image) => image.file ? URL.createObjectURL(image.file) : image.url), [images]);
@@ -33,7 +34,9 @@ export function PostImagePicker({ images, onChange, disabled = false }: {
       }
       onChange([...images, ...files.map((file) => ({ file }))]);
     }} />
-    <Button type="button" variant="ghost" size="sm" disabled={disabled || images.length >= 4} onClick={() => input.current?.click()}><ImagePlus className="mr-2 h-4 w-4 text-primary" />Add images ({images.length}/4)</Button>
-    <span className="ml-2 text-xs text-muted-foreground">Up to 5 MB each</span>
+    <div className="flex items-center gap-2">
+      <Button type="button" variant="ghost" size="sm" title="Up to four images, 5 MB each" disabled={disabled || images.length >= 4} onClick={() => input.current?.click()}><ImagePlus className="mr-2 h-4 w-4 text-primary" />Add images ({images.length}/4)</Button>
+      {actions}
+    </div>
   </div>;
 }

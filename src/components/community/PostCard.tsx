@@ -619,6 +619,7 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
                   <div className="text-foreground/90 prose prose-sm max-w-none dark:prose-invert [&_p]:mb-2 [&_p]:mt-0 [&_p]:leading-relaxed line-clamp-3">
                     <ReactMarkdown 
                       remarkPlugins={[remarkGfm, remarkBreaks, remarkPlatformMentions]}
+                      components={{ a: ({ href, children }) => <a href={href} className={href?.startsWith('/') ? '!no-underline text-primary' : undefined}>{children}</a> }}
                     >
                       {post.content}
                     </ReactMarkdown>
@@ -635,6 +636,7 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
                   <div className="text-foreground/90 prose prose-sm max-w-none dark:prose-invert [&_p]:mb-2 [&_p]:mt-0 [&_p]:leading-relaxed">
                     <ReactMarkdown 
                       remarkPlugins={[remarkGfm, remarkBreaks, remarkPlatformMentions]}
+                      components={{ a: ({ href, children }) => <a href={href} className={href?.startsWith('/') ? '!no-underline text-primary' : undefined}>{children}</a> }}
                     >
                       {post.content}
                     </ReactMarkdown>

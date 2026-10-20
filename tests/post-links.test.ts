@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { getPostLinks, getPostYouTubeId } from '../src/lib/postLinks.ts';
+import { getPostLinks, getPostYouTubeId, insertPostLink } from '../src/lib/postLinks.ts';
 
 test('post links preserve text positions, query strings and URL-only posts', () => {
   const content = 'Demo: https://example.com/demo?a=1&b=2\nwww.example.org';
@@ -43,5 +43,26 @@ test('unrelated hosts, malformed IDs and channel links never create a player', (
     'javascript:alert(1)',
     'not a valid video link',
   ]) assert.equal(getPostYouTubeId(href), null, href);
+});
+
+test('selected text becomes a named link while surrounding text is preserved', () => {
+  const result = insertPostLink('See our demo today', 'our demo', 'https://example.com/demo', 4, 12)!;
+  assert.equal(result.text, 'See [our demo](https://example.com/demo) today');
+  const links = getPostLinks(result.text);
+  assert.equal(links.length, 1);
+  assert.equal(links[0].text, 'our demo');
+  assert.equal(links[0].href, 'https://example.com/demo');
+});
+
+test('named links escape labels, encode parentheses and remain separate when adjacent', () => {
+  const result = insertPostLink('', 'Demo [new]', 'https://example.com/demo(new)', 0, 0)!;
+  assert.equal(getPostLinks(result.text)[0].text, 'Demo [new]');
+  assert.equal(getPostLinks(result.text)[0].href, 'https://example.com/demo%28new%29');
+  assert.equal(getPostLinks('[One](https://one.example)[Two](https://two.example)').length, 2);
+});
+
+test('link insertion rejects executable schemes and empty labels', () => {
+  assert.equal(insertPostLink('test', 'test', 'javascript:alert(1)', 0, 4), null);
+  assert.equal(insertPostLink('', '', 'https://example.com', 0, 0), null);
 });
 

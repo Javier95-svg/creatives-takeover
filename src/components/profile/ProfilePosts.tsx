@@ -16,6 +16,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { PostImagePicker, type PostImageAttachment } from './PostImagePicker';
 import { uploadPostImages } from '@/lib/postImageUploads';
 import { PostImageGallery } from './PostImageGallery';
+import { PostLinkButton } from './PostLinkButton';
 import { PostContent } from './PostContent';
 
 const PostVideoPlayer = lazy(() => import('@/components/podcast/PodcastPlayerModal'));
@@ -103,6 +104,7 @@ export function ProfilePosts({ userId, name, avatarUrl, isOwnProfile }: Props) {
   const [editing, setEditing] = useState<FeedPost | null>(null);
   const [editContent, setEditContent] = useState('');
   const [editImages, setEditImages] = useState<PostImageAttachment[]>([]);
+  const editTextarea = useRef<HTMLTextAreaElement>(null);
   const [editBusy, setEditBusy] = useState(false);
   const [busy, setBusy] = useState(false);
   const [pinBusy, setPinBusy] = useState(false);
@@ -455,8 +457,8 @@ export function ProfilePosts({ userId, name, avatarUrl, isOwnProfile }: Props) {
         <DialogContent className="max-h-[90vh] max-w-xl overflow-y-auto">
           <DialogHeader><DialogTitle>Edit post</DialogTitle><DialogDescription>Correct your update and add or remove up to four images.</DialogDescription></DialogHeader>
           <div className="space-y-4">
-            <Textarea value={editContent} onChange={(event) => setEditContent(event.target.value)} maxLength={POST_MAX_LENGTH} rows={6} aria-label="Post text" placeholder="What would you like to share?" />
-            <PostImagePicker images={editImages} onChange={setEditImages} disabled={editBusy} />
+            <Textarea ref={editTextarea} value={editContent} onChange={(event) => setEditContent(event.target.value)} maxLength={POST_MAX_LENGTH} rows={6} aria-label="Post text" placeholder="What would you like to share?" />
+            <PostImagePicker images={editImages} onChange={setEditImages} disabled={editBusy} actions={<PostLinkButton value={editContent} onChange={setEditContent} textarea={editTextarea} disabled={editBusy} />} />
           </div>
           <DialogFooter><Button variant="outline" disabled={editBusy} onClick={() => setEditing(null)}>Cancel</Button><Button disabled={editBusy} onClick={() => void savePostEdit()}>{editBusy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}{editBusy ? 'Saving…' : 'Save changes'}</Button></DialogFooter>
         </DialogContent>
