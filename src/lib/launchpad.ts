@@ -45,6 +45,7 @@ export interface LaunchpadAuthor {
 }
 
 export interface LaunchpadPost {
+  source_data?: { origin?: string; image_paths?: string[] } | null;
   id: string;
   user_id: string;
   title: string | null;
@@ -71,7 +72,7 @@ export interface LaunchpadComment {
   author: LaunchpadAuthor | null;
 }
 
-const POST_COLUMNS = 'id, user_id, title, content, post_type, topic, project_name, stage, upvotes, comment_count, created_at, updated_at';
+const POST_COLUMNS = 'id, user_id, title, content, post_type, topic, project_name, stage, upvotes, comment_count, created_at, updated_at, source_data';
 
 async function authorsById(ids: string[]): Promise<Map<string, LaunchpadAuthor>> {
   const unique = [...new Set(ids)];
@@ -151,7 +152,7 @@ export async function listPosts(filters: PostFilters, viewerId?: string): Promis
 
   // Best ranks client-side, so it reads a wider window than it shows.
   const fetchSize = filters.sort === 'best' ? Math.max(filters.limit, 100) : filters.limit;
-  let query = db.from('community_posts').select(POST_COLUMNS).eq('is_public', true).is('hidden_at', null);
+  let query = db.from('community_posts').select(POST_COLUMNS).eq('is_public', true).is('hidden_at', null).lte('created_at', new Date().toISOString());
   if (filters.topic) query = query.eq('topic', filters.topic);
   if (filters.topics) {
     if (filters.topics.length === 0) return [];

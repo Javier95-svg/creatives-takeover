@@ -1,4 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { KIND_VISUALS } from '@/components/launchpad/roomVisuals';
 import { CalendarClock, Loader2, Smile } from 'lucide-react';
 import { toast } from 'sonner';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -22,13 +24,12 @@ const EMOJIS = [
   ['😊', 'Smile'], ['🔥', 'Fire'], ['✅', 'Done'], ['🙏', 'Thanks'],
 ];
 
-// A blank box is where updates die, so an empty composer offers three ways in.
-const UPDATE_PROMPTS = [
-  { key: 'shipped', label: 'What I shipped', starter: 'This week I shipped ' },
-  { key: 'learned', label: 'What I learned', starter: 'This week I learned ' },
-  { key: 'need', label: 'What I need', starter: 'I could use help with ' },
+const ROOM_OPTIONS = [
+  { key: 'feedback', label: 'Ask for feedback' },
+  { key: 'milestone', label: 'Milestone' },
+  { key: 'idea', label: 'Idea' },
 ] as const;
-type UpdatePrompt = (typeof UPDATE_PROMPTS)[number]['key'];
+type RoomKind = (typeof ROOM_OPTIONS)[number]['key'];
 
 const SOURCE_HINT: Record<ProfileUpdateSource, string> = {
   stage: 'Started from the stage you completed. Edit it before you post.',
@@ -61,11 +62,12 @@ export function JourneyPostComposer(props: Props) {
 }
 
 function JourneyPostEditor({ userId, name, avatarUrl, onPublished, focusOnOpen = false }: Props) {
+  const queryClient = useQueryClient();
   // Unfinished text stays in this browser tab, isolated by account, and never
   // reaches analytics or the post table. Photos and schedules are not restored.
   const [content, setContent] = useState(() => readJourneyDraft(userId));
   const [draftSource, setDraftSource] = useState<ProfileUpdateSource | null>(() => readDraftSource(userId));
-  const [promptUsed, setPromptUsed] = useState<UpdatePrompt | null>(null);
+  const [roomKind, setRoomKind] = useState<RoomKind | null>(null);
   const [draftSaved, setDraftSaved] = useState(false);
   const [images, setImages] = useState<PostImageAttachment[]>([]);
   const [showSchedule, setShowSchedule] = useState(false);
@@ -101,14 +103,8 @@ function JourneyPostEditor({ userId, name, avatarUrl, onPublished, focusOnOpen =
     field.setSelectionRange(field.value.length, field.value.length);
   }, [focusOnOpen]);
 
-  function startWith(prompt: (typeof UPDATE_PROMPTS)[number]) {
-    setContent(prompt.starter);
-    setPromptUsed(prompt.key);
-    selection.current = { start: prompt.starter.length, end: prompt.starter.length };
-    requestAnimationFrame(() => {
-      textarea.current?.focus();
-      textarea.current?.setSelectionRange(prompt.starter.length, prompt.starter.length);
-    });
+  function selectRoomKind(prompt: (typeof ROOM_OPTIONS)[number]) {
+    setRoomKind((selected) => selected === prompt.key ? null : prompt.key);
   }
 
   function addEmoji(emoji: string) {
@@ -139,11 +135,14 @@ function JourneyPostEditor({ userId, name, avatarUrl, onPublished, focusOnOpen =
       // Validate again after upload, in case the chosen time passed meanwhile.
       const afterUpload = validatePost(content, images.length > 0, schedule);
       if (afterUpload) throw new Error(afterUpload);
-      const { data: insertedPost, error } = await supabase.from('profile_posts').insert({
-        user_id: userId,
-        content: content.trim(),
+      const { data: insertedPost, error } = roomKind ? await supabase.rpc('publish_profile_update', {
+        p_content: content.trim(),
+        p_image_paths: imagePaths,
+        p_room_kind: roomKind,
+        p_publish_at: schedule ? new Date(schedule).toISOString() : null,
+      }).single() : await supabase.from('profile_posts').insert({
+        user_id: userId, content: content.trim(), image_paths: imagePaths,
         image_path: imagePaths[0] || null,
-        image_paths: imagePaths,
         ...(schedule ? { publish_at: new Date(schedule).toISOString() } : {}),
       }).select('id,content,image_path,image_paths,publish_at').single();
       if (error) throw error;
@@ -165,15 +164,17 @@ function JourneyPostEditor({ userId, name, avatarUrl, onPublished, focusOnOpen =
         scheduled: Boolean(schedule),
       });
       captureEvent('profile_update_published', {
-        source: draftSource ?? (promptUsed ? 'prompt' : 'manual'),
-        prompt: promptUsed,
+        source: draftSource ?? 'manual',
+        room_kind: roomKind,
         scheduled: Boolean(schedule),
         has_photo: Boolean(insertedPost.image_path),
       });
       clearDraftSource(userId);
       setDraftSource(null);
-      setPromptUsed(null);
-      toast.success(schedule ? 'Post scheduled. Your journey update is on its way.' : 'Your journey update is live!');
+      setRoomKind(null);
+      void queryClient.invalidateQueries({ queryKey: ['launchpad-posts'] });
+      void queryClient.invalidateQueries({ queryKey: ['launchpad-topic-stats'] });
+      toast.success(schedule ? 'Your update is scheduled.' : roomKind ? 'Your update is live on your profile and in Rooms!' : 'Your project update is live!');
       setContent('');
       setImages([]);
       setSchedule('');
@@ -216,21 +217,23 @@ function JourneyPostEditor({ userId, name, avatarUrl, onPublished, focusOnOpen =
               {draftSaved && <p className="mb-2 text-xs text-muted-foreground" title="Text saved privately for your account in this browser tab">Draft saved</p>}
             </div>
           </div>
-          {!content.trim() && images.length === 0 && (
-            <div className="flex flex-wrap items-center gap-2 px-4 pb-3 sm:px-6">
-              <span className="text-xs text-muted-foreground">Start with</span>
-              {UPDATE_PROMPTS.map((prompt) => (
+            <div className="flex flex-wrap items-center gap-2 px-4 pb-3 sm:px-6" role="group" aria-label="Also share in Rooms">
+              <span className="text-xs text-muted-foreground">Rooms</span>
+              {ROOM_OPTIONS.map((prompt) => {
+                const { icon: Icon, badge } = KIND_VISUALS[prompt.key];
+                return (
                 <button
                   key={prompt.key}
                   type="button"
-                  onClick={() => startWith(prompt)}
-                  className="rounded-full border border-border/70 bg-background px-3 py-1 text-xs font-medium text-foreground transition-colors hover:border-primary/50 hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none"
+                  onClick={() => selectRoomKind(prompt)}
+                  aria-pressed={roomKind === prompt.key}
+                  className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors hover:border-primary/50 hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none ${roomKind === prompt.key ? `${badge} ring-1 ring-current` : 'border-border/70 bg-background text-foreground'}`}
                 >
-                  {prompt.label}
+                  <Icon className="h-3.5 w-3.5" aria-hidden="true" />{prompt.label}
                 </button>
-              ))}
+              ); })}
+              {roomKind && <p className="w-full text-xs text-muted-foreground">Also shared in Rooms · Founder life. Click the selected topic to undo.</p>}
             </div>
-          )}
           <div className="mx-4 mb-3 sm:mx-6"><PostImagePicker images={images} onChange={setImages} disabled={busy} actions={<PostLinkButton value={content} onChange={setContent} textarea={textarea} disabled={busy} />} /></div>
           {showSchedule && (
             <div className="mx-4 mb-4 rounded-lg border border-primary/20 bg-primary/5 p-3 sm:mx-6">

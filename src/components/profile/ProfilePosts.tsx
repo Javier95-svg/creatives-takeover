@@ -162,7 +162,7 @@ export function ProfilePosts({ userId, name, avatarUrl, isOwnProfile }: Props) {
       const [journey, photos, community] = await Promise.all([
         supabase.rpc('list_profile_journey_posts', { p_user_id: userId, p_limit: limit }),
         supabase.from('user_photos').select('id, caption, image_url, created_at').eq('user_id', userId).order('created_at', { ascending: false }).limit(limit),
-        supabase.from('community_posts').select('id, content, title, created_at').eq('user_id', userId).order('created_at', { ascending: false }).limit(limit),
+        supabase.from('community_posts').select('id, content, title, created_at').eq('user_id', userId).or('source_data->>origin.is.null,source_data->>origin.neq.profile-update').order('created_at', { ascending: false }).limit(limit),
       ]);
       // Keep existing content accessible during a frontend/database rollout.
       const postingAvailable = !(journey.error && ['42P01', '42883', 'PGRST202', 'PGRST205'].includes(journey.error.code));

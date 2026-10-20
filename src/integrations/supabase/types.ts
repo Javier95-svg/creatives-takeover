@@ -8928,6 +8928,10 @@ export type Database = {
       }
     }
     Functions: {
+      publish_profile_update: {
+        Args: { p_content: string; p_image_paths: string[]; p_room_kind: string | null; p_publish_at: string | null }
+        Returns: Database["public"]["Tables"]["profile_posts"]["Row"][]
+      }
       set_profile_pinned_post: { Args: { p_source: string; p_id: string; p_pinned: boolean }; Returns: undefined }
       get_profile_pinned_post: { Args: { p_user_id: string }; Returns: Json }
       profile_post_metrics: { Args: { p_posts: Json }; Returns: Json }
