@@ -168,6 +168,14 @@ export const FOUNDER_ID_PROGRAMS = {
   ],
   cta: { label: 'See programs', href: '/enterprise' },
   exampleLabel: 'Example showcase · Spring cohort',
+  // Its own invented founders, so the showcase never repeats the hero deck.
+  // Checked against profiles on 2026-10-22: none of these names or handles exists.
+  exampleCards: [
+    { name: 'Mateo Rossi', handle: 'mateorossi', number: '000 452', stage: 'Prototyping', tagline: 'Shared kitchens for food startups' },
+    { name: 'Aiko Tanaka', handle: 'aikotanaka', number: '001 206', stage: 'Validation', tagline: 'Translation for small clinics' },
+    { name: 'Nadia Haddad', handle: 'nadiahaddad', number: '000 893', stage: 'Building', tagline: 'Reusable packaging for cafés' },
+    { name: 'Lukas Becker', handle: 'lukasbecker', number: '000 078', stage: 'Identity', tagline: 'Scheduling for dog walkers' },
+  ],
 };
 
 // Every answer checked against the product on 2026-10-22.

@@ -499,7 +499,7 @@ const FounderIdPage = () => {
                     <span>{FOUNDER_ID_PROGRAMS.exampleLabel}</span>
                   </figcaption>
                   <div className="fid-mini-grid">
-                    {FOUNDER_ID_EXAMPLE_CARDS.map((person) => (
+                    {FOUNDER_ID_PROGRAMS.exampleCards.map((person) => (
                       <IdCard key={person.handle} person={person} className="fid-idcard--flat" label={`Example card: ${person.name}`} />
                     ))}
                   </div>
