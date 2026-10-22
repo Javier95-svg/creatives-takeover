@@ -6,6 +6,7 @@ import {
   getFounderAnswerProvenance,
   getRelatedFounderAnswerPages,
 } from "../src/data/founderAnswerPages.ts";
+import { FOUNDER_ID_FAQS } from "../src/data/founderIdPage.ts";
 
 export const BASE_URL = "https://creatives-takeover.com";
 export const SITE_NAME = "Creatives Takeover";
@@ -442,6 +443,7 @@ export const INDEXABLE_ROUTES = [
     heroCopy:
       "Founder ID is your public page on Creatives Takeover. Your project, your links, a way for people to support you and your latest progress, at one short address you can share anywhere.",
     ogImage: `${BASE_URL}/og-founder-id.png`,
+    faqs: FOUNDER_ID_FAQS,
     ogImageWidth: 1200,
     ogImageHeight: 630,
     sections: [

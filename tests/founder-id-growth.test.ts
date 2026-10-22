@@ -3,6 +3,30 @@ import { readFileSync } from 'node:fs';
 import test from 'node:test';
 
 import { FOUNDER_ID_ITEMS, founderIdCompletion, usableProjectName } from '../src/lib/founderIdCompletion.ts';
+import { founderIdBaseHandle, nextFreeHandle } from '../src/lib/founderIdHandle.ts';
+import { FOUNDER_ID_FAQS } from '../src/data/founderIdPage.ts';
+import { INDEXABLE_ROUTES } from '../scripts/seo-route-config.mjs';
+
+test('the try-it link follows the signup rule: first and last name, no accents', () => {
+  assert.equal(founderIdBaseHandle('Sofía Marín'), 'sofiamarin');
+  assert.equal(founderIdBaseHandle('  Daniel   Kwame Mensah '), 'danielmensah');
+  assert.equal(founderIdBaseHandle('Priya'), 'priya');
+  assert.equal(founderIdBaseHandle("O'Brien-Smith Jr."), 'obriensmithjr');
+  assert.equal(founderIdBaseHandle('   '), null);
+  assert.equal(founderIdBaseHandle('!!!'), null);
+});
+
+test('a taken link gets the next free number, as signup assigns it', () => {
+  assert.equal(nextFreeHandle('danielmensah', []), 'danielmensah');
+  assert.equal(nextFreeHandle('danielmensah', ['DanielMensah']), 'danielmensah1');
+  assert.equal(nextFreeHandle('danielmensah', ['danielmensah', 'danielmensah1', 'danielmensah3']), 'danielmensah2');
+});
+
+test('the FAQ the page shows is the FAQ search engines read', () => {
+  const route = INDEXABLE_ROUTES.find((entry: { path: string }) => entry.path === '/founder-id');
+  assert.deepEqual(route.faqs, FOUNDER_ID_FAQS);
+  assert.ok(FOUNDER_ID_FAQS.length >= 5);
+});
 
 // Founder ID growth (2026-10-22): the owner's completion checklist, share
 // prompts at the right moments, the cohort showcase and its measurement.

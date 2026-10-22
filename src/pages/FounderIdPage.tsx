@@ -1,28 +1,33 @@
 import { useCallback, useEffect, useRef, useState, type PointerEvent, type ReactNode } from 'react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowDown, ArrowRight, Hash, Link2, RefreshCw, Share2 } from 'lucide-react';
+import { ArrowDown, ArrowRight, ArrowUpRight, Check, Hash, Link2, Plus, RefreshCw, Share2 } from 'lucide-react';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import { ScrollReveal } from '@/components/animations/ScrollReveal';
 import { AccountSignupDialog } from '@/components/auth/AccountSignupDialog';
-import SEO, { createBreadcrumbSchema, createWebPageSchema } from '@/components/SEO';
+import SEO, { createBreadcrumbSchema, createFAQSchema, createWebPageSchema } from '@/components/SEO';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { usePageAnalytics } from '@/hooks/usePageAnalytics';
 import { useCTAAttribution } from '@/hooks/useCTAAttribution';
 import { captureEvent } from '@/lib/analytics';
 import { isFounderIdAccount } from '@/lib/founderId';
+import { founderIdBaseHandle, nextFreeHandle } from '@/lib/founderIdHandle';
 import { cn } from '@/lib/utils';
 import {
   FOUNDER_ID_CLOSING,
   FOUNDER_ID_EXAMPLE_CARDS,
   FOUNDER_ID_EXAMPLE_LINK,
+  FOUNDER_ID_FAQ_SECTION,
+  FOUNDER_ID_FAQS,
   FOUNDER_ID_HERO,
   FOUNDER_ID_PATH,
+  FOUNDER_ID_PROGRAMS,
   FOUNDER_ID_SECTIONS,
   FOUNDER_ID_SEO,
   FOUNDER_ID_SHARE,
+  FOUNDER_ID_TRY,
 } from '@/data/founderIdPage';
 import profileShot from '@/assets/founder-id/profile.webp';
 import supportShot from '@/assets/founder-id/support.webp';
@@ -143,6 +148,42 @@ const FounderIdPage = () => {
   const [activePart, setActivePart] = useState(0);
   const partRefs = useRef<Array<HTMLLIElement | null>>([]);
 
+  // "Try it with your name": the visitor's own card and the link signup would
+  // give them (src/lib/founderIdHandle.ts), checked against taken usernames.
+  const [tryName, setTryName] = useState('');
+  const [tryProject, setTryProject] = useState('');
+  const baseHandle = founderIdBaseHandle(tryName);
+  const [checkedBase, setCheckedBase] = useState<string | null>(null);
+  useEffect(() => {
+    const timer = window.setTimeout(() => setCheckedBase(baseHandle), 400);
+    return () => window.clearTimeout(timer);
+  }, [baseHandle]);
+  const takenHandles = useQuery({
+    queryKey: ['founder-id-taken-handles', checkedBase],
+    enabled: Boolean(checkedBase),
+    staleTime: 60_000,
+    queryFn: async () => {
+      // The base is a-z0-9 only, so it carries no LIKE wildcards.
+      const { data, error } = await supabase.from('public_profiles').select('username').ilike('username', `${checkedBase}%`).limit(200);
+      if (error) throw error;
+      return (data ?? []).map((row) => row.username).filter((name): name is string => Boolean(name));
+    },
+  });
+  const predictedHandle = baseHandle && checkedBase === baseHandle && takenHandles.data
+    ? nextFreeHandle(baseHandle, takenHandles.data)
+    : baseHandle;
+  const tryPerson = baseHandle && predictedHandle
+    ? { name: tryName.trim(), handle: predictedHandle, number: '', stage: null, tagline: tryProject.trim() || null }
+    : null;
+  const triedRef = useRef(false);
+  const onTryName = (value: string) => {
+    setTryName(value);
+    if (!triedRef.current && value.trim()) {
+      triedRef.current = true;
+      captureEvent('founder_id_try_used', {});
+    }
+  };
+
   // Signed-in visitors get a link to their own Founder ID instead of signup.
   const me = useQuery({
     queryKey: ['founder-id-page-me', user?.id],
@@ -211,6 +252,7 @@ const FounderIdPage = () => {
       { name: 'Home', url: '/' },
       { name: 'Founder ID', url: FOUNDER_ID_PATH },
     ]),
+    createFAQSchema(FOUNDER_ID_FAQS),
   ];
 
   return (
@@ -258,6 +300,60 @@ const FounderIdPage = () => {
               </ScrollReveal>
               <ScrollReveal variant="scale" delay={0.2} className="flex w-full justify-center">
                 <CardDeck caption={FOUNDER_ID_HERO.cardCaption} />
+              </ScrollReveal>
+            </div>
+          </section>
+
+          {/* Try it: the visitor's own card, live, and the link signup would give them. */}
+          <section className="fid-section fid-try" aria-labelledby="founder-id-try">
+            <div className="fid-container fid-try__grid">
+              <ScrollReveal variant="slide-right">
+                <div className="fid-try__form">
+                  <p className="fid-label">{FOUNDER_ID_TRY.eyebrow}</p>
+                  <Title id="founder-id-try" className="fid-h2" lead={FOUNDER_ID_TRY.title} accent={FOUNDER_ID_TRY.titleAccent} />
+                  <p className="fid-lede">{FOUNDER_ID_TRY.lede}</p>
+                  <div className="fid-fields">
+                    <label className="fid-field" htmlFor="founder-id-try-name">
+                      <span>{FOUNDER_ID_TRY.nameLabel}</span>
+                      <input
+                        id="founder-id-try-name"
+                        type="text"
+                        autoComplete="name"
+                        maxLength={40}
+                        placeholder={FOUNDER_ID_TRY.namePlaceholder}
+                        value={tryName}
+                        onChange={(event) => onTryName(event.target.value)}
+                      />
+                    </label>
+                    <label className="fid-field" htmlFor="founder-id-try-project">
+                      <span>{FOUNDER_ID_TRY.projectLabel}</span>
+                      <input
+                        id="founder-id-try-project"
+                        type="text"
+                        maxLength={60}
+                        placeholder={FOUNDER_ID_TRY.projectPlaceholder}
+                        value={tryProject}
+                        onChange={(event) => setTryProject(event.target.value)}
+                      />
+                    </label>
+                  </div>
+                  <div className="fid-try__link" aria-live="polite">
+                    <span className="fid-try__link-label">{FOUNDER_ID_TRY.linkLabel}</span>
+                    <span className="fid-try__url">
+                      creatives-takeover.com/@<strong>{predictedHandle ?? 'yourname'}</strong>
+                    </span>
+                    {baseHandle && predictedHandle && predictedHandle !== baseHandle && (
+                      <span className="fid-try__note">{FOUNDER_ID_TRY.takenNote}</span>
+                    )}
+                  </div>
+                  {primaryCta('try')}
+                </div>
+              </ScrollReveal>
+              <ScrollReveal variant="slide-left" delay={0.1}>
+                <div className="fid-try__card">
+                  <IdCard person={tryPerson ?? undefined} className="fid-idcard--flat" />
+                  <p className="fid-stage__caption">{FOUNDER_ID_TRY.numberNote}</p>
+                </div>
               </ScrollReveal>
             </div>
           </section>
@@ -373,6 +469,76 @@ const FounderIdPage = () => {
             </div>
           </section>
 
+          {/* For programs: the cohort showcase, shown with the example cards. */}
+          <section className="fid-section" aria-labelledby="founder-id-programs">
+            <div className="fid-container fid-programs">
+              <ScrollReveal variant="slide-right">
+                <div className="fid-programs__text">
+                  <p className="fid-label">{FOUNDER_ID_PROGRAMS.eyebrow}</p>
+                  <Title id="founder-id-programs" className="fid-h2" lead={FOUNDER_ID_PROGRAMS.title} accent={FOUNDER_ID_PROGRAMS.titleAccent} />
+                  <p className="fid-lede">{FOUNDER_ID_PROGRAMS.lede}</p>
+                  <ul className="fid-checks">
+                    {FOUNDER_ID_PROGRAMS.bullets.map((bullet) => (
+                      <li key={bullet}><Check aria-hidden="true" />{bullet}</li>
+                    ))}
+                  </ul>
+                  <Link
+                    to={FOUNDER_ID_PROGRAMS.cta.href}
+                    className="fid-btn fid-btn--outline"
+                    onClick={() => captureEvent('founder_id_cta_clicked', { placement: 'programs', signed_in: Boolean(user) })}
+                  >
+                    {FOUNDER_ID_PROGRAMS.cta.label}
+                    <ArrowUpRight aria-hidden="true" />
+                  </Link>
+                </div>
+              </ScrollReveal>
+              <ScrollReveal variant="slide-left" delay={0.1}>
+                <figure className="fid-frame">
+                  <figcaption className="fid-frame__bar">
+                    <span className="fid-device__dots" aria-hidden="true"><i /><i /><i /></span>
+                    <span>{FOUNDER_ID_PROGRAMS.exampleLabel}</span>
+                  </figcaption>
+                  <div className="fid-mini-grid">
+                    {FOUNDER_ID_EXAMPLE_CARDS.map((person) => (
+                      <IdCard key={person.handle} person={person} className="fid-idcard--flat" label={`Example card: ${person.name}`} />
+                    ))}
+                  </div>
+                </figure>
+              </ScrollReveal>
+            </div>
+          </section>
+
+          {/* FAQ: the questions that stop people from signing up. */}
+          <section className="fid-section" aria-labelledby="founder-id-faq">
+            <div className="fid-container fid-faq">
+              <ScrollReveal>
+                <div className="fid-head__title">
+                  <p className="fid-label">{FOUNDER_ID_FAQ_SECTION.eyebrow}</p>
+                  <Title id="founder-id-faq" className="fid-h2" lead={FOUNDER_ID_FAQ_SECTION.title} accent={FOUNDER_ID_FAQ_SECTION.titleAccent} />
+                </div>
+              </ScrollReveal>
+              <ScrollReveal delay={0.08}>
+                <div className="fid-faq__list">
+                  {FOUNDER_ID_FAQS.map((faq) => (
+                    <details
+                      key={faq.question}
+                      className="fid-faq__item"
+                      onToggle={(event) => {
+                        if ((event.currentTarget as HTMLDetailsElement).open) captureEvent('founder_id_faq_opened', { question: faq.question });
+                      }}
+                    >
+                      <summary>
+                        <span>{faq.question}</span>
+                        <Plus aria-hidden="true" />
+                      </summary>
+                      <p>{faq.answer}</p>
+                    </details>
+                  ))}
+                </div>
+              </ScrollReveal>
+            </div>
+          </section>
+
           {/* Closing: the blank card and the claim. */}
           <section className="fid-ob fid-close" aria-labelledby="founder-id-close">
             <div className="fid-rings" aria-hidden="true"><span /><span /><span /></div>
@@ -389,7 +555,7 @@ const FounderIdPage = () => {
                 </div>
               </ScrollReveal>
               <ScrollReveal variant="slide-left" delay={0.1}>
-                <IdCard />
+                <IdCard person={tryPerson ?? undefined} />
               </ScrollReveal>
             </div>
           </section>
@@ -402,7 +568,7 @@ const FounderIdPage = () => {
         title={<>Create your{' '}<span className="bg-gradient-rgb bg-clip-text text-transparent">Founder ID.</span></>}
         subtitle="Create your free account. It takes about ten seconds."
         contextLabel="Your link will look like"
-        contextValue={FOUNDER_ID_EXAMPLE_LINK}
+        contextValue={predictedHandle ? `creatives-takeover.com/@${predictedHandle}` : FOUNDER_ID_EXAMPLE_LINK}
         returnPath={POST_AUTH_DEST}
       />
     </>

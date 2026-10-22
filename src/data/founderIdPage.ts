@@ -137,6 +137,73 @@ export const FOUNDER_ID_SECTIONS = {
   ],
 };
 
+// "Try it with your name": the visitor's own card, before signing up. The link
+// shown follows the real rule (first and last name, lowercased, accents and
+// symbols removed, a number added if taken; supabase/migrations/
+// 20260215110000_fix_profile_username_generation_normalization.sql).
+export const FOUNDER_ID_TRY = {
+  eyebrow: 'Try it',
+  title: 'See your card',
+  titleAccent: 'before you sign up.',
+  lede: 'Type your name and what you’re building. This is the card people see when you share your link.',
+  nameLabel: 'Your name',
+  namePlaceholder: 'Daniel Mensah',
+  projectLabel: 'What you’re building',
+  projectPlaceholder: 'Payroll for small restaurants',
+  linkLabel: 'Your link would be',
+  takenNote: 'That name is taken, so a number is added.',
+  numberNote: 'Your founder number is assigned when you join.',
+};
+
+// For programs: the cohort showcase (supabase/migrations/20261022032451_cohort_showcase.sql).
+export const FOUNDER_ID_PROGRAMS = {
+  eyebrow: 'For programs',
+  title: 'Give every startup in your cohort',
+  titleAccent: 'a Founder ID.',
+  lede: 'Turn on a public showcase for your cohort: one page with every startup’s Founder ID card, ready for demo day or your website.',
+  bullets: [
+    'One link for the whole cohort',
+    'Each founder chooses whether to appear',
+    'Every card opens the founder’s live Founder ID',
+  ],
+  cta: { label: 'See programs', href: '/enterprise' },
+  exampleLabel: 'Example showcase · Spring cohort',
+};
+
+// Every answer checked against the product on 2026-10-22.
+export const FOUNDER_ID_FAQS = [
+  {
+    question: 'Is Founder ID free?',
+    answer: 'Yes. Every founder and builder account comes with a Founder ID, including on the free Rookie plan.',
+  },
+  {
+    question: 'Who can see my Founder ID?',
+    answer: 'Anyone with your link, signed in or not. Your stage only shows if you choose to make your progress public, and your workspace, files and ideas stay private.',
+  },
+  {
+    question: 'Does Creatives Takeover take a cut of donations?',
+    answer: 'No. Supporters pay on your own Patreon, PayPal, Buy Me a Coffee or other provider page. Creatives Takeover never handles the payment.',
+  },
+  {
+    question: 'How is my link chosen, and can it change?',
+    answer: 'Your link comes from your name, for example creatives-takeover.com/@danielmensah, with a number added if the name is taken. If you change your name in Edit Founder ID, your link changes with it and links you shared before stop working.',
+  },
+  {
+    question: 'What is the founder number?',
+    answer: 'A permanent number given in the order people join. It is printed on your share card and never changes.',
+  },
+  {
+    question: 'Do I need a startup to have one?',
+    answer: 'No. Founder and builder accounts both get a Founder ID, whether you are running a startup or building a side project.',
+  },
+];
+
+export const FOUNDER_ID_FAQ_SECTION = {
+  eyebrow: 'Questions',
+  title: 'Before you',
+  titleAccent: 'claim yours.',
+};
+
 export const FOUNDER_ID_CLOSING = {
   eyebrow: 'Claim yours',
   title: 'Your number is',

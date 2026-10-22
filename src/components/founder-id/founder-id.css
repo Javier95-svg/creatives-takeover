@@ -737,6 +737,196 @@ html:not(.dark) .fid-hero .fid-stage__floor {
 .fid-tabs button.is-active::after { transform: scaleX(1); }
 .fid-tabs button:focus-visible { outline: 2px solid var(--fid-gold); outline-offset: 4px; }
 
+/* ── Try it: the visitor's own card ───────────────────────────────────── */
+
+.fid-try__grid {
+  display: grid;
+  gap: 56px;
+  align-items: center;
+}
+
+@media (min-width: 1024px) {
+  .fid-try__grid { grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: 80px; }
+}
+
+.fid-try__form { display: grid; gap: 22px; justify-items: start; }
+.fid-try__form .fid-lede { max-width: 460px; }
+
+.fid-fields { display: grid; gap: 14px; width: 100%; max-width: 460px; }
+
+.fid-field { display: grid; gap: 8px; }
+
+.fid-field span {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--fid-muted);
+}
+
+.fid-field input {
+  width: 100%;
+  height: 52px;
+  padding: 0 18px;
+  border: 1px solid var(--fid-line);
+  border-radius: 14px;
+  background: var(--fid-surface);
+  color: var(--fid-ink);
+  font: inherit;
+  font-size: 16px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.fid-field input::placeholder { color: var(--fid-muted); opacity: 0.7; }
+
+.fid-field input:focus {
+  outline: none;
+  border-color: var(--fid-gold);
+  box-shadow: 0 0 0 4px var(--fid-glow);
+}
+
+.fid-try__link { display: grid; gap: 4px; min-width: 0; max-width: 100%; }
+.fid-try__link-label { font-size: 12px; color: var(--fid-muted); }
+
+.fid-try__url {
+  overflow-wrap: anywhere;
+  font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+  font-size: 15px;
+  color: var(--fid-muted);
+}
+
+.fid-try__url strong { font-weight: 600; color: var(--fid-ink); }
+.fid-try__note { font-size: 12px; color: var(--fid-gold); }
+
+.fid-try__card { display: grid; justify-items: center; }
+.fid-try__card .fid-stage__caption { color: var(--fid-muted); text-align: center; }
+
+/* ── For programs ─────────────────────────────────────────────────────── */
+
+.fid-programs {
+  display: grid;
+  gap: 56px;
+  align-items: center;
+}
+
+@media (min-width: 1024px) {
+  .fid-programs { grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr); gap: 80px; }
+}
+
+.fid-programs__text { display: grid; gap: 22px; justify-items: start; }
+.fid-programs__text .fid-lede { max-width: 460px; }
+
+.fid-checks { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; }
+
+.fid-checks li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.fid-checks svg { flex-shrink: 0; width: 18px; height: 18px; margin-top: 2px; color: var(--fid-gold); }
+
+.fid-btn--outline {
+  border: 1px solid var(--fid-line);
+  background: transparent;
+  color: var(--fid-ink);
+}
+
+.fid-btn--outline:hover { border-color: var(--fid-gold); background: var(--fid-glow); }
+.fid-btn--outline:hover svg { transform: translate(2px, -2px); }
+
+.fid-frame {
+  margin: 0;
+  border-radius: 20px;
+  padding: 10px;
+  background: linear-gradient(160deg, #24261f, #0c0d0b);
+  box-shadow:
+    0 0 0 1px rgba(214, 201, 159, 0.22),
+    inset 0 1px 0 rgba(255, 245, 215, 0.08),
+    0 60px 120px -60px rgba(0, 0, 0, 0.85),
+    0 40px 90px -60px var(--fid-glow);
+}
+
+.fid-frame__bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 8px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #a19e8e;
+}
+
+.fid-mini-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  padding: 14px;
+  border-radius: 12px;
+  background: #0f110e;
+}
+
+.fid-mini-grid .fid-idcard { border-radius: 10px; }
+
+/* ── FAQ ──────────────────────────────────────────────────────────────── */
+
+.fid-faq {
+  display: grid;
+  gap: 40px;
+}
+
+@media (min-width: 1024px) {
+  .fid-faq { grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr); gap: 80px; align-items: start; }
+}
+
+.fid-faq__list { border-top: 1px solid var(--fid-line); }
+
+.fid-faq__item { border-bottom: 1px solid var(--fid-line); }
+
+.fid-faq__item summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 22px 0;
+  cursor: pointer;
+  list-style: none;
+  font-size: 17px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+.fid-faq__item summary::-webkit-details-marker { display: none; }
+
+.fid-faq__item summary:focus-visible {
+  outline: 2px solid var(--fid-gold);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
+.fid-faq__item summary svg {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  color: var(--fid-gold);
+  transition: transform 0.3s ease;
+}
+
+.fid-faq__item[open] summary svg { transform: rotate(45deg); }
+
+.fid-faq__item p {
+  margin: 0;
+  padding: 0 32px 24px 0;
+  max-width: 62ch;
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--fid-muted);
+}
+
 /* ── Closing: the blank card ──────────────────────────────────────────── */
 
 .fid-close { padding-top: 112px; padding-bottom: 112px; }
