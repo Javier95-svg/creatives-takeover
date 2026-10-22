@@ -33,9 +33,12 @@ export const FOUNDER_ID_EXAMPLE_LINK = 'creatives-takeover.com/@yourname';
  * the market-approach rule. Stages are the real stage labels.
  */
 export const FOUNDER_ID_EXAMPLE_CARDS = [
-  { name: 'Amara Okafor', handle: 'amara', number: '000 214', stage: 'Validation', tagline: 'Solar kits for small farms' },
-  { name: 'Lucía Fernández', handle: 'luciaf', number: '001 027', stage: 'Building', tagline: 'Bookings for independent salons' },
-  { name: 'Kenji Watanabe', handle: 'kenji', number: '000 532', stage: 'Launch', tagline: 'Stock tracking for coffee roasters' },
+  // Ordinary names and handles, checked against profiles on 2026-10-22 so
+  // none of them belongs to a real account.
+  { name: 'Daniel Mensah', handle: 'danielmensah', number: '000 341', stage: 'Validation', tagline: 'Payroll for small restaurants' },
+  { name: 'Sofía Marín', handle: 'sofiamarin', number: '000 117', stage: 'Building', tagline: 'Online booking for physiotherapists' },
+  { name: 'Priya Raman', handle: 'priyaraman', number: '001 482', stage: 'Traction', tagline: 'Meal plans for new parents' },
+  { name: 'Tom Whitfield', handle: 'tomwhitfield', number: '000 769', stage: 'Launch', tagline: 'Inventory app for bike shops' },
 ];
 
 export const FOUNDER_ID_SEO = {

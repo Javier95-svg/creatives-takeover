@@ -16,8 +16,8 @@
   --fid-gold-hi: #b8954c;
   --fid-glow: rgba(176, 141, 69, 0.2);
 
-  /* Obsidian bands: identical in both themes. */
-  --fid-ob-bg: #0b0c0a;
+  /* Hero and closing text: these stay light-on-dark in dark mode and take the
+     theme ink in light mode (see html:not(.dark) .fid-ob). */
   --fid-ob-ink: #ece5d3;
   --fid-ob-muted: #a19e8e;
   --fid-ob-gold: #d6c99f;
@@ -26,9 +26,37 @@
 
   --fid-bezel: #11141b;
 
-  background: var(--fid-bg);
+  --fid-wallpaper:
+    radial-gradient(1200px 700px at 50% 0%, rgba(184, 149, 76, 0.14), transparent 60%),
+    radial-gradient(1000px 640px at 100% 100%, rgba(184, 149, 76, 0.08), transparent 60%),
+    radial-gradient(900px 600px at 0% 55%, rgba(184, 149, 76, 0.05), transparent 60%),
+    linear-gradient(180deg, #f9f6ef 0%, #f2ede2 100%);
+  --fid-grain: 0.035;
+
+  position: relative;
+  isolation: isolate;
+  background-color: var(--fid-bg);
   color: var(--fid-ink);
   font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+/* One wallpaper for the whole page, fixed to the viewport so every section
+   scrolls over the same surface, with a fine grain on top so the colour reads
+   as a material rather than a flat fill. */
+.fid::before,
+.fid::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.fid::before { background: var(--fid-wallpaper); }
+
+.fid::after {
+  opacity: var(--fid-grain);
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
 }
 
 .dark .fid {
@@ -40,6 +68,12 @@
   --fid-gold: #d6c99f;
   --fid-gold-hi: #efe3bb;
   --fid-glow: rgba(214, 201, 159, 0.12);
+  --fid-wallpaper:
+    radial-gradient(1200px 700px at 50% 0%, rgba(214, 201, 159, 0.09), transparent 60%),
+    radial-gradient(1000px 640px at 100% 100%, rgba(214, 201, 159, 0.05), transparent 60%),
+    radial-gradient(900px 600px at 0% 55%, rgba(214, 201, 159, 0.035), transparent 60%),
+    linear-gradient(160deg, #171815 0%, #0f110e 45%, #0b0c0a 100%);
+  --fid-grain: 0.05;
 }
 
 .fid-container {
@@ -189,28 +223,16 @@
 
 /* ── Obsidian bands (hero, closing) ───────────────────────────────────── */
 
+/* The hero and closing sections carry the rings; the wallpaper behind them is
+   the page's single one (.fid::before). */
 .fid-ob {
   position: relative;
   overflow: hidden;
-  background:
-    radial-gradient(1100px 600px at 50% -10%, rgba(214, 201, 159, 0.1), transparent 60%),
-    radial-gradient(900px 500px at 100% 100%, rgba(214, 201, 159, 0.05), transparent 60%),
-    linear-gradient(160deg, #191a17 0%, #0f110e 45%, var(--fid-ob-bg) 100%);
   color: var(--fid-ob-ink);
 }
 
 .fid-ob .fid-label { color: var(--fid-ob-gold); }
 .fid-ob .fid-lede { color: var(--fid-ob-muted); }
-
-/* Fine grain, so the dark reads as a material rather than a flat fill. */
-.fid-ob::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  opacity: 0.05;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
-}
 
 /* The card's concentric rings, drawn large behind the content. */
 .fid-rings {
@@ -246,23 +268,18 @@
 
 .fid-hero .fid-rings { top: 74%; }
 
-/* In light mode the floating navbar is light, so the hero turns to ivory and
-   the dark card sits on it like a product shot. */
-html:not(.dark) .fid-hero {
+/* Light mode: the whole page sits on the ivory wallpaper, so the bands take
+   the theme's ink and gold; the dark cards sit on it like product shots. */
+html:not(.dark) .fid-ob {
   --fid-ob-ink: #1a1912;
   --fid-ob-muted: #6b685c;
   --fid-ob-gold: #8a6d2c;
   --fid-ob-line: rgba(120, 98, 48, 0.24);
-  background:
-    radial-gradient(1100px 600px at 50% -10%, rgba(184, 149, 76, 0.16), transparent 60%),
-    radial-gradient(900px 500px at 100% 100%, rgba(184, 149, 76, 0.08), transparent 60%),
-    linear-gradient(180deg, #f9f6ef 0%, #f2ede2 100%);
 }
 
-html:not(.dark) .fid-hero::before { opacity: 0.035; }
-html:not(.dark) .fid-hero .fid-rings span { border-color: rgba(138, 109, 44, 0.12); }
+html:not(.dark) .fid-ob .fid-rings span { border-color: rgba(138, 109, 44, 0.12); }
 
-html:not(.dark) .fid-hero .fid-foil {
+html:not(.dark) .fid-ob .fid-foil {
   background-image: linear-gradient(100deg, #7a5f24 0%, #b8954c 30%, #8a6d2c 50%, #b8954c 75%, #7a5f24 100%);
 }
 
@@ -391,7 +408,7 @@ html:not(.dark) .fid-hero .fid-stage__floor {
   --rx: 8deg;
   --ry: -6deg;
   position: relative;
-  margin-top: 8%;
+  margin-top: 14%;
   aspect-ratio: 1200 / 630;
   transform: rotateX(var(--rx)) rotateY(var(--ry));
   transform-style: preserve-3d;
@@ -406,8 +423,10 @@ html:not(.dark) .fid-hero .fid-stage__floor {
 
 .fid-deck__slot .fid-idcard { transform: none; }
 
-/* Front card in the middle, the other two fanned out to either side. */
-.fid-deck__slot[data-pos="0"] { z-index: 3; transform: translate3d(0, 0, 0); }
+/* Front card in the middle, two fanned out to either side and the fourth
+   waiting straight behind, just showing above the front card. */
+.fid-deck__slot[data-pos="0"] { z-index: 4; transform: translate3d(0, 0, 0); }
+.fid-deck__slot[data-pos="3"] { z-index: 0; transform: translate3d(0, -27%, -160px) scale(0.8); filter: brightness(0.45); }
 .fid-deck__slot[data-pos="1"] { z-index: 2; transform: translate3d(-19%, -7%, -80px) rotate(-7deg) scale(0.84); filter: brightness(0.62); }
 .fid-deck__slot[data-pos="2"] { z-index: 1; transform: translate3d(19%, -7%, -80px) rotate(7deg) scale(0.84); filter: brightness(0.62); }
 
