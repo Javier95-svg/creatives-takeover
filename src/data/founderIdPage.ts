@@ -60,7 +60,7 @@ export const FOUNDER_ID_HERO = {
   signedInCta: 'Open my Founder ID',
   secondaryCta: 'See what’s inside',
   cardCaption: 'Example Founder ID cards',
-  note: 'Free with every founder and builder account.',
+  note: 'Free with account creation.',
 };
 
 export const FOUNDER_ID_SHARE = {
