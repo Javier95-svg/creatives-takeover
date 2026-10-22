@@ -146,24 +146,6 @@ const Footer = () => {
           </nav>
         </div>
 
-        <div className="mt-8 flex justify-center">
-          <a
-            href="https://peerpush.com/p/creatives-takeover-apxb"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex max-w-full rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-          >
-            <img
-              src="https://peerpush.com/p/creatives-takeover-apxb/badge.png"
-              alt="Creatives Takeover on PeerPush"
-              className="h-auto max-w-full"
-              style={{ width: '230px' }}
-              loading="lazy"
-              decoding="async"
-            />
-          </a>
-        </div>
-
         {/* RGB gradient divider */}
         <div className="mt-8 pt-8 border-t border-border/40" />
         <div className="mt-6 text-xs text-muted-foreground text-center">
