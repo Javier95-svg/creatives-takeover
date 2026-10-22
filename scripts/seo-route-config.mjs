@@ -429,6 +429,42 @@ export const INDEXABLE_ROUTES = [
     ],
   },
   {
+    path: "/founder-id",
+    // Mirrors src/data/founderIdPage.ts (FOUNDER_ID_SEO); tests/founder-id-page.test.ts
+    // keeps them equal. A static share card, because robots.txt blocks /api/og
+    // for the LinkedIn and Facebook scrapers.
+    title: "Founder ID: Your Project in One Link | Creatives Takeover",
+    description:
+      "Founder ID is a free public page for founders and builders: your project, your links, a way to support you and your updates, all at one short link.",
+    changefreq: "monthly",
+    priority: 0.8,
+    heroHeading: "Everything you’re building, in one link.",
+    heroCopy:
+      "Founder ID is your public page on Creatives Takeover. Your project, your links, a way for people to support you and your latest progress, at one short address you can share anywhere.",
+    ogImage: `${BASE_URL}/og-founder-id.png`,
+    ogImageWidth: 1200,
+    ogImageHeight: 630,
+    sections: [
+      {
+        heading: "Profile: who you are and what you’re building",
+        copy: "Your name, location and one-line pitch beside your project, your role, stage and industry, project links (website, demo, Loom video, pitch deck, waitlist) and your LinkedIn, X, GitHub and Instagram.",
+      },
+      {
+        heading: "Support: let people back your project",
+        copy: "Add your Patreon, PayPal or Buy Me a Coffee page, or Ko-fi, Stripe, GitHub Sponsors and Open Collective. Visitors tap Donate and pay on your provider’s page, not through Creatives Takeover.",
+      },
+      {
+        heading: "Project Updates: show your progress",
+        copy: "Post milestones, ideas and requests for feedback, with photos or a YouTube video. Schedule posts, pin one, and let people like, comment, repost and share them.",
+      },
+    ],
+    relatedLinks: [
+      { href: "/pricing", label: "See pricing" },
+      { href: "/build", label: "Build your product" },
+      { href: "/mentorship", label: "Find mentors" },
+    ],
+  },
+  {
     path: "/podcast",
     title: "Founders Unleashed — Podcast | Creatives Takeover",
     description:

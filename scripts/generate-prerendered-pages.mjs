@@ -34,6 +34,7 @@ const PRIMARY_NAV = [
   { href: "/", label: "Home" },
   ...SITELINK_NAV,
   { href: "/mentorship", label: "Collab" },
+  { href: "/founder-id", label: "Founder ID" },
   { href: "/bizmap-ai", label: "Startup Cycle" },
   { href: "/answers", label: "Founder Answers" },
   { href: "/newspaper", label: "Newspaper" },

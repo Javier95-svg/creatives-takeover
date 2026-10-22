@@ -7,6 +7,7 @@ import {
   Compass,
   DollarSign,
   Handshake,
+  IdCard,
   Info,
   Lightbulb,
   type LucideIcon,
@@ -37,10 +38,12 @@ type VisitorEntry = VisitorLink | VisitorMenu;
 
 const isMenu = (entry: VisitorEntry): entry is VisitorMenu => "links" in entry;
 
-// The For founders menu's contents: what founders build and who they work with.
+// The For founders menu's contents: what founders build, who they work with,
+// and the Founder ID page (2026-10-21).
 const founderLinks: VisitorLink[] = [
   { label: "Build", href: "/build", icon: Wrench },
   { label: "Collab", href: "/mentorship", icon: Handshake },
+  { label: "Founder ID", href: "/founder-id", icon: IdCard },
 ];
 
 // The Explore menu's contents.

@@ -1,0 +1,854 @@
+/*
+ * /founder-id (2026-10-21): the page borrows its look from the Founder ID share
+ * card (api/_founder-id-card.tsx): charcoal, champagne gold, light type and
+ * wide-tracked capitals, thin concentric rings. The hero and the closing band
+ * stay "obsidian" in both themes, like the card itself; the sections between
+ * follow the site theme (ivory in light, charcoal in dark).
+ */
+
+.fid {
+  --fid-bg: #f5f2ea;
+  --fid-surface: #fffdf8;
+  --fid-line: rgba(120, 98, 48, 0.2);
+  --fid-ink: #1a1912;
+  --fid-muted: #6b685c;
+  --fid-gold: #8a6d2c;
+  --fid-gold-hi: #b8954c;
+  --fid-glow: rgba(176, 141, 69, 0.2);
+
+  /* Obsidian bands: identical in both themes. */
+  --fid-ob-bg: #0b0c0a;
+  --fid-ob-ink: #ece5d3;
+  --fid-ob-muted: #a19e8e;
+  --fid-ob-gold: #d6c99f;
+  --fid-ob-gold-hi: #f2e7c3;
+  --fid-ob-line: rgba(214, 201, 159, 0.18);
+
+  --fid-bezel: #11141b;
+
+  background: var(--fid-bg);
+  color: var(--fid-ink);
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.dark .fid {
+  --fid-bg: #0d0e0c;
+  --fid-surface: #141612;
+  --fid-line: rgba(214, 201, 159, 0.14);
+  --fid-ink: #ebe5d4;
+  --fid-muted: #9c9a8b;
+  --fid-gold: #d6c99f;
+  --fid-gold-hi: #efe3bb;
+  --fid-glow: rgba(214, 201, 159, 0.12);
+}
+
+.fid-container {
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding-left: 20px;
+  padding-right: 20px;
+}
+
+@media (min-width: 768px) {
+  .fid-container { padding-left: 32px; padding-right: 32px; }
+}
+
+/* ── Type ─────────────────────────────────────────────────────────────── */
+
+.fid-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--fid-gold);
+}
+
+.fid-label::before,
+.fid-label--both::after {
+  content: "";
+  width: 28px;
+  height: 1px;
+  background: currentColor;
+  opacity: 0.6;
+}
+
+.fid-label--plain::before { display: none; }
+
+/* The site sets headings in Space Grotesk; the card is set in Inter. */
+.fid h1,
+.fid h2,
+.fid h3 {
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.fid-h1 {
+  margin: 0;
+  font-size: clamp(44px, 7.2vw, 96px);
+  font-weight: 300;
+  line-height: 0.98;
+  letter-spacing: -0.045em;
+  text-wrap: balance;
+}
+
+.fid-h2 {
+  margin: 0;
+  font-size: clamp(34px, 4.6vw, 60px);
+  font-weight: 300;
+  line-height: 1.04;
+  letter-spacing: -0.04em;
+  text-wrap: balance;
+}
+
+.fid-h3 {
+  margin: 0;
+  font-size: clamp(26px, 2.6vw, 36px);
+  font-weight: 400;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+
+.fid-lede {
+  margin: 0;
+  font-size: clamp(16px, 1.35vw, 19px);
+  line-height: 1.65;
+  color: var(--fid-muted);
+}
+
+/* Champagne foil on the accent words, with one slow sweep of light. */
+.fid-foil {
+  background: linear-gradient(100deg, var(--fid-gold) 0%, var(--fid-gold-hi) 30%, var(--fid-gold) 50%, var(--fid-gold-hi) 75%, var(--fid-gold) 100%);
+  background-size: 220% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: fid-foil 9s ease-in-out infinite;
+}
+
+.fid-ob .fid-foil {
+  background-image: linear-gradient(100deg, #b49b62 0%, var(--fid-ob-gold-hi) 30%, #c9b47e 50%, var(--fid-ob-gold-hi) 75%, #b49b62 100%);
+}
+
+@keyframes fid-foil {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+/* ── Buttons ──────────────────────────────────────────────────────────── */
+
+.fid-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  height: 52px;
+  padding: 0 26px;
+  border-radius: 999px;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, filter 0.25s ease, background-color 0.25s ease, border-color 0.25s ease;
+}
+
+.fid-btn:focus-visible {
+  outline: 2px solid var(--fid-ob-gold);
+  outline-offset: 3px;
+}
+
+.fid-btn svg { width: 16px; height: 16px; transition: transform 0.25s ease; }
+.fid-btn:hover svg { transform: translateX(3px); }
+
+.fid-btn--gold {
+  border: 1px solid rgba(255, 244, 210, 0.55);
+  background: linear-gradient(180deg, #f1e6c2 0%, #d9c58f 55%, #c4ad72 100%);
+  color: #17140b;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65), 0 14px 34px -14px rgba(214, 201, 159, 0.7);
+}
+
+.fid-btn--gold:hover {
+  filter: brightness(1.05);
+  transform: translateY(-1px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7), 0 20px 44px -14px rgba(214, 201, 159, 0.8);
+}
+
+.fid-btn--ghost {
+  border: 1px solid var(--fid-ob-line);
+  background: transparent;
+  color: var(--fid-ob-ink);
+}
+
+.fid-btn--ghost:hover { border-color: rgba(214, 201, 159, 0.45); background: rgba(214, 201, 159, 0.06); }
+.fid-btn--ghost:hover svg { transform: translateY(2px); }
+
+/* ── Obsidian bands (hero, closing) ───────────────────────────────────── */
+
+.fid-ob {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(1100px 600px at 50% -10%, rgba(214, 201, 159, 0.1), transparent 60%),
+    radial-gradient(900px 500px at 100% 100%, rgba(214, 201, 159, 0.05), transparent 60%),
+    linear-gradient(160deg, #191a17 0%, #0f110e 45%, var(--fid-ob-bg) 100%);
+  color: var(--fid-ob-ink);
+}
+
+.fid-ob .fid-label { color: var(--fid-ob-gold); }
+.fid-ob .fid-lede { color: var(--fid-ob-muted); }
+
+/* Fine grain, so the dark reads as a material rather than a flat fill. */
+.fid-ob::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+
+/* The card's concentric rings, drawn large behind the content. */
+.fid-rings {
+  position: absolute;
+  left: 50%;
+  pointer-events: none;
+}
+
+.fid-rings span {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  border-radius: 50%;
+  border: 1px solid rgba(214, 201, 159, 0.09);
+  transform: translate(-50%, -50%);
+}
+
+.fid-rings span:nth-child(1) { width: 640px; height: 640px; }
+.fid-rings span:nth-child(2) { width: 920px; height: 920px; border-color: rgba(214, 201, 159, 0.07); }
+.fid-rings span:nth-child(3) { width: 1240px; height: 1240px; border-color: rgba(214, 201, 159, 0.05); }
+
+/* ── Hero ─────────────────────────────────────────────────────────────── */
+
+.fid-hero {
+  padding-top: 148px;
+  padding-bottom: 96px;
+  text-align: center;
+}
+
+@media (min-width: 1024px) {
+  .fid-hero { padding-top: 176px; padding-bottom: 120px; }
+}
+
+.fid-hero .fid-rings { top: 74%; }
+
+/* In light mode the floating navbar is light, so the hero turns to ivory and
+   the dark card sits on it like a product shot. */
+html:not(.dark) .fid-hero {
+  --fid-ob-ink: #1a1912;
+  --fid-ob-muted: #6b685c;
+  --fid-ob-gold: #8a6d2c;
+  --fid-ob-line: rgba(120, 98, 48, 0.24);
+  background:
+    radial-gradient(1100px 600px at 50% -10%, rgba(184, 149, 76, 0.16), transparent 60%),
+    radial-gradient(900px 500px at 100% 100%, rgba(184, 149, 76, 0.08), transparent 60%),
+    linear-gradient(180deg, #f9f6ef 0%, #f2ede2 100%);
+}
+
+html:not(.dark) .fid-hero::before { opacity: 0.035; }
+html:not(.dark) .fid-hero .fid-rings span { border-color: rgba(138, 109, 44, 0.12); }
+
+html:not(.dark) .fid-hero .fid-foil {
+  background-image: linear-gradient(100deg, #7a5f24 0%, #b8954c 30%, #8a6d2c 50%, #b8954c 75%, #7a5f24 100%);
+}
+
+html:not(.dark) .fid-hero .fid-claim__link { background: rgba(255, 253, 248, 0.75); }
+
+@media (min-width: 640px) {
+  html:not(.dark) .fid-hero .fid-claim { background: rgba(255, 253, 248, 0.75); }
+  html:not(.dark) .fid-hero .fid-claim__link { background: none; }
+}
+
+html:not(.dark) .fid-hero .fid-stage__floor {
+  background: radial-gradient(ellipse at center, rgba(60, 48, 20, 0.28), transparent 70%);
+}
+
+.fid-hero__inner {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 28px;
+}
+
+.fid-hero .fid-lede { max-width: 600px; }
+
+/* The link, set like an engraved line, with the claim button inside. */
+.fid-claim {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+  width: 100%;
+  max-width: 600px;
+}
+
+.fid-claim__link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  height: 56px;
+  padding: 0 20px;
+  border: 1px solid var(--fid-ob-line);
+  border-radius: 999px;
+  background: rgba(255, 250, 235, 0.03);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+  font-size: 15px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.fid-claim__link span:first-child { color: var(--fid-ob-muted); }
+.fid-claim__link span:last-child { color: var(--fid-ob-ink); }
+
+.fid-claim__caret {
+  display: inline-block;
+  width: 1.5px;
+  height: 1.1em;
+  margin-left: 2px;
+  background: var(--fid-ob-gold);
+  animation: fid-caret 1.1s steps(1) infinite;
+}
+
+@keyframes fid-caret {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+@media (min-width: 640px) {
+  .fid-claim {
+    flex-direction: row;
+    align-items: center;
+    gap: 0;
+    padding: 6px;
+    border: 1px solid var(--fid-ob-line);
+    border-radius: 999px;
+    background: rgba(255, 250, 235, 0.03);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 30px 60px -40px rgba(0, 0, 0, 0.9);
+  }
+
+  .fid-claim__link {
+    flex: 1;
+    justify-content: flex-start;
+    height: auto;
+    border: 0;
+    background: none;
+    box-shadow: none;
+  }
+}
+
+.fid-hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 14px 24px;
+  font-size: 13px;
+  color: var(--fid-ob-muted);
+}
+
+.fid-hero__actions a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--fid-ob-ink);
+  text-decoration: none;
+  border-bottom: 1px solid var(--fid-ob-line);
+  padding-bottom: 2px;
+  transition: border-color 0.2s ease;
+}
+
+.fid-hero__actions a:hover { border-color: var(--fid-ob-gold); }
+.fid-hero__actions a svg { width: 14px; height: 14px; }
+
+/* A deck of example cards, tilted toward the pointer. The front card changes
+   every few seconds; the others wait behind it, fanned out. */
+.fid-stage {
+  position: relative;
+  width: 100%;
+  max-width: 640px;
+  margin-top: 40px;
+  perspective: 1600px;
+}
+
+.fid-deck {
+  --rx: 8deg;
+  --ry: -6deg;
+  position: relative;
+  margin-top: 8%;
+  aspect-ratio: 1200 / 630;
+  transform: rotateX(var(--rx)) rotateY(var(--ry));
+  transform-style: preserve-3d;
+  transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.fid-deck__slot {
+  position: absolute;
+  inset: 0;
+  transition: transform 1s cubic-bezier(0.22, 1, 0.36, 1), filter 1s ease;
+}
+
+.fid-deck__slot .fid-idcard { transform: none; }
+
+/* Front card in the middle, the other two fanned out to either side. */
+.fid-deck__slot[data-pos="0"] { z-index: 3; transform: translate3d(0, 0, 0); }
+.fid-deck__slot[data-pos="1"] { z-index: 2; transform: translate3d(-19%, -7%, -80px) rotate(-7deg) scale(0.84); filter: brightness(0.62); }
+.fid-deck__slot[data-pos="2"] { z-index: 1; transform: translate3d(19%, -7%, -80px) rotate(7deg) scale(0.84); filter: brightness(0.62); }
+
+@media (min-width: 900px) {
+  .fid-deck__slot[data-pos="1"] { transform: translate3d(-34%, -6%, -80px) rotate(-7deg) scale(0.84); }
+  .fid-deck__slot[data-pos="2"] { transform: translate3d(34%, -6%, -80px) rotate(7deg) scale(0.84); }
+}
+
+/* A slow sweep of light across the front card. */
+.fid-deck__slot[data-pos="0"] .fid-idcard::after {
+  content: "";
+  position: absolute;
+  inset: -20% -60%;
+  background: linear-gradient(115deg, transparent 40%, rgba(255, 246, 220, 0.14) 48%, rgba(255, 246, 220, 0.04) 54%, transparent 62%);
+  transform: translateX(-60%);
+  animation: fid-sheen 7s ease-in-out 1.2s infinite;
+  pointer-events: none;
+}
+
+@keyframes fid-sheen {
+  0% { transform: translateX(-60%); }
+  45%, 100% { transform: translateX(60%); }
+}
+
+.fid-stage__floor {
+  position: absolute;
+  left: 10%;
+  right: 10%;
+  bottom: -46px;
+  height: 60px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgba(214, 201, 159, 0.22), transparent 70%);
+  filter: blur(14px);
+  pointer-events: none;
+}
+
+.fid-stage__caption {
+  margin-top: 34px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: var(--fid-ob-muted);
+}
+
+/* ── Sections on the theme background ─────────────────────────────────── */
+
+.fid-section { padding-top: 112px; padding-bottom: 112px; }
+
+@media (min-width: 1024px) {
+  .fid-section { padding-top: 144px; padding-bottom: 144px; }
+}
+
+.fid-section + .fid-section { padding-top: 0; }
+
+.fid-head {
+  display: grid;
+  gap: 24px;
+  margin-bottom: 64px;
+}
+
+@media (min-width: 1024px) {
+  .fid-head { grid-template-columns: 1.15fr 0.85fr; align-items: end; gap: 64px; margin-bottom: 80px; }
+}
+
+.fid-head__title { display: grid; gap: 22px; }
+.fid-head .fid-lede { max-width: 460px; }
+
+/* Four facts in an editorial row: hairlines, no boxes. */
+.fid-facts {
+  display: grid;
+  gap: 0;
+  border-top: 1px solid var(--fid-line);
+}
+
+@media (min-width: 640px) {
+  .fid-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (min-width: 1024px) {
+  .fid-facts { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+.fid-fact {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+  min-width: 0;
+  padding: 32px 0;
+  border-bottom: 1px solid var(--fid-line);
+}
+
+@media (min-width: 640px) {
+  .fid-fact { padding: 36px 28px 40px 0; }
+  .fid-fact:nth-child(odd) { padding-right: 32px; border-right: 1px solid var(--fid-line); }
+  .fid-fact:nth-child(even) { padding-left: 32px; }
+}
+
+@media (min-width: 1024px) {
+  .fid-fact { border-bottom: 0; padding: 40px 28px 8px; border-right: 1px solid var(--fid-line); }
+  .fid-fact:nth-child(odd) { padding-right: 28px; }
+  .fid-fact:nth-child(even) { padding-left: 28px; }
+  .fid-fact:first-child { padding-left: 0; }
+  .fid-fact:last-child { border-right: 0; padding-right: 0; }
+}
+
+.fid-fact__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--fid-line);
+  color: var(--fid-gold);
+}
+
+.fid-fact__icon svg { width: 18px; height: 18px; }
+
+.fid-fact h3 {
+  margin: 8px 0 0;
+  font-size: 18px;
+  font-weight: 500;
+  letter-spacing: -0.015em;
+}
+
+.fid-fact p {
+  margin: 0;
+  font-size: 14.5px;
+  line-height: 1.65;
+  color: var(--fid-muted);
+}
+
+.fid-fact__mono { font-family: ui-monospace, "SFMono-Regular", Consolas, monospace; font-size: 13px; color: var(--fid-ink); }
+
+/* ── What's inside: sticky screen, scrolling parts ────────────────────── */
+
+.fid-show {
+  display: grid;
+  gap: 72px;
+}
+
+@media (min-width: 1024px) {
+  .fid-show { grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr); gap: 72px; align-items: start; }
+}
+
+.fid-show__parts { display: grid; gap: 88px; }
+
+@media (min-width: 1024px) {
+  .fid-show__parts { gap: 0; }
+}
+
+.fid-part {
+  display: grid;
+  gap: 18px;
+  align-content: center;
+  transition: opacity 0.5s ease;
+}
+
+@media (min-width: 1024px) {
+  .fid-part { min-height: 78vh; opacity: 0.32; }
+  .fid-part.is-active { opacity: 1; }
+  .fid-part__screen { display: none; }
+}
+
+.fid-part .fid-lede { max-width: 440px; }
+
+.fid-part ul {
+  display: grid;
+  gap: 12px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.fid-part li {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  gap: 12px;
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+.fid-part li::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  margin: 9px 0 0 4px;
+  border-radius: 50%;
+  background: var(--fid-gold);
+  box-shadow: 0 0 0 4px var(--fid-glow);
+}
+
+.fid-show__sticky { display: none; }
+
+@media (min-width: 1024px) {
+  .fid-show__sticky {
+    display: block;
+    position: sticky;
+    top: calc(50vh - 260px);
+  }
+}
+
+/* The screen: a dark device on either theme, framed in a gold hairline. */
+.fid-device {
+  position: relative;
+  border-radius: 20px;
+  padding: 10px;
+  background: linear-gradient(160deg, #24261f, #0c0d0b);
+  box-shadow:
+    0 0 0 1px rgba(214, 201, 159, 0.22),
+    inset 0 1px 0 rgba(255, 245, 215, 0.08),
+    0 60px 120px -60px rgba(0, 0, 0, 0.85),
+    0 40px 90px -60px var(--fid-glow);
+}
+
+.fid-device__bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 8px 12px;
+}
+
+.fid-device__dots { display: flex; gap: 6px; }
+.fid-device__dots i { width: 9px; height: 9px; border-radius: 50%; background: rgba(214, 201, 159, 0.25); }
+
+.fid-device__url {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: center;
+  font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+  font-size: 12px;
+  color: #a19e8e;
+}
+
+.fid-device__tag {
+  flex-shrink: 0;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #d6c99f;
+}
+
+.fid-device__screen {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--fid-bezel);
+}
+
+.fid-device__screen img { display: block; width: 100%; height: auto; }
+
+/* On large screens the three captures share one fixed screen and crossfade. */
+.fid-device__screen--stack { aspect-ratio: 16 / 11; }
+
+.fid-device__screen--stack img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  opacity: 0;
+  transform: scale(0.985);
+  transition: opacity 0.6s ease, transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.fid-device__screen--stack img.is-active { opacity: 1; transform: none; }
+
+.fid-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 28px;
+  margin-top: 26px;
+}
+
+.fid-tabs button {
+  position: relative;
+  padding: 6px 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--fid-muted);
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.fid-tabs button::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: var(--fid-gold);
+  transform: scaleX(0);
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.fid-tabs button.is-active { color: var(--fid-ink); }
+.fid-tabs button.is-active::after { transform: scaleX(1); }
+.fid-tabs button:focus-visible { outline: 2px solid var(--fid-gold); outline-offset: 4px; }
+
+/* ── Closing: the blank card ──────────────────────────────────────────── */
+
+.fid-close { padding-top: 112px; padding-bottom: 112px; }
+
+@media (min-width: 1024px) {
+  .fid-close { padding-top: 144px; padding-bottom: 144px; }
+}
+
+.fid-close .fid-rings { top: 50%; left: 72%; }
+
+.fid-close__grid {
+  position: relative;
+  display: grid;
+  gap: 64px;
+  align-items: center;
+}
+
+@media (min-width: 1024px) {
+  .fid-close__grid { grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: 80px; }
+}
+
+.fid-close__text { display: grid; gap: 24px; justify-items: start; }
+.fid-close__text .fid-lede { max-width: 440px; }
+.fid-close__note { font-size: 13px; color: var(--fid-ob-muted); }
+
+/* Built from the same proportions and palette as the real 1200×630 card. */
+.fid-idcard {
+  position: relative;
+  aspect-ratio: 1200 / 630;
+  width: 100%;
+  container-type: inline-size;
+  border-radius: 20px;
+  overflow: hidden;
+  background: linear-gradient(125deg, #252624 0%, #131512 42%, #080b09 100%);
+  color: #e7e0cd;
+  text-align: left;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  box-shadow: 0 0 0 1px rgba(214, 201, 159, 0.2), 0 60px 120px -50px rgba(0, 0, 0, 0.95), 0 30px 80px -50px rgba(214, 201, 159, 0.3);
+  transform: rotate(-2deg);
+}
+
+.fid-idcard::before {
+  content: "";
+  position: absolute;
+  inset: 3%;
+  border: 1px solid #47483e;
+  border-radius: 3.6cqi;
+}
+
+.fid-idcard__ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid #292c25;
+}
+
+.fid-idcard__ring:nth-of-type(1) { width: 71cqi; height: 71cqi; right: -18cqi; top: -21cqi; }
+.fid-idcard__ring:nth-of-type(2) { width: 59cqi; height: 59cqi; right: -12.5cqi; top: -15cqi; border-color: #262922; }
+
+.fid-idcard__body {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 7.6cqi 8.4cqi;
+}
+
+.fid-idcard__top { display: flex; justify-content: space-between; align-items: center; }
+.fid-idcard__brand { font-size: 1.75cqi; letter-spacing: 0.26em; color: #d6c99f; font-weight: 600; }
+.fid-idcard__small { font-size: 1cqi; letter-spacing: 0.2em; color: #9c9e8e; }
+.fid-idcard__label { margin-top: 4.5cqi; }
+.fid-idcard__number { margin-top: 0.9cqi; font-size: 3cqi; letter-spacing: 0.2em; color: #d6c99f; }
+.fid-idcard__name { margin-top: 3cqi; font-size: 5.4cqi; letter-spacing: 0.09em; font-weight: 600; color: #e4ddc9; }
+.fid-idcard__handle { margin-top: 1cqi; font-size: 1.75cqi; letter-spacing: 0.12em; color: #9c9e8e; }
+
+.fid-idcard__foot {
+  margin-top: auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 2cqi;
+}
+
+.fid-idcard__foot div { display: grid; gap: 0.9cqi; }
+.fid-idcard__foot div:last-child { text-align: right; }
+.fid-idcard__value { font-size: 1.75cqi; color: #cfc5a6; }
+
+/* Initials in the photo's place, as the real card does without a photo. */
+.fid-idcard__who { display: flex; align-items: center; gap: 1.5cqi; }
+
+.fid-idcard__mono {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 5.3cqi;
+  height: 5.3cqi;
+  border-radius: 50%;
+  border: 1px solid #82785d;
+  font-size: 2cqi;
+  letter-spacing: 0.04em;
+  color: #d6c99f;
+}
+
+.fid-idcard__who > span:last-child { display: grid; gap: 0.9cqi; }
+
+.fid-idcard__slot {
+  display: inline-block;
+  width: 0.62em;
+  margin-right: 0.12em;
+  border-bottom: 1px solid rgba(214, 201, 159, 0.55);
+  animation: fid-slot 2.4s ease-in-out infinite;
+}
+
+.fid-idcard__slot:nth-child(2) { animation-delay: 0.15s; }
+.fid-idcard__slot:nth-child(3) { animation-delay: 0.3s; margin-right: 0.5em; }
+.fid-idcard__slot:nth-child(4) { animation-delay: 0.45s; }
+.fid-idcard__slot:nth-child(5) { animation-delay: 0.6s; }
+.fid-idcard__slot:nth-child(6) { animation-delay: 0.75s; }
+
+@keyframes fid-slot {
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fid-foil,
+  .fid-deck__slot[data-pos="0"] .fid-idcard::after,
+  .fid-claim__caret,
+  .fid-idcard__slot { animation: none; }
+  .fid-deck,
+  .fid-deck__slot { transition: none; }
+  .fid-part,
+  .fid-device__screen--stack img { transition: none; }
+}

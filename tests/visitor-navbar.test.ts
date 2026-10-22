@@ -24,7 +24,7 @@ const linkTable = (name: string) => {
 };
 
 test('visitor navigation keeps the intended public destinations', () => {
-  for (const label of ['How it works', 'For founders', 'Explore', 'Enterprise', 'Build', 'Collab', 'Newspaper', 'Podcast', 'About', 'Pricing']) {
+  for (const label of ['How it works', 'For founders', 'Explore', 'Enterprise', 'Build', 'Collab', 'Founder ID', 'Newspaper', 'Podcast', 'About', 'Pricing']) {
     assert.match(source, new RegExp(`label: "${label}"`));
   }
 });
@@ -50,11 +50,13 @@ test('every bar entry keeps its icon on the left', () => {
   assert.equal(source.match(/<entry\.icon className="hidden h-4 w-4 shrink-0 2xl:block"/g)?.length, 2, 'icon on links and on menu triggers');
 });
 
-test('For founders holds Build and Collab', () => {
+test('For founders holds Build, Collab and Founder ID', () => {
   const { table, labels } = linkTable('founderLinks');
-  assert.deepEqual(labels, ['Build', 'Collab']);
+  assert.deepEqual(labels, ['Build', 'Collab', 'Founder ID']);
   // Collab replaced Guidance and keeps the same destination.
   assert.match(table, /label: "Collab", href: "\/mentorship", icon: Handshake/);
+  // Added 2026-10-21: the Founder ID landing page.
+  assert.match(table, /label: "Founder ID", href: "\/founder-id", icon: IdCard/);
   assert.doesNotMatch(table, /Guidance|Compass|Connect/);
 });
 
