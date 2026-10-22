@@ -843,6 +843,10 @@ html:not(.dark) .fid-hero .fid-stage__floor {
 }
 
 .fid-idcard__who > span:last-child { display: grid; gap: 0.9cqi; }
+.fid-idcard__photo { object-fit: cover; padding: 0; }
+
+/* Cards in a grid (the cohort showcase) sit straight, not tilted. */
+.fid-idcard--flat { transform: none; }
 
 .fid-idcard__slot {
   display: inline-block;

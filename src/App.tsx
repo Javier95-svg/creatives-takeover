@@ -183,6 +183,7 @@ const DemoCalls = lazy(() => import("./pages/DemoCalls"));
 const MVPBuilderBetaPage = lazy(() => import("./pages/MVPBuilderBetaPage"));
 const BuildPage = lazy(() => import("./pages/BuildPage"));
 const FounderIdPage = lazy(() => import("./pages/FounderIdPage"));
+const CohortShowcasePage = lazy(() => import("./pages/CohortShowcasePage"));
 const TractionEnginePage = lazy(() => import("./pages/TractionEnginePage"));
 const ProjectsDashboard = lazy(() => import("./components/dashboard/ProjectsDashboard"));
 
@@ -377,6 +378,7 @@ function App() {
                         <Route path="/purchase-history" element={<PurchaseHistory />} />
                         <Route path="/build" element={<BuildPage />} />
                         <Route path="/founder-id" element={<FounderIdPage />} />
+                        <Route path="/cohort/:slug" element={<CohortShowcasePage />} />
                         <Route path="/contact" element={<Contact />} />
                         <Route path="/faq" element={<FAQPage />} />
                         <Route path="/resources" element={<Resources />} />

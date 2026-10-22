@@ -171,7 +171,7 @@ export function ProfileSupportSection({ username, name, startupName, productUrl,
   };
 
   return (
-    <Card className="mb-6 w-full overflow-hidden p-0">
+    <Card id="founder-id-support" className="mb-6 w-full scroll-mt-24 overflow-hidden p-0">
       <div className="hidden">
         <h2 className="flex items-center gap-2 text-base font-semibold">
           <Heart className="h-4 w-4 text-primary" aria-hidden="true" />

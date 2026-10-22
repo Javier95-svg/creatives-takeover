@@ -28,6 +28,7 @@ import profileShot from '@/assets/founder-id/profile.webp';
 import supportShot from '@/assets/founder-id/support.webp';
 import updatesShot from '@/assets/founder-id/updates.webp';
 import '@/components/founder-id/founder-id.css';
+import { IdCard } from '@/components/founder-id/IdCard';
 
 // After signup the visitor comes back here with ?open=mine and goes straight
 // on to their own Founder ID.
@@ -65,56 +66,6 @@ const Title = ({ as: Tag = 'h2', id, lead, accent, className }: { as?: 'h1' | 'h
   <Tag id={id} className={className}>
     {lead} <span className="fid-foil">{accent}</span>
   </Tag>
-);
-
-type CardPerson = (typeof FOUNDER_ID_EXAMPLE_CARDS)[number];
-
-const initials = (name: string) =>
-  name.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]).join('').toUpperCase();
-
-/**
- * A Founder ID card in HTML, laid out like the real 1200×630 card
- * (api/_founder-id-card.tsx). Without a person it is the blank card, still
- * waiting for a name and a number.
- */
-const IdCard = ({ person }: { person?: CardPerson }) => (
-  <div
-    className="fid-idcard"
-    role="img"
-    aria-label={person
-      ? `Example Founder ID card: ${person.name}, @${person.handle}, founder number ${person.number}, ${person.stage} stage, building ${person.tagline.toLowerCase()}.`
-      : 'A blank Founder ID card: your name, @yourname, and a founder number still to be assigned.'}
-  >
-    <span className="fid-idcard__ring" />
-    <span className="fid-idcard__ring" />
-    <div className="fid-idcard__body" aria-hidden="true">
-      <div className="fid-idcard__top">
-        <span className="fid-idcard__brand">FOUNDER ID</span>
-        <span className="fid-idcard__small">• {(person?.stage ?? 'Your stage').toUpperCase()}</span>
-      </div>
-      <span className="fid-idcard__small fid-idcard__label">FOUNDER NO.</span>
-      <span className="fid-idcard__number">
-        {person
-          ? person.number
-          : Array.from({ length: 6 }, (_, index) => <span key={index} className="fid-idcard__slot">&nbsp;</span>)}
-      </span>
-      <span className="fid-idcard__name">{(person?.name ?? 'Your name').toUpperCase()}</span>
-      <span className="fid-idcard__handle">@{person?.handle ?? 'yourname'}</span>
-      <div className="fid-idcard__foot">
-        <span className="fid-idcard__who">
-          {person && <span className="fid-idcard__mono">{initials(person.name)}</span>}
-          <span>
-            <span className="fid-idcard__small">BUILDING IN PUBLIC</span>
-            <span className="fid-idcard__value">{person?.tagline ?? 'What you’re building'}</span>
-          </span>
-        </span>
-        <div>
-          <span className="fid-idcard__small">FOLLOW THE JOURNEY</span>
-          <span className="fid-idcard__value">creatives-takeover.com/@{person?.handle ?? 'yourname'}</span>
-        </div>
-      </div>
-    </div>
-  </div>
 );
 
 /**
@@ -155,7 +106,10 @@ const CardDeck = ({ caption }: { caption: string }) => {
           const position = (index - front + count) % count;
           return (
             <div key={person.handle} className="fid-deck__slot" data-pos={position} aria-hidden={position !== 0}>
-              <IdCard person={person} />
+              <IdCard
+                person={person}
+                label={`Example Founder ID card: ${person.name}, @${person.handle}, founder number ${person.number}, ${person.stage} stage, building ${person.tagline.toLowerCase()}.`}
+              />
             </div>
           );
         })}

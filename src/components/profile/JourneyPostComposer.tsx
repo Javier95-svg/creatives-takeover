@@ -54,6 +54,8 @@ export interface PublishedJourneyPost {
   imagePaths: string[];
   imageUrls: string[];
   scheduled: boolean;
+  /** Where the draft came from: a finished stage, a program check-in, or typed by hand. */
+  source: ProfileUpdateSource | 'manual';
 }
 
 export function JourneyPostComposer(props: Props) {
@@ -162,6 +164,7 @@ function JourneyPostEditor({ userId, name, avatarUrl, onPublished, focusOnOpen =
         imagePaths,
         imageUrls,
         scheduled: Boolean(schedule),
+        source: draftSource ?? 'manual',
       });
       captureEvent('profile_update_published', {
         source: draftSource ?? 'manual',

@@ -24,6 +24,7 @@ import {
   type CohortSummary,
 } from '@/lib/cohorts';
 import { cn } from '@/lib/utils';
+import { CohortShowcaseStaffCard } from './CohortShowcaseControls';
 
 const formatDate = (value: string) =>
   new Date(`${value.slice(0, 10)}T00:00:00Z`).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
@@ -161,6 +162,8 @@ export default function ProgramDashboard({
           </div>
         ))}
       </div>
+
+      <CohortShowcaseStaffCard cohortId={cohortId} />
 
       <Card className="mb-6 border-border/60 bg-card/70">
         <CardContent className="p-0">

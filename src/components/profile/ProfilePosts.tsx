@@ -18,6 +18,7 @@ import { uploadPostImages } from '@/lib/postImageUploads';
 import { PostImageGallery } from './PostImageGallery';
 import { PostLinkButton } from './PostLinkButton';
 import { PostContent } from './PostContent';
+import { FounderIdSharePrompt } from './FounderIdSharePrompt';
 
 const PostVideoPlayer = lazy(() => import('@/components/podcast/PodcastPlayerModal'));
 
@@ -26,6 +27,8 @@ interface Props {
   name: string;
   avatarUrl: string | null;
   isOwnProfile: boolean;
+  /** Set on the owner's own Founder ID: after a post goes live, ask them to share the link. */
+  founderIdShare?: { username: string; startupName: string | null } | null;
 }
 
 interface FeedPost {
@@ -80,7 +83,7 @@ interface ProfilePostsData {
 
 const formatDate = (date: string) => new Date(date).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
 
-export function ProfilePosts({ userId, name, avatarUrl, isOwnProfile }: Props) {
+export function ProfilePosts({ userId, name, avatarUrl, isOwnProfile, founderIdShare = null }: Props) {
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const location = useLocation();
@@ -94,6 +97,8 @@ export function ProfilePosts({ userId, name, avatarUrl, isOwnProfile }: Props) {
   // A Founder ID keeps a focused, five-update journey rather than an archive.
   const limit = 5;
   const [activePostIndex, setActivePostIndex] = useState(0);
+  // The moment an update goes live is the moment worth sharing.
+  const [sharePrompt, setSharePrompt] = useState<PublishedJourneyPost['source'] | null>(null);
   const activeSlideRef = useRef<HTMLDivElement | null>(null);
   const [activeSlideHeight, setActiveSlideHeight] = useState<number | null>(null);
   const [rotationPaused, setRotationPaused] = useState(false);
@@ -270,6 +275,7 @@ export function ProfilePosts({ userId, name, avatarUrl, isOwnProfile }: Props) {
       return { ...current, feed: [optimistic, ...current.feed.filter((item) => !(item.source === 'journey' && item.id === post.id))] };
     });
     void refetch();
+    if (!post.scheduled && isOwnProfile && founderIdShare) setSharePrompt(post.source);
   }
 
   async function deletePost() {
@@ -380,6 +386,17 @@ export function ProfilePosts({ userId, name, avatarUrl, isOwnProfile }: Props) {
       </div>
       <div className="w-full space-y-5">
         {isOwnProfile && !isLoading && data?.postingAvailable !== false && <JourneyPostComposer userId={userId} name={name} avatarUrl={avatarUrl} onPublished={showPublishedPost} focusOnOpen={composeRequested} />}
+        {sharePrompt && founderIdShare && (
+          <FounderIdSharePrompt
+            username={founderIdShare.username}
+            name={name}
+            startupName={founderIdShare.startupName}
+            placement={sharePrompt === 'stage' ? 'stage_update_posted' : 'update_posted'}
+            title={sharePrompt === 'stage' ? 'Your stage update is live.' : 'Your update is live.'}
+            body="Share your Founder ID so people can follow what you’re building."
+            onDismiss={() => setSharePrompt(null)}
+          />
+        )}
         {isOwnProfile && data?.postingAvailable === false && <Card className="p-5 text-sm text-muted-foreground">Posting is temporarily unavailable. Please try again shortly.</Card>}
         {isLoading && <div role="status" className="flex items-center justify-center gap-2 py-10 text-muted-foreground"><Loader2 className="h-5 w-5 animate-spin" />Loading posts…</div>}
         {isError && <Card className="p-6 text-center"><p className="mb-3 text-sm text-muted-foreground">We couldn’t load these posts. Please try again.</p><Button variant="outline" onClick={() => { void refetch(); }}>Try again</Button></Card>}

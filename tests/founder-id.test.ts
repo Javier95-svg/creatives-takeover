@@ -22,7 +22,9 @@ test('the short link redirects to the profile, which stays canonical', () => {
   const vercel = JSON.parse(read('../vercel.json')) as { redirects: Array<{ source: string; destination: string; permanent: boolean }> };
   const short = vercel.redirects.find((rule) => rule.source === '/@:username');
   assert.ok(short, 'the /@username redirect exists');
-  assert.equal(short.destination, '/profile/:username');
+  // ?via=short (2026-10-22) tells short-link visits apart in analytics; the
+  // canonical stays /profile/:username without it.
+  assert.equal(short.destination, '/profile/:username?via=short');
   assert.equal(short.permanent, false, 'temporary, so the short link can change target later without stale browser caches');
   assert.ok(vercel.redirects.some((rule) => rule.source === '/%40:username'), 'an encoded @ is handled too');
   assert.match(read('../api/public-entity.ts'), /const canonical = `\$\{SITE_ORIGIN\}\$\{path\}`/);

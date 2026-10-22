@@ -19,6 +19,7 @@ import { captureEvent } from '@/lib/analytics';
 import { BIZMAP_STAGES, STAGE_TASKS } from '@/lib/bizmapStages';
 import { cohortTotalWeeks, cohortWeek, linesToList, type CohortSummary } from '@/lib/cohorts';
 import { checkinUpdateDraft, ownProfileComposePath, stageJourneyDraft } from '@/lib/profileUpdateDraft';
+import { CohortShowcaseOptInCard } from './CohortShowcaseControls';
 
 type CheckinRow = {
   week_number: number;
@@ -169,6 +170,8 @@ export default function FounderCohortView({ cohort }: { cohort: CohortSummary })
           existing={checkins.data?.find((row) => row.week_number === week) ?? null}
         />
       </div>
+
+      <CohortShowcaseOptInCard cohortId={cohort.cohortId} programName={cohort.programName || cohort.cohortName} />
 
       <p className="mt-6 flex items-start gap-2 text-sm text-muted-foreground">
         <Lock className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />

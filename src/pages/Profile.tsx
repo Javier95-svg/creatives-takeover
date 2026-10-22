@@ -27,6 +27,7 @@ import { ProfileShareButton } from "@/components/profile/ProfileShareButton";
 import { ProfileLinks } from "@/components/profile/ProfileLinks";
 import { PublicProgressCard } from "@/components/profile/PublicProgressCard";
 import { ProfileSupportSection } from "@/components/profile/ProfileSupportSection";
+import { FounderIdChecklist } from "@/components/profile/FounderIdChecklist";
 import { FounderIdHeader } from "@/components/profile/FounderIdHeader";
 import { isFounderIdAccount } from "@/lib/founderId";
 
@@ -423,7 +424,13 @@ const Profile = () => {
       is_owner: isOwnProfile,
       signed_in: Boolean(currentUser),
       referrer_domain: referrerDomain,
+      founder_id: isFounderId,
+      // vercel.json tags the /@username short link with ?via=short, so shared
+      // short links can be told apart from in-app /profile visits.
+      via_short_link: new URLSearchParams(window.location.search).get('via') === 'short',
+      has_project: Boolean(profile?.startup_name?.trim()),
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- one view per profile load
   }, [profileId, isOwnProfile, currentUser]);
 
   // Real-time listener for profile updates
@@ -791,6 +798,25 @@ const Profile = () => {
                 </div>
               </Card>
 
+              {isOwnProfile && isFounderId && profile.id && (
+                <FounderIdChecklist
+                  userId={profile.id}
+                  fields={{
+                    startup_name: profile.startup_name,
+                    startup_tagline: profile.startup_tagline,
+                    startup_description: profile.startup_description,
+                    startup_links: profile.startup_links,
+                    website_url: profile.website_url,
+                  }}
+                  onSaved={(fields) => {
+                    // Public fields, so the visitor preview gets them too.
+                    setProfile((prev) => (prev ? { ...prev, ...fields } : prev));
+                    setPublicProfile((prev) => (prev ? { ...prev, ...fields } : prev));
+                  }}
+                  onEditProfile={() => setShowEditModal(true)}
+                />
+              )}
+
               {profile.username && isFounderId && (
                 <PublicProgressCard
                   username={profile.username}
@@ -818,6 +844,7 @@ const Profile = () => {
                 name={profile.full_name || profile.username || 'Founder'}
                 avatarUrl={profile.avatar_url}
                 isOwnProfile={isOwnProfile}
+                founderIdShare={isOwnProfile && isFounderId && profile.username ? { username: profile.username, startupName: profile.startup_name } : null}
               />
 
               {profile && (

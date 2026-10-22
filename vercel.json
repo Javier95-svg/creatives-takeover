@@ -9,8 +9,8 @@
       "destination": "https://creatives-takeover.com/$1",
       "permanent": true
     },
-    { "source": "/@:username", "destination": "/profile/:username", "permanent": false },
-    { "source": "/%40:username", "destination": "/profile/:username", "permanent": false },
+    { "source": "/@:username", "destination": "/profile/:username?via=short", "permanent": false },
+    { "source": "/%40:username", "destination": "/profile/:username?via=short", "permanent": false },
     { "source": "/community/co-founders/:path*", "destination": "/co-founder/:path*", "permanent": true },
     { "source": "/community/angels/:path*", "destination": "/investors/:path*", "permanent": true },
     { "source": "/community/co-founders", "destination": "/co-founder", "permanent": true },
