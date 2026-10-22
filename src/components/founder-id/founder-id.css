@@ -88,6 +88,139 @@
   .fid-container { padding-left: 32px; padding-right: 32px; }
 }
 
+/* ── The living wallpaper (/founder-id only, .fid--animated) ─────────────
+   Three champagne glows drifting slowly, two layers of gold dust rising at
+   different speeds, and a faint band of light. All fixed behind the content,
+   between the base gradient (::before) and the grain (::after), animating only
+   transform and opacity. Off for prefers-reduced-motion. */
+
+.fid {
+  --fid-wall-glow: rgba(184, 149, 76, 0.16);
+  --fid-wall-sheen: rgba(255, 246, 220, 0.5);
+  --fid-dust: rgba(138, 109, 44, 0.5);
+}
+
+.dark .fid {
+  --fid-wall-glow: rgba(214, 201, 159, 0.1);
+  --fid-wall-sheen: rgba(255, 246, 220, 0.045);
+  --fid-dust: rgba(232, 220, 176, 0.6);
+}
+
+.fid-wall {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.fid-wall__glow {
+  position: absolute;
+  width: 70vmax;
+  height: 70vmax;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--fid-wall-glow) 0%, transparent 62%);
+  will-change: transform;
+}
+
+.fid-wall__glow--a { top: -28vmax; left: -18vmax; animation: fid-drift-a 46s ease-in-out infinite alternate; }
+.fid-wall__glow--b { bottom: -32vmax; right: -22vmax; animation: fid-drift-b 58s ease-in-out infinite alternate; }
+.fid-wall__glow--c { top: 28%; left: 38%; width: 48vmax; height: 48vmax; opacity: 0.75; animation: fid-drift-c 70s ease-in-out infinite alternate; }
+
+@keyframes fid-drift-a {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to { transform: translate3d(14vmax, 10vmax, 0) scale(1.15); }
+}
+
+@keyframes fid-drift-b {
+  from { transform: translate3d(0, 0, 0) scale(1.1); }
+  to { transform: translate3d(-12vmax, -14vmax, 0) scale(0.95); }
+}
+
+@keyframes fid-drift-c {
+  from { transform: translate3d(-8vmax, 6vmax, 0) scale(0.9); }
+  to { transform: translate3d(10vmax, -8vmax, 0) scale(1.12); }
+}
+
+/* A faint diagonal band of light, crossing the page every half minute. */
+.fid-wall__sheen {
+  position: absolute;
+  inset: -50%;
+  background: linear-gradient(115deg, transparent 46%, var(--fid-wall-sheen) 50%, transparent 54%);
+  opacity: 0.6;
+  animation: fid-wall-sheen 30s linear infinite;
+  will-change: transform;
+}
+
+@keyframes fid-wall-sheen {
+  from { transform: translate3d(-35%, 0, 0); }
+  to { transform: translate3d(35%, 0, 0); }
+}
+
+/* Gold dust: dots on a repeating tile, drifting up exactly one tile per loop
+   so the motion never jumps, and twinkling softly. The far layer is larger,
+   fainter and slower, which reads as depth. */
+.fid-wall__dust {
+  position: absolute;
+  inset: -240px 0 0;
+  /* Each speck is a bright core with a soft halo. */
+  background-image:
+    radial-gradient(circle at 22px 34px, var(--fid-dust) 0, var(--fid-dust) 1.2px, transparent 3px),
+    radial-gradient(circle at 96px 120px, var(--fid-dust) 0, var(--fid-dust) 0.9px, transparent 2.4px),
+    radial-gradient(circle at 170px 64px, var(--fid-dust) 0, var(--fid-dust) 1.4px, transparent 3.4px),
+    radial-gradient(circle at 210px 190px, var(--fid-dust) 0, var(--fid-dust) 1px, transparent 2.6px),
+    radial-gradient(circle at 58px 208px, var(--fid-dust) 0, var(--fid-dust) 1.1px, transparent 2.8px),
+    radial-gradient(circle at 140px 156px, var(--fid-dust) 0, var(--fid-dust) 0.8px, transparent 2.2px),
+    radial-gradient(circle at 228px 22px, var(--fid-dust) 0, var(--fid-dust) 1px, transparent 2.6px),
+    radial-gradient(circle at 12px 132px, var(--fid-dust) 0, var(--fid-dust) 0.9px, transparent 2.4px);
+  background-size: 240px 240px;
+  animation: fid-dust-rise 80s linear infinite, fid-dust-twinkle 7s ease-in-out infinite alternate;
+  will-change: transform, opacity;
+}
+
+.fid-wall__dust--far {
+  inset: -380px 0 0;
+  background-size: 380px 380px;
+  animation: fid-dust-rise-far 140s linear infinite, fid-dust-twinkle-far 11s ease-in-out 2s infinite alternate;
+}
+
+@keyframes fid-dust-rise {
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(0, -240px, 0); }
+}
+
+@keyframes fid-dust-rise-far {
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(0, -380px, 0); }
+}
+
+@keyframes fid-dust-twinkle {
+  from { opacity: 0.45; }
+  to { opacity: 1; }
+}
+
+@keyframes fid-dust-twinkle-far {
+  from { opacity: 0.25; }
+  to { opacity: 0.6; }
+}
+
+/* The card's rings breathe, one after another. */
+.fid--animated .fid-rings span { animation: fid-ring-breathe 9s ease-in-out infinite; }
+.fid--animated .fid-rings span:nth-child(2) { animation-delay: 1.5s; }
+.fid--animated .fid-rings span:nth-child(3) { animation-delay: 3s; }
+
+@keyframes fid-ring-breathe {
+  0%, 100% { opacity: 0.55; transform: translate(-50%, -50%) scale(1); }
+  50% { opacity: 1; transform: translate(-50%, -50%) scale(1.025); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fid-wall__glow,
+  .fid-wall__sheen,
+  .fid-wall__dust,
+  .fid--animated .fid-rings span { animation: none; }
+}
+
 /* ── Type ─────────────────────────────────────────────────────────────── */
 
 .fid-label {

@@ -265,7 +265,16 @@ const FounderIdPage = () => {
         image={FOUNDER_ID_SEO.image}
         structuredData={structuredData}
       />
-      <div className="fid relative min-h-screen overflow-x-clip">
+      <div className="fid fid--animated relative min-h-screen overflow-x-clip">
+        {/* The living wallpaper: glows, gold dust and a band of light (founder-id.css). */}
+        <div className="fid-wall" aria-hidden="true">
+          <span className="fid-wall__glow fid-wall__glow--a" />
+          <span className="fid-wall__glow fid-wall__glow--b" />
+          <span className="fid-wall__glow fid-wall__glow--c" />
+          <span className="fid-wall__dust fid-wall__dust--far" />
+          <span className="fid-wall__dust" />
+          <span className="fid-wall__sheen" />
+        </div>
         <Navigation />
         <main>
           {/* Hero: the link, then the real card it shares. */}
