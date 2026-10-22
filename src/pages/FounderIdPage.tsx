@@ -428,8 +428,10 @@ const FounderIdPage = () => {
                   <p className="fid-label">{FOUNDER_ID_CLOSING.eyebrow}</p>
                   <Title id="founder-id-close" className="fid-h2" lead={FOUNDER_ID_CLOSING.title} accent={FOUNDER_ID_CLOSING.titleAccent} />
                   <p className="fid-lede">{FOUNDER_ID_CLOSING.body}</p>
-                  {primaryCta('closing')}
-                  {!user && <p className="fid-close__note">{FOUNDER_ID_HERO.note}</p>}
+                  <div className="fid-close__cta">
+                    {primaryCta('closing')}
+                    {!user && <p className="fid-close__note">{FOUNDER_ID_HERO.note}</p>}
+                  </div>
                 </div>
               </ScrollReveal>
               <ScrollReveal variant="slide-left" delay={0.1}>

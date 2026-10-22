@@ -108,7 +108,7 @@ export const FOUNDER_ID_SECTIONS = {
       bullets: [
         'Your role, stage and industry at a glance',
         'Project links: website, demo, Loom video, pitch deck and waitlist',
-        'Your LinkedIn, X, GitHub and Instagram',
+        'Your LinkedIn, X, GitHub, Instagram or YouTube',
         'Connect and Message buttons, so people can reach you',
       ],
     },

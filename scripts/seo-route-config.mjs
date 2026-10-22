@@ -447,7 +447,7 @@ export const INDEXABLE_ROUTES = [
     sections: [
       {
         heading: "Profile: who you are and what you’re building",
-        copy: "Your name, location and one-line pitch beside your project, your role, stage and industry, project links (website, demo, Loom video, pitch deck, waitlist) and your LinkedIn, X, GitHub and Instagram.",
+        copy: "Your name, location and one-line pitch beside your project, your role, stage and industry, project links (website, demo, Loom video, pitch deck, waitlist) and your LinkedIn, X, GitHub, Instagram or YouTube.",
       },
       {
         heading: "Support: let people back your project",

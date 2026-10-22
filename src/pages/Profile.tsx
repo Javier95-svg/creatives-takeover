@@ -752,6 +752,7 @@ const Profile = () => {
                     twitter: profile.twitter_url,
                     github: profile.github_url,
                     instagram: profile.instagram_url,
+                    youtube: profile.youtube_url,
                   }}
                 />
 

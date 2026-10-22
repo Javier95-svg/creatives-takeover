@@ -37,6 +37,7 @@ interface EditProfileModalProps {
     twitter_url: string | null;
     linkedin_url: string | null;
     instagram_url: string | null;
+    youtube_url?: string | null;
     github_url: string | null;
     role: string | null;
 
@@ -128,6 +129,7 @@ export const EditProfileModal = ({ open, onClose, profile, onSuccess }: EditProf
     twitter_url: profile.twitter_url || "",
     linkedin_url: profile.linkedin_url || "",
     instagram_url: profile.instagram_url || "",
+    youtube_url: profile.youtube_url || "",
     github_url: profile.github_url || "",
     role: profile.role || "",
 
@@ -273,6 +275,7 @@ export const EditProfileModal = ({ open, onClose, profile, onSuccess }: EditProf
         twitter_url: formData.twitter_url,
         linkedin_url: formData.linkedin_url,
         instagram_url: formData.instagram_url,
+        youtube_url: formData.youtube_url,
         github_url: formData.github_url,
         role: formData.role || null,
 
@@ -830,6 +833,16 @@ export const EditProfileModal = ({ open, onClose, profile, onSuccess }: EditProf
                     value={formData.instagram_url}
                     onChange={(e) => setFormData({ ...formData, instagram_url: e.target.value })}
                     placeholder="https://instagram.com/..."
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="youtube_url">YouTube</Label>
+                  <Input
+                    id="youtube_url"
+                    type="url"
+                    value={formData.youtube_url}
+                    onChange={(e) => setFormData({ ...formData, youtube_url: e.target.value })}
+                    placeholder="https://youtube.com/@..."
                   />
                 </div>
               </div>

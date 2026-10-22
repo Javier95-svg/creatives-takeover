@@ -760,7 +760,9 @@ html:not(.dark) .fid-hero .fid-stage__floor {
 
 .fid-close__text { display: grid; gap: 24px; justify-items: start; }
 .fid-close__text .fid-lede { max-width: 440px; }
-.fid-close__note { font-size: 13px; color: var(--fid-ob-muted); }
+/* The note sits centred under the button it qualifies. */
+.fid-close__cta { display: grid; justify-items: center; gap: 14px; }
+.fid-close__note { margin: 0; font-size: 13px; color: var(--fid-ob-muted); }
 
 /* Built from the same proportions and palette as the real 1200×630 card. */
 .fid-idcard {

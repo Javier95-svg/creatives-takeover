@@ -1,5 +1,5 @@
 import type { ComponentType, ReactNode } from 'react';
-import { ExternalLink, FileText, Globe, Instagram, Linkedin, Rocket, Users2 } from 'lucide-react';
+import { ExternalLink, FileText, Globe, Instagram, Linkedin, Rocket, Users2, Youtube } from 'lucide-react';
 
 interface StartupLinks {
   pitchDeck?: string;
@@ -15,6 +15,7 @@ interface SocialLinks {
   twitter: string | null;
   github: string | null;
   instagram: string | null;
+  youtube?: string | null;
 }
 
 const XIcon = ({ className }: { className?: string }) => (
@@ -53,6 +54,7 @@ export function ProfileLinks({ startupLinks, social }: { startupLinks: StartupLi
     [webUrl(social.twitter), 'X', <XIcon key="x" className="h-5 w-5" />],
     [webUrl(social.github), 'GitHub', <GitHubIcon key="g" className="h-5 w-5" />],
     [webUrl(social.instagram), 'Instagram', <Instagram key="i" className="h-5 w-5" aria-hidden="true" />],
+    [webUrl(social.youtube), 'YouTube', <Youtube key="y" className="h-5 w-5" aria-hidden="true" />],
   ];
   const socials = candidates.filter((item): item is [string, string, ReactNode] => item[0] !== null);
 
