@@ -77,6 +77,7 @@ export type DashboardSidebarToolKey =
   | 'prompt_library'
   | 'saved_mentors'
   | 'decision_sprint'
+  | 'project_setup'
   | 'core_metrics'
   | 'ai_goals';
 

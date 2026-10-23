@@ -182,6 +182,10 @@ export const PUBLIC_TAB_VISIBILITY: Record<string, PublicTabConfig> = {
     state: 'hidden',
     featureName: 'Decision Sprint',
   },
+  '/project-setup': {
+    state: 'hidden',
+    featureName: 'Project setup',
+  },
   '/core-metrics': {
     state: 'hidden',
     featureName: 'Core Metrics',

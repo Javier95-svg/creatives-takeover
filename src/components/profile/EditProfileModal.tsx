@@ -293,8 +293,10 @@ export const EditProfileModal = ({ open, onClose, profile, onSuccess }: EditProf
         current_focus: formData.current_focus || null,
         looking_for: formData.looking_for.length > 0 ? formData.looking_for : null,
 
-        // Startup links as JSONB
+        // Startup links as JSONB. Keys this form doesn't edit (the website
+        // saved by Project setup) are kept.
         startup_links: {
+          ...(profile.startup_links && typeof profile.startup_links === 'object' ? profile.startup_links : {}),
           pitchDeck: formData.pitch_deck_url || undefined,
           waitlist: formData.waitlist_url || undefined,
           demo: formData.demo_url || undefined,

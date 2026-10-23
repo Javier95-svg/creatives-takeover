@@ -1,407 +1,340 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { ArrowLeft, ArrowRight, Check, Loader2, Plus, Trash2, Trophy } from "lucide-react";
+import { toast } from "sonner";
 import SEO, { createBreadcrumbSchema } from "@/components/SEO";
-import { useLeanStartupStore } from "@/store/leanStartupStore";
-import { getSafeLocalStorage } from "@/lib/safeStorage";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { DecisionSprintStepNav } from "@/components/decision-sprint/DecisionSprintStepNav";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Slider } from "@/components/ui/slider";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, ArrowRight, CheckCircle2, Save, Scale, Star, Target } from "lucide-react";
-import { DecisionSprintStepNav, type DecisionSprintStep } from "@/components/decision-sprint/DecisionSprintStepNav";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
-import { toast } from "sonner";
+import { useAccountContext } from "@/hooks/useAccountContext";
 import { captureEvent } from "@/lib/analytics";
-import { loadValidationDraftArtifact, saveValidationDraftArtifact, trackRetentionEvent } from "@/lib/retentionSystem";
+import {
+  CHECK_ANSWER_LABELS,
+  CHECK_QUESTIONS,
+  MAX_SPRINT_IDEAS,
+  answeredCount,
+  buildSprintSeed,
+  canOpenStep,
+  createSprintDraft,
+  createSprintIdea,
+  furthestStep,
+  hasSprintContent,
+  ideaReason,
+  isIdeaFilled,
+  parseSprintDraft,
+  pickSprintDraft,
+  rankIdeas,
+  scoreIdea,
+  scoreVerdict,
+  sprintStorageKey,
+  DECISION_SPRINT_STORAGE_PREFIX,
+  type CheckAnswer,
+  type CheckKey,
+  type SprintDraft,
+  type SprintIdea,
+  type SprintStep,
+} from "@/lib/decisionSprint";
+import { buildIcpSeedReturnPath } from "@/lib/icpSeed";
+import { loadValidationDraftArtifact, saveValidationDraftArtifact, trackRetentionEvent, updateValidationDraft } from "@/lib/retentionSystem";
+import { getSafeLocalStorage } from "@/lib/safeStorage";
+import { scrollToTopFrom } from "@/lib/scrollToTop";
+import { cn } from "@/lib/utils";
 import { clearPendingValueCapture, persistPendingValueCapture, readPendingValueCapture } from "@/lib/valueCapture";
+import { useLeanStartupStore } from "@/store/leanStartupStore";
 
-type CriteriaKey =
-  | "problemSeverity"
-  | "frequency"
-  | "willingnessToPay"
-  | "reachableCustomer"
-  | "differentiation"
-  | "founderAdvantage"
-  | "earlyEvidence";
+const AUTOSAVE_DELAY_MS = 1500;
+const ANSWERS: CheckAnswer[] = [0, 1, 2];
 
-interface IdeaScore {
-  id: string;
-  name: string;
-  oneLiner: string;
-  targetCustomer: string;
-  coreProblem: string;
-  currentAlternative: string;
-  unfairAdvantage: string;
-  marketSignals: string[];
-  risks: string;
-  criteria: Record<CriteriaKey, number>;
+type SaveState = "idle" | "saving" | "saved" | "error";
+
+const VERDICT_STYLES = {
+  strong: "border-success/40 bg-success/10 text-success",
+  mixed: "border-warning/40 bg-warning/10 text-warning",
+  weak: "border-destructive/40 bg-destructive/10 text-destructive",
+} as const;
+
+function readLocalDraft(key: string): SprintDraft | null {
+  try {
+    const raw = getSafeLocalStorage().getItem(key);
+    return typeof raw === "string" && raw ? parseSprintDraft(JSON.parse(raw)) : null;
+  } catch {
+    return null;
+  }
 }
 
-const MAX_IDEAS = 3;
-const STORAGE_KEY = "validateDecisionSprint";
+function ideaLabel(idea: SprintIdea, index: number) {
+  return idea.name.trim() || `Idea ${index + 1}`;
+}
 
-const SIGNAL_OPTIONS = [
-  {
-    id: "search_demand",
-    title: "Search or community demand",
-    description: "People are already asking for this solution."
-  },
-  {
-    id: "competitor_spend",
-    title: "Competitors spending on ads",
-    description: "Others are paying to acquire these customers."
-  },
-  {
-    id: "manual_workaround",
-    title: "Painful manual workaround",
-    description: "Customers are hacking together a fix today."
-  },
-  {
-    id: "paid_alternatives",
-    title: "Paid alternatives exist",
-    description: "Indicates willingness to pay."
-  },
-  {
-    id: "urgent_deadline",
-    title: "Urgent deadline or regulatory pressure",
-    description: "The problem cannot wait."
-  },
-  {
-    id: "early_interest",
-    title: "Early inbound interest",
-    description: "People already asked for a solution."
+function AnswerPicker({
+  value,
+  onChange,
+  label,
+}: {
+  value: CheckAnswer | undefined;
+  onChange: (answer: CheckAnswer) => void;
+  label: string;
+}) {
+  return (
+    <div role="radiogroup" aria-label={label} className="grid grid-cols-3 gap-1 rounded-lg border border-border/70 bg-muted/40 p-1">
+      {ANSWERS.map((answer) => {
+        const selected = value === answer;
+        return (
+          <button
+            key={answer}
+            type="button"
+            role="radio"
+            aria-checked={selected}
+            onClick={() => onChange(answer)}
+            className={cn(
+              "min-h-9 rounded-md px-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+              selected
+                ? answer === 2
+                  ? "bg-success text-white shadow-sm"
+                  : answer === 1
+                    ? "bg-warning text-white shadow-sm"
+                    : "bg-foreground text-background shadow-sm"
+                : "text-muted-foreground hover:bg-background hover:text-foreground",
+            )}
+          >
+            {CHECK_ANSWER_LABELS[answer]}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function ScorePill({ idea }: { idea: SprintIdea }) {
+  const score = scoreIdea(idea);
+  if (score === null) {
+    return (
+      <span className="text-xs text-muted-foreground">
+        {answeredCount(idea)} of {CHECK_QUESTIONS.length} answered
+      </span>
+    );
   }
-];
-
-const CRITERIA = [
-  {
-    key: "problemSeverity" as const,
-    title: "Problem severity",
-    description: "How painful is the problem?",
-  },
-  {
-    key: "frequency" as const,
-    title: "Frequency",
-    description: "How often does it happen?",
-  },
-  {
-    key: "willingnessToPay" as const,
-    title: "Willingness to pay",
-    description: "Will customers pay to solve it?",
-  },
-  {
-    key: "reachableCustomer" as const,
-    title: "Reachability",
-    description: "Can you reach the customer cheaply?",
-  },
-  {
-    key: "differentiation" as const,
-    title: "Differentiation",
-    description: "Is there a clear edge vs alternatives?",
-  },
-  {
-    key: "founderAdvantage" as const,
-    title: "Founder advantage",
-    description: "Do you have unique insight or access?",
-  },
-  {
-    key: "earlyEvidence" as const,
-    title: "Early evidence",
-    description: "Any proof of demand today?",
-  }
-];
-
-const createIdea = (): IdeaScore => ({
-  id: `idea-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-  name: "",
-  oneLiner: "",
-  targetCustomer: "",
-  coreProblem: "",
-  currentAlternative: "",
-  unfairAdvantage: "",
-  marketSignals: [],
-  risks: "",
-  criteria: {
-    problemSeverity: 3,
-    frequency: 3,
-    willingnessToPay: 3,
-    reachableCustomer: 3,
-    differentiation: 3,
-    founderAdvantage: 3,
-    earlyEvidence: 3,
-  },
-});
-
-const computeScore = (idea: IdeaScore) => {
-  const total = CRITERIA.reduce((sum, criterion) => sum + idea.criteria[criterion.key], 0);
-  const max = CRITERIA.length * 5;
-  return Math.round((total / max) * 100);
-};
-
-const getDecisionLabel = (score: number) => {
-  if (score >= 80) {
-    return {
-      title: "Build",
-      description: "Strong signal. Move to Market Need Lab and design your MVP scope.",
-      tone: "text-success",
-      badge: "bg-success/10 text-success border-success",
-    };
-  }
-  if (score >= 60) {
-    return {
-      title: "Refine",
-      description: "Promising, but tighten the problem or segment before building.",
-      tone: "text-warning",
-      badge: "bg-warning/10 text-warning border-warning",
-    };
-  }
-  return {
-    title: "Pause",
-    description: "Weak signal. Replace or reshape this idea before investing time.",
-    tone: "text-destructive",
-    badge: "bg-destructive/10 text-destructive border-destructive",
-  };
-};
+  const verdict = scoreVerdict(score);
+  return (
+    <Badge variant="outline" className={cn("font-semibold", VERDICT_STYLES[verdict.tone])}>
+      {score}/100 · {verdict.label}
+    </Badge>
+  );
+}
 
 export default function ValidateJourneyPage() {
   const [searchParams] = useSearchParams();
-  const focusedActivation = searchParams.get('activation') === '1' && Boolean(searchParams.get('journey'));
+  const focusedActivation = searchParams.get("activation") === "1" && Boolean(searchParams.get("journey"));
   const navigate = useNavigate();
-  const { user, isAuthenticated } = useAuth();
-  const [ideas, setIdeas] = useState<IdeaScore[]>([createIdea()]);
-  const [activeIdeaId, setActiveIdeaId] = useState<string>(ideas[0]?.id || "");
-  const [chosenIdeaId, setChosenIdeaId] = useState<string | null>(null);
-  const [draftArtifactId, setDraftArtifactId] = useState<string>(`validation-draft-${Date.now()}`);
-  const [isSavingDraft, setIsSavingDraft] = useState(false);
-  const [step, setStep] = useState<DecisionSprintStep>(1);
-  const restoredFromLocal = useRef(false);
-  const remoteDraftLoaded = useRef(false);
+  const { user, loading: authLoading } = useAuth();
+  const userId = user?.id ?? null;
 
-  const markToolUsed = useLeanStartupStore(s => s.markToolUsed);
-  useEffect(() => { markToolUsed('decision-sprint'); }, [markToolUsed]);
+  const [draft, setDraft] = useState<SprintDraft>(() => createSprintDraft());
+  const [loaded, setLoaded] = useState(false);
+  const [step, setStep] = useState<SprintStep>(1);
+  const [selectedIdeaId, setSelectedIdeaId] = useState<string | null>(null);
+  const [saveState, setSaveState] = useState<SaveState>("idle");
+  const [isValidating, setIsValidating] = useState(false);
+  const dirtyRef = useRef(false);
+  const savedThisSessionRef = useRef(false);
+  const topRef = useRef<HTMLDivElement>(null);
 
+  const markToolUsed = useLeanStartupStore((s) => s.markToolUsed);
+  useEffect(() => { markToolUsed("decision-sprint"); }, [markToolUsed]);
+
+  // Decision Sprint is the builder tool; founders already have a project and
+  // bring it in at /project-setup instead.
+  const account = useAccountContext();
+  const isFounder = Boolean(userId) && !account.isLoading && !account.isError && account.userType === "founder";
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    const storage = getSafeLocalStorage();
-    const stored = storage.getItem(STORAGE_KEY);
-    if (!stored) return;
-    try {
-      const parsed = JSON.parse(stored) as {
-        ideas?: IdeaScore[];
-        activeIdeaId?: string;
-        chosenIdeaId?: string | null;
-        lastStep?: number;
-      };
-      if (parsed.ideas && parsed.ideas.length > 0) {
-        restoredFromLocal.current = true;
-        setIdeas(parsed.ideas);
-        setActiveIdeaId(parsed.activeIdeaId || parsed.ideas[0].id);
-        setChosenIdeaId(parsed.chosenIdeaId ?? null);
-        setDraftArtifactId(parsed.chosenIdeaId || parsed.activeIdeaId || parsed.ideas[0].id);
-        setStep(parsed.lastStep === 2 || parsed.lastStep === 3 ? parsed.lastStep : parsed.chosenIdeaId ? 3 : 1);
+    if (isFounder) navigate("/project-setup", { replace: true });
+  }, [isFounder, navigate]);
+
+  // Open the newest of this account's local and cloud drafts.
+  useEffect(() => {
+    if (authLoading) return;
+    let cancelled = false;
+    setLoaded(false);
+    dirtyRef.current = false;
+
+    const restore = async () => {
+      const storage = getSafeLocalStorage();
+      const local = readLocalDraft(sprintStorageKey(userId));
+      // Drafts from before per-account keys were saved under the bare prefix;
+      // they are only adopted like a guest draft, when the account has nothing.
+      const guest = userId
+        ? readLocalDraft(sprintStorageKey(null)) ?? readLocalDraft(DECISION_SPRINT_STORAGE_PREFIX)
+        : local ?? readLocalDraft(DECISION_SPRINT_STORAGE_PREFIX);
+      let remote: SprintDraft | null = null;
+      if (userId) {
+        try {
+          remote = parseSprintDraft(await loadValidationDraftArtifact(userId));
+        } catch (error) {
+          console.error("Failed to restore validation draft", error);
+        }
       }
-    } catch (error) {
-      console.error("Failed to load validation sprint data", error);
-    }
-  }, []);
+      if (cancelled) return;
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const payload = JSON.stringify({ ideas, activeIdeaId, chosenIdeaId, lastStep: step });
-    const storage = getSafeLocalStorage();
-    storage.setItem(STORAGE_KEY, payload);
-  }, [ideas, activeIdeaId, chosenIdeaId, step]);
+      const picked = userId ? pickSprintDraft({ local, remote, guest }) : { draft: guest, fromGuest: false };
+      storage.removeItem(DECISION_SPRINT_STORAGE_PREFIX);
+      if (picked.fromGuest) {
+        storage.removeItem(sprintStorageKey(null));
+        dirtyRef.current = true;
+      }
 
-  useEffect(() => {
-    if (!user || restoredFromLocal.current || remoteDraftLoaded.current) return;
+      const next = picked.draft ?? createSprintDraft();
+      setDraft(next);
+      setSelectedIdeaId(next.chosenIdeaId);
+      setStep(furthestStep(next.ideas));
+      setLoaded(true);
 
-    remoteDraftLoaded.current = true;
-
-    const restoreRemoteDraft = async () => {
-      try {
-        const remoteDraft = await loadValidationDraftArtifact(user.id);
-        if (!remoteDraft) return;
-
-        const restoredIdeas = remoteDraft.ideas as IdeaScore[];
-        if (!Array.isArray(restoredIdeas) || restoredIdeas.length === 0) return;
-
-        // FIX(retention): /decision-sprint — signed-in users now reopen their saved validation draft instead of starting from a blank local-only state.
-        setIdeas(restoredIdeas);
-        setActiveIdeaId(remoteDraft.activeIdeaId || restoredIdeas[0].id);
-        setChosenIdeaId(remoteDraft.chosenIdeaId ?? null);
-        setDraftArtifactId(remoteDraft.id);
-        setStep(remoteDraft.chosenIdeaId ? 3 : 1);
-      } catch (error) {
-        console.error('Failed to restore validation draft', error);
+      const pending = readPendingValueCapture();
+      if (userId && pending?.action === "save_validation") {
+        clearPendingValueCapture();
+        dirtyRef.current = true;
+        toast.success("Your sprint is saved to your account.");
       }
     };
 
-    void restoreRemoteDraft();
-  }, [user]);
+    void restore();
+    return () => { cancelled = true; };
+  }, [authLoading, userId]);
 
-  const rankedIdeas = useMemo(() => {
-    return [...ideas].sort((a, b) => computeScore(b) - computeScore(a));
-  }, [ideas]);
-
-  const activeIdea = ideas.find((idea) => idea.id === activeIdeaId) || ideas[0];
-
-  const updateIdea = (ideaId: string, updates: Partial<IdeaScore>) => {
-    setIdeas((prev) =>
-      prev.map((idea) => (idea.id === ideaId ? { ...idea, ...updates } : idea))
-    );
-  };
-
-  const updateCriteria = (ideaId: string, key: CriteriaKey, value: number) => {
-    setIdeas((prev) =>
-      prev.map((idea) =>
-        idea.id === ideaId
-          ? {
-              ...idea,
-              criteria: {
-                ...idea.criteria,
-                [key]: value,
-              },
-            }
-          : idea
-      )
-    );
-  };
-
-  const toggleSignal = (ideaId: string, signalId: string) => {
-    setIdeas((prev) =>
-      prev.map((idea) => {
-        if (idea.id !== ideaId) return idea;
-        const hasSignal = idea.marketSignals.includes(signalId);
-        return {
-          ...idea,
-          marketSignals: hasSignal
-            ? idea.marketSignals.filter((signal) => signal !== signalId)
-            : [...idea.marketSignals, signalId],
-        };
-      })
-    );
-  };
-
-  const handleAddIdea = () => {
-    if (ideas.length >= MAX_IDEAS) return;
-    const nextIdea = createIdea();
-    setIdeas((prev) => [...prev, nextIdea]);
-    setActiveIdeaId(nextIdea.id);
-  };
-
-  const handleRemoveIdea = (ideaId: string) => {
-    if (ideas.length <= 1) return;
-    setIdeas((prev) => prev.filter((idea) => idea.id !== ideaId));
-    if (activeIdeaId === ideaId) {
-      const remaining = ideas.filter((idea) => idea.id !== ideaId);
-      setActiveIdeaId(remaining[0]?.id || "");
-    }
-    if (chosenIdeaId === ideaId) {
-      setChosenIdeaId(null);
-    }
-  };
-
-  const decisionScore = activeIdea ? computeScore(activeIdea) : 0;
-  const decisionLabel = getDecisionLabel(decisionScore);
-  const readinessFields = [
-    activeIdea?.name,
-    activeIdea?.oneLiner,
-    activeIdea?.targetCustomer,
-    activeIdea?.coreProblem,
-  ];
-  const readinessCount = readinessFields.filter((field) => field && field.trim()).length + (activeIdea?.marketSignals.length >= 2 ? 1 : 0);
-  const readinessTotal = 5;
-  const readinessPercent = Math.round((readinessCount / readinessTotal) * 100);
-  const hasMeaningfulDraft = ideas.some((idea) =>
-    [
-      idea.name,
-      idea.oneLiner,
-      idea.targetCustomer,
-      idea.coreProblem,
-      idea.currentAlternative,
-      idea.unfairAdvantage,
-      idea.risks,
-    ].some((value) => value.trim().length > 0) || idea.marketSignals.length > 0,
-  );
-
-  const handleSaveDraft = async () => {
-    if (!hasMeaningfulDraft) {
-      toast.error('Add at least one idea or signal before saving this validation draft.');
-      return;
-    }
-
-    if (!user || !isAuthenticated) {
-      // FIX(retention): /decision-sprint — anonymous users can build the sprint first and only hit auth when they decide to save the draft.
-      persistPendingValueCapture({
-        action: 'save_validation',
-        entityId: activeIdeaId,
-        source: 'decision_sprint',
-        resumeLabel: 'Validation sprint draft',
-      });
-      navigate(`/signup?source=save-validation&return=${encodeURIComponent('/decision-sprint')}`);
-      return;
-    }
-
-    setIsSavingDraft(true);
-
+  const persistCloud = useCallback(async (next: SprintDraft) => {
+    if (!userId) return;
+    setSaveState("saving");
+    const artifact = { id: next.id, ideas: next.ideas, activeIdeaId: next.activeIdeaId, chosenIdeaId: next.chosenIdeaId, updatedAt: next.updatedAt };
     try {
-      const updatedAt = new Date().toISOString();
-      const nextDraftId = draftArtifactId || chosenIdeaId || activeIdeaId || `validation-draft-${Date.now()}`;
-      await saveValidationDraftArtifact(user.id, {
-        id: nextDraftId,
-        ideas,
-        activeIdeaId,
-        chosenIdeaId,
-        updatedAt,
-      });
-      setDraftArtifactId(nextDraftId);
-      captureEvent('artifact_saved', {
-        artifactType: 'validation_draft',
-        artifactId: nextDraftId,
-        resumeUrl: '/decision-sprint',
-      });
-      // FIX(retention): /decision-sprint — validation saves now emit durable artifact events so tranche 3 reporting can measure activation outcomes outside PostHog.
-      void trackRetentionEvent('artifact_saved', {
-        user_id: user.id,
-        artifactType: 'validation_draft',
-        artifactId: nextDraftId,
-        resumeUrl: '/decision-sprint',
-      });
-      toast.success('Validation draft saved. You can now resume it from the dashboard.');
+      if (savedThisSessionRef.current) {
+        await updateValidationDraft(userId, artifact);
+      } else {
+        await saveValidationDraftArtifact(userId, artifact);
+        savedThisSessionRef.current = true;
+        captureEvent("artifact_saved", { artifactType: "validation_draft", artifactId: next.id, resumeUrl: "/decision-sprint" });
+        void trackRetentionEvent("artifact_saved", { user_id: userId, artifactType: "validation_draft", artifactId: next.id, resumeUrl: "/decision-sprint" });
+      }
+      setSaveState("saved");
     } catch (error) {
-      console.error('Failed to save validation draft', error);
-      toast.error('Failed to save validation draft. Please try again.');
+      console.error("Failed to save validation draft", error);
+      setSaveState("error");
+      throw error;
+    }
+  }, [userId]);
+
+  // Every change is kept on this device right away, and in the account after
+  // a short pause in typing.
+  useEffect(() => {
+    if (!loaded || !dirtyRef.current) return;
+    getSafeLocalStorage().setItem(sprintStorageKey(userId), JSON.stringify(draft));
+    if (!userId || !hasSprintContent(draft.ideas)) return;
+    const timer = window.setTimeout(() => { void persistCloud(draft).catch(() => undefined); }, AUTOSAVE_DELAY_MS);
+    return () => window.clearTimeout(timer);
+  }, [draft, loaded, persistCloud, userId]);
+
+  useEffect(() => {
+    captureEvent("decision_sprint_step_viewed", { step });
+  }, [step]);
+
+  const changeDraft = (change: (current: SprintDraft) => Partial<SprintDraft>) => {
+    dirtyRef.current = true;
+    setDraft((current) => {
+      const next = { ...current, ...change(current), updatedAt: new Date().toISOString() };
+      return { ...next, activeIdeaId: next.ideas[0]?.id ?? next.activeIdeaId };
+    });
+  };
+
+  const updateIdea = (ideaId: string, updates: Partial<SprintIdea>) => {
+    changeDraft((current) => ({
+      ideas: current.ideas.map((idea) => (idea.id === ideaId ? { ...idea, ...updates } : idea)),
+    }));
+  };
+
+  const setAnswer = (ideaId: string, key: CheckKey, answer: CheckAnswer) => {
+    changeDraft((current) => ({
+      ideas: current.ideas.map((idea) => (idea.id === ideaId ? { ...idea, answers: { ...idea.answers, [key]: answer } } : idea)),
+    }));
+  };
+
+  const addIdea = () => {
+    changeDraft((current) => (current.ideas.length >= MAX_SPRINT_IDEAS ? {} : { ideas: [...current.ideas, createSprintIdea()] }));
+  };
+
+  const removeIdea = (ideaId: string) => {
+    changeDraft((current) => {
+      if (current.ideas.length <= 1) return {};
+      return {
+        ideas: current.ideas.filter((idea) => idea.id !== ideaId),
+        chosenIdeaId: current.chosenIdeaId === ideaId ? null : current.chosenIdeaId,
+      };
+    });
+    if (selectedIdeaId === ideaId) setSelectedIdeaId(null);
+  };
+
+  const ideas = draft.ideas;
+  const ranked = useMemo(() => rankIdeas(ideas), [ideas]);
+  const pickedIdea = ideas.find((idea) => idea.id === selectedIdeaId) ?? ranked[0];
+  const pickedScore = pickedIdea ? scoreIdea(pickedIdea) : null;
+
+  const firstUnfilled = ideas.findIndex((idea) => !isIdeaFilled(idea));
+  const firstUnchecked = ideas.findIndex((idea) => answeredCount(idea) < CHECK_QUESTIONS.length);
+  const canOpen = (target: SprintStep) => canOpenStep(ideas, target);
+
+  const goTo = (target: SprintStep) => {
+    if (!canOpen(target)) return;
+    setStep(target);
+    scrollToTopFrom(topRef.current);
+  };
+
+  const handleValidate = async () => {
+    if (!pickedIdea) return;
+    const next: SprintDraft = { ...draft, chosenIdeaId: pickedIdea.id, updatedAt: new Date().toISOString() };
+    dirtyRef.current = true;
+    setDraft(next);
+    getSafeLocalStorage().setItem(sprintStorageKey(userId), JSON.stringify(next));
+    captureEvent("decision_sprint_idea_chosen", { score: pickedScore, ideas: ideas.length });
+
+    if (!userId) {
+      persistPendingValueCapture({
+        action: "save_validation",
+        entityId: pickedIdea.id,
+        source: "decision_sprint",
+        resumeLabel: "Validation sprint draft",
+      });
+      navigate(`/signup?source=save-validation&return=${encodeURIComponent("/decision-sprint")}`);
+      return;
+    }
+
+    setIsValidating(true);
+    try {
+      await persistCloud(next);
+      navigate(buildIcpSeedReturnPath(buildSprintSeed(pickedIdea)));
+    } catch {
+      toast.error("Couldn't save your choice. Check your connection and try again.");
     } finally {
-      setIsSavingDraft(false);
+      setIsValidating(false);
     }
   };
 
-  useEffect(() => {
-    if (!user || !hasMeaningfulDraft) return;
-
-    const pendingCapture = readPendingValueCapture();
-    if (pendingCapture?.action !== 'save_validation') return;
-
-    clearPendingValueCapture();
-    void handleSaveDraft();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id, hasMeaningfulDraft]);
-
-  useEffect(() => {
-    captureEvent('decision_sprint_step_viewed', { step });
-  }, [step]);
+  const saveLabel = !userId
+    ? "Saved on this device"
+    : saveState === "saving"
+      ? "Saving…"
+      : saveState === "error"
+        ? "Not saved yet. We'll retry when you edit."
+        : saveState === "saved"
+          ? "Saved"
+          : "";
 
   return (
     <>
       <SEO
         title="Decision Sprint - Creatives Takeover"
-        description="Compare startup ideas side by side, score them against practical demand criteria, and choose the idea that deserves your next sprint."
+        description="Compare up to three startup ideas with five plain questions and pick the one to validate next."
         keywords="startup idea scoring, idea validation, startup prioritization, founder decision framework"
         url="/decision-sprint"
         structuredData={[
@@ -409,8 +342,7 @@ export default function ValidateJourneyPage() {
             "@context": "https://schema.org",
             "@type": "WebPage",
             name: "Decision Sprint",
-            description:
-              "Compare startup ideas side by side, score them against practical demand criteria, and choose the idea that deserves your next sprint.",
+            description: "Compare up to three startup ideas with five plain questions and pick the one to validate next.",
             url: "https://creatives-takeover.com/decision-sprint",
           },
           createBreadcrumbSchema([
@@ -420,377 +352,266 @@ export default function ValidateJourneyPage() {
           ]),
         ]}
       />
-	      <DashboardLayout
-	        title="Decision Sprint"
-	        subtitle="Score ideas and pick your next build."
-	      >
-	        <div className="space-y-8">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-            <div className="w-full max-w-2xl flex-1">
-              {!focusedActivation && <DecisionSprintStepNav active={step} onSelect={setStep} />}
-            </div>
-            {!focusedActivation && <Button
-              type="button"
-              variant="outline"
-              className="shrink-0 self-start"
-              onClick={handleSaveDraft}
-              disabled={isSavingDraft || !hasMeaningfulDraft}
-            >
-              <Save className="mr-2 h-4 w-4" />
-              {isSavingDraft ? 'Saving draft...' : 'Save validation draft'}
-            </Button>}
+      <DashboardLayout title="Decision Sprint" subtitle="Compare your ideas and pick one to validate.">
+        <div ref={topRef} className="mx-auto w-full max-w-5xl space-y-8">
+          <div className="space-y-2">
+            <DecisionSprintStepNav active={step} onSelect={goTo} canOpen={canOpen} />
+            <p className="min-h-4 text-right text-xs text-muted-foreground" aria-live="polite">
+              {loaded && hasSprintContent(ideas) ? saveLabel : ""}
+            </p>
           </div>
-            {step === 1 && (
-            <div id="shortlist" className="space-y-6">
-              <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold">Idea shortlist</h2>
-                <Badge variant="outline">Up to {MAX_IDEAS} ideas</Badge>
+
+          {!loaded ? (
+            <div className="flex items-center justify-center gap-2 py-16 text-sm text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+              Opening your sprint…
+            </div>
+          ) : null}
+
+          {loaded && step === 1 ? (
+            <section className="space-y-5" aria-labelledby="sprint-ideas-title">
+              <div>
+                <h2 id="sprint-ideas-title" className="text-xl font-semibold">Which ideas are you choosing between?</h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Add one to three. Short answers are fine; you can change them later.
+                </p>
               </div>
 
               <div className="grid gap-4">
-                {ideas.map((idea, index) => {
-                  const score = computeScore(idea);
-                  const isActive = idea.id === activeIdeaId;
-                  const isChosen = idea.id === chosenIdeaId;
-
-                  return (
-                    <Card
-                      key={idea.id}
-                      className={cn(
-                        "border-border/70 bg-background/90",
-                        isActive && "border-primary/50 shadow-sm"
-                      )}
-                    >
-                      <CardHeader className="pb-3">
-                        <div className="flex flex-wrap items-center justify-between gap-2">
-                          <CardTitle className="flex items-center gap-2">
-                            <span className="text-primary font-semibold">Idea {index + 1}</span>
-                            <span className="text-sm text-muted-foreground">Score {score}/100</span>
-                            {isChosen && (
-                              <Badge className="bg-success/15 text-success border-success">
-                                Chosen
-                              </Badge>
-                            )}
-                          </CardTitle>
-                          {(!focusedActivation || Boolean(idea.name.trim())) && <div className="flex items-center gap-2">
-                            <Button
-                              size="sm"
-                              variant={isActive ? "default" : "outline"}
-                              onClick={() => {
-                                setActiveIdeaId(idea.id);
-                                setStep(2);
-                              }}
-                            >
-                              Score this idea
-                              <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
-                            </Button>
-                            {ideas.length > 1 && (
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => handleRemoveIdea(idea.id)}
-                              >
-                                Remove
-                              </Button>
-                            )}
-                          </div>}
-                        </div>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
-                        <div className="grid gap-4 md:grid-cols-2">
-                          <div className="space-y-2">
-                            <label className="text-sm font-medium">Idea name</label>
-                            <Input
-                              value={idea.name}
-                              onChange={(event) => updateIdea(idea.id, { name: event.target.value })}
-                              placeholder="e.g., AI scheduling assistant"
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <label className="text-sm font-medium">Target customer</label>
-                            <Input
-                              value={idea.targetCustomer}
-                              onChange={(event) => updateIdea(idea.id, { targetCustomer: event.target.value })}
-                              placeholder="e.g., boutique agencies, solo consultants"
-                            />
-                          </div>
-                        </div>
-                        <div className="space-y-2">
-                          <label className="text-sm font-medium">One-line value prop</label>
-                          <Textarea
-                            value={idea.oneLiner}
-                            onChange={(event) => updateIdea(idea.id, { oneLiner: event.target.value })}
-                            placeholder="Describe the promise in one clear sentence."
-                            rows={2}
-                            className="resize-none"
+                {ideas.map((idea, index) => (
+                  <Card key={idea.id} className="border-border/70">
+                    <CardContent className="space-y-4 p-5">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-sm font-semibold text-primary">Idea {index + 1}</span>
+                        {ideas.length > 1 ? (
+                          <Button variant="ghost" size="sm" onClick={() => removeIdea(idea.id)} aria-label={`Remove idea ${index + 1}`}>
+                            <Trash2 className="mr-1.5 h-3.5 w-3.5" aria-hidden />
+                            Remove
+                          </Button>
+                        ) : null}
+                      </div>
+                      <div className="grid gap-4 md:grid-cols-2">
+                        <label className="space-y-1.5">
+                          <span className="text-sm font-medium">Idea name</span>
+                          <Input
+                            value={idea.name}
+                            onChange={(event) => updateIdea(idea.id, { name: event.target.value })}
+                            placeholder="e.g. Invoice reminders for freelancers"
                           />
-                        </div>
-                        <div className="space-y-2">
-                          <label className="text-sm font-medium">Core problem</label>
-                          <Textarea
-                            value={idea.coreProblem}
-                            onChange={(event) => updateIdea(idea.id, { coreProblem: event.target.value })}
-                            placeholder="What painful outcome are you fixing?"
-                            rows={2}
-                            className="resize-none"
+                        </label>
+                        <label className="space-y-1.5">
+                          <span className="text-sm font-medium">Who it's for</span>
+                          <Input
+                            value={idea.customer}
+                            onChange={(event) => updateIdea(idea.id, { customer: event.target.value })}
+                            placeholder="e.g. freelance designers"
                           />
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
-
-              <div className="flex flex-wrap gap-3">
-                {!focusedActivation && <Button
-                  variant="outline"
-                  onClick={handleAddIdea}
-                  disabled={ideas.length >= MAX_IDEAS}
-                >
-                  Add another idea
-                </Button>}
-                {!focusedActivation && <Button
-                  variant="ghost"
-                  onClick={() => setActiveIdeaId(rankedIdeas[0]?.id || "")}
-                  disabled={ideas.length === 0}
-                >
-                  Focus highest score
-                </Button>}
-                <Button className="ml-auto" onClick={() => setStep(2)} disabled={!activeIdea}>
-                  Score {activeIdea?.name.trim() || "this idea"}
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-            )}
-
-            {step === 2 && activeIdea && (
-              <div className="mx-auto w-full max-w-3xl space-y-6">
-                <div className="sticky top-20 z-10 flex flex-wrap items-center gap-2 rounded-xl border border-border/70 bg-card/95 px-4 py-2.5 shadow-sm backdrop-blur">
-                  <span className="min-w-0 truncate text-sm font-medium">
-                    {activeIdea.name.trim() || "Unnamed idea"}
-                  </span>
-                  <Badge variant="outline">Score {decisionScore}/100</Badge>
-                  <Badge variant="outline">{readinessPercent}% ready</Badge>
-                  <Badge className={cn("ml-auto", decisionLabel.badge)}>{decisionLabel.title}</Badge>
-                </div>
-                {!activeIdea.name.trim() ? (
-                  <p className="text-xs text-muted-foreground">
-                    Name this idea in Shortlist so your scoreboard stays readable.
-                  </p>
-                ) : null}
-                  <Card className="border-primary/20 bg-background/90">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <Target className="h-5 w-5 text-primary" />
-                        Active idea deep dive
-                      </CardTitle>
-                      <CardDescription>
-                        Clarify the problem, market signal, and your edge for the idea you are scoring.
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">Current alternative</label>
+                        </label>
+                      </div>
+                      <label className="block space-y-1.5">
+                        <span className="text-sm font-medium">The problem it solves</span>
                         <Textarea
-                          value={activeIdea.currentAlternative}
-                          onChange={(event) => updateIdea(activeIdea.id, { currentAlternative: event.target.value })}
-                          placeholder="What do customers do today instead?"
+                          value={idea.problem}
+                          onChange={(event) => updateIdea(idea.id, { problem: event.target.value })}
+                          placeholder="e.g. clients pay late and chasing them takes hours every month"
                           rows={2}
                           className="resize-none"
                         />
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">Unfair advantage</label>
-                        <Textarea
-                          value={activeIdea.unfairAdvantage}
-                          onChange={(event) => updateIdea(activeIdea.id, { unfairAdvantage: event.target.value })}
-                          placeholder="What edge do you have (data, access, brand, speed)?"
-                          rows={2}
-                          className="resize-none"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">Key risks</label>
-                        <Textarea
-                          value={activeIdea.risks}
-                          onChange={(event) => updateIdea(activeIdea.id, { risks: event.target.value })}
-                          placeholder="What could break demand or execution?"
-                          rows={2}
-                          className="resize-none"
-                        />
-                      </div>
-                      <div className="space-y-3">
-                        <label className="text-sm font-medium">Market signals observed</label>
-                        <div className="grid gap-3 sm:grid-cols-2">
-                          {SIGNAL_OPTIONS.map((signal) => (
-                            <label
-                              key={signal.id}
-                              className="flex items-start gap-2 rounded-md border border-border/70 bg-background/80 p-3 text-sm"
-                            >
-                              <Checkbox
-                                checked={activeIdea.marketSignals.includes(signal.id)}
-                                onCheckedChange={() => toggleSignal(activeIdea.id, signal.id)}
-                              />
-                              <span>
-                                <span className="font-medium">{signal.title}</span>
-                                <span className="block text-xs text-muted-foreground mt-1">{signal.description}</span>
-                              </span>
-                            </label>
-                          ))}
-                        </div>
-                      </div>
+                      </label>
                     </CardContent>
                   </Card>
+                ))}
+              </div>
 
-                  <Card className="border-primary/20 bg-background/90">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <Scale className="h-5 w-5 text-primary" />
-                        Decision scorecard
-                      </CardTitle>
-                      <CardDescription>
-                        Rate each dimension from 1 to 5. Use real evidence where possible.
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                      {CRITERIA.map((criterion) => (
-                        <div key={criterion.key} className="space-y-3">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <p className="text-sm font-medium">{criterion.title}</p>
-                              <p className="text-xs text-muted-foreground">{criterion.description}</p>
-                            </div>
-                            <Badge variant="outline">{activeIdea.criteria[criterion.key]} / 5</Badge>
-                          </div>
-                          <Slider
-                            value={[activeIdea.criteria[criterion.key]]}
-                            onValueChange={(value) => updateCriteria(activeIdea.id, criterion.key, value[0])}
-                            min={1}
-                            max={5}
-                            step={1}
+              <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center">
+                {!focusedActivation && ideas.length < MAX_SPRINT_IDEAS ? (
+                  <Button variant="outline" onClick={addIdea}>
+                    <Plus className="mr-1.5 h-4 w-4" aria-hidden />
+                    Add another idea
+                  </Button>
+                ) : null}
+                <div className="flex flex-col items-stretch gap-1.5 sm:ml-auto sm:items-end">
+                  <Button onClick={() => goTo(2)} disabled={!canOpen(2)}>
+                    Next: quick check
+                    <ArrowRight className="ml-2 h-4 w-4" aria-hidden />
+                  </Button>
+                  {firstUnfilled >= 0 ? (
+                    <p className="text-xs text-muted-foreground">
+                      Fill in all three fields for {ideaLabel(ideas[firstUnfilled], firstUnfilled)} to continue.
+                    </p>
+                  ) : null}
+                </div>
+              </div>
+            </section>
+          ) : null}
+
+          {loaded && step === 2 ? (
+            <section className="space-y-5" aria-labelledby="sprint-check-title">
+              <div>
+                <h2 id="sprint-check-title" className="text-xl font-semibold">Answer honestly, from what you've seen</h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  "Partly" is fine when you're unsure. A score appears once all five are answered.
+                </p>
+              </div>
+
+              {/* Desktop: one row per question, one column per idea. */}
+              <div className="hidden overflow-hidden rounded-xl border border-border/70 bg-card md:block">
+                <div
+                  className="grid items-center gap-x-4 border-b border-border/70 bg-muted/30 px-5 py-3"
+                  style={{ gridTemplateColumns: `minmax(200px, 1.1fr) repeat(${ideas.length}, minmax(0, 1fr))` }}
+                >
+                  <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Question</span>
+                  {ideas.map((idea, index) => (
+                    <div key={idea.id} className="min-w-0 space-y-1">
+                      <p className="truncate text-sm font-semibold">{ideaLabel(idea, index)}</p>
+                      <ScorePill idea={idea} />
+                    </div>
+                  ))}
+                </div>
+                {CHECK_QUESTIONS.map((question, rowIndex) => (
+                  <div
+                    key={question.key}
+                    className={cn("grid items-center gap-x-4 px-5 py-3.5", rowIndex > 0 && "border-t border-border/50")}
+                    style={{ gridTemplateColumns: `minmax(200px, 1.1fr) repeat(${ideas.length}, minmax(0, 1fr))` }}
+                  >
+                    <p className="text-sm font-medium">{question.question}</p>
+                    {ideas.map((idea, index) => (
+                      <AnswerPicker
+                        key={idea.id}
+                        value={idea.answers[question.key]}
+                        onChange={(answer) => setAnswer(idea.id, question.key, answer)}
+                        label={`${question.question} ${ideaLabel(idea, index)}`}
+                      />
+                    ))}
+                  </div>
+                ))}
+              </div>
+
+              {/* Phones: one card per idea. */}
+              <div className="space-y-4 md:hidden">
+                {ideas.map((idea, index) => (
+                  <Card key={idea.id} className="border-border/70">
+                    <CardContent className="space-y-4 p-4">
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="min-w-0 truncate font-semibold">{ideaLabel(idea, index)}</p>
+                        <ScorePill idea={idea} />
+                      </div>
+                      {CHECK_QUESTIONS.map((question) => (
+                        <div key={question.key} className="space-y-1.5">
+                          <p className="text-sm font-medium">{question.question}</p>
+                          <AnswerPicker
+                            value={idea.answers[question.key]}
+                            onChange={(answer) => setAnswer(idea.id, question.key, answer)}
+                            label={`${question.question} ${ideaLabel(idea, index)}`}
                           />
                         </div>
                       ))}
                     </CardContent>
                   </Card>
+                ))}
+              </div>
 
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <Button variant="ghost" onClick={() => setStep(1)}>
-                    <ArrowLeft className="mr-2 h-4 w-4" />
-                    Shortlist
+              <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center">
+                <Button variant="ghost" onClick={() => goTo(1)}>
+                  <ArrowLeft className="mr-2 h-4 w-4" aria-hidden />
+                  Edit ideas
+                </Button>
+                <div className="flex flex-col items-stretch gap-1.5 sm:ml-auto sm:items-end">
+                  <Button onClick={() => goTo(3)} disabled={!canOpen(3)}>
+                    See the decision
+                    <ArrowRight className="ml-2 h-4 w-4" aria-hidden />
                   </Button>
-                  <Button onClick={() => setStep(3)}>
-                    See decision
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
+                  {firstUnchecked >= 0 ? (
+                    <p className="text-xs text-muted-foreground">
+                      Answer all five questions for {ideaLabel(ideas[firstUnchecked], firstUnchecked)} to continue.
+                    </p>
+                  ) : null}
                 </div>
               </div>
-            )}
+            </section>
+          ) : null}
 
-            {step === 3 && activeIdea && (
-              <div className="space-y-6">
-                <Button variant="ghost" size="sm" onClick={() => setStep(2)}>
-                  <ArrowLeft className="mr-2 h-4 w-4" />
-                  Back to scoring
-                </Button>
-                <div className="grid gap-6 lg:grid-cols-2">
-                  <Card className="border-primary/20 bg-background/90">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <Star className="h-5 w-5 text-primary" />
-                        Decision output
-                      </CardTitle>
-                      <CardDescription>
-                        Live score and recommendation for the active idea.
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="font-medium">Decision readiness</span>
-                          <span className="text-muted-foreground">{readinessPercent}%</span>
-                        </div>
-                        <Progress value={readinessPercent} className="h-2" />
-                        <p className="text-xs text-muted-foreground">
-                          Complete the basics and add two signals to finalize a decision.
-                        </p>
-                      </div>
+          {loaded && step === 3 && pickedIdea ? (
+            <section className="space-y-5" aria-labelledby="sprint-decision-title">
+              <Card className="overflow-hidden border-primary/30">
+                <CardContent className="space-y-4 p-6">
+                  <div className="flex flex-wrap items-center gap-2 text-sm font-medium text-primary">
+                    <Trophy className="h-4 w-4" aria-hidden />
+                    {pickedIdea.id === ranked[0]?.id ? (ideas.length > 1 ? "Your strongest idea" : "Your idea") : "Your pick"}
+                  </div>
+                  <div className="flex flex-wrap items-baseline justify-between gap-3">
+                    <h2 id="sprint-decision-title" className="text-2xl font-bold">{pickedIdea.name}</h2>
+                    <ScorePill idea={pickedIdea} />
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    For {pickedIdea.customer}. {ideaReason(pickedIdea)}
+                  </p>
+                  <div className="flex flex-col gap-2 border-t border-border/60 pt-4 sm:flex-row sm:items-center sm:justify-between">
+                    <p className="text-sm text-muted-foreground">
+                      {userId
+                        ? "Next, ICP Builder opens with this idea filled in, so you can define who to talk to first."
+                        : "Create a free account to keep this sprint and continue in ICP Builder."}
+                    </p>
+                    <Button onClick={handleValidate} disabled={isValidating} className="shrink-0">
+                      {isValidating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden /> : null}
+                      {userId ? "Validate this idea" : "Sign up to validate this idea"}
+                      {!isValidating ? <ArrowRight className="ml-2 h-4 w-4" aria-hidden /> : null}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
 
-                      <div className="rounded-lg border border-border/70 bg-background/80 p-4 space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm font-medium">Score</span>
-                          <span className="text-2xl font-bold text-primary">{decisionScore}</span>
-                        </div>
-                        <Badge className={decisionLabel.badge}>{decisionLabel.title}</Badge>
-                        <p className={cn("text-sm", decisionLabel.tone)}>{decisionLabel.description}</p>
-                      </div>
-
-	                      <Button
-	                        className="w-full"
-	                        onClick={() => {
-                            setChosenIdeaId(activeIdea.id);
-                            setDraftArtifactId(activeIdea.id);
-                            captureEvent('decision_sprint_idea_chosen', { score: decisionScore });
-                          }}
-	                        disabled={!activeIdea.name.trim()}
-	                      >
-	                        Mark this idea as chosen
-	                      </Button>
-                        <Button variant="outline" className="w-full" onClick={handleSaveDraft} disabled={isSavingDraft || !hasMeaningfulDraft}>
-                          <Save className="h-4 w-4 mr-2" />
-                          {isSavingDraft ? 'Saving draft...' : 'Save and come back later'}
-                        </Button>
-	                      {!focusedActivation && <Button variant="outline" className="w-full" asChild>
-                        <Link to="/pmf-lab">
-                          Continue to Market Need Lab
-                          <ArrowRight className="h-4 w-4 ml-2" />
-                        </Link>
-                      </Button>}
-                    </CardContent>
-                  </Card>
-
-                  <Card className="border-primary/20 bg-background/90">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <CheckCircle2 className="h-5 w-5 text-primary" />
-                        Scoreboard
-                      </CardTitle>
-                      <CardDescription>
-                        Rank your shortlist before committing resources.
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      {rankedIdeas.map((idea, index) => (
-                        <div
+              {ideas.length > 1 ? (
+                <div className="space-y-2">
+                  <h3 className="text-sm font-semibold">Ranking</h3>
+                  <div role="radiogroup" aria-label="Idea to validate" className="space-y-2">
+                    {ranked.map((idea, position) => {
+                      const selected = idea.id === pickedIdea.id;
+                      return (
+                        <button
                           key={idea.id}
+                          type="button"
+                          role="radio"
+                          aria-checked={selected}
+                          onClick={() => setSelectedIdeaId(idea.id)}
                           className={cn(
-                            "flex items-center justify-between rounded-lg border border-border/60 px-3 py-2 text-sm",
-                            idea.id === activeIdeaId && "border-primary/60 bg-primary/5"
+                            "flex w-full items-center gap-3 rounded-xl border px-4 py-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                            selected ? "border-primary/60 bg-primary/5" : "border-border/70 bg-card hover:border-primary/30",
                           )}
                         >
-                          <div>
-                            <p className="font-medium">{idea.name || `Idea ${index + 1}`}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {idea.targetCustomer || "Define a target customer"}
-                            </p>
-                          </div>
-                          <Badge variant="outline">{computeScore(idea)}/100</Badge>
-                        </div>
-                      ))}
-                      {chosenIdeaId && (
-                        <div className="rounded-lg border border-success bg-success-subtle px-3 py-2 text-sm text-success">
-                          Chosen concept: {ideas.find((idea) => idea.id === chosenIdeaId)?.name || "Unnamed idea"}
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
+                          <span className="w-5 text-sm font-semibold text-muted-foreground">{position + 1}</span>
+                          <span className="min-w-0 flex-1">
+                            <span className="block text-sm font-semibold sm:truncate">{idea.name}</span>
+                            <span className="block text-xs text-muted-foreground sm:truncate">{ideaReason(idea)}</span>
+                            {/* Phones: the score sits under the name so neither gets cut off. */}
+                            <span className="mt-1.5 block sm:hidden"><ScorePill idea={idea} /></span>
+                          </span>
+                          <span className="hidden sm:block"><ScorePill idea={idea} /></span>
+                          <span
+                            className={cn(
+                              "flex h-5 w-5 shrink-0 items-center justify-center rounded-full border",
+                              selected ? "border-primary bg-primary text-primary-foreground" : "border-border",
+                            )}
+                            aria-hidden
+                          >
+                            {selected ? <Check className="h-3 w-3" /> : null}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <p className="text-xs text-muted-foreground">Tap another idea if you'd rather validate that one.</p>
                 </div>
-              </div>
-            )}
+              ) : null}
+
+              <Button variant="ghost" onClick={() => goTo(2)}>
+                <ArrowLeft className="mr-2 h-4 w-4" aria-hidden />
+                Change answers
+              </Button>
+            </section>
+          ) : null}
         </div>
       </DashboardLayout>
     </>
   );
 }
-

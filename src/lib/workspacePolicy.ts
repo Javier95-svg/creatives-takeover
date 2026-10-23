@@ -11,7 +11,7 @@ const roots = [
   '/mentorship', '/mentor', '/co-founder', '/investors', '/marketplace', '/messages', '/profile',
   '/account', '/settings/security', '/settings/delete-account', '/newspaper', '/podcast',
   '/saved-mentors', '/my-bookings', '/purchase-history', '/accountability',
-  '/projects-dashboard', '/ai-goals', '/core-metrics', '/decision-sprint', '/validate',
+  '/projects-dashboard', '/ai-goals', '/core-metrics', '/decision-sprint', '/project-setup', '/validate',
   '/insighta/vc', '/insighta/accelerator', '/launchpad', '/rooms',
 ];
 const exact = ['/pricing', '/files', '/tasks', '/routine', '/weekly-mission', '/focus-funnel',

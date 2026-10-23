@@ -17,6 +17,7 @@ import { PulseAnswerFeedback } from './PulseAnswerFeedback';
 import { PulseCommitmentCheck } from './PulseCommitmentCheck';
 import { PulseInsights } from './PulseInsights';
 import { BuilderPath } from './BuilderPath';
+import { ProjectSetupCard } from './ProjectSetupCard';
 import { PulseMemoryChips } from './PulseMemoryChips';
 import { PulseMemoryPanel } from './PulseMemoryPanel';
 import { parseCommitmentCheck, parseMemorySuggestions } from '@/lib/pulseMemory';
@@ -179,6 +180,8 @@ function LiveConversation({ concept, scope }: { concept: PulseHomeConcept; scope
     homeExtras={founderHome && historyReady ? <>
       {/* Builders see which three tools matter first, and the next one. */}
       {userType === 'builder' && <BuilderPath navigate={enterWorkspaceRoute} />}
+      {/* Founders bring their existing project in once. */}
+      {userType === 'founder' && <ProjectSetupCard navigate={enterWorkspaceRoute} />}
       <PulseInsights projectId={scope.projectId} onAsk={text => { void send(text); }} navigate={enterWorkspaceRoute} />
     </> : undefined}
     onInvestorClick={(action, rank) => trackPulseInvestorProfileClicked({ surface: 'home', investor_id: action.id, rank, is_pro: !action.locked })}

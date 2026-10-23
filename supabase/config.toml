@@ -331,3 +331,6 @@ verify_jwt = true
 # confirms password-based identities, cancels billing, and deletes server-side.
 [functions.delete-account]
 verify_jwt = true
+
+[functions.project-import-extract]
+verify_jwt = true

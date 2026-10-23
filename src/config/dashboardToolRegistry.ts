@@ -7,6 +7,7 @@ import {
   ClipboardList,
   FileText,
   FlaskConical,
+  FolderUp,
   Globe2,
   Handshake,
   Library,
@@ -83,7 +84,10 @@ const definitions: DashboardToolDefinition[] = [
   { key: 'find_cofounder', label: 'Find a Co-Founder', route: '/co-founder', stage: 'MORE', icon: Handshake, inlineActions: ['open_tool'] },
   { key: 'marketplace', label: 'Marketplace', route: '/marketplace', stage: 'MORE', icon: Handshake, inlineActions: ['open_social_action', 'open_tool'] },
   { ...catalogTool('directories', Search, ['open_tool']), key: 'directories' },
+  // Builder accounts choose between ideas here; founders bring in their existing
+  // project at /project-setup instead (DashboardSidebar picks by account type).
   { key: 'decision_sprint', label: 'Decision Sprint', route: '/decision-sprint', stage: 'MORE', icon: ClipboardList, inlineActions: ['open_tool'] },
+  { key: 'project_setup', label: 'Project setup', route: '/project-setup', stage: 'MORE', icon: FolderUp, inlineActions: ['open_tool'] },
   { key: 'find_angel', label: 'Find your Angel', route: '/investors', stage: 'MORE', icon: Sparkles, entitlement: 'angels_community', inlineActions: ['open_tool'] },
   { ...catalogTool('vc_search', Search, ['toggle_funding_bookmark', 'create_follow_up_task']), key: 'vc_search' },
   { ...catalogTool('accelerator_hunt', Rocket, ['toggle_funding_bookmark', 'create_follow_up_task']), key: 'accelerator_hunt' },

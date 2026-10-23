@@ -53,10 +53,9 @@ import {
   formatFileSize,
   getDashboardFileTypeLabel,
   getDashboardStorageLimit,
-  getFileExtension,
   isSupportedDashboardFile,
-  stripFileExtension,
 } from '@/lib/dashboardFiles';
+import { prepareDashboardUpload, runDashboardUpload } from '@/lib/dashboardFileUpload';
 
 interface MyFilesSectionProps {
   files: DashboardFileRecord[];
@@ -315,15 +314,13 @@ export function MyFilesSection({ files, primaryIcp, refreshDashboard }: MyFilesS
       return 0;
     }
 
-    const extension = getFileExtension(file.name);
-    const fileId = crypto.randomUUID();
-    const now = new Date().toISOString();
-    const storagePath = `${user.id}/${fileId}.${extension}`;
+    const prepared = prepareDashboardUpload(user.id, file);
+    const { fileId, extension, storagePath, createdAt: now } = prepared;
 
     const provisionalRow: DashboardFileRecord = {
       id: fileId,
       file_kind: 'uploaded_file',
-      title: stripFileExtension(file.name),
+      title: prepared.title,
       summary: 'Uploading file...',
       source_table: 'dashboard_files',
       source_id: fileId,
@@ -343,61 +340,26 @@ export function MyFilesSection({ files, primaryIcp, refreshDashboard }: MyFilesS
     setLocalFiles((current) => sortFiles([provisionalRow, ...current]));
     setSelectedFileId(fileId);
 
-    const { error: insertError } = await supabase.from('dashboard_files').insert({
-      id: fileId,
-      user_id: user.id,
-      file_kind: 'uploaded_file',
-      title: stripFileExtension(file.name),
-      summary: 'Uploading file...',
-      origin: 'user_upload',
-      source_table: 'dashboard_files',
-      source_id: fileId,
-      storage_path: storagePath,
-      mime_type: file.type || null,
-      file_extension: extension,
-      file_size_bytes: file.size,
-      preview_payload: { stage: 'Uploading' },
-      upload_status: 'processing',
-      is_protected: false,
-      created_at: now,
-      updated_at: now,
+    const result = await runDashboardUpload(user.id, file, prepared, {
+      onUploaded: () => patchLocalFile(fileId, {
+        summary: 'Preparing preview...',
+        preview_payload: { stage: 'Preparing preview' },
+      }),
     });
 
-    if (insertError) {
+    if (result.status === 'insert_failed') {
       removeLocalFile(fileId);
       toast.error("We couldn't create this file entry right now.");
       return 0;
     }
 
-    const { error: uploadError } = await supabase.storage.from(DASHBOARD_FILES_BUCKET).upload(storagePath, file, {
-      cacheControl: '3600',
-      upsert: false,
-      contentType: file.type || undefined,
-    });
-
-    if (uploadError) {
-      await supabase.from('dashboard_files').delete().eq('id', fileId).eq('user_id', user.id);
+    if (result.status === 'upload_failed') {
       removeLocalFile(fileId);
-      toast.error(describeUploadFailure(uploadError));
+      toast.error(describeUploadFailure(result.error));
       return 0;
     }
 
-    patchLocalFile(fileId, {
-      summary: 'Preparing preview...',
-      preview_payload: { stage: 'Preparing preview' },
-    });
-
-    const { data: parseData, error: parseError } = await supabase.functions.invoke('document-parser', {
-      body: {
-        file_path: storagePath,
-        user_id: user.id,
-        bucket: DASHBOARD_FILES_BUCKET,
-        target_table: 'dashboard_files',
-        record_id: fileId,
-      },
-    });
-
-    if (parseError || !parseData?.success) {
+    if (result.status === 'parse_failed') {
       patchLocalFile(fileId, {
         upload_status: 'failed',
         summary: 'Preview unavailable right now.',
@@ -408,16 +370,16 @@ export function MyFilesSection({ files, primaryIcp, refreshDashboard }: MyFilesS
       return file.size;
     }
 
-    const parsedRow = parseData.dashboard_file as Partial<DashboardFileRecord> | null;
+    const { parsedRow, extractedText } = result;
     patchLocalFile(fileId, {
       ...(parsedRow ?? {}),
       upload_status: 'ready',
-      summary: parsedRow?.summary ?? buildUploadedFilePreview(parseData.document?.text) ?? 'Ready',
-      extracted_text: parsedRow?.extracted_text ?? parseData.document?.text ?? null,
+      summary: parsedRow?.summary ?? buildUploadedFilePreview(extractedText) ?? 'Ready',
+      extracted_text: extractedText,
       preview_payload:
         parsedRow?.preview_payload ??
         ({
-          excerpt: buildUploadedFilePreview(parseData.document?.text),
+          excerpt: buildUploadedFilePreview(extractedText),
           file_type: extension,
         } satisfies PreviewPayload),
     });

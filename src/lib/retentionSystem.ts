@@ -199,7 +199,7 @@ async function getProfileRetentionState(userId: string): Promise<ProfileRetentio
   };
 }
 
-async function updateUserPreferences(userId: string, patch: Record<string, unknown>, onboardingCompleted?: boolean) {
+export async function updateUserPreferences(userId: string, patch: Record<string, unknown>, onboardingCompleted?: boolean) {
   const profileState = await getProfileRetentionState(userId);
   const mergedPreferences = {
     ...(profileState?.user_preferences ?? {}),
@@ -821,6 +821,15 @@ export async function saveValidationDraftArtifact(userId: string, draft: Validat
   }
 
   return nextState;
+}
+
+/**
+ * Auto-save path for the Decision Sprint: stores the draft only. The first
+ * save of a session still goes through saveValidationDraftArtifact so the
+ * first-artifact and stage bookkeeping runs once, not on every keystroke.
+ */
+export async function updateValidationDraft(userId: string, draft: ValidationDraftArtifact) {
+  return updateUserPreferences(userId, { validationDraft: draft });
 }
 
 export async function loadValidationDraftArtifact(userId: string): Promise<ValidationDraftArtifact | null> {

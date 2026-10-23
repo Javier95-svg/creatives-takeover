@@ -41,6 +41,7 @@ export const SECTION_EXTRA_ROUTES: Array<[route: string, section: AdoptionSectio
   ['/gtm-strategist', 'BizMap', 'GTM Strategist'],
   ['/client-acquisition', 'BizMap', 'GTM Strategist'],
   ['/decision-sprint', 'BizMap', null],
+  ['/project-setup', 'Dashboard', null],
   ['/validate', 'BizMap', null],
   ['/messages', 'Network', null],
   ['/saved-mentors', 'Network', 'Find a Mentor'],

@@ -162,6 +162,7 @@ const IcpDraftPage = lazy(() => import("./pages/IcpDraftPage"));
 const IcpPublicDraftPage = lazy(() => import("./pages/IcpPublicDraftPage"));
 const IcpPublicScorePage = lazy(() => import("./pages/IcpPublicScorePage"));
 const ValidateJourneyPage = lazy(() => import("./pages/ValidateJourneyPage"));
+const ProjectSetupPage = lazy(() => import("./pages/ProjectSetupPage"));
 const TechStackPage = lazy(() => import("./pages/TechStackPage"));
 const AppBuilderPage = lazy(() => import("./pages/AppBuilderPage"));
 const GTMStrategistPage = lazy(() => import("./pages/GTMStrategistPage"));
@@ -478,6 +479,7 @@ function App() {
                         <Route path="/idea/:slug" element={<IcpPublicScorePage />} />
                         <Route path="/bizmap-ai/icp-builder" element={<Navigate to="/icp-builder" replace />} />
                         <Route path="/decision-sprint" element={<ToolRouteWithCreditGate><ValidateJourneyPage /></ToolRouteWithCreditGate>} />
+                        <Route path="/project-setup" element={<RouteErrorBoundary routeName="Project setup"><ProjectSetupPage /></RouteErrorBoundary>} />
                         <Route path="/validate" element={<ToolRouteWithCreditGate><ValidateJourney /></ToolRouteWithCreditGate>} />
                         {/* Demo Studio = the new interactive demo builder (front door) */}
                         <Route path="/demo-studio" element={<RouteErrorBoundary routeName="Demo Studio"><DemoStudioProjectsPage /></RouteErrorBoundary>} />

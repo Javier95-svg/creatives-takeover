@@ -61,6 +61,7 @@ const DEFAULT_ONBOARDING_TOOL_KEYS = new Set<DashboardSidebarToolKey>(['waitlist
 const UNIVERSAL_MORE_TOOL_KEYS = new Set<DashboardSidebarToolKey>([
   'saved_mentors',
   'decision_sprint',
+  'project_setup',
   'core_metrics',
   'ai_goals',
 ]);
@@ -98,6 +99,7 @@ interface SidebarPreferences {
   showPromptLibrary: boolean;
   showSavedMentors: boolean;
   showDecisionSprint: boolean;
+  showProjectSetup: boolean;
   showCoreMetrics: boolean;
   showAiGoals: boolean;
 }
@@ -127,6 +129,7 @@ const defaultSidebarPreferences: SidebarPreferences = {
   showPromptLibrary: true,
   showSavedMentors: true,
   showDecisionSprint: true,
+  showProjectSetup: true,
   showCoreMetrics: true,
   showAiGoals: true,
 };
@@ -156,6 +159,29 @@ interface SidebarPersonalization {
   preferences: SidebarPreferences;
   reduceOnboardingNav: boolean;
   activationIntent: ActivationIntent | null;
+  /** Decision Sprint is for builders; founders get Project setup instead. */
+  userType: string | null;
+}
+
+interface SidebarProfileRow {
+  sidebar_preferences: unknown;
+  user_preferences: unknown;
+  onboarding_completed: boolean | null;
+  user_type: string | null;
+}
+
+function personalizationFromProfile(row: SidebarProfileRow, userCreatedAt: string | undefined): SidebarPersonalization {
+  return {
+    preferences: row.sidebar_preferences
+      ? normalizePreferences(row.sidebar_preferences as LegacySidebarPreferences)
+      : defaultSidebarPreferences,
+    reduceOnboardingNav: shouldReduceOnboardingNav(
+      { onboarding_completed: row.onboarding_completed, user_preferences: row.user_preferences as never },
+      userCreatedAt,
+    ),
+    activationIntent: getActivationPreferenceState(row.user_preferences as never).activationIntent,
+    userType: row.user_type ?? null,
+  };
 }
 
 const sidebarPersonalizationCache = new Map<string, SidebarPersonalization>();
@@ -212,16 +238,12 @@ export const DashboardSidebarContent = ({ currentStage }: { currentStage: BizMap
   // Read the cache during render (not in an effect) so a remount paints the
   // known-good panel on the first frame rather than one frame later.
   const bootstrapPersonalization = useMemo(() => user && bootstrapProfile
-    ? ({
-        preferences: bootstrapProfile.sidebar_preferences
-          ? normalizePreferences(bootstrapProfile.sidebar_preferences as LegacySidebarPreferences)
-          : defaultSidebarPreferences,
-        reduceOnboardingNav: shouldReduceOnboardingNav(
-          { onboarding_completed: bootstrapProfile.onboarding_completed, user_preferences: bootstrapProfile.user_preferences },
-          user.created_at,
-        ),
-        activationIntent: getActivationPreferenceState(bootstrapProfile.user_preferences).activationIntent,
-      } satisfies SidebarPersonalization)
+    ? personalizationFromProfile({
+        sidebar_preferences: bootstrapProfile.sidebar_preferences,
+        user_preferences: bootstrapProfile.user_preferences,
+        onboarding_completed: bootstrapProfile.onboarding_completed,
+        user_type: bootstrapProfile.user_type ?? null,
+      }, user.created_at)
     : null, [bootstrapProfile, user]);
   const personalization =
     (loadedPersonalization && loadedPersonalization.userId === userId ? loadedPersonalization.value : null)
@@ -231,6 +253,7 @@ export const DashboardSidebarContent = ({ currentStage }: { currentStage: BizMap
   const sidebarPreferences = personalization?.preferences ?? defaultSidebarPreferences;
   const reduceOnboardingNav = personalization?.reduceOnboardingNav ?? false;
   const activationIntent = personalization?.activationIntent ?? null;
+  const userType = personalization?.userType ?? null;
 
   // Until both the profile row and the plan are known, every entry we could
   // render is a guess — `defaultSidebarPreferences` shows tools the stored
@@ -255,6 +278,31 @@ export const DashboardSidebarContent = ({ currentStage }: { currentStage: BizMap
       isCancelled = true;
     };
   }, [bootstrapPersonalization, user]);
+
+  // Tool pages outside /dashboard have no bootstrap profile (only
+  // DashboardShell provides one), so without this read the sidebar stayed on
+  // its loading rows forever when a tool page was opened directly. One read,
+  // only when neither the bootstrap profile nor the cache can answer.
+  useEffect(() => {
+    if (!user || bootstrapProfile || sidebarPersonalizationCache.has(user.id)) return;
+    let cancelled = false;
+    const activeUserId = user.id;
+    void supabase
+      .from('profiles')
+      .select('sidebar_preferences, user_preferences, onboarding_completed, user_type')
+      .eq('id', activeUserId)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (cancelled) return;
+        const value = personalizationFromProfile(
+          (data ?? { sidebar_preferences: null, user_preferences: null, onboarding_completed: null, user_type: null }) as SidebarProfileRow,
+          user.created_at,
+        );
+        sidebarPersonalizationCache.set(activeUserId, value);
+        setLoadedPersonalization({ userId: activeUserId, value });
+      });
+    return () => { cancelled = true; };
+  }, [bootstrapProfile, user]);
 
   const handleNavClick = () => {
     if (isMobile) {
@@ -337,6 +385,7 @@ export const DashboardSidebarContent = ({ currentStage }: { currentStage: BizMap
     registryToolItem('directories', 'showDirectories', 'directories'),
     registryToolItem('saved_mentors', 'showSavedMentors'),
     registryToolItem('decision_sprint', 'showDecisionSprint'),
+    registryToolItem('project_setup', 'showProjectSetup'),
     registryToolItem('core_metrics', 'showCoreMetrics'),
     registryToolItem('ai_goals', 'showAiGoals'),
     registryToolItem('find_mentor', 'showFindMentor'),
@@ -351,6 +400,10 @@ export const DashboardSidebarContent = ({ currentStage }: { currentStage: BizMap
     registryToolItem('prompt_library', 'showPromptLibrary', 'prompt_library'),
   ].filter((item) => {
     const isUniversalMoreTool = UNIVERSAL_MORE_TOOL_KEYS.has(item.toolKey);
+
+    // Builders choose between ideas; founders bring in the project they have.
+    if (item.toolKey === 'decision_sprint' && userType !== 'builder') return false;
+    if (item.toolKey === 'project_setup' && userType !== 'founder') return false;
 
     if (reduceOnboardingNav && !onboardingToolKeys.has(item.toolKey)) {
       return false;
@@ -377,6 +430,7 @@ export const DashboardSidebarContent = ({ currentStage }: { currentStage: BizMap
       preferences: updatedPreferences,
       reduceOnboardingNav,
       activationIntent,
+      userType,
     };
 
     if (userId) {

@@ -166,12 +166,19 @@ const Onboarding = () => {
     void checkOnboardingStatus();
   }, [authLoading, isAuthenticated, navigate, searchParams, user]);
 
-  const handleComplete = (_startRoute?: string) => {
+  const handleComplete = (_startRoute?: string, details?: { userType?: string }) => {
     const requested = searchParams.get('return') ?? getOnboardingReturn('/app-entry');
     const target = sanitizeReturnPath(requested, '/app-entry');
     const explicitReturn = !['/app-entry', '/onboarding', '/setup-quiz'].includes(target.split('?')[0]);
     // Preserve explicit return links and onboarding's deliberately selected tool.
-    navigate(explicitReturn ? target : _startRoute || '/app-entry');
+    const destination = explicitReturn ? target : _startRoute || '/app-entry';
+    // Founders already have a project: offer to bring it in first, then
+    // continue to where onboarding was going (they can skip).
+    if (details?.userType === 'founder' && !explicitReturn) {
+      navigate(`/project-setup?next=${encodeURIComponent(destination)}`);
+      return;
+    }
+    navigate(destination);
   };
 
   return (

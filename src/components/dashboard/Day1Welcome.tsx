@@ -27,6 +27,8 @@ export interface Day1Profile {
   quiz_current_stage: string | null;
   user_preferences?: Json | null;
   sidebar_preferences?: Json | null;
+  /** founder | builder | mentor | marketplace | investor; DashboardShell selects it. */
+  user_type?: string | null;
 }
 
 interface Day1WelcomeProps {

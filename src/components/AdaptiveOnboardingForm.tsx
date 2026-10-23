@@ -285,7 +285,8 @@ function joinList(items: string[]) {
 
 interface AdaptiveOnboardingFormProps {
   session: OnboardingSessionV1;
-  onComplete?: (startRoute?: string) => void;
+  /** userType lets the page send founders to Project setup first. */
+  onComplete?: (startRoute?: string, details?: { userType?: string }) => void;
   /**
    * Quiz for a visitor without an account. Nothing is sent to the server:
    * the final screen hands the answers to onPlanReady (which asks them to sign
@@ -1013,7 +1014,7 @@ export function AdaptiveOnboardingForm({ session, onComplete, guest, autoFinish 
         console.warn('Mentor enrichment failed after onboarding completion', mentorError);
       });
 
-      onComplete?.(buildActivationJourneyUrl(context.selectedIntent, journey.journeyId, journey.resumeUrl));
+      onComplete?.(buildActivationJourneyUrl(context.selectedIntent, journey.journeyId, journey.resumeUrl), { userType: answers.founderSegment });
     } catch (completionError) {
       if (completedRef.current) {
         toast.info('Your setup is saved. Opening your workspace.');
