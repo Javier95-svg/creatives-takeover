@@ -40,11 +40,13 @@ test('founders receive explanations, corrections, and one adjacent boundary ques
   assert.match(model, /getStageExplanation/);
   assert.match(hook, /confirmFounderStage/);
   assert.match(hook, /answerFounderStageBoundary/);
-  assert.match(card, /We placed you here because/);
+  assert.match(card, /aria-label="Why you are at this stage"/);
+  assert.match(card, /explanations\.map/);
   assert.match(card, /Looks right/);
   assert.match(card, /Not quite/);
-  assert.match(card, /Fundraising \{state\.capital_motion\}/);
-  assert.match(dashboard, /<FounderJourneyPanel \/>[\s\S]*<DashboardFocusEditor \/>[\s\S]*<FounderStageIntelligenceCard \/>/);
+  assert.match(card, /Fundraising \$\{state\.capital_motion\}/);
+  // The stage sits directly under the journey it explains.
+  assert.match(dashboard, /<FounderJourneyPanel \/>\s*<FounderStageIntelligenceCard \/>[\s\S]*<DashboardFocusEditor \/>/);
 });
 
 test('meaningful artifacts trigger evidence recording and immediate recalculation', async () => {

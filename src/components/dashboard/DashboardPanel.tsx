@@ -15,8 +15,37 @@ import { cn } from '@/lib/utils';
  * L3 tertiary — optional content lives in DashboardDisclosure.
  */
 
+/** The one card surface on dashboard pages: hairline border, solid card, no gradient or shadow. */
+export const DASHBOARD_CARD = 'rounded-2xl border border-border/60 bg-card';
+
+/** A section label above a card: what the section is, optional context, optional link. */
+export function DashboardSectionTitle({
+  id,
+  title,
+  meta,
+  action,
+  className,
+}: {
+  id?: string;
+  title: string;
+  meta?: ReactNode;
+  action?: ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={cn('mb-3 flex items-baseline justify-between gap-3 px-1', className)}>
+      <div className="flex min-w-0 items-baseline gap-2">
+        <h2 id={id} className="text-sm font-semibold text-foreground">{title}</h2>
+        {meta ? <span className="truncate text-sm text-muted-foreground">{meta}</span> : null}
+      </div>
+      {action ? <div className="shrink-0 text-sm">{action}</div> : null}
+    </div>
+  );
+}
+
 interface DashboardPanelHeaderProps {
-  kicker: string;
+  /** Short context above the title, in plain sentence case. */
+  kicker?: string;
   title: string;
   as?: 'h1' | 'h2';
   size?: 'page' | 'panel';
@@ -39,7 +68,7 @@ export function DashboardPanelHeader({
   return (
     <div className={cn('flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between', className)}>
       <div className="min-w-0 space-y-1">
-        <p className="text-label font-semibold uppercase tracking-[0.18em] text-primary/80">{kicker}</p>
+        {kicker ? <p className="text-sm font-medium text-muted-foreground">{kicker}</p> : null}
         <div className="flex flex-wrap items-center gap-2">
           <Heading
             className={cn(
@@ -97,13 +126,13 @@ export function MetricTile({
   const body = (
     <>
       <div className="flex items-center justify-between gap-2">
-        <span className="truncate text-label font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+        <span className="truncate text-xs font-medium text-muted-foreground">
           {label}
         </span>
         {Icon ? <Icon className="h-4 w-4 shrink-0 text-primary/70" aria-hidden="true" /> : null}
       </div>
       <div className="mt-1 flex flex-wrap items-baseline gap-2">
-        <span className="font-space-grotesk text-2xl font-semibold text-foreground">{value}</span>
+        <span className="font-space-grotesk text-2xl font-semibold tabular-nums text-foreground">{value}</span>
         {delta && DeltaIcon ? (
           <span
             className={cn(

@@ -121,10 +121,10 @@ test('first-result and resume banners lead into the complete command center', ()
   assert.ok(firstResult > 0);
   assert.ok(firstResult < resume);
   assert.ok(resume < today);
-  assert.ok(today < updates);
-  assert.ok(updates < journey);
   assert.ok(today < journey);
-  assert.ok(journey < disclosure);
+  // Announcements come after the founder's own work.
+  assert.ok(journey < updates);
+  assert.ok(updates < disclosure);
   assert.ok(disclosure < exitIntent);
   assert.match(dashboard, /showFirstResultBanner/);
   assert.match(dashboard, /first_result_mode: showFirstResultBanner/);
@@ -134,7 +134,7 @@ test('first-result prompt is compact, responsive, non-dismissible, and keeps act
   const banner = read('../src/components/dashboard/FirstResultActivationCard.tsx');
   const tour = read('../src/components/dashboard/DashboardTour.tsx');
 
-  assert.match(banner, /mb-6 rounded-2xl/);
+  assert.match(banner, /DASHBOARD_CARD, 'mb-10/);
   assert.match(banner, /sm:flex-row/);
   assert.match(banner, /Finish your first result/);
   assert.match(banner, /trackRetentionEvent\('activation_first_action_opened'/);
@@ -154,7 +154,7 @@ test('every completed account receives the canonical utility routes and dashboar
   );
   assert.match(sidebar, /!isUniversalMoreTool && !modeConfig\.visibleTools\.includes/);
   assert.match(sidebar, /!isUniversalMoreTool && !sidebarPreferences\[item\.prefKey\]/);
-  assert.match(dashboard, /<DashboardTodayCockpit \/>[\s\S]*<PlatformUpdates \/>[\s\S]*<FounderJourneyPanel \/>/);
+  assert.match(dashboard, /<DashboardTodayCockpit \/>[\s\S]*<FounderJourneyPanel \/>[\s\S]*<PlatformUpdates \/>/);
   assert.match(dashboard, /title="More founder signals"[\s\S]*<StartupHomeCommandCenter \/>/);
   assert.match(founderSignals, /lg:grid-cols-2/);
   assert.match(founderSignals, /title="Your startup info"/);
@@ -231,4 +231,14 @@ test('assigned-stage review opens a practical onboarding answer dialog instead o
   assert.match(journey, /getStageExplanation/);
   assert.doesNotMatch(reviewDialog, /to="\/bizmap-ai"/);
   assert.match(journeyHook, /onboarding,[\s\S]*stageIntelligence/);
+});
+
+test('the Today section reads the whole snapshot, so routine, tasks and missions show', () => {
+  // useDashboardFocus() returns { focus }, not { snapshot }; reading snapshot
+  // from it left routine, due today and both missions permanently empty.
+  const today = read('../src/components/dashboard/DashboardTodaySnapshot.tsx');
+  assert.match(today, /const \{ snapshot, primaryAction, isLoading, isOffline, isStale \} = useDashboardData\(\)/);
+  assert.doesNotMatch(today, /\{ snapshot[^}]*\} = useDashboardFocus\(\)/);
+  assert.match(today, /snapshot\?\.focus\.routine/);
+  assert.match(today, /snapshot\?\.focus\.dailyMission/);
 });

@@ -36,6 +36,7 @@ import {
 } from '@/lib/onboardingContext';
 import { updateOnboardingFocus } from '@/lib/onboardingSession';
 import { cn } from '@/lib/utils';
+import { DASHBOARD_CARD } from '@/components/dashboard/DashboardPanel';
 
 const GOALS: Array<[OnboardingAnswersV1['primaryGoal'], string]> = [
   ['validate_problem', 'Validate the customer problem'],
@@ -190,10 +191,10 @@ export default function DashboardFocusEditor() {
   ].filter(Boolean) as string[];
 
   return (
-    <div className={needsTopUp && missing.length ? 'mb-6' : '-mt-3 mb-6 flex justify-end'}>
+    <div className={needsTopUp && missing.length ? 'mb-10' : '-mt-6 mb-10 flex justify-end'}>
       <Dialog open={open} onOpenChange={setOpen}>
         {needsTopUp && missing.length ? (
-          <div className="rounded-card border border-accent-teal/30 bg-accent-teal/5 p-4 sm:flex sm:items-center sm:justify-between sm:gap-4">
+          <div className={cn(DASHBOARD_CARD, 'p-5 sm:flex sm:items-center sm:justify-between sm:gap-6 sm:p-6')}>
             <div>
               <p className="text-sm font-semibold">Sharpen your recommendations</p>
               <p className="mt-1 text-sm text-muted-foreground">
@@ -202,7 +203,7 @@ export default function DashboardFocusEditor() {
               </p>
             </div>
             <DialogTrigger asChild>
-              <Button type="button" size="sm" className="mt-3 shrink-0 sm:mt-0">
+              <Button type="button" size="sm" variant="outline" className="mt-3 shrink-0 sm:mt-0">
                 Add {missing.length === 1 ? 'it' : 'them'}
               </Button>
             </DialogTrigger>

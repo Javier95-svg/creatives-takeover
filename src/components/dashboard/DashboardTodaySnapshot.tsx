@@ -1,53 +1,131 @@
+import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
-import {
-  AlertTriangle,
-  ArrowRight,
-  CalendarClock,
-  CheckCircle2,
-  Circle,
-  Repeat2,
-  Zap,
-} from 'lucide-react';
+import { AlertTriangle, ArrowRight, CheckCircle2, Circle } from 'lucide-react';
 
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
-import { DashboardPanelHeader, MetricTile } from '@/components/dashboard/DashboardPanel';
-import { useAuth } from '@/contexts/AuthContext';
-import { useDashboardFocus } from '@/contexts/DashboardDataContext';
+import { DASHBOARD_CARD, DashboardSectionTitle } from '@/components/dashboard/DashboardPanel';
+import { useDashboardData } from '@/contexts/DashboardDataContext';
 import { getDashboardTool } from '@/config/dashboardToolRegistry';
 import { cn } from '@/lib/utils';
 import { captureEvent } from '@/lib/analytics';
 import { useFirstCustomerSprint } from '@/hooks/useFirstCustomerSprint';
 import { usePlanAccess } from '@/hooks/usePlanAccess';
 
-function firstName(value: string | null | undefined) {
-  const name = value?.trim();
-  return name ? name.split(/\s+/)[0] : 'founder';
+const MAX_ROWS = 4;
+const WEEK_COLUMNS: Record<number, string> = { 1: 'sm:grid-cols-1', 2: 'sm:grid-cols-2', 3: 'sm:grid-cols-3' };
+
+interface TodayRow {
+  id: string;
+  title: string;
+  done: boolean;
+}
+
+function TodayList({
+  id,
+  title,
+  count,
+  href,
+  linkLabel,
+  rows,
+  alert,
+  empty,
+}: {
+  id: string;
+  title: string;
+  count: string | null;
+  href: string;
+  linkLabel: string;
+  rows: TodayRow[];
+  alert?: ReactNode;
+  empty: ReactNode;
+}) {
+  const shown = rows.slice(0, MAX_ROWS);
+  const hidden = rows.length - shown.length;
+  return (
+    <div className="flex min-w-0 flex-col p-5 sm:p-6" aria-labelledby={id}>
+      <div className="mb-3 flex items-baseline justify-between gap-3">
+        <div className="flex items-baseline gap-2">
+          <h3 id={id} className="text-sm font-semibold text-foreground">{title}</h3>
+          {count ? <span className="text-sm tabular-nums text-muted-foreground">{count}</span> : null}
+        </div>
+        <Link to={href} className="text-sm font-medium text-primary hover:underline">{linkLabel}</Link>
+      </div>
+      {alert}
+      {shown.length ? (
+        <ul className="-mx-2 space-y-0.5">
+          {shown.map((row) => (
+            <li key={row.id}>
+              <Link
+                to={href}
+                className="flex items-center gap-3 rounded-lg px-2 py-2 text-sm transition-colors hover:bg-muted/60"
+              >
+                {row.done ? (
+                  <CheckCircle2 className="h-4 w-4 shrink-0 text-success" aria-hidden="true" />
+                ) : (
+                  <Circle className="h-4 w-4 shrink-0 text-muted-foreground/50" aria-hidden="true" />
+                )}
+                <span className={cn('min-w-0 truncate', row.done ? 'text-muted-foreground line-through' : 'text-foreground')}>
+                  {row.title}
+                </span>
+                <span className="sr-only">{row.done ? ', done' : ', to do'}</span>
+              </Link>
+            </li>
+          ))}
+          {hidden > 0 ? (
+            <li className="px-2 pt-1 text-xs text-muted-foreground">+{hidden} more</li>
+          ) : null}
+        </ul>
+      ) : empty}
+    </div>
+  );
+}
+
+function WeekStat({ label, value, detail, progress, to }: { label: string; value: string; detail?: ReactNode; progress?: number; to?: string }) {
+  const body = (
+    <>
+      <p className="text-xs font-medium text-muted-foreground">{label}</p>
+      <p className="mt-1 font-space-grotesk text-2xl font-semibold tabular-nums text-foreground">{value}</p>
+      {typeof progress === 'number' ? <Progress value={progress} className="mt-3 h-1" /> : null}
+      {detail ? <div className="mt-2 text-xs leading-5 text-muted-foreground">{detail}</div> : null}
+    </>
+  );
+  return to ? (
+    <Link to={to} className="block min-w-0 p-5 transition-colors hover:bg-muted/40 sm:p-6">{body}</Link>
+  ) : (
+    <div className="min-w-0 p-5 sm:p-6">{body}</div>
+  );
+}
+
+function ActiveDays({ active, goal }: { active: number; goal: number }) {
+  const total = Math.max(goal, 1);
+  return (
+    <span className="flex items-center gap-1" aria-hidden="true">
+      {Array.from({ length: total }, (_, index) => (
+        <span key={index} className={cn('h-1.5 w-5 rounded-full', index < active ? 'bg-primary' : 'bg-muted')} />
+      ))}
+    </span>
+  );
 }
 
 /**
- * Command Center's above-the-fold accountability view. It renders exclusively
- * from the dashboard snapshot; detail tabs own the heavier task/routine writes.
+ * The top of the Progress Tracker: the one next step, today's list and the
+ * week so far. Renders only from the dashboard snapshot; the Tasks and
+ * Routine tabs own the writes.
  */
 export default function DashboardTodaySnapshot() {
-  const { user } = useAuth();
-  const { snapshot, primaryAction, isLoading, isOffline, isStale } = useDashboardFocus();
+  const { snapshot, primaryAction, isLoading, isOffline, isStale } = useDashboardData();
   const firstCustomerProof = useFirstCustomerSprint();
   const proofAccess = usePlanAccess('first_customer_proof');
   const actionTool = primaryAction ? getDashboardTool(primaryAction.toolKey) : null;
   const actionRoute = primaryAction?.actionUrl || actionTool?.route || null;
   const routine = snapshot?.focus.routine;
-  const remainingRoutineItems = routine?.items.filter((item) => !item.completed) ?? [];
   const dueToday = snapshot?.focus.dueToday.filter((task) => !task.completed) ?? [];
   const overdueCount = snapshot?.focus.overdueCount ?? 0;
-  const routineCompleted = routine?.completed ?? 0;
-  const routineTotal = routine?.total ?? 0;
-  const routineProgress = routineTotal > 0 ? Math.round((routineCompleted / routineTotal) * 100) : 0;
   const dailyMission = snapshot?.focus.dailyMission ?? null;
   const weeklyMission = snapshot?.focus.weeklyMission ?? null;
+  const engagement = snapshot && snapshot.version !== 1 ? snapshot.engagement : null;
   const proofSprint = firstCustomerProof.snapshot?.sprint ?? null;
   const proofEvidence = firstCustomerProof.snapshot?.evidence ?? { attachedProspects: 0, contactedProspects: 0, replies: 0, conversations: 0, commitments: 0, payments: 0 };
   const showCustomerProof = proofAccess.hasAccess && proofSprint?.status !== 'completed';
@@ -57,48 +135,162 @@ export default function DashboardTodaySnapshot() {
       ? `Send and record outreach (${proofEvidence.contactedProspects}/10)`
       : 'Record the buyer-evidence decision';
 
-  if (isLoading) return <Skeleton className="mb-6 h-64 rounded-xl" />;
+  if (isLoading) {
+    return (
+      <div className="mb-10 space-y-8">
+        <Skeleton className="h-40 rounded-2xl" />
+        <Skeleton className="h-56 rounded-2xl" />
+      </div>
+    );
+  }
+
+  const routineRows: TodayRow[] = routine?.items.map((item) => ({ id: item.id, title: item.title, done: item.completed })) ?? [];
+  const taskRows: TodayRow[] = dueToday.map((task) => ({ id: task.id, title: task.title, done: false }));
 
   return (
-    <Card className="mb-6 overflow-hidden border-primary/25 bg-[radial-gradient(circle_at_top_left,_hsl(var(--primary)/0.14),_transparent_42%),linear-gradient(135deg,hsl(var(--background)),hsl(var(--card))_62%)] shadow-sm">
-      <CardContent className="p-5 sm:p-6">
-        <DashboardPanelHeader
-          as="h1"
-          size="page"
-          kicker="Today"
-          title={`Welcome back, ${firstName((user?.user_metadata as { full_name?: string } | undefined)?.full_name ?? user?.email)}.`}
-          description="Close today's loop before anything else competes for your attention."
-          action={<><Badge variant="secondary">{routineCompleted}/{routineTotal} routine</Badge><Badge variant={overdueCount ? 'destructive' : 'outline'}>{overdueCount} overdue</Badge></>}
-        />
-
-        <section className="mt-5 rounded-2xl border border-primary/30 bg-background/80 p-4 shadow-sm sm:p-5" aria-labelledby="dashboard-primary-action">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-2"><p id="dashboard-primary-action" className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">Do this next</p>{primaryAction ? <Badge variant="outline">About {primaryAction.estimatedMinutes} min</Badge> : null}</div>
-              <h2 className="mt-2 text-lg font-semibold text-foreground">{primaryAction?.title ?? 'Plan one useful move for today'}</h2>
-              <p className="mt-1 max-w-2xl text-sm leading-6 text-muted-foreground">{primaryAction?.description ?? 'Your Progress Tracker will prioritize the next action as soon as you add a task, routine, or startup artifact.'}</p>
-              {isOffline || isStale ? <p className="mt-2 text-xs text-warning">{isOffline ? 'You are offline. Showing your last saved priorities.' : 'Refreshing your latest progress…'}</p> : null}
-            </div>
-            <Button asChild={Boolean(actionRoute)} disabled={!actionRoute} className="shrink-0">
-              {actionRoute ? <Link to={actionRoute} onClick={() => captureEvent('dashboard_primary_action_opened', { tool_key: primaryAction?.toolKey ?? null })}>Continue in {actionTool?.label ?? 'platform'}<ArrowRight className="ml-1.5 h-4 w-4" /></Link> : <span>Ready when you are</span>}
-            </Button>
+    <div className="mb-10 space-y-10">
+      <section aria-labelledby="dashboard-primary-action" className={cn(DASHBOARD_CARD, 'p-6 sm:p-8')}>
+        <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+          <div className="min-w-0">
+            <p id="dashboard-primary-action" className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+              <span className="h-1.5 w-1.5 rounded-full bg-primary" aria-hidden="true" />
+              <span>Next step{primaryAction ? <span className="tabular-nums"> · about {primaryAction.estimatedMinutes} min</span> : null}</span>
+            </p>
+            <h2 className="mt-3 text-balance font-space-grotesk text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
+              {primaryAction?.title ?? 'Plan one useful move for today'}
+            </h2>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
+              {primaryAction?.description ?? 'Add a task, a routine or a saved result and your next step will show here.'}
+            </p>
+            {isOffline || isStale ? (
+              <p className="mt-2 text-xs text-warning">
+                {isOffline ? 'You are offline. Showing your last saved priorities.' : 'Refreshing your latest progress…'}
+              </p>
+            ) : null}
           </div>
-        </section>
-
-        {showCustomerProof ? <section className="mt-5 rounded-2xl border border-success/30 bg-success/5 p-4 sm:p-5" aria-labelledby="first-customer-proof"><div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"><div><div className="flex flex-wrap items-center gap-2"><Badge variant="outline">First Customer Proof</Badge><Badge variant="secondary">Stage V: GTM</Badge></div><h2 id="first-customer-proof" className="mt-2 text-lg font-semibold">{proofNextAction}</h2><p className="mt-1 text-sm text-muted-foreground">{proofEvidence.attachedProspects}/10 qualified prospects · {proofEvidence.contactedProspects}/10 founder-sent messages · {proofEvidence.replies + proofEvidence.conversations + proofEvidence.commitments + proofEvidence.payments} buyer signals. Complete the next task to turn activity into a defensible decision.</p></div><Button asChild className="shrink-0"><Link to="/go-to-market?workspace=first-customer-proof">{proofSprint ? 'Continue proof' : 'Start proof'}<ArrowRight className="ml-1.5 h-4 w-4" /></Link></Button></div></section> : null}
-
-        {dailyMission ? <div className="mt-5 rounded-xl border border-primary/25 bg-primary/[0.06] p-4"><div className="flex flex-wrap items-start justify-between gap-3"><div><p className="flex items-center gap-1.5 text-label font-semibold uppercase tracking-[0.16em] text-primary/80"><Zap className="h-3.5 w-3.5" />Daily mission</p><p className="mt-1.5 text-sm leading-6 text-foreground">{dailyMission.title}</p></div>{dailyMission.completed ? <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-success"><CheckCircle2 className="h-3.5 w-3.5" />Done</span> : <Button asChild size="sm" variant="outline"><Link to="/dashboard/routine">Open routine</Link></Button>}</div></div> : null}
-
-        {routineTotal > 0 ? <div className="mt-5"><div className="mb-1.5 flex justify-between text-xs text-muted-foreground"><span>Routine progress</span><span className="font-medium text-foreground">{routineProgress}%</span></div><Progress value={routineProgress} className="h-2" /></div> : null}
-
-        <div className="mt-5 grid gap-4 lg:grid-cols-2">
-          <div className="rounded-xl border border-border/60 bg-background/70 p-4"><div className="mb-3 flex items-center justify-between"><h2 className="flex items-center gap-2 text-sm font-semibold"><Repeat2 className="h-4 w-4 text-primary" />Today's habits</h2><Link to="/dashboard/routine" className="text-xs font-medium text-primary hover:underline">Routine</Link></div>{remainingRoutineItems.length ? <ul className="space-y-1.5">{remainingRoutineItems.slice(0, 3).map((item) => <li key={item.id}><Link to="/dashboard/routine" className="flex items-center gap-2.5 rounded-lg border border-border/50 bg-background/80 px-3 py-2 text-sm hover:border-primary/40"><Circle className="h-4 w-4 text-muted-foreground/60" />{item.title}</Link></li>)}</ul> : <p className="flex items-center gap-2 text-sm text-success"><CheckCircle2 className="h-4 w-4" />All habits done for today.</p>}</div>
-          <div className="rounded-xl border border-border/60 bg-background/70 p-4"><div className="mb-3 flex items-center justify-between"><h2 className="flex items-center gap-2 text-sm font-semibold"><CalendarClock className="h-4 w-4 text-primary" />Due today</h2><Link to="/dashboard/tasks" className="text-xs font-medium text-primary hover:underline">Tasks</Link></div>{overdueCount ? <Link to="/dashboard/tasks" className="mb-2 flex items-center gap-2 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm font-medium text-destructive"><AlertTriangle className="h-4 w-4" />{overdueCount} overdue. Clear them first.</Link> : null}{dueToday.length ? <ul className="space-y-1.5">{dueToday.slice(0, 3).map((task) => <li key={task.id}><Link to="/dashboard/tasks" className="flex items-center gap-2.5 rounded-lg border border-border/50 bg-background/80 px-3 py-2 text-sm hover:border-primary/40"><Circle className="h-4 w-4 text-muted-foreground/60" />{task.title}</Link></li>)}</ul> : !overdueCount ? <p className="flex items-center gap-2 text-sm text-muted-foreground"><CheckCircle2 className="h-4 w-4 text-success" />Nothing due today.</p> : null}</div>
+          {actionRoute ? (
+            <Button asChild className="shrink-0 px-5">
+              <Link to={actionRoute} onClick={() => captureEvent('dashboard_primary_action_opened', { tool_key: primaryAction?.toolKey ?? null })}>
+                Continue in {actionTool?.label ?? 'platform'}
+                <ArrowRight className="ml-1.5 h-4 w-4" aria-hidden="true" />
+              </Link>
+            </Button>
+          ) : null}
         </div>
 
-        {weeklyMission ? <div className="mt-5 grid gap-3 sm:grid-cols-3"><MetricTile label="Weekly commitment" value={`${Math.round(weeklyMission.progress)}%`} progress={weeklyMission.progress} hint={weeklyMission.title} to="/dashboard/routine" /></div> : null}
-        {snapshot && snapshot.version !== 1 ? <div className="mt-4 flex flex-wrap items-center gap-2 rounded-xl border border-border/60 bg-background/60 px-4 py-3 text-xs text-muted-foreground"><span className="font-semibold text-foreground">Weekly momentum</span><Badge variant="outline">{snapshot.engagement.activeDays7}/{snapshot.engagement.weeklyGoal} active days</Badge><Badge variant="outline">{snapshot.engagement.meaningfulActions7} meaningful actions</Badge>{snapshot.engagement.nextReturnCue ? <Link to={snapshot.engagement.nextReturnCue.ctaUrl} className={cn('ml-auto font-medium text-primary hover:underline')}>Next return {new Date(snapshot.engagement.nextReturnCue.scheduledFor).toLocaleDateString()}</Link> : null}</div> : null}
-      </CardContent>
-    </Card>
+        {showCustomerProof ? (
+          <div className="mt-6 flex flex-col gap-4 border-t border-border/60 pt-6 sm:flex-row sm:items-center sm:justify-between" aria-labelledby="first-customer-proof">
+            <div className="min-w-0">
+              <p className="text-xs font-medium text-muted-foreground">First Customer Proof · Stage V: GTM</p>
+              <h3 id="first-customer-proof" className="mt-1 text-sm font-semibold text-foreground">{proofNextAction}</h3>
+              <p className="mt-1 text-sm tabular-nums text-muted-foreground">
+                {proofEvidence.attachedProspects}/10 qualified prospects · {proofEvidence.contactedProspects}/10 founder-sent messages · {proofEvidence.replies + proofEvidence.conversations + proofEvidence.commitments + proofEvidence.payments} buyer signals
+              </p>
+            </div>
+            <Button asChild variant="outline" className="shrink-0">
+              <Link to="/go-to-market?workspace=first-customer-proof">
+                {proofSprint ? 'Continue proof' : 'Start proof'}
+                <ArrowRight className="ml-1.5 h-4 w-4" aria-hidden="true" />
+              </Link>
+            </Button>
+          </div>
+        ) : null}
+      </section>
+
+      <section aria-labelledby="dashboard-today-title">
+        <DashboardSectionTitle id="dashboard-today-title" title="Today" />
+        <div className={cn(DASHBOARD_CARD, 'overflow-hidden')}>
+          {dailyMission ? (
+            <div className="flex flex-col gap-3 border-b border-border/60 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+              <div className="min-w-0">
+                <p className="text-xs font-medium text-muted-foreground">Today's mission</p>
+                <p className={cn('mt-1 text-sm font-medium', dailyMission.completed ? 'text-muted-foreground line-through' : 'text-foreground')}>
+                  {dailyMission.title}
+                </p>
+              </div>
+              {dailyMission.completed ? (
+                <span className="inline-flex shrink-0 items-center gap-1.5 text-sm font-medium text-success">
+                  <CheckCircle2 className="h-4 w-4" aria-hidden="true" />Done
+                </span>
+              ) : (
+                <Link to="/dashboard/routine" className="shrink-0 text-sm font-medium text-primary hover:underline">Open routine</Link>
+              )}
+            </div>
+          ) : null}
+          <div className="grid divide-y divide-border/60 lg:grid-cols-2 lg:divide-x lg:divide-y-0">
+            <TodayList
+              id="dashboard-routine-title"
+              title="Routine"
+              count={routine?.total ? `${routine.completed} of ${routine.total} done` : null}
+              href="/dashboard/routine"
+              linkLabel="View all"
+              rows={routineRows}
+              empty={
+                <p className="text-sm text-muted-foreground">
+                  No routine yet. <Link to="/dashboard/routine" className="font-medium text-primary hover:underline">Set one up</Link>
+                </p>
+              }
+            />
+            <TodayList
+              id="dashboard-due-title"
+              title="Due today"
+              count={dueToday.length ? String(dueToday.length) : null}
+              href="/dashboard/tasks"
+              linkLabel="View all"
+              rows={taskRows}
+              alert={overdueCount ? (
+                <Link
+                  to="/dashboard/tasks"
+                  className="-mx-2 mb-1 flex items-center gap-3 rounded-lg px-2 py-2 text-sm font-medium text-destructive transition-colors hover:bg-destructive/10"
+                >
+                  <AlertTriangle className="h-4 w-4 shrink-0" aria-hidden="true" />
+                  {overdueCount} overdue. Clear {overdueCount === 1 ? 'it' : 'them'} first.
+                </Link>
+              ) : null}
+              empty={!overdueCount ? (
+                <p className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <CheckCircle2 className="h-4 w-4 text-success" aria-hidden="true" />Nothing due today.
+                </p>
+              ) : null}
+            />
+          </div>
+        </div>
+      </section>
+
+      {weeklyMission || engagement ? (
+        <section aria-labelledby="dashboard-week-title">
+          <DashboardSectionTitle
+            id="dashboard-week-title"
+            title="This week"
+            action={engagement?.nextReturnCue ? (
+              <Link to={engagement.nextReturnCue.ctaUrl} className="font-medium text-primary hover:underline">
+                Next check-in {new Date(engagement.nextReturnCue.scheduledFor).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}
+              </Link>
+            ) : null}
+          />
+          <div className={cn(DASHBOARD_CARD, 'grid divide-y divide-border/60 overflow-hidden sm:divide-x sm:divide-y-0', WEEK_COLUMNS[(weeklyMission ? 1 : 0) + (engagement ? 2 : 0)])}>
+            {weeklyMission ? (
+              <WeekStat
+                label="Weekly commitment"
+                value={`${Math.round(weeklyMission.progress)}%`}
+                progress={weeklyMission.progress}
+                detail={<span className="line-clamp-2">{weeklyMission.title}</span>}
+                to="/dashboard/routine"
+              />
+            ) : null}
+            {engagement ? (
+              <>
+                <WeekStat
+                  label="Active days"
+                  value={`${engagement.activeDays7} of ${engagement.weeklyGoal}`}
+                  detail={<div className="space-y-2"><ActiveDays active={engagement.activeDays7} goal={engagement.weeklyGoal} /><span className="block">Last 7 days</span></div>}
+                />
+                <WeekStat label="Meaningful actions" value={String(engagement.meaningfulActions7)} detail="Last 7 days" />
+              </>
+            ) : null}
+          </div>
+        </section>
+      ) : null}
+    </div>
   );
 }

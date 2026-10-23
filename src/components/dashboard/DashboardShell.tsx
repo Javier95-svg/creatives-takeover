@@ -15,8 +15,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useWorkspaceFrame } from '@/contexts/WorkspaceFrameContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useFeatureGating } from '@/hooks/useFeatureGating';
-import { useSubscription } from '@/hooks/useSubscription';
-import { normalizePlan, resolveDashboardMode } from '@/config/planPermissions';
 import { shouldRedirectToGuidedOnboarding } from '@/lib/guidedOnboarding';
 import {
   getOnboardingPathState,
@@ -29,7 +27,6 @@ import { DashboardSidebar } from './DashboardSidebar';
 import { DashboardStreakChip } from './DashboardStreakChip';
 import { DashboardTabsHost } from './DashboardTabsHost';
 import { DashboardMetricsContext, TaskCountContext, type DashboardWeeklyMetrics } from './TaskCountContext';
-import { ModeToggle, type DashboardMode } from './modes/ModeToggle';
 import { getActivationPreferenceState } from '@/lib/activationState';
 
 const DASHBOARD_MAX_WIDTH = 'max-w-7xl';
@@ -49,10 +46,6 @@ function DashboardFrameContent({
   const inWorkspace = useWorkspaceFrame();
   const navigate = useNavigate();
   const { pathname } = useLocation();
-  const { subscriptionData } = useSubscription();
-  const currentPlan = normalizePlan(subscriptionData?.subscription_tier);
-  const dashboardMode = resolveDashboardMode(currentPlan) as DashboardMode;
-  const isHome = pathname === '/dashboard';
 
   useEffect(() => {
     if (pathname === '/dashboard/weekly-mission') {
@@ -73,9 +66,6 @@ function DashboardFrameContent({
                   <div className="pointer-events-auto flex items-start gap-2">
                     {!inWorkspace && <SidebarTrigger className="rounded-full border border-border/70 bg-background/88 shadow-sm backdrop-blur-md" />}
                     {useLegacyStreak ? <DashboardStreakChip /> : null}
-                    {isHome ? (
-                      <ModeToggle currentMode={dashboardMode} />
-                    ) : null}
                   </div>
                   <div aria-hidden="true" />
                   {!inWorkspace && <button
@@ -90,26 +80,8 @@ function DashboardFrameContent({
                 </div>
               </div>
 
-              <div className="pointer-events-none absolute inset-0 overflow-hidden">
-                <div className="absolute inset-0 bg-background" />
-                <div
-                  className="absolute inset-0"
-                  style={{
-                    backgroundImage:
-                      'radial-gradient(circle at 15% 20%, hsl(var(--primary) / 0.08), transparent 40%), radial-gradient(circle at 85% 30%, hsl(var(--accent) / 0.06), transparent 45%)',
-                  }}
-                />
-                <div
-                  className="absolute inset-0 opacity-[0.03] dark:opacity-[0.06]"
-                  style={{
-                    backgroundImage:
-                      'linear-gradient(to right, hsl(var(--foreground)) 1px, transparent 1px), linear-gradient(to bottom, hsl(var(--foreground)) 1px, transparent 1px)',
-                    backgroundSize: '64px 64px',
-                  }}
-                />
-              </div>
-
-              <div className={cn('relative z-10 container mx-auto p-6 pb-24 pt-24', DASHBOARD_MAX_WIDTH)}>
+              {/* A plain page: the cards carry the structure, so no grid or glow behind them. */}
+              <div className={cn('relative z-10 container mx-auto p-6 pb-24', inWorkspace ? 'pt-10' : 'pt-24', DASHBOARD_MAX_WIDTH)}>
                 <DashboardTabsHost />
               </div>
             </div>

@@ -1,10 +1,9 @@
-import { ArrowRight, Megaphone, Sparkles } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { DASHBOARD_CARD, DashboardSectionTitle } from '@/components/dashboard/DashboardPanel';
 import { captureEvent } from '@/lib/analytics';
+import { cn } from '@/lib/utils';
 
 const PLATFORM_UPDATES = [
   {
@@ -17,34 +16,31 @@ const PLATFORM_UPDATES = [
   },
 ] as const;
 
-/** A dedicated Command Center surface for product announcements and release updates. */
+/** Product announcements, kept below the founder's own work. */
 export default function PlatformUpdates() {
   return (
-    <section className="mb-6" aria-labelledby="platform-updates-title">
-      <div className="mb-3 flex items-center gap-2">
-        <Megaphone className="h-4 w-4 text-primary" aria-hidden="true" />
-        <h2 id="platform-updates-title" className="text-sm font-semibold">Platform updates</h2>
-        <span className="text-xs text-muted-foreground">What’s new for founders</span>
-      </div>
+    <section className="mb-10" aria-labelledby="platform-updates-title">
+      <DashboardSectionTitle id="platform-updates-title" title="What's new" />
       <div className="space-y-3">
         {PLATFORM_UPDATES.map((update) => (
-          <Card key={update.id} className="border-primary/25 bg-primary/5">
-            <CardContent className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
-              <div className="max-w-3xl">
-                <Badge variant="outline" className="gap-1.5"><Sparkles className="h-3 w-3" />{update.badge}</Badge>
-                <h3 className="mt-3 text-lg font-semibold">{update.title}</h3>
-                <p className="mt-1.5 text-sm leading-6 text-muted-foreground">{update.description}</p>
-              </div>
-              <Button asChild variant="outline" className="shrink-0">
-                <Link
-                  to={update.route}
-                  onClick={() => captureEvent('dashboard_platform_update_opened', { update_id: update.id })}
-                >
-                  {update.cta} <ArrowRight className="ml-2 h-4 w-4" />
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
+          <div
+            key={update.id}
+            className={cn(DASHBOARD_CARD, 'flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between sm:gap-8 sm:p-6')}
+          >
+            <div className="min-w-0 max-w-3xl">
+              <p className="text-xs font-medium text-muted-foreground">{update.badge}</p>
+              <h3 className="mt-1 text-sm font-semibold text-foreground">{update.title}</h3>
+              <p className="mt-1 text-sm leading-6 text-muted-foreground">{update.description}</p>
+            </div>
+            <Link
+              to={update.route}
+              onClick={() => captureEvent('dashboard_platform_update_opened', { update_id: update.id })}
+              className="inline-flex shrink-0 items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+            >
+              {update.cta}
+              <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            </Link>
+          </div>
         ))}
       </div>
     </section>

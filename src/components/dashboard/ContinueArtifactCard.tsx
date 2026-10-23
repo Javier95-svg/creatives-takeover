@@ -1,7 +1,10 @@
 import { useState } from "react";
-import { ArrowRight, PlayCircle, X } from "lucide-react";
+import { ArrowRight, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { captureEvent } from "@/lib/analytics";
+import { Button } from "@/components/ui/button";
+import { DASHBOARD_CARD } from "@/components/dashboard/DashboardPanel";
+import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { trackRetentionEvent } from "@/lib/retentionSystem";
 
@@ -69,12 +72,9 @@ const ContinueArtifactCard = ({
   };
 
   return (
-    <div className="mb-6 rounded-2xl border border-primary/25 bg-primary/8 p-5 shadow-sm">
+    <div className={cn(DASHBOARD_CARD, "mb-6 p-5 sm:p-6")}>
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-start gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary">
-            <PlayCircle className="h-5 w-5" />
-          </div>
           <div>
             <p className="text-sm font-semibold text-foreground">Continue where you left off</p>
             <p className="mt-0.5 text-sm text-muted-foreground">
@@ -83,21 +83,19 @@ const ContinueArtifactCard = ({
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          <Link
-            to={continueUrl}
-            className="inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
-            onClick={handleContinue}
-          >
-            Continue
-            <ArrowRight className="h-4 w-4" />
-          </Link>
+          <Button asChild size="sm" variant="outline">
+            <Link to={continueUrl} onClick={handleContinue}>
+              Continue
+              <ArrowRight className="ml-1.5 h-4 w-4" aria-hidden="true" />
+            </Link>
+          </Button>
           <button
             type="button"
             onClick={handleDismiss}
-            className="text-muted-foreground transition-colors hover:text-foreground"
+            className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             aria-label="Dismiss"
           >
-            <X className="h-4 w-4" />
+            <X className="h-4 w-4" aria-hidden="true" />
           </button>
         </div>
       </div>

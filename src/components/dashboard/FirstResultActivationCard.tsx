@@ -1,7 +1,9 @@
-import { ArrowRight, Sparkles } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 import { Button } from '@/components/ui/button';
+import { DASHBOARD_CARD } from '@/components/dashboard/DashboardPanel';
+import { cn } from '@/lib/utils';
 import { buildActivationSummary, trackRetentionEvent, type ActivationIntent } from '@/lib/retentionSystem';
 import { RecommendationFeedback } from '@/components/dashboard/RecommendationFeedback';
 import { recordRecommendationOutcome } from '@/lib/recommendationLearning';
@@ -44,17 +46,14 @@ export function FirstResultActivationCard({
   };
 
   return (
-    <div className="mb-6 rounded-2xl border border-primary/25 bg-primary/8 p-5 shadow-sm">
+    <div className={cn(DASHBOARD_CARD, 'mb-10 p-6 sm:p-8')}>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 items-start gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary">
-            <Sparkles className="h-5 w-5" aria-hidden="true" />
-          </div>
           <div className="min-w-0">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">
+            <p className="text-sm font-medium text-muted-foreground">
               First result
             </p>
-            <p className="mt-1 text-sm font-semibold text-foreground">
+            <p className="mt-2 font-space-grotesk text-xl font-semibold tracking-tight text-foreground">
               Finish your first result
             </p>
             <p className="mt-0.5 max-w-3xl text-sm leading-6 text-muted-foreground">

@@ -1,8 +1,10 @@
 import { useMemo, useState } from 'react';
-import { CheckCircle2, Gauge, Landmark, Loader2, PencilLine } from 'lucide-react';
+import { Check, CheckCircle2, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
+import { DASHBOARD_CARD } from '@/components/dashboard/DashboardPanel';
+import { cn } from '@/lib/utils';
 import {
   Dialog,
   DialogContent,
@@ -110,54 +112,39 @@ export default function FounderStageIntelligenceCard() {
   return (
     <>
       <section
-        className="mb-6 rounded-2xl border border-border bg-card/70 p-5"
+        className={cn(DASHBOARD_CARD, 'p-5 sm:p-6')}
         aria-labelledby="founder-stage-title"
+        title="We use this stage to tune your journey, missions and next actions."
       >
-        <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
-                <Gauge className="h-3.5 w-3.5" />
-                Operating stage {state.current_stage}
-              </span>
-              <span className="rounded-full border border-border bg-muted/40 px-3 py-1 text-xs text-muted-foreground">
-                {confidenceLabel(state.confidence_band)}
-              </span>
-              {state.capital_motion !== 'inactive' ? (
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/40 px-3 py-1 text-xs text-muted-foreground">
-                  <Landmark className="h-3.5 w-3.5" />
-                  Fundraising {state.capital_motion}
-                </span>
-              ) : null}
-            </div>
-            <h2 id="founder-stage-title" className="mt-3 text-xl font-semibold text-foreground">
+            <p className="text-xs font-medium text-muted-foreground">
+              Operating stage {state.current_stage} · {confidenceLabel(state.confidence_band)}
+              {state.capital_motion !== 'inactive' ? ` · Fundraising ${state.capital_motion}` : ''}
+            </p>
+            <h2 id="founder-stage-title" className="mt-1 text-base font-semibold text-foreground">
               {STAGES[state.current_stage].name}
             </h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              We use this evidence-backed stage to tune your journey, missions, and next actions.
-            </p>
-            <div className="mt-4 grid gap-2">
-              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                We placed you here because
-              </p>
+            <ul className="mt-2 space-y-1" aria-label="Why you are at this stage">
               {explanations.map((explanation) => (
-                <p key={explanation} className="flex items-start gap-2 text-sm text-foreground/90">
-                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                <li key={explanation} className="flex items-start gap-2 text-sm text-muted-foreground">
+                  <Check className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
                   {explanation}
-                </p>
+                </li>
               ))}
-            </div>
+            </ul>
           </div>
 
           <div className="flex shrink-0 flex-wrap gap-2">
             {isConfirmed ? (
               <span className="inline-flex items-center gap-2 px-2 py-2 text-sm text-muted-foreground">
-                <CheckCircle2 className="h-4 w-4 text-success" />
+                <CheckCircle2 className="h-4 w-4 text-success" aria-hidden="true" />
                 Stage confirmed
               </span>
             ) : (
               <Button
                 type="button"
+                size="sm"
                 variant="outline"
                 disabled={!available || saving}
                 onClick={() => void confirmCurrent()}
@@ -168,20 +155,19 @@ export default function FounderStageIntelligenceCard() {
             )}
             <Button
               type="button"
-              variant="outline"
-              className="gap-2"
+              size="sm"
+              variant="ghost"
               disabled={!available || saving}
               onClick={openCorrection}
             >
-              <PencilLine className="h-4 w-4" />
               Not quite
             </Button>
           </div>
         </div>
 
         {boundaryQuestion ? (
-          <div className="mt-5 rounded-xl border border-primary/20 bg-primary/5 p-4">
-            <p className="text-xs font-semibold uppercase tracking-wide text-primary">
+          <div className="mt-5 border-t border-border/60 pt-5">
+            <p className="text-xs font-medium text-muted-foreground">
               One detail will improve your dashboard
             </p>
             <p className="mt-2 text-sm font-medium text-foreground">{boundaryQuestion.question}</p>
@@ -198,6 +184,7 @@ export default function FounderStageIntelligenceCard() {
               <Button
                 type="button"
                 size="sm"
+                variant="outline"
                 disabled={saving}
                 onClick={() => void resolveBoundary('upper')}
               >

@@ -1,6 +1,6 @@
 import { Helmet } from 'react-helmet-async';
 import { useSearchParams } from 'react-router-dom';
-import { CheckCircle2 } from 'lucide-react';
+import { CheckCircle2, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 
 import StartupHomeCommandCenter from '@/components/dashboard/StartupHomeCommandCenter';
@@ -28,7 +28,10 @@ import {
   shouldShowFirstResultMode,
   trackActivationReturnMilestones,
 } from '@/lib/activationState';
-import { normalizePlan } from '@/config/planPermissions';
+import { getDashboardModeConfig, normalizePlan, resolveDashboardMode } from '@/config/planPermissions';
+import { DASHBOARD_CARD } from '@/components/dashboard/DashboardPanel';
+import { useDashboardData } from '@/contexts/DashboardDataContext';
+import { cn } from '@/lib/utils';
 import { trackRetentionEvent, type ActivationIntent } from '@/lib/retentionSystem';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useCohortContext } from '@/hooks/useCohortContext';
@@ -47,6 +50,34 @@ interface DashboardActivationState {
   onboardingSessionId: string | null;
   flowVersion: string | null;
   rolloutVariant: string | null;
+}
+
+function greetingFor(hour: number) {
+  if (hour < 12) return 'Good morning';
+  if (hour < 18) return 'Good afternoon';
+  return 'Good evening';
+}
+
+/** Date, greeting, and which startup and mode this page is about. */
+function DashboardGreeting({ plan }: { plan: ReturnType<typeof normalizePlan> }) {
+  const { user } = useAuth();
+  const { snapshot } = useDashboardData();
+  const now = new Date();
+  const fullName = (user?.user_metadata as { full_name?: string } | undefined)?.full_name ?? snapshot?.profile.fullName ?? '';
+  const firstName = fullName.trim().split(/\s+/)[0];
+  const mode = getDashboardModeConfig(resolveDashboardMode(plan));
+  const context = [snapshot?.profile.startupName, mode.label, mode.badgeDescription].filter(Boolean).join(' · ');
+  return (
+    <header className="mb-8 space-y-1 px-1">
+      <p className="text-sm text-muted-foreground">
+        {now.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
+      </p>
+      <h1 className="text-balance font-space-grotesk text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+        {greetingFor(now.getHours())}{firstName ? `, ${firstName}` : ''}
+      </h1>
+      <p className="text-sm text-muted-foreground" title={mode.subtitle}>{context}</p>
+    </header>
+  );
 }
 
 // The founder Overview. Split out so the per type branch below can choose
@@ -125,19 +156,18 @@ const FounderDashboard = () => {
   };
 
   return (
-    <>
+    <div className="mx-auto w-full max-w-5xl">
       <Helmet>
         <title>Dashboard — Creatives Takeover</title>
       </Helmet>
       <DashboardTour />
+      <DashboardGreeting plan={currentPlan} />
       {fromIcpBuilder ? (
-        <div className="mb-6 flex items-start justify-between gap-4 rounded-2xl border border-success/20 bg-success/10 p-5 shadow-sm">
+        <div className={cn(DASHBOARD_CARD, 'mb-6 flex items-start justify-between gap-4 p-5')}>
           <div className="flex items-start gap-3">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-success/15 text-success">
-              <CheckCircle2 className="h-5 w-5" />
-            </div>
+            <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-success" aria-hidden="true" />
             <div>
-              <p className="text-sm font-semibold text-white">
+              <p className="text-sm font-semibold text-foreground">
                 ICP saved. Your dashboard is ready.
               </p>
               <p className="mt-0.5 text-sm text-muted-foreground">
@@ -148,10 +178,10 @@ const FounderDashboard = () => {
           <button
             type="button"
             onClick={dismissIcpBanner}
-            className="shrink-0 text-muted-foreground hover:text-muted-foreground"
+            className="shrink-0 rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             aria-label="Dismiss"
           >
-            x
+            <X className="h-4 w-4" aria-hidden="true" />
           </button>
         </div>
       ) : null}
@@ -174,14 +204,16 @@ const FounderDashboard = () => {
       ) : null}
       <CompletionChainResume />
       <DashboardTodayCockpit />
-      <PlatformUpdates />
-      <FounderJourneyPanel />
+      <div className="mb-10 space-y-4">
+        <FounderJourneyPanel />
+        <FounderStageIntelligenceCard />
+      </div>
       <DashboardFocusEditor />
-      <FounderStageIntelligenceCard />
+      <PlatformUpdates />
       <DashboardDisclosure
         title="More founder signals"
         summary="Review your startup information and connect with relevant founders."
-        className="mb-6"
+        className="mb-6 rounded-2xl bg-card"
         onOpenChange={(open) => {
           if (open) trackDashboardFounderSignalsExpanded();
         }}
@@ -189,7 +221,7 @@ const FounderDashboard = () => {
         <StartupHomeCommandCenter />
       </DashboardDisclosure>
       <ExitIntentModal isOpen={showExitIntent} onClose={closeExitIntent} />
-    </>
+    </div>
   );
 };
 

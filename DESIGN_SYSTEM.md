@@ -96,13 +96,19 @@ Headings should adopt `text-headline-*` / `text-subheading-*` rather than hand-r
 
 Every dashboard surface (the 5 `/dashboard` tabs and dashboard-family pages) follows one three-level pattern so users learn it once. Primitives live in [`src/components/dashboard/DashboardPanel.tsx`](src/components/dashboard/DashboardPanel.tsx).
 
-**L1 — Primary.** Exactly one `DashboardPanelHeader as="h1" size="page"` per tab (kicker `text-label uppercase tracking-[0.18em] text-primary/80` + `font-space-grotesk text-2xl sm:text-3xl` title), plus at most one `MetricTile` row (2–4 tiles). `MetricTile` is the only sanctioned big-number treatment: kicker-style label, `font-space-grotesk text-2xl` value, optional delta arrow (`success`/`destructive`/`muted`), optional `Progress`, optional deep link.
+**L1 — Primary.** Exactly one `DashboardPanelHeader as="h1" size="page"` per tab (optional kicker in plain sentence case, `text-sm font-medium text-muted-foreground`, + `font-space-grotesk text-2xl sm:text-3xl` title), plus at most one `MetricTile` row (2–4 tiles). `MetricTile` is the only sanctioned big-number treatment: small sentence-case label, `font-space-grotesk text-2xl tabular-nums` value, optional delta arrow (`success`/`destructive`/`muted`), optional `Progress`, optional deep link.
 
-**L2 — Secondary.** Section headers use `DashboardPanelHeader as="h2" size="panel"` (`text-lg`). Badge semantics are fixed: `secondary` = the primary count, `outline` = context (stage, totals), `destructive` = overdue/alerts.
+**L2 — Secondary.** Sections sit under a `DashboardSectionTitle` (a plain `text-sm font-semibold` label above the card, optional muted meta and a link on the right). Inside a card, headers use `DashboardPanelHeader as="h2" size="panel"` (`text-lg`). Badge semantics are fixed: `secondary` = the primary count, `outline` = context (stage, totals), `destructive` = overdue/alerts.
 
 **L3 — Tertiary.** Anything optional or explanatory lives inside `DashboardDisclosure` (collapsed by default).
 
-Card containers: standard panel = `border-border/60 bg-card/70`; inner tiles = `rounded-xl border border-border/60 bg-background/70`. Do not hand-roll new kicker/heading/stat styles on dashboard surfaces — use the primitives.
+Card containers: every dashboard card uses `DASHBOARD_CARD` (`rounded-2xl border border-border/60 bg-card`): no gradients, glows or shadows. Split a card into parts with `divide-border/60` hairlines rather than nesting bordered boxes. Do not hand-roll new kicker/heading/stat styles on dashboard surfaces — use the primitives.
+
+Restraint rules (the Progress Tracker home is the reference):
+- **One filled button per page**, for the single most important action. Everything else is `outline`, `ghost` or a text link.
+- **No uppercase, letter-spaced labels.** Labels are sentence case and muted; the content carries the emphasis.
+- **Colour means something.** `primary` for the main action and links, status colours only for state (done, overdue). No decorative colour washes behind cards.
+- **The page background stays plain.** No grid wallpaper or radial glows behind dashboard tabs.
 
 ---
 
