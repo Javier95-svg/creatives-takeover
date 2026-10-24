@@ -32,24 +32,28 @@ export const ENTERPRISE_SEO = {
     'founder validation pilot, accelerator software, incubator software, customer validation, cohort management, cohort reporting, accelerator program management',
 };
 
+// Coherence review (2026-10-24): the first screen names the audience and
+// promises visibility into who is doing the work, not "program impact", which
+// a 30-day pilot with 5 to 10 startups can't measure. The lede stays in
+// Javier's wording (2026-10-16): engagement, accountability, and a pilot
+// shaped around each program.
 export const ENTERPRISE_HERO = {
-  eyebrow: '30-day founder validation pilot',
-  titleLead: 'Measure your program impact',
-  titleAccent: 'with evidence.',
-  // Javier's wording (2026-10-16): engagement and accountability, and that it
-  // adapts (weekly check-ins and stage results are how). Programs
-  // don't all last 30 days, so the 30 days is the pilot, not the program.
+  eyebrow: 'For accelerators, incubators and university programs',
+  titleLead: 'See which startups in your cohort',
+  titleAccent: 'are doing the work.',
   lede:
     'We keep your cohort engaged and accountable throughout the program. Start with a 30-day pilot, then we shape it around your program’s length, size and founders.',
   // The pilot's outcomes come from stages I to III: the ideal customer
   // (Identity), the demand test (Prototype) and the evidence (Validation).
+  // Plain words for a busy director: the stages founders move through, and
+  // the part the pilot covers.
   cycle: {
-    label: 'Startup Development Cycle',
+    label: 'The stages founders work through',
     pilotStages: 3,
-    pilotLabel: 'The 30-day pilot: stages I–III',
+    pilotLabel: 'The pilot covers the first three',
   },
   primaryCta: 'Book a pilot call',
-  secondaryCta: { label: 'See the platform', href: '/demo' },
+  secondaryCta: { label: 'See how the pilot works', href: '#how' },
   facts: [
     { value: '30', label: 'day pilot' },
     { value: '5–10', label: 'startups' },
@@ -97,7 +101,7 @@ export const ENTERPRISE_PILOT = {
       when: 'Weeks 1–4',
       owner: 'Your founders',
       title: 'Founders do the validation work',
-      body: 'A weekly plan for their stage, the Rising plan’s tools free for the pilot dates, including First Customer Proof, and a two-minute weekly check-in.',
+      body: 'Each founder gets a weekly plan for their stage and full access to our paid tools for the 30 days, at no cost to them. That includes a guided plan to find and contact their first buyers. Every week they send a short update in two minutes.',
       visual: 'founder',
     },
     {
@@ -105,7 +109,7 @@ export const ENTERPRISE_PILOT = {
       when: 'Any time',
       owner: 'Your team',
       title: 'You see every startup on one screen',
-      body: 'Stage, interviews, experiments, check-ins and who needs attention. Numbers cover the pilot only, and verified evidence is shown apart from what founders report.',
+      body: 'Stage, interviews, experiments, check-ins and who needs attention. Unlike a spreadsheet or a weekly form, the numbers come from the work founders do on the platform, and what the platform can confirm is shown apart from what founders report.',
       visual: 'program',
     },
     {
@@ -142,11 +146,10 @@ export const ENTERPRISE_SCOPE = {
   title: 'What the pilot includes, and what it doesn’t',
   included: [
     { title: 'A program dashboard for your team', body: 'Every startup’s stage, interviews, experiments, check-ins and who needs attention. Export it as a spreadsheet at any time.' },
-    { title: 'Free access for every founder', body: 'The Rising plan’s tools for the pilot dates, including First Customer Proof. Founders don’t pay.' },
+    { title: 'Full access for every founder', body: 'Our paid tools for the 30 days, at no cost to them.' },
     { title: 'Kickoff and onboarding', body: 'We onboard your founders at kickoff.' },
     { title: 'Weekly follow-up and a summary', body: 'We remind and follow up with every team, and send your team a summary every week.' },
     { title: 'The final cohort report', body: 'Written by our team, with a next step for every startup, in your funder’s format if you share it.' },
-    { title: 'After the pilot', body: 'Founders keep their account, their work and the free plan.' },
   ],
   excluded: [
     { title: 'Founders’ private work', body: 'Files, idea details and messages stay private. A startup’s plan summary goes in your report only if its founder agrees.' },
@@ -175,7 +178,7 @@ export const ENTERPRISE_ADAPT = {
 export const ENTERPRISE_AFTER = {
   eyebrow: 'Post-program support',
   title: 'Your founders keep going after the program ends',
-  copy: 'They keep their account, their work and the free plan, with no extra work for your team.',
+  copy: 'Alumni keep getting support from the platform, with no extra work for your team.',
   duringLabel: 'With your program',
   endLabel: 'Program ends',
   afterLabel: 'On their own, with the platform',
@@ -197,7 +200,7 @@ export const ENTERPRISE_FAQS = [
   {
     question: 'What can we realistically expect from the pilot?',
     answer:
-      'Every startup finishes with a validation plan, documented customer interviews and experiments, and a recommended next step. Thirty days won’t prove product-market fit or make a startup investment-ready. They give your cohort a disciplined process and evidence you can review.',
+      'Every startup gets a validation plan and a weekly routine. How many interviews and experiments each one completes depends on the founders. Your dashboard shows who is doing the work and who needs a push, and the final report records what each startup actually did.',
   },
   {
     question: 'How much of our team’s time does it take?',
@@ -217,12 +220,12 @@ export const ENTERPRISE_FAQS = [
   {
     question: 'Can the final report follow our funder’s format?',
     answer:
-      'Yes. We build it from each team’s recorded work and can follow your funder’s or university’s template, including milestone reports for public grants. Share the template with us at kickoff.',
+      'Yes. We build it from each team’s recorded work and can follow your funder’s or university’s template. Share the template with us at kickoff.',
   },
   {
     question: 'Does it replace our curriculum or mentors?',
     answer:
-      'No, it works alongside them. Your sessions and mentors teach; the Startup Development Cycle helps founders turn that into finished work, stage by stage. Founders can also find experts in specific fields and other founders on the platform.',
+      'No, it works alongside them. Your sessions and mentors teach, and the platform helps founders turn that into finished work, one stage at a time. Founders can also find experts in specific fields and other founders on the platform.',
   },
   {
     question: 'Our founders are all in one sector. Does that work?',
@@ -238,8 +241,8 @@ export const ENTERPRISE_FAQS = [
 
 export const ENTERPRISE_CONTACT = {
   eyebrow: 'Talk to us',
-  title: 'Book a free pilot call',
-  copy: 'Tell us about your program and we’ll shape the pilot around your founders and your calendar.',
+  title: 'Book a pilot call',
+  copy: 'A short call about your program. We send you a proposal within a week.',
   pilotIncludes: [
     'Platform access for 5 to 10 startups',
     'A structured validation workflow',

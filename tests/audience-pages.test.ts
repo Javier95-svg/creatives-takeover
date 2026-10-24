@@ -117,7 +117,9 @@ test('the pilot is explained step by step, with who does the work and its scope'
   // What the program can't see or expect is said plainly, next to what it gets.
   const scope = JSON.stringify(enterprise.ENTERPRISE_SCOPE);
   assert.ok(enterprise.ENTERPRISE_SCOPE.included.length >= 5);
-  assert.match(scope, /First Customer Proof/);
+  // Plain words for program directors (2026-10-24): no internal plan or feature names.
+  assert.match(scope, /at no cost to them/);
+  assert.doesNotMatch(JSON.stringify(enterprise), /Rising plan|First Customer Proof|Startup Development Cycle/);
   assert.match(scope, /Files, idea details and messages stay private/);
   assert.match(scope, /only if its founder agrees/);
   assert.match(scope, /won’t prove product-market fit/);

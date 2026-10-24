@@ -1,8 +1,8 @@
 import { useEffect, useRef, type CSSProperties, type MouseEvent, type ReactNode, type RefObject } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import {
+  ArrowDown,
   ArrowRight,
-  ArrowUpRight,
   CalendarDays,
   Check,
   Info,
@@ -49,6 +49,7 @@ import {
 import "@/components/enterprise/enterprise.css";
 
 const CONTACT_ID = "talk";
+const HOW_ID = "how";
 
 // Dense screens get the full width under their step, so their numbers stay legible.
 const WIDE_STEP_VISUALS = new Set(["founder", "program"]);
@@ -197,6 +198,13 @@ const Enterprise = () => {
     document.getElementById(CONTACT_ID)?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
+  // The secondary call to action stays on the page: it shows how the pilot runs.
+  const scrollToHow = (event: MouseEvent<HTMLAnchorElement>) => {
+    event.preventDefault();
+    track(ENTERPRISE_HERO.secondaryCta.label, "hero");
+    document.getElementById(HOW_ID)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
   const structuredData = [
     createWebPageSchema({ name: ENTERPRISE_SEO.title, description: ENTERPRISE_SEO.description, url: ENTERPRISE_PATH }),
     createBreadcrumbSchema([
@@ -250,14 +258,10 @@ const Enterprise = () => {
                       {ENTERPRISE_HERO.primaryCta}
                       <ArrowRight aria-hidden="true" />
                     </a>
-                    <Link
-                      to={ENTERPRISE_HERO.secondaryCta.href}
-                      className="ent-btn ent-btn--ghost"
-                      onClick={() => track(ENTERPRISE_HERO.secondaryCta.label, "hero")}
-                    >
+                    <a href={`#${HOW_ID}`} className="ent-btn ent-btn--ghost" onClick={scrollToHow}>
                       {ENTERPRISE_HERO.secondaryCta.label}
-                      <ArrowUpRight aria-hidden="true" />
-                    </Link>
+                      <ArrowDown aria-hidden="true" />
+                    </a>
                   </div>
                 </div>
 
@@ -269,7 +273,7 @@ const Enterprise = () => {
 
             {/* How the pilot runs, step by step with who does the work, then
                 exactly what it includes, what it doesn't and what the program brings. */}
-            <section className="ent-section ent-section--tint">
+            <section id={HOW_ID} className="ent-section ent-section--tint scroll-mt-24">
               <div className="ent-container">
                 <SectionHead
                   eyebrow={ENTERPRISE_PILOT.eyebrow}
@@ -479,7 +483,7 @@ const Enterprise = () => {
                     <InstitutionContactForm
                       audience="enterprise"
                       defaultOrgType="accelerator"
-                      submitLabel="Request a pilot"
+                      submitLabel={ENTERPRISE_HERO.primaryCta}
                       variant="plain"
                     />
                   </div>

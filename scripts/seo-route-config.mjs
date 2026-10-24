@@ -192,17 +192,17 @@ export const INDEXABLE_ROUTES = [
       "A 30-day founder validation pilot for accelerators and incubators: a validation plan and documented evidence for every founder, and a cohort report.",
     changefreq: "monthly",
     priority: 0.9,
-    heroHeading: "Measure your program impact with evidence.",
+    heroHeading: "See which startups in your cohort are doing the work.",
     heroCopy:
-      "A 30-day founder validation pilot for accelerators, incubators and university programs. We keep your cohort engaged and accountable throughout the program. Start with a 30-day pilot, then we shape it around your program’s length, size and founders.",
+      "For accelerators, incubators and university programs. We keep your cohort engaged and accountable throughout the program. Start with a 30-day pilot, then we shape it around your program’s length, size and founders.",
     sections: [
       {
-        heading: "A unified system to measure your cohort progress and outcomes.",
-        copy: "A validation plan for every startup, every interview and experiment on record, a cohort report ready for your funders with next steps per startup, and weekly updates without chasing anyone.",
+        heading: "We run it. You bring the founders.",
+        copy: "Seven steps: we set up your cohort; founders join with their consent; they get a weekly plan and full access to our paid tools for the 30 days, at no cost to them; you see every startup on one screen; we follow up every week and send you a summary; on day 30 you get the cohort report; after that, founders keep their account, their work and the free plan.",
       },
       {
-        heading: "We run it. You bring the founders.",
-        copy: "We provide platform access, a structured validation workflow, weekly progress check-ins and the final cohort report. You provide 5 to 10 startups and one program contact. Thirty days won’t prove product-market fit; they give every founder a disciplined process and documented evidence.",
+        heading: "What the pilot includes, and what it doesn’t",
+        copy: "Included: a program dashboard with spreadsheet export, full access for every founder, kickoff and onboarding, weekly follow-up and a summary, and the final cohort report. Not included: founders’ private work, promised results, funding or investor introductions, or a replacement for your curriculum. You provide 5 to 10 startups, one contact from your team and your funder’s report template, if you have one.",
       },
       {
         heading: "Your size, your founders, your calendar",
@@ -210,7 +210,7 @@ export const INDEXABLE_ROUTES = [
       },
       {
         heading: "Your founders keep going after the program ends",
-        copy: "Post-program support: founders keep their account, their work and the free plan, with the stage tools, mentors, and rooms, launches and co-founder matching with other founders. No extra work for your team.",
+        copy: "Alumni keep getting support from the platform, with the stage tools, mentors, and rooms, launches and co-founder matching with other founders. No extra work for your team.",
       },
     ],
   },

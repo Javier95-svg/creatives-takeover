@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   Building2,
+  CalendarDays,
   ChevronDown,
   Compass,
   DollarSign,
@@ -91,6 +92,10 @@ const LegacyVisitorNavbar = () => {
   useEffect(() => {
     setMobileOpen(false);
   }, [location.pathname, location.hash]);
+
+  // On /enterprise the visitor is a program, not a founder, so the main button
+  // books a pilot call (the form on that page) instead of founder sign-up.
+  const onEnterprise = location.pathname === "/enterprise";
 
   const isActive = (href: string, sectionId?: string, exact?: boolean) => {
     if (sectionId) {
@@ -247,10 +252,17 @@ const LegacyVisitorNavbar = () => {
                 </Link>
               </Button>
               <Button asChild size="sm" className="gap-2">
-                <Link to="/signup" onClick={() => { trackNavClick("Join Today"); setAttribution('navbar_join_today', location.pathname); }}>
-                  <Rocket className="h-4 w-4" aria-hidden="true" />
-                  Join Today
-                </Link>
+                {onEnterprise ? (
+                  <Link to="/enterprise#talk" onClick={() => trackNavClick("Book a pilot call")}>
+                    <CalendarDays className="h-4 w-4" aria-hidden="true" />
+                    Book a pilot call
+                  </Link>
+                ) : (
+                  <Link to="/signup" onClick={() => { trackNavClick("Join Today"); setAttribution('navbar_join_today', location.pathname); }}>
+                    <Rocket className="h-4 w-4" aria-hidden="true" />
+                    Join Today
+                  </Link>
+                )}
               </Button>
             </div>
 
@@ -298,10 +310,17 @@ const LegacyVisitorNavbar = () => {
                     </Link>
                   </Button>
                   <Button asChild className="w-full">
-                    <Link to="/signup" onClick={() => { trackNavClick("Mobile Join Today"); setAttribution('navbar_join_today', location.pathname); }}>
-                      <Rocket className="mr-2 h-4 w-4" aria-hidden="true" />
-                      Join Today
-                    </Link>
+                    {onEnterprise ? (
+                      <Link to="/enterprise#talk" onClick={() => trackNavClick("Mobile Book a pilot call")}>
+                        <CalendarDays className="mr-2 h-4 w-4" aria-hidden="true" />
+                        Book a pilot call
+                      </Link>
+                    ) : (
+                      <Link to="/signup" onClick={() => { trackNavClick("Mobile Join Today"); setAttribution('navbar_join_today', location.pathname); }}>
+                        <Rocket className="mr-2 h-4 w-4" aria-hidden="true" />
+                        Join Today
+                      </Link>
+                    )}
                   </Button>
                 </div>
               </div>
