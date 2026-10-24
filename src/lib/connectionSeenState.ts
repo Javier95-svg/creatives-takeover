@@ -11,8 +11,10 @@
  * and writes are dropped. The badge then simply does not persist as cleared.
  */
 
-const SEEN_ACCEPTED_KEY_PREFIX = 'ct_seen_accepted_connections_';
-const SEEN_PENDING_KEY_PREFIX = 'ct_seen_pending_requests_';
+/** Shared start of both storage keys, so a storage event from another tab can be matched. */
+export const SEEN_STORAGE_PREFIX = 'ct_seen_';
+const SEEN_ACCEPTED_KEY_PREFIX = `${SEEN_STORAGE_PREFIX}accepted_connections_`;
+const SEEN_PENDING_KEY_PREFIX = `${SEEN_STORAGE_PREFIX}pending_requests_`;
 
 /** Broadcast so the badge and any open list refresh together. */
 export const CONNECTION_EVENT = 'connection-requests-updated';

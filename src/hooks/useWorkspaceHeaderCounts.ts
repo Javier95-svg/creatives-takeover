@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { CONNECTION_EVENT, getSeenAcceptedIds, getSeenPendingIds } from '@/lib/connectionSeenState';
+import { CONNECTION_EVENT, getSeenAcceptedIds, getSeenPendingIds, SEEN_STORAGE_PREFIX } from '@/lib/connectionSeenState';
 import { MESSAGES_READ_EVENT, readCountFromEvent } from '@/lib/messagesReadState';
 import { refreshHeaderCounts, subscribeWorkspaceHeader } from '@/lib/workspaceHeaderRealtime';
 
@@ -84,13 +84,29 @@ export function useWorkspaceHeaderCounts(): WorkspaceHeaderCounts {
     void refresh();
   }, [queryClient, userId, refresh]);
 
+  // Seen state lives in localStorage, so marking a notification seen leaves the
+  // RPC result unchanged. React Query then keeps the same data object and this
+  // hook never re-renders, which left the badge at 1 after the modal cleared
+  // it. Bumping a version re-reads the seen ids whenever they change, here or
+  // in another tab.
+  const [seenVersion, setSeenVersion] = useState(0);
+
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    window.addEventListener(CONNECTION_EVENT, refresh);
+    const onConnectionUpdate = () => {
+      setSeenVersion((version) => version + 1);
+      void refresh();
+    };
+    const onStorage = (event: StorageEvent) => {
+      if (event.key === null || event.key.startsWith(SEEN_STORAGE_PREFIX)) setSeenVersion((version) => version + 1);
+    };
+    window.addEventListener(CONNECTION_EVENT, onConnectionUpdate);
     window.addEventListener(MESSAGES_READ_EVENT, applyRead);
+    window.addEventListener('storage', onStorage);
     return () => {
-      window.removeEventListener(CONNECTION_EVENT, refresh);
+      window.removeEventListener(CONNECTION_EVENT, onConnectionUpdate);
       window.removeEventListener(MESSAGES_READ_EVENT, applyRead);
+      window.removeEventListener('storage', onStorage);
     };
   }, [refresh, applyRead]);
 
@@ -106,5 +122,7 @@ export function useWorkspaceHeaderCounts(): WorkspaceHeaderCounts {
       unreadMessages: row.unreadMessages,
       connectionNotifications: unseenPending + unseenAccepted,
     };
-  }, [userId, row]);
+    // seenVersion is not read inside; it marks that the stored seen ids changed.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, row, seenVersion]);
 }
