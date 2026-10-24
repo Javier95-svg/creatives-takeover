@@ -1109,8 +1109,11 @@
   gap: 20px;
 }
 
-/* The rail joining one number to the next. */
-.ent-step:not(:last-child)::before {
+/* The rail joining one number to the next: a faint track, and over it a fill
+   that grows as the visitor scrolls past the step (--fill, 0 to 1, set by
+   useStepsProgress in Enterprise.tsx). */
+.ent-step:not(:last-child)::before,
+.ent-step:not(:last-child)::after {
   content: "";
   position: absolute;
   top: 48px;
@@ -1118,8 +1121,41 @@
   left: 21px;
   width: 2px;
   border-radius: 999px;
+}
+
+.ent-step:not(:last-child)::before {
   background: linear-gradient(180deg, var(--ent-blue), var(--ent-violet));
-  opacity: 0.35;
+  opacity: 0.2;
+}
+
+.ent-step:not(:last-child)::after {
+  background: linear-gradient(180deg, var(--ent-blue), var(--ent-violet));
+  box-shadow: 0 0 10px rgba(79, 143, 247, 0.45);
+  transform: scaleY(var(--fill, 0));
+  transform-origin: top;
+}
+
+/* A step the visitor has reached lights up. */
+.ent-step.is-reached .ent-step__num {
+  border-color: transparent;
+  background: linear-gradient(135deg, var(--ent-blue), var(--ent-violet));
+  box-shadow: 0 0 0 6px var(--ent-blue-soft), 0 6px 18px -6px rgba(79, 143, 247, 0.7);
+  color: #ffffff;
+}
+
+.ent-step.is-reached:last-child .ent-step__num {
+  background: linear-gradient(135deg, var(--ent-violet), var(--ent-green));
+  box-shadow: 0 0 0 6px var(--ent-green-soft), 0 6px 18px -6px rgba(31, 157, 99, 0.6);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .ent-step__num {
+    transition: background 0.4s ease, color 0.4s ease, box-shadow 0.4s ease, border-color 0.4s ease, transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .ent-step.is-reached .ent-step__num {
+    transform: scale(1.06);
+  }
 }
 
 .ent-step__num {
@@ -1564,7 +1600,8 @@
     font-size: 13px;
   }
 
-  .ent-step:not(:last-child)::before {
+  .ent-step:not(:last-child)::before,
+  .ent-step:not(:last-child)::after {
     top: 40px;
     left: 17px;
   }

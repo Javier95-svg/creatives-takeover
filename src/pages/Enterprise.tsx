@@ -118,7 +118,7 @@ const revealDelay = (ms: number) => ({ "--reveal-delay": `${ms}ms` }) as CSSProp
  * The page renders fully without it: elements are only hidden once this has
  * armed, and never when the visitor prefers reduced motion.
  */
-const useScrollReveal = (root: RefObject<HTMLElement>) => {
+const useScrollReveal = (root: RefObject<HTMLElement | null>) => {
   useEffect(() => {
     const element = root.current;
     if (!element || typeof IntersectionObserver === "undefined") return;
@@ -137,6 +137,48 @@ const useScrollReveal = (root: RefObject<HTMLElement>) => {
     element.classList.add("is-reveal-ready");
     return () => observer.disconnect();
   }, [root]);
+};
+
+/**
+ * The pilot steps fill in as the visitor scrolls: each step lights up once a
+ * reading line (60% down the screen) passes its number, and the rail to the
+ * next number fills in proportion (enterprise.css draws both). Updates at most
+ * once a frame. Without it the timeline simply stays unfilled.
+ */
+const READING_LINE = 0.6;
+const useStepsProgress = (list: RefObject<HTMLElement | null>) => {
+  useEffect(() => {
+    const element = list.current;
+    if (!element) return;
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      const line = window.innerHeight * READING_LINE;
+      const steps = [...element.children] as HTMLElement[];
+      const centres = steps.map((step) => {
+        const rect = (step.querySelector(".ent-step__num") ?? step).getBoundingClientRect();
+        return rect.top + rect.height / 2;
+      });
+      steps.forEach((step, index) => {
+        step.classList.toggle("is-reached", line >= centres[index]);
+        const next = centres[index + 1];
+        if (next === undefined) return;
+        const fill = Math.min(1, Math.max(0, (line - centres[index]) / (next - centres[index])));
+        step.style.setProperty("--fill", fill.toFixed(3));
+      });
+    };
+    const request = () => {
+      if (!frame) frame = window.requestAnimationFrame(update);
+    };
+    update();
+    window.addEventListener("scroll", request, { passive: true });
+    window.addEventListener("resize", request);
+    return () => {
+      window.removeEventListener("scroll", request);
+      window.removeEventListener("resize", request);
+      if (frame) window.cancelAnimationFrame(frame);
+    };
+  }, [list]);
 };
 
 const SectionHead = ({
@@ -175,7 +217,9 @@ const SectionHead = ({
 const Enterprise = () => {
   const location = useLocation();
   const pageRef = useRef<HTMLDivElement>(null);
+  const stepsRef = useRef<HTMLOListElement>(null);
   useScrollReveal(pageRef);
+  useStepsProgress(stepsRef);
   usePageAnalytics(ENTERPRISE_PATH, "Enterprise - Creatives Takeover");
 
   // Links like /enterprise#talk (pricing band, tour panel) land on the form.
@@ -282,7 +326,7 @@ const Enterprise = () => {
                   copy={ENTERPRISE_PILOT.copy}
                   wide
                 />
-                <ol className="ent-steps">
+                <ol ref={stepsRef} className="ent-steps">
                   {ENTERPRISE_PILOT.steps.map((step, index) => {
                     const visualKey = "visual" in step && step.visual ? step.visual : null;
                     const visual = visualKey ? STEP_VISUALS[visualKey] : null;
