@@ -29,7 +29,7 @@ import {
 } from '@/components/ui/dialog';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
-import { DASHBOARD_CARD, DashboardPanelHeader, DashboardSectionTitle } from '@/components/dashboard/DashboardPanel';
+import { DocSection } from '@/components/dashboard/DocBlocks';
 import { RecommendationFeedback } from '@/components/dashboard/RecommendationFeedback';
 import { useAuth } from '@/contexts/AuthContext';
 import { useDashboardFocus } from '@/contexts/DashboardDataContext';
@@ -92,13 +92,12 @@ const CUSTOMER_COUNT_LABELS: Record<OnboardingCustomerCountBand, string> = {
   '4_plus': 'More than 3 paying customers',
 };
 
-/** The journey card under its section title, shared by every journey state. */
+/** The BizMap part of Overview, shared by every journey state. */
 function JourneyShell({ children }: { children: ReactNode }) {
   return (
-    <section aria-labelledby="dashboard-journey-title">
-      <DashboardSectionTitle id="dashboard-journey-title" title="Your journey" />
-      <div className={cn(DASHBOARD_CARD, 'p-6 sm:p-7')}>{children}</div>
-    </section>
+    <DocSection id="dashboard-journey-title" title="BizMap" icon={Compass} action={{ label: 'Open BizMap', to: '/bizmap-ai' }}>
+      {children}
+    </DocSection>
   );
 }
 
@@ -156,12 +155,12 @@ function ToolTile({ tile }: { tile: JourneyToolTile }) {
       to={tile.route}
       onClick={() => trackDashboardJourneyToolOpened({ tool: tile.key, status: tile.status, route: tile.route })}
       className={cn(
-        'group flex items-start gap-3 rounded-xl border border-border/60 bg-background/70 p-3.5 transition-colors hover:border-primary/40 hover:bg-primary/[0.03]',
+        'group -mx-2 flex items-start gap-3 rounded-md px-2 py-2 transition-colors hover:bg-muted/60',
         tile.status === 'not_started' && !tile.isCurrentStage && 'opacity-75',
-        tile.isCurrentStage && 'border-primary/40 ring-1 ring-primary/25',
+        tile.isCurrentStage && 'bg-muted/40',
       )}
     >
-      <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border/60 bg-background/80">
+      <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-muted/70">
         <Icon className="h-4 w-4 text-primary/80" aria-hidden="true" />
       </span>
       <span className="min-w-0 flex-1">
@@ -239,7 +238,7 @@ function StageUpdatePrompt({ userId, stage, label }: { userId: string; stage: st
   };
 
   return (
-    <div className="mt-4 flex flex-col gap-3 rounded-xl border border-border/60 bg-background/70 p-4 sm:flex-row sm:items-center sm:justify-between">
+    <div className="mt-4 flex flex-col gap-3 rounded-xl bg-muted/50 p-4 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex items-start gap-2.5">
         <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-success" aria-hidden="true" />
         <div>
@@ -348,16 +347,18 @@ export default function FounderJourneyPanel({ showRecommendedAction = false }: {
       .map((run) => run.stage));
     return (
       <JourneyShell>
-          <DashboardPanelHeader kicker="Current business outcome" title={`${currentContract.label}: ${currentContract.outcome}`} description="A saved artifact can make the work usable. Only the observable outcome advances this journey." />
+          <p className="text-sm text-muted-foreground">Current business outcome</p>
+          <p className="mt-1 font-medium text-foreground">{currentContract.label}: {currentContract.outcome}</p>
+          <p className="mt-1 text-sm text-muted-foreground">A saved artifact can make the work usable. Only the observable outcome advances this journey.</p>
           <div className="mt-4 flex gap-2 overflow-x-auto pb-2">
             {OUTCOME_JOURNEY_STAGE_KEYS.filter((stage) => stage !== 'capital').map((stage) => {
               const contract = OUTCOME_JOURNEY_CONTRACTS[stage];
               const current = stage === journey.current_stage;
               const achieved = achievedStages.has(stage);
-              return <div key={stage} className={cn('min-w-24 rounded-lg border px-3 py-2 text-center', current && 'border-primary bg-primary/5', achieved && 'border-success/30 bg-success/5')}><p className="text-xs font-semibold">{contract.stageNumber}. {contract.label}</p><p className="mt-1 text-caption text-muted-foreground">{current ? currentRun?.outcome_state?.replaceAll('_', ' ') ?? 'not started' : achieved ? 'outcome reached' : 'available'}</p></div>;
+              return <div key={stage} className={cn('min-w-24 rounded-md px-3 py-2 text-center', current && 'bg-primary/10', achieved && 'bg-success/10')}><p className="text-xs font-semibold">{contract.stageNumber}. {contract.label}</p><p className="mt-1 text-caption text-muted-foreground">{current ? currentRun?.outcome_state?.replaceAll('_', ' ') ?? 'not started' : achieved ? 'outcome reached' : 'available'}</p></div>;
             })}
           </div>
-          <div className="mt-4 rounded-xl border bg-background/70 p-4">
+          <div className="mt-4 rounded-xl bg-muted/50 p-4">
             <div className="flex flex-wrap items-start justify-between gap-3"><div><p className="text-xs font-medium text-muted-foreground">Next evidence</p><p className="mt-1 font-semibold">{currentRun?.branch_reason ?? currentContract.observableMinimum.join(' · ')}</p><p className="mt-1 text-xs text-muted-foreground">Artifact: {currentRun?.artifact_state ?? 'missing'} · Outcome: {currentRun?.outcome_state?.replaceAll('_', ' ') ?? 'not started'}{currentRun?.outcome_state === 'verified' ? ' · CT evidence recorded' : ''}</p></div><Button asChild variant="outline"><Link to={currentContract.route} onClick={() => trackDashboardJourneyContinueClicked({ milestone_key: `outcome:${journey.current_stage}` })}>Continue this outcome<ArrowRight className="ml-2 h-4 w-4" /></Link></Button></div>
           </div>
           <div className="mt-3 flex items-center justify-between gap-3 text-xs text-muted-foreground"><span>Journey entry: {OUTCOME_JOURNEY_CONTRACTS[journey.entry_stage].label} · Contract {journey.contract_version}</span><Link className="text-primary hover:underline" to="/bizmap-ai">Browse secondary tools</Link></div>
@@ -368,10 +369,8 @@ export default function FounderJourneyPanel({ showRecommendedAction = false }: {
   if (snapshot.isEmpty) {
     return (
       <JourneyShell>
-          <DashboardPanelHeader
-            title="Start with the earliest missing business outcome."
-            description="We will place you from your existing evidence, then keep every tool secondary to the outcome you need next."
-          />
+          <p className="font-medium text-foreground">Start with the earliest missing business outcome.</p>
+          <p className="mt-1 text-sm text-muted-foreground">We will place you from your existing evidence, then keep every tool secondary to the outcome you need next.</p>
           <div className="mt-4 flex flex-wrap gap-2">
             {showRecommendedAction && primaryAction && recommendedRoute ? (
               <Button asChild size="sm" variant="outline">
@@ -469,10 +468,7 @@ export default function FounderJourneyPanel({ showRecommendedAction = false }: {
 
   return (
     <JourneyShell>
-        <DashboardPanelHeader
-          title="Where you stand"
-          badges={<Badge variant="secondary">{snapshot.stagesCompleted}/6 core stages</Badge>}
-        />
+        <p className="text-sm text-muted-foreground">{snapshot.stagesCompleted} of 6 core stages done</p>
 
         <Progress value={snapshot.progressPercent} className="mt-4 h-1.5" />
 
@@ -495,7 +491,7 @@ export default function FounderJourneyPanel({ showRecommendedAction = false }: {
         ) : null}
 
         {showRecommendedAction && primaryAction && recommendedRoute ? (
-          <div className="mt-5 rounded-xl border border-primary/25 bg-primary/[0.05] p-4">
+          <div className="mt-5 rounded-xl bg-muted/50 p-4">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div className="min-w-0">
                 <p className="text-xs font-medium text-muted-foreground">
@@ -525,7 +521,7 @@ export default function FounderJourneyPanel({ showRecommendedAction = false }: {
             </div>
           </div>
         ) : snapshot.nextAction ? (
-          <div className="mt-5 flex flex-col gap-3 rounded-xl border border-primary/25 bg-primary/[0.05] p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="mt-5 flex flex-col gap-3 rounded-xl bg-muted/50 p-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-xs font-medium text-muted-foreground">Recommended next</p>
               <p className="mt-1 text-sm font-semibold text-foreground">{snapshot.nextAction.label}</p>
@@ -544,21 +540,21 @@ export default function FounderJourneyPanel({ showRecommendedAction = false }: {
           </div>
         ) : null}
 
-        <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-4 grid gap-x-6 sm:grid-cols-2">
           {snapshot.tools.filter((tile) => enhancedPathway ? tile.role === 'core' : tile.role !== 'support').map((tile) => (
             <ToolTile key={tile.key} tile={tile} />
           ))}
         </div>
 
-        {proofClaims.length > 0 ? <div className="mt-5 rounded-xl border border-success/25 bg-success/5 p-4">
+        {proofClaims.length > 0 ? <div className="mt-5 rounded-xl bg-muted/50 p-4">
           <div className="flex flex-wrap items-center justify-between gap-2"><div><p className="text-xs font-medium text-success">Portable proof history</p><p className="mt-1 text-sm font-semibold">CT verifies the evidence and observed result—not startup success.</p></div><Badge variant="outline">{proofClaims.filter((claim) => claim?.evidenceLevel === 'ct_verified').length} CT Verified</Badge></div>
-          <div className="mt-3 space-y-2">{proofClaims.slice(0, 3).map((claim) => claim ? <div key={claim.id} className="rounded-lg border bg-background/70 p-3 text-xs"><div className="flex flex-wrap items-start justify-between gap-2"><p className="font-medium text-foreground">{claim.claim}</p><Badge variant="outline" className="capitalize">{claim.result}</Badge></div><p className="mt-1 text-muted-foreground">{claim.nextAction}</p>{claim.unlockedBenefit === 'mentor_checkpoint' ? <p className="mt-1 font-medium text-success">Mentor checkpoint unlocked</p> : null}</div> : null)}</div>
+          <div className="mt-3 space-y-2">{proofClaims.slice(0, 3).map((claim) => claim ? <div key={claim.id} className="py-1.5 text-xs"><div className="flex flex-wrap items-start justify-between gap-2"><p className="font-medium text-foreground">{claim.claim}</p><Badge variant="outline" className="capitalize">{claim.result}</Badge></div><p className="mt-1 text-muted-foreground">{claim.nextAction}</p>{claim.unlockedBenefit === 'mentor_checkpoint' ? <p className="mt-1 font-medium text-success">Mentor checkpoint unlocked</p> : null}</div> : null)}</div>
         </div> : null}
 
         {enhancedPathway ? <div className="mt-5 border-t border-border/60 pt-4">
           <p className="text-xs font-medium text-muted-foreground">Optional support and fundraising</p>
           <p className="mt-1 text-xs text-muted-foreground">These tools can accelerate a core outcome but never block or inflate journey completion.</p>
-          <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-3 grid gap-x-6 sm:grid-cols-2">
             {snapshot.tools.filter((tile) => tile.role !== 'core').map((tile) => (
               <ToolTile key={tile.key} tile={tile} />
             ))}

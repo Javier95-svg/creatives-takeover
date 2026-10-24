@@ -15,7 +15,8 @@ import CompletionChainResume from '@/components/dashboard/CompletionChainResume'
 import { FirstResultActivationCard } from '@/components/dashboard/FirstResultActivationCard';
 import { useExitIntent } from '@/hooks/useExitIntent';
 import { ExitIntentModal } from '@/components/ExitIntentModal';
-import { DashboardDisclosure } from '@/components/dashboard/DashboardDisclosure';
+import { DocToggle } from '@/components/dashboard/DocBlocks';
+import DashboardPlatformSections from '@/components/dashboard/DashboardPlatformSections';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAccountContext } from '@/hooks/useAccountContext';
 import AccountOverview from '@/components/dashboard/AccountOverview';
@@ -29,9 +30,7 @@ import {
   trackActivationReturnMilestones,
 } from '@/lib/activationState';
 import { getDashboardModeConfig, normalizePlan, resolveDashboardMode } from '@/config/planPermissions';
-import { DASHBOARD_CARD } from '@/components/dashboard/DashboardPanel';
 import { useDashboardData } from '@/contexts/DashboardDataContext';
-import { cn } from '@/lib/utils';
 import { trackRetentionEvent, type ActivationIntent } from '@/lib/retentionSystem';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useCohortContext } from '@/hooks/useCohortContext';
@@ -156,14 +155,14 @@ const FounderDashboard = () => {
   };
 
   return (
-    <div className="mx-auto w-full max-w-5xl">
+    <div className="mx-auto w-full max-w-3xl pb-8">
       <Helmet>
         <title>Dashboard — Creatives Takeover</title>
       </Helmet>
       <DashboardTour />
       <DashboardGreeting plan={currentPlan} />
       {fromIcpBuilder ? (
-        <div className={cn(DASHBOARD_CARD, 'mb-6 flex items-start justify-between gap-4 p-5')}>
+        <div className="mb-6 flex items-start justify-between gap-4 rounded-xl bg-muted/50 px-5 py-4">
           <div className="flex items-start gap-3">
             <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-success" aria-hidden="true" />
             <div>
@@ -204,22 +203,22 @@ const FounderDashboard = () => {
       ) : null}
       <CompletionChainResume />
       <DashboardTodayCockpit />
-      <div className="mb-10 space-y-4">
-        <FounderJourneyPanel />
-        <FounderStageIntelligenceCard />
+      <FounderJourneyPanel />
+      <FounderStageIntelligenceCard />
+      <DashboardPlatformSections />
+      <div className="mt-12 space-y-6">
+        <DashboardFocusEditor />
+        <PlatformUpdates />
+        <DocToggle
+          title="More founder signals"
+          summary="Your startup info and founders to connect with"
+          onOpenChange={(open) => {
+            if (open) trackDashboardFounderSignalsExpanded();
+          }}
+        >
+          <StartupHomeCommandCenter />
+        </DocToggle>
       </div>
-      <DashboardFocusEditor />
-      <PlatformUpdates />
-      <DashboardDisclosure
-        title="More founder signals"
-        summary="Review your startup information and connect with relevant founders."
-        className="mb-6 rounded-2xl bg-card"
-        onOpenChange={(open) => {
-          if (open) trackDashboardFounderSignalsExpanded();
-        }}
-      >
-        <StartupHomeCommandCenter />
-      </DashboardDisclosure>
       <ExitIntentModal isOpen={showExitIntent} onClose={closeExitIntent} />
     </div>
   );

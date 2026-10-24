@@ -27,7 +27,7 @@ export default function CompletionChainResume() {
     try { return new URL(route, window.location.origin).pathname === tool.route; } catch { return false; }
   });
   if (!candidates.length) return null;
-  return <section className="space-y-3 rounded-xl border p-4">
+  return <section className="mb-6 space-y-2 rounded-xl bg-muted/50 px-5 py-4">
     <h2 className="font-semibold">Continue your startup cycle</h2>
     <p className="text-sm text-muted-foreground">Your saved output is ready for the next tool. Choose the work you want to continue.</p>
     {candidates.map(row => <Link className="block font-medium text-primary underline" key={row.id} to={row.payload.destinationRoute!}>

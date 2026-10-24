@@ -3,8 +3,6 @@ import { ArrowRight, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { captureEvent } from "@/lib/analytics";
 import { Button } from "@/components/ui/button";
-import { DASHBOARD_CARD } from "@/components/dashboard/DashboardPanel";
-import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { trackRetentionEvent } from "@/lib/retentionSystem";
 
@@ -72,7 +70,7 @@ const ContinueArtifactCard = ({
   };
 
   return (
-    <div className={cn(DASHBOARD_CARD, "mb-6 p-5 sm:p-6")}>
+    <div className="mb-6 rounded-xl bg-muted/50 px-5 py-4">
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-start gap-3">
           <div>

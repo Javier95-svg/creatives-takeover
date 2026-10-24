@@ -355,7 +355,8 @@ function RoutineRow({
   );
 }
 
-export default function YourRoutinePage() {
+/** embedded: shown inside the Overview page, which already has its own title. */
+export default function YourRoutinePage({ embedded = false }: { embedded?: boolean } = {}) {
   const markToolUsed = useLeanStartupStore((state) => state.markToolUsed);
   const {
     config,
@@ -489,11 +490,11 @@ export default function YourRoutinePage() {
 
   return (
     <>
-      <Helmet><title>Routines - Creatives Takeover</title></Helmet>
+      {!embedded ? <Helmet><title>Routines - Creatives Takeover</title></Helmet> : null}
 
-      <div className="mx-auto max-w-4xl space-y-6 pb-12">
-        <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
+      <div className={embedded ? "space-y-6" : "mx-auto max-w-4xl space-y-6 pb-12"}>
+        <header className={embedded ? "flex justify-end gap-2" : "flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"}>
+          {!embedded ? <div>
             <div className="mb-2 flex items-center gap-2 text-sm font-medium text-primary">
               <Repeat2 className="h-4 w-4" />Routines
             </div>
@@ -501,7 +502,7 @@ export default function YourRoutinePage() {
             <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">
               Add the actions you want to repeat, then check them off as you go.
             </p>
-          </div>
+          </div> : null}
           <div className="flex items-center gap-2">
             <Button variant="outline" size="icon" onClick={() => setReminderOpen(true)} aria-label="Routine reminder settings" className="relative">
               <Settings2 className="h-4 w-4" />

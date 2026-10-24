@@ -3,7 +3,7 @@ import test from 'node:test';
 import { readFileSync } from 'node:fs';
 
 import { cohortTotals, share, topSection, type AdoptionCohort, type AdoptionMetrics, type AdoptionSectionStat } from '../src/lib/adoptionMetrics.ts';
-import { ADOPTION_SECTIONS, sectionForPath, WORKSPACE_SECTION_TOOLS } from '../src/lib/workspaceSections.ts';
+import { ADOPTION_SECTIONS, SIDEBAR_HIDDEN_TOOLS, sectionForPath, WORKSPACE_SECTION_TOOLS } from '../src/lib/workspaceSections.ts';
 
 const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8');
 const sectionMigration = read('../supabase/migrations/20261012120000_adoption_by_section.sql');
@@ -34,7 +34,11 @@ test('adoption helpers format shares, find the leading section and only total fi
 
 test('the report uses exactly the sidebar sections and tools, in sidebar order', () => {
   const sidebar = read('../src/components/workspace/WorkspaceSidebar.tsx');
-  assert.match(sidebar, /const NAV_TOOLS: Record<string, string\[\]> = WORKSPACE_SECTION_TOOLS;/);
+  // The sidebar lists the report's tools minus the few it hides (Tasks and
+  // Routine live in Overview, Referrals in the account row); those pages are
+  // still tracked under their own names.
+  assert.match(sidebar, /Object\.entries\(WORKSPACE_SECTION_TOOLS\)\.map\(\(\[section, tools\]\) => \[section, tools\.filter\(\(tool\) => !SIDEBAR_HIDDEN_TOOLS\.has\(tool\)\)\]\)/);
+  assert.deepEqual([...SIDEBAR_HIDDEN_TOOLS], ['Tasks', 'Routine', 'Referrals']);
 
   const values = segmentMigration.slice(segmentMigration.indexOf('section_tools (section, section_order, tool, tool_order) AS ('), segmentMigration.indexOf('legacy_tools (tool_key'));
   const rows = [...values.matchAll(/\('([A-Za-z]+)', (\d+), '([^']+)', (\d+)\)/g)]

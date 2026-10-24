@@ -24,6 +24,7 @@ import {
 import { OnboardingPathGate } from '@/components/onboarding/OnboardingPathGate';
 import { cn } from '@/lib/utils';
 import { DashboardSidebar } from './DashboardSidebar';
+import { DashboardBackground } from './DashboardBackground';
 import { DashboardStreakChip } from './DashboardStreakChip';
 import { DashboardTabsHost } from './DashboardTabsHost';
 import { DashboardMetricsContext, TaskCountContext, type DashboardWeeklyMetrics } from './TaskCountContext';
@@ -80,7 +81,8 @@ function DashboardFrameContent({
                 </div>
               </div>
 
-              {/* A plain page: the cards carry the structure, so no grid or glow behind them. */}
+              <DashboardBackground />
+
               <div className={cn('relative z-10 container mx-auto p-6 pb-24', inWorkspace ? 'pt-10' : 'pt-24', DASHBOARD_MAX_WIDTH)}>
                 <DashboardTabsHost />
               </div>

@@ -115,7 +115,7 @@ test('first-result and resume banners lead into the complete command center', ()
   const today = dashboard.lastIndexOf('<DashboardTodayCockpit');
   const updates = dashboard.lastIndexOf('<PlatformUpdates');
   const journey = dashboard.lastIndexOf('<FounderJourneyPanel');
-  const disclosure = dashboard.lastIndexOf('<DashboardDisclosure');
+  const disclosure = dashboard.lastIndexOf('<DocToggle');
   const exitIntent = dashboard.lastIndexOf('<ExitIntentModal');
 
   assert.ok(firstResult > 0);
@@ -134,7 +134,7 @@ test('first-result prompt is compact, responsive, non-dismissible, and keeps act
   const banner = read('../src/components/dashboard/FirstResultActivationCard.tsx');
   const tour = read('../src/components/dashboard/DashboardTour.tsx');
 
-  assert.match(banner, /DASHBOARD_CARD, 'mb-10/);
+  assert.match(banner, /mb-6 rounded-xl bg-muted\/50/);
   assert.match(banner, /sm:flex-row/);
   assert.match(banner, /Finish your first result/);
   assert.match(banner, /trackRetentionEvent\('activation_first_action_opened'/);
@@ -241,4 +241,27 @@ test('the Today section reads the whole snapshot, so routine, tasks and missions
   assert.doesNotMatch(today, /\{ snapshot[^}]*\} = useDashboardFocus\(\)/);
   assert.match(today, /snapshot\?\.focus\.routine/);
   assert.match(today, /snapshot\?\.focus\.dailyMission/);
+});
+
+test('Overview reads as one document: platform sections, tickable checklist, tools in toggles', () => {
+  const dashboard = read('../src/pages/Dashboard.tsx');
+  const today = read('../src/components/dashboard/DashboardTodaySnapshot.tsx');
+  const sections = read('../src/components/dashboard/DashboardPlatformSections.tsx');
+  assert.match(dashboard, /<FounderJourneyPanel \/>[\s\S]*<DashboardPlatformSections \/>/);
+  assert.match(today, /'complete_routine_item'/);
+  assert.match(today, /'complete_task'/);
+  assert.match(today, /'complete_daily_mission'/);
+  assert.match(today, /'create_task'/);
+  assert.match(today, /<TaskTodayWorkspace embedded \/>/);
+  assert.match(today, /<YourRoutinePage embedded \/>/);
+  for (const title of ['Network', 'Insighta', 'Community']) assert.match(sections, new RegExp(`title="${title}"`));
+});
+
+test('tool pages inside the workspace frame do not add a second sidebar', () => {
+  const layout = read('../src/components/dashboard/DashboardLayout.tsx').replace(/\r\n/g, '\n');
+  const inWorkspace = layout.slice(layout.indexOf('if (inWorkspace) {'), layout.indexOf('  return (\n    <ErrorBoundary>\n      <DashboardDataProvider>\n        <SidebarProvider>\n'));
+  assert.match(layout, /const inWorkspace = useWorkspaceFrame\(\);/);
+  assert.ok(inWorkspace.length > 0);
+  assert.doesNotMatch(inWorkspace, /<DashboardSidebar \/>/);
+  assert.match(inWorkspace, /<DashboardBackground \/>/);
 });

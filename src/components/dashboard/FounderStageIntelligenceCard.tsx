@@ -3,8 +3,7 @@ import { Check, CheckCircle2, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
-import { DASHBOARD_CARD } from '@/components/dashboard/DashboardPanel';
-import { cn } from '@/lib/utils';
+import { DocToggle } from '@/components/dashboard/DocBlocks';
 import {
   Dialog,
   DialogContent,
@@ -112,32 +111,22 @@ export default function FounderStageIntelligenceCard() {
   return (
     <>
       <section
-        className={cn(DASHBOARD_CARD, 'p-5 sm:p-6')}
+        className="mt-4"
         aria-labelledby="founder-stage-title"
         title="We use this stage to tune your journey, missions and next actions."
       >
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div className="min-w-0">
-            <p className="text-xs font-medium text-muted-foreground">
-              Operating stage {state.current_stage} · {confidenceLabel(state.confidence_band)}
-              {state.capital_motion !== 'inactive' ? ` · Fundraising ${state.capital_motion}` : ''}
-            </p>
-            <h2 id="founder-stage-title" className="mt-1 text-base font-semibold text-foreground">
-              {STAGES[state.current_stage].name}
-            </h2>
-            <ul className="mt-2 space-y-1" aria-label="Why you are at this stage">
-              {explanations.map((explanation) => (
-                <li key={explanation} className="flex items-start gap-2 text-sm text-muted-foreground">
-                  <Check className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-                  {explanation}
-                </li>
-              ))}
-            </ul>
-          </div>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <p className="min-w-0 text-sm text-muted-foreground">
+            <span id="founder-stage-title" className="font-medium text-foreground">
+              Operating stage {state.current_stage}: {STAGES[state.current_stage].name}
+            </span>
+            {' · '}{confidenceLabel(state.confidence_band)}
+            {state.capital_motion !== 'inactive' ? ` · Fundraising ${state.capital_motion}` : ''}
+          </p>
 
-          <div className="flex shrink-0 flex-wrap gap-2">
+          <div className="flex shrink-0 flex-wrap items-center gap-1">
             {isConfirmed ? (
-              <span className="inline-flex items-center gap-2 px-2 py-2 text-sm text-muted-foreground">
+              <span className="inline-flex items-center gap-1.5 px-2 text-sm text-muted-foreground">
                 <CheckCircle2 className="h-4 w-4 text-success" aria-hidden="true" />
                 Stage confirmed
               </span>
@@ -165,8 +154,19 @@ export default function FounderStageIntelligenceCard() {
           </div>
         </div>
 
+        <DocToggle title="Why this stage">
+          <ul className="space-y-1" aria-label="Why you are at this stage">
+            {explanations.map((explanation) => (
+              <li key={explanation} className="flex items-start gap-2 text-sm text-muted-foreground">
+                <Check className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+                {explanation}
+              </li>
+            ))}
+          </ul>
+        </DocToggle>
+
         {boundaryQuestion ? (
-          <div className="mt-5 border-t border-border/60 pt-5">
+          <div className="mt-3 rounded-xl bg-muted/50 p-4">
             <p className="text-xs font-medium text-muted-foreground">
               One detail will improve your dashboard
             </p>

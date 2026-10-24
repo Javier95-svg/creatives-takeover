@@ -2,8 +2,6 @@ import { ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 import { Button } from '@/components/ui/button';
-import { DASHBOARD_CARD } from '@/components/dashboard/DashboardPanel';
-import { cn } from '@/lib/utils';
 import { buildActivationSummary, trackRetentionEvent, type ActivationIntent } from '@/lib/retentionSystem';
 import { RecommendationFeedback } from '@/components/dashboard/RecommendationFeedback';
 import { recordRecommendationOutcome } from '@/lib/recommendationLearning';
@@ -46,7 +44,7 @@ export function FirstResultActivationCard({
   };
 
   return (
-    <div className={cn(DASHBOARD_CARD, 'mb-10 p-6 sm:p-8')}>
+    <div className="mb-6 rounded-xl bg-muted/50 px-5 py-5">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 items-start gap-3">
           <div className="min-w-0">

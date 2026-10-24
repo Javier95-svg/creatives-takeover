@@ -36,7 +36,6 @@ import {
 } from '@/lib/onboardingContext';
 import { updateOnboardingFocus } from '@/lib/onboardingSession';
 import { cn } from '@/lib/utils';
-import { DASHBOARD_CARD } from '@/components/dashboard/DashboardPanel';
 
 const GOALS: Array<[OnboardingAnswersV1['primaryGoal'], string]> = [
   ['validate_problem', 'Validate the customer problem'],
@@ -191,10 +190,10 @@ export default function DashboardFocusEditor() {
   ].filter(Boolean) as string[];
 
   return (
-    <div className={needsTopUp && missing.length ? 'mb-10' : '-mt-6 mb-10 flex justify-end'}>
+    <div className={needsTopUp && missing.length ? '' : 'flex justify-end'}>
       <Dialog open={open} onOpenChange={setOpen}>
         {needsTopUp && missing.length ? (
-          <div className={cn(DASHBOARD_CARD, 'p-5 sm:flex sm:items-center sm:justify-between sm:gap-6 sm:p-6')}>
+          <div className="rounded-xl bg-muted/50 px-5 py-4 sm:flex sm:items-center sm:justify-between sm:gap-6">
             <div>
               <p className="text-sm font-semibold">Sharpen your recommendations</p>
               <p className="mt-1 text-sm text-muted-foreground">

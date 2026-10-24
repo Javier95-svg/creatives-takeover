@@ -21,7 +21,7 @@ test('dashboard keeps the journey prominent and founder signals focused', () => 
   const founderSignals = readFileSync(new URL('../src/components/dashboard/StartupHomeCommandCenter.tsx', import.meta.url), 'utf8');
 
   assert.match(source, /<DashboardTodayCockpit \/>[\s\S]*<FounderJourneyPanel \/>/);
-  assert.match(source, /<DashboardDisclosure[\s\S]*<StartupHomeCommandCenter \/>[\s\S]*<\/DashboardDisclosure>/);
+  assert.match(source, /<DocToggle[\s\S]*<StartupHomeCommandCenter \/>[\s\S]*<\/DocToggle>/);
   assert.doesNotMatch(source, /<JourneyNextStepCard \/>|<StarterDashboardNudge \/>/);
   assert.match(founderSignals, /title="Your startup info"/);
   assert.match(founderSignals, /Connect, Share & Grow/);

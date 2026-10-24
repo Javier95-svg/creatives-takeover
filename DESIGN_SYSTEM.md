@@ -108,7 +108,9 @@ Restraint rules (the Progress Tracker home is the reference):
 - **One filled button per page**, for the single most important action. Everything else is `outline`, `ghost` or a text link.
 - **No uppercase, letter-spaced labels.** Labels are sentence case and muted; the content carries the emphasis.
 - **Colour means something.** `primary` for the main action and links, status colours only for state (done, overdue). No decorative colour washes behind cards.
-- **The page background stays plain.** No grid wallpaper or radial glows behind dashboard tabs.
+- **One wallpaper.** Dashboard tabs and tool pages share `DashboardBackground` (two faint brand glows over a 64px grid). Don't add other washes behind cards.
+
+Overview (`/dashboard`) reads as one document rather than a stack of cards. It uses the blocks in [`src/components/dashboard/DocBlocks.tsx`](src/components/dashboard/DocBlocks.tsx): `DocSection` (an icon heading with an optional "Open …" link), `DocRow` (label, value and a link), `DocCheck` (a checklist line that completes in place), `DocToggle` (a collapsed line whose content mounts only when opened) and `DocCallout` (a borderless `bg-muted/50` highlight, used for the next step). There are no borders or `DASHBOARD_CARD` on Overview: spacing and type carry the structure. Tasks and Routine open in full from toggles under Today, so the sidebar doesn't list them.
 
 ---
 

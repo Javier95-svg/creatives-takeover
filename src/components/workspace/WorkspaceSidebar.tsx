@@ -17,7 +17,7 @@ import ctLogo from "@/assets/ct-logo-polished-borders.webp";
 import { cn } from "@/lib/utils";
 import { enterWorkspaceRoute, WORKSPACE_ROUTES } from "@/lib/workspaceNavigation";
 import { navSectionsForType, navToolsForType } from "@/lib/workspaceNavForType";
-import { WORKSPACE_SECTION_TOOLS } from "@/lib/workspaceSections";
+import { SIDEBAR_HIDDEN_TOOLS, WORKSPACE_SECTION_TOOLS } from "@/lib/workspaceSections";
 import type { UserType } from "@/lib/accountTypes";
 
 
@@ -44,7 +44,9 @@ const NAV_ITEMS: Array<{ label: string; icon: Icon }> = [
 const NAV_ITEM_LABELS = NAV_ITEMS.map(item => item.label);
 
 // Shared with the admin adoption report, which counts use by these sections.
-const NAV_TOOLS: Record<string, string[]> = WORKSPACE_SECTION_TOOLS;
+const NAV_TOOLS: Record<string, string[]> = Object.fromEntries(
+  Object.entries(WORKSPACE_SECTION_TOOLS).map(([section, tools]) => [section, tools.filter((tool) => !SIDEBAR_HIDDEN_TOOLS.has(tool))]),
+);
 
 // The lockup goes through navigateTo like every other link. It used to call
 // enterWorkspaceRoute directly, which meant a caller that intercepts navigation
@@ -84,7 +86,9 @@ export function WorkspaceSidebar({ navigateTo = enterWorkspaceRoute, currentPath
   const sections = navSectionsForType(userType, NAV_ITEM_LABELS);
   const toolsFor = (label: string) => navToolsForType(userType, label, NAV_TOOLS);
   const path = currentPath ?? window.location.pathname;
-  const selected = path === '/' ? '' : Object.keys(WORKSPACE_ROUTES).sort((a, b) => WORKSPACE_ROUTES[b].length - WORKSPACE_ROUTES[a].length).find(name => path === WORKSPACE_ROUTES[name] || path.startsWith(WORKSPACE_ROUTES[name] + '/')) ?? '';
+  const routeName = path === '/' ? '' : Object.keys(WORKSPACE_ROUTES).sort((a, b) => WORKSPACE_ROUTES[b].length - WORKSPACE_ROUTES[a].length).find(name => path === WORKSPACE_ROUTES[name] || path.startsWith(WORKSPACE_ROUTES[name] + '/')) ?? '';
+  // Tasks and Routine are opened from Overview, so Overview stays highlighted there.
+  const selected = routeName === 'Tasks' || routeName === 'Routine' ? 'Overview' : routeName;
   const openRoute = (label: string) => {
     const path = WORKSPACE_ROUTES[label];
     if (!path) return;
@@ -203,6 +207,7 @@ export function WorkspaceSidebar({ navigateTo = enterWorkspaceRoute, currentPath
               <p className="truncate text-sm font-medium leading-5 text-foreground">{account.username}</p>
               <p className="text-xs leading-5 text-foreground">{account.plan}</p>
             </div>}
+            {!collapsed && <a href={WORKSPACE_ROUTES.Referrals} onClick={(event) => { if (event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey) { event.preventDefault(); openRoute("Referrals"); } }} aria-label="Referrals" title="Referrals" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><Gift className="h-5 w-5" /></a>}
             {!collapsed && <a href={WORKSPACE_ROUTES.Settings} onClick={(event) => { if (event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey) { event.preventDefault(); openRoute("Settings"); } }} aria-label="Account settings" title="Account settings" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><Settings className="h-5 w-5" /></a>}
           </div>
         </div>

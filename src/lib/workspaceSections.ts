@@ -8,6 +8,13 @@ import { WORKSPACE_ROUTES } from './workspaceNavigation.ts';
 export const ADOPTION_SECTIONS = ['Dashboard', 'BizMap', 'Network', 'Insighta', 'Community', 'Content', 'Bonus'] as const;
 export type AdoptionSection = typeof ADOPTION_SECTIONS[number];
 
+/**
+ * Pages that keep their route and their adoption tracking but are not listed
+ * in the sidebar: Tasks and Routine are managed from Overview, Referrals from
+ * the account row.
+ */
+export const SIDEBAR_HIDDEN_TOOLS: ReadonlySet<string> = new Set(['Tasks', 'Routine', 'Referrals']);
+
 export const WORKSPACE_SECTION_TOOLS: Record<AdoptionSection, string[]> = {
   Dashboard: ['Overview', 'Tasks', 'Routine', 'Files', 'Referrals'],
   BizMap: ['ICP Builder', 'Demo Studio', 'PMF Lab', 'MVP Builder', 'GTM Strategist', 'Directories'],

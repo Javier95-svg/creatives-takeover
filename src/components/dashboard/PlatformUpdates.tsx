@@ -1,9 +1,7 @@
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Megaphone } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-import { DASHBOARD_CARD, DashboardSectionTitle } from '@/components/dashboard/DashboardPanel';
 import { captureEvent } from '@/lib/analytics';
-import { cn } from '@/lib/utils';
 
 const PLATFORM_UPDATES = [
   {
@@ -16,33 +14,25 @@ const PLATFORM_UPDATES = [
   },
 ] as const;
 
-/** Product announcements, kept below the founder's own work. */
+/** Product announcements: one quiet line each, below the founder's own work. */
 export default function PlatformUpdates() {
   return (
-    <section className="mb-10" aria-labelledby="platform-updates-title">
-      <DashboardSectionTitle id="platform-updates-title" title="What's new" />
-      <div className="space-y-3">
-        {PLATFORM_UPDATES.map((update) => (
-          <div
-            key={update.id}
-            className={cn(DASHBOARD_CARD, 'flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between sm:gap-8 sm:p-6')}
+    <section aria-label="What's new" className="space-y-1">
+      {PLATFORM_UPDATES.map((update) => (
+        <p key={update.id} className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground" title={update.description}>
+          <Megaphone className="h-4 w-4 shrink-0" aria-hidden="true" />
+          <span className="font-medium text-foreground">What's new:</span>
+          <span>{update.title}</span>
+          <Link
+            to={update.route}
+            onClick={() => captureEvent('dashboard_platform_update_opened', { update_id: update.id })}
+            className="inline-flex items-center gap-1 font-medium text-primary hover:underline"
           >
-            <div className="min-w-0 max-w-3xl">
-              <p className="text-xs font-medium text-muted-foreground">{update.badge}</p>
-              <h3 className="mt-1 text-sm font-semibold text-foreground">{update.title}</h3>
-              <p className="mt-1 text-sm leading-6 text-muted-foreground">{update.description}</p>
-            </div>
-            <Link
-              to={update.route}
-              onClick={() => captureEvent('dashboard_platform_update_opened', { update_id: update.id })}
-              className="inline-flex shrink-0 items-center gap-1.5 text-sm font-medium text-primary hover:underline"
-            >
-              {update.cta}
-              <ArrowRight className="h-4 w-4" aria-hidden="true" />
-            </Link>
-          </div>
-        ))}
-      </div>
+            {update.cta}
+            <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+          </Link>
+        </p>
+      ))}
     </section>
   );
 }

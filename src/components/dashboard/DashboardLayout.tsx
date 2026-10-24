@@ -4,8 +4,10 @@ import { ArrowRight, LayoutDashboard } from 'lucide-react';
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import { DashboardNavigationProvider } from '@/contexts/DashboardNavigationContext';
 import { DashboardDataProvider } from '@/contexts/DashboardDataContext';
+import { useWorkspaceFrame } from '@/contexts/WorkspaceFrameContext';
 import { DashboardSidebar } from './DashboardSidebar';
 import { DashboardStreakChip } from './DashboardStreakChip';
+import { DashboardBackground } from './DashboardBackground';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 interface DashboardLayoutProps {
@@ -16,6 +18,33 @@ interface DashboardLayoutProps {
 
 export const DashboardLayout = ({ children, title, subtitle }: DashboardLayoutProps) => {
   const navigate = useNavigate();
+  // Inside the workspace frame the page already has the workspace sidebar and
+  // top bar, so this layout adds only the title and the page. Rendering its own
+  // sidebar there showed two side panels.
+  const inWorkspace = useWorkspaceFrame();
+
+  if (inWorkspace) {
+    return (
+      <ErrorBoundary>
+        <DashboardDataProvider>
+          <SidebarProvider className="min-h-0">
+            <DashboardNavigationProvider>
+              <div className="relative min-h-full w-full overflow-hidden bg-background">
+                <DashboardBackground />
+                <div className="relative z-10 container mx-auto max-w-7xl p-6 pb-24 pt-10">
+                  <header className="mb-8 space-y-1 text-center">
+                    <h1 className="text-balance font-space-grotesk text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">{title}</h1>
+                    {subtitle ? <p className="mx-auto max-w-2xl text-sm text-muted-foreground">{subtitle}</p> : null}
+                  </header>
+                  {children}
+                </div>
+              </div>
+            </DashboardNavigationProvider>
+          </SidebarProvider>
+        </DashboardDataProvider>
+      </ErrorBoundary>
+    );
+  }
 
   return (
     <ErrorBoundary>
@@ -60,25 +89,7 @@ export const DashboardLayout = ({ children, title, subtitle }: DashboardLayoutPr
                 </div>
               </div>
 
-              {/* Background */}
-              <div className="pointer-events-none absolute inset-0 overflow-hidden">
-                <div className="absolute inset-0 bg-background" />
-                <div
-                  className="absolute inset-0"
-                  style={{
-                    backgroundImage:
-                      'radial-gradient(circle at 15% 20%, hsl(var(--primary) / 0.08), transparent 40%), radial-gradient(circle at 85% 30%, hsl(var(--accent) / 0.06), transparent 45%)',
-                  }}
-                />
-                <div
-                  className="absolute inset-0 opacity-[0.03] dark:opacity-[0.06]"
-                  style={{
-                    backgroundImage:
-                      'linear-gradient(to right, hsl(var(--foreground)) 1px, transparent 1px), linear-gradient(to bottom, hsl(var(--foreground)) 1px, transparent 1px)',
-                    backgroundSize: '64px 64px',
-                  }}
-                />
-              </div>
+              <DashboardBackground />
 
               {/* Page Content */}
               <div className="relative z-10 container mx-auto p-6 pb-24 max-w-7xl pt-24">
