@@ -3,11 +3,12 @@ import { useLocation } from "react-router-dom";
 import {
   ArrowDown,
   ArrowRight,
+  Building2,
   CalendarDays,
   Check,
-  Info,
   Mail,
   Minus,
+  Rocket,
   Target,
   Users,
 } from "lucide-react";
@@ -38,6 +39,7 @@ import { captureEvent } from "@/lib/analytics";
 import {
   ENTERPRISE_ADAPT,
   ENTERPRISE_AFTER,
+  ENTERPRISE_CONDITIONS,
   ENTERPRISE_CONTACT,
   ENTERPRISE_FAQS,
   ENTERPRISE_HERO,
@@ -393,16 +395,35 @@ const Enterprise = () => {
                       </ul>
                     </div>
                   </div>
-                  <div className="ent-scope__you" data-reveal="up">
-                    <p className="ent-scope__you-head">
-                      <Info aria-hidden="true" />
-                      You provide
-                    </p>
-                    <ul>
-                      {ENTERPRISE_PILOT.youProvide.map((item) => (
-                        <li key={item}>{item}</li>
+                  {/* The pilot's conditions: what the program provides, what each startup commits to. */}
+                  <div className="ent-conditions">
+                    <h3 className="ent-conditions__title" data-reveal="up">{ENTERPRISE_CONDITIONS.title}</h3>
+                    <div className="ent-conditions__grid">
+                      {[
+                        { group: ENTERPRISE_CONDITIONS.program, Icon: Building2, reveal: "left" },
+                        { group: ENTERPRISE_CONDITIONS.startups, Icon: Rocket, reveal: "right" },
+                      ].map(({ group, Icon, reveal }, groupIndex) => (
+                        <div key={group.title} className="ent-scope__card ent-conditions__card" data-reveal={reveal} style={revealDelay(groupIndex * 120)}>
+                          <p className="ent-scope__head ent-conditions__head">
+                            <span className="ent-icon" aria-hidden="true">
+                              <Icon />
+                            </span>
+                            {group.title}
+                          </p>
+                          <ol>
+                            {group.items.map((item, index) => (
+                              <li key={item.title}>
+                                <span className="ent-conditions__num" aria-hidden="true">{index + 1}</span>
+                                <div>
+                                  <strong>{item.title}</strong>
+                                  <span>{item.body}</span>
+                                </div>
+                              </li>
+                            ))}
+                          </ol>
+                        </div>
                       ))}
-                    </ul>
+                    </div>
                   </div>
                 </div>
               </div>

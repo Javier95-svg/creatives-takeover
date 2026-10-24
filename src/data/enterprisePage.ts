@@ -134,7 +134,6 @@ export const ENTERPRISE_PILOT = {
       body: 'The pilot plan ends on its own. Founders keep their account, their work and the free plan.',
     },
   ],
-  youProvide: ['5 to 10 startups', 'One contact from your team', 'Your funder’s report template, if you have one'],
   honesty: PILOT_HONESTY,
 };
 
@@ -157,6 +156,37 @@ export const ENTERPRISE_SCOPE = {
     { title: 'Funding or investor introductions', body: 'The pilot produces evidence of demand, not fundraising.' },
     { title: 'A replacement for your curriculum', body: 'It works alongside your sessions and mentors.' },
   ],
+};
+
+// What we ask before we start (2026-10-24): what the program provides and
+// what each startup commits to, so both sides know the pilot's conditions.
+// Grounded in how the pilot runs: we onboard founders at kickoff; each founder
+// joins with their own (free) account and must agree to share progress, and
+// can leave at any time; the dashboard counts per founder, so one project;
+// check-ins are weekly on the cohort's check-in day; the pilot covers the
+// first three stages. The weekly hours are Javier's call.
+export const ENTERPRISE_CONDITIONS = {
+  title: 'What we ask before we start',
+  program: {
+    title: 'Your program provides',
+    items: [
+      { title: '5 to 10 startups', body: 'Chosen by you, all taking part in the same 30 days.' },
+      { title: 'One contact from your team', body: 'To introduce the pilot to your founders and read the weekly summary.' },
+      { title: 'A kickoff session with your founders', body: 'In week 1, so we can onboard every startup together.' },
+      { title: 'Your funder’s report format, if you need one', body: 'Optional. Share it at kickoff and the final report will follow it.' },
+    ],
+  },
+  startups: {
+    title: 'Each startup commits to',
+    items: [
+      { title: 'An early-stage project', body: 'An idea or a first version they want to test with real customers. The pilot covers the first three stages.' },
+      { title: 'One founder who leads the work', body: 'The same person for the 30 days, on their own free account.' },
+      { title: 'Sharing progress with your program', body: 'They agree when they join and can stop at any time. Their files, ideas and messages stay private.' },
+      { title: 'One project during the pilot', body: 'So the numbers on your dashboard stay accurate.' },
+      { title: 'About 3 hours a week', body: 'Including real conversations with potential customers every week.' },
+      { title: 'A short update every week', body: 'Two minutes, on the check-in day you choose.' },
+    ],
+  },
 };
 
 export const ENTERPRISE_ADAPT = {

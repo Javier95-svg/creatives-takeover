@@ -124,5 +124,9 @@ test('the pilot is explained step by step, with who does the work and its scope'
   assert.match(scope, /only if its founder agrees/);
   assert.match(scope, /won’t prove product-market fit/);
   assert.match(enterprisePage, /ENTERPRISE_SCOPE\.excluded\.map/);
-  assert.match(enterprisePage, /ENTERPRISE_PILOT\.youProvide\.map/);
+  // The pilot's conditions for both sides (2026-10-24).
+  assert.match(enterprisePage, /ENTERPRISE_CONDITIONS\.program/);
+  assert.match(enterprisePage, /ENTERPRISE_CONDITIONS\.startups/);
+  assert.ok(enterprise.ENTERPRISE_CONDITIONS.program.items.some((item) => /kickoff/.test(item.title)));
+  assert.ok(enterprise.ENTERPRISE_CONDITIONS.startups.items.some((item) => /Sharing progress/.test(item.title)));
 });
