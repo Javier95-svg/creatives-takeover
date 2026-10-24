@@ -194,7 +194,7 @@ export const INDEXABLE_ROUTES = [
     priority: 0.9,
     heroHeading: "See which startups in your cohort are doing the work.",
     heroCopy:
-      "For accelerators, incubators and university programs. We keep your cohort engaged and accountable throughout the program. Start with a 30-day pilot, then we shape it around your program’s length, size and founders.",
+      "A 30-day founder validation pilot for accelerators, incubators and university programs. We keep your cohort engaged and accountable throughout the program. Start with a 30-day pilot, then we shape it around your program’s length, size and founders.",
     sections: [
       {
         heading: "We run it. You bring the founders.",

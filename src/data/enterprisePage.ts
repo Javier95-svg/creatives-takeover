@@ -32,13 +32,13 @@ export const ENTERPRISE_SEO = {
     'founder validation pilot, accelerator software, incubator software, customer validation, cohort management, cohort reporting, accelerator program management',
 };
 
-// Coherence review (2026-10-24): the first screen names the audience and
-// promises visibility into who is doing the work, not "program impact", which
-// a 30-day pilot with 5 to 10 startups can't measure. The lede stays in
-// Javier's wording (2026-10-16): engagement, accountability, and a pilot
-// shaped around each program.
+// Coherence review (2026-10-24): the headline promises visibility into who is
+// doing the work, not "program impact", which a 30-day pilot with 5 to 10
+// startups can't measure. The eyebrow and the lede stay in Javier's wording
+// (2026-10-16): the pilot up top, then engagement, accountability, and a
+// pilot shaped around each program.
 export const ENTERPRISE_HERO = {
-  eyebrow: 'For accelerators, incubators and university programs',
+  eyebrow: '30-day founder validation pilot',
   titleLead: 'See which startups in your cohort',
   titleAccent: 'are doing the work.',
   lede:
