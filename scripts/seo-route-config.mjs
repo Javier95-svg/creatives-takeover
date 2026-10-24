@@ -202,7 +202,7 @@ export const INDEXABLE_ROUTES = [
       },
       {
         heading: "What the pilot includes, and what it doesn’t",
-        copy: "Included: a program dashboard with spreadsheet export, full access for every founder, kickoff and onboarding, weekly follow-up and a summary, and the final cohort report. Not included: founders’ private work, promised results, funding or investor introductions, or a replacement for your curriculum. Your program provides 5 to 10 startups, one contact from your team, a kickoff session with your founders and, if you need one, your funder’s report format. Each startup commits to an early-stage project, one founder who leads the work, sharing progress with your program, one project during the pilot, about 3 hours a week and a short update every week.",
+        copy: "Included: a program dashboard with spreadsheet export, full access for every founder, kickoff and onboarding, weekly follow-up and a summary, and the final cohort report. Not included: founders’ private work, promised results, funding or investor introductions, or a replacement for your curriculum. Your program provides 5 to 10 startups, one contact from your team, a kickoff session with your founders and, if you need one, your funder’s report format. Each startup brings an idea worth testing, one founder to lead it, and about 3 hours a week.",
       },
       {
         heading: "Your size, your founders, your calendar",

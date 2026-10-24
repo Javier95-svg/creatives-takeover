@@ -128,5 +128,8 @@ test('the pilot is explained step by step, with who does the work and its scope'
   assert.match(enterprisePage, /ENTERPRISE_CONDITIONS\.program/);
   assert.match(enterprisePage, /ENTERPRISE_CONDITIONS\.startups/);
   assert.ok(enterprise.ENTERPRISE_CONDITIONS.program.items.some((item) => /kickoff/.test(item.title)));
-  assert.ok(enterprise.ENTERPRISE_CONDITIONS.startups.items.some((item) => /Sharing progress/.test(item.title)));
+  // Few rules for founders (2026-10-24): three asks, consent included.
+  assert.ok(enterprise.ENTERPRISE_CONDITIONS.startups.items.length <= 3);
+  assert.match(JSON.stringify(enterprise.ENTERPRISE_CONDITIONS.startups), /progress is shared with your program/);
+  assert.match(JSON.stringify(enterprise.ENTERPRISE_CONDITIONS.startups), /can stop at any time/);
 });

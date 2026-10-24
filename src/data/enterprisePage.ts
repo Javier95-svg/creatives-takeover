@@ -176,15 +176,16 @@ export const ENTERPRISE_CONDITIONS = {
       { title: 'Your funder’s report format, if you need one', body: 'Optional. Share it at kickoff and the final report will follow it.' },
     ],
   },
+  // Kept to three, so founders feel welcome rather than bound by rules
+  // (Javier, 2026-10-24). Consent to share progress is part of joining; the
+  // weekly update is part of the time; one project per founder is handled at
+  // kickoff (pilot playbook), not asked here.
   startups: {
-    title: 'Each startup commits to',
+    title: 'Each startup brings',
     items: [
-      { title: 'An early-stage project', body: 'An idea or a first version they want to test with real customers. The pilot covers the first three stages.' },
-      { title: 'One founder who leads the work', body: 'The same person for the 30 days, on their own free account.' },
-      { title: 'Sharing progress with your program', body: 'They agree when they join and can stop at any time. Their files, ideas and messages stay private.' },
-      { title: 'One project during the pilot', body: 'So the numbers on your dashboard stay accurate.' },
-      { title: 'About 3 hours a week', body: 'Including real conversations with potential customers every week.' },
-      { title: 'A short update every week', body: 'Two minutes, on the check-in day you choose.' },
+      { title: 'An idea worth testing', body: 'An idea or a first version they want to try with real customers.' },
+      { title: 'One founder to lead it', body: 'On their own free account. Their progress is shared with your program, their files and ideas stay private, and they can stop at any time.' },
+      { title: 'About 3 hours a week', body: 'Mostly talking to potential customers, plus a two-minute update.' },
     ],
   },
 };
