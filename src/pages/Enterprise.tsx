@@ -63,6 +63,10 @@ const STEP_VISUALS: Record<string, ReactNode> = {
       height={594}
       title="Founder invitation"
       fade={false}
+      hotspots={[
+        { left: 75, top: 49.3, label: "Never shared", side: "below" },
+        { left: 10.5, top: 85.7, label: "Joins only with consent" },
+      ]}
       alt="The cohort invitation a founder opens: what is shared with the program (name and email, stage and tasks, counts of interviews, evidence and experiments, weekly check-ins), what stays private (files, idea details, messages) and the consent to join."
     />
   ),
@@ -74,6 +78,10 @@ const STEP_VISUALS: Record<string, ReactNode> = {
       height={727}
       title="Founder view"
       fade={false}
+      hotspots={[
+        { left: 70, top: 19, label: "Rising plan, free for the pilot" },
+        { left: 69.5, top: 45.7, label: "Check-in sent to the program" },
+      ]}
       alt="A founder's cohort view in week 2 of 4: the Rising plan given by the program until the pilot ends, this week's tasks for their stage, and the week 2 check-in sent to the program with wins, a blocker, next week's goal and the help needed."
     />
   ),
@@ -85,6 +93,10 @@ const STEP_VISUALS: Record<string, ReactNode> = {
       height={955}
       title="Program dashboard"
       fade={false}
+      hotspots={[
+        { left: 83, top: 37.6, label: "Needs attention" },
+        { left: 40.5, top: 45.1, label: "Verified / total", side: "below" },
+      ]}
       alt="The program dashboard for five startups: customer profiles ready, median interviews, experiments run, check-ins this week and startups that need attention, then one row per startup with stage, tasks, interviews, evidence, experiments, last activity, check-in and attention flags such as a reported blocker or no interviews logged."
     />
   ),
@@ -264,6 +276,7 @@ const Enterprise = () => {
                   title={ENTERPRISE_PILOT.title}
                   accent={ENTERPRISE_PILOT.titleAccent}
                   copy={ENTERPRISE_PILOT.copy}
+                  wide
                 />
                 <ol className="ent-steps">
                   {ENTERPRISE_PILOT.steps.map((step, index) => {
@@ -290,7 +303,7 @@ const Enterprise = () => {
                             <p className="ent-step__copy">{step.body}</p>
                           </div>
                           {visual ? (
-                            <div className="ent-step__visual" data-reveal="zoom" style={revealDelay(120)}>
+                            <div className="ent-step__visual" data-reveal="tilt" style={revealDelay(120)}>
                               {visual}
                             </div>
                           ) : null}
