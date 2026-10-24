@@ -11,6 +11,7 @@ import {
   generateInviteCode,
   linesToList,
   memberStage,
+  memberStageAtJoin,
   type CohortDashboardData,
   type CohortMemberProgress,
 } from '../src/lib/cohorts.ts';
@@ -33,7 +34,9 @@ const member = (overrides: Partial<CohortMemberProgress> = {}): CohortMemberProg
   completedTaskIds: [],
   interviews: { total: 0, verified: 0 },
   evidence: { replies: 0, interviewsCompleted: 0, commitments: 0, payments: 0, strangersActed: 0, strangersIdentified: 0, total: 0, verified: 0 },
+  experimentsRun: 0,
   experimentDecisions: 0,
+  assumptions: { total: 0, tested: 0 },
   checkins: [],
   ...overrides,
 });
@@ -60,13 +63,16 @@ test('the stage uses the same rules as the founder dashboard', () => {
 });
 
 test('attention flags are things a program manager can act on', () => {
-  // Week 3: quiet for a week, no week-2 check-in, no customer profile.
+  // Week 3: quiet for a week, no week-2 check-in, no customer profile, no
+  // interview logged and no experiment started.
   const quiet = attentionReasons(member({ lastActivityAt: '2026-10-05T12:00:00Z' }), 3, NOW).map((reason) => reason.key);
-  assert.deepEqual(quiet, ['quiet', 'missed_checkin', 'no_plan']);
+  assert.deepEqual(quiet, ['quiet', 'missed_checkin', 'no_plan', 'no_interviews', 'no_experiment']);
 
   // Active, checked in last week, asked for help.
   const helped = attentionReasons(member({
     outcomes: identityDone,
+    interviews: { total: 3, verified: 0 },
+    experimentsRun: 1,
     checkins: [{ weekNumber: 2, checkinDate: '2026-10-09', wins: ['5 calls'], blockers: [''], nextWeekGoals: [], helpNeeded: 'Intro to a bank', createdAt: '2026-10-09T10:00:00Z' }],
   }), 3, NOW).map((reason) => reason.key);
   assert.deepEqual(helped, ['help']);
@@ -92,7 +98,8 @@ test('the summary and the CSV come from the same numbers', () => {
 
   const csv = cohortCsv(data, 3, NOW).split('\n');
   assert.equal(csv.length, 3);
-  assert.match(csv[0], /^Founder,Email,Stage/);
+  assert.match(csv[0], /^Founder,Email,Joined,Stage at join,Stage,/);
+  assert.match(csv[0], /Experiments run/);
   assert.match(csv[2], /^"Luis, Jr",/); // commas are quoted
 });
 
@@ -140,4 +147,68 @@ test('cohort mode is wired into routes and the dashboard', () => {
   assert.match(dashboard, /useCohortContext\(\)/);
   assert.match(dashboard, /<ProgramDashboard /);
   assert.match(dashboard, /<FounderCohortView /);
+});
+
+// Pilot readiness (2026-10-23): counts cover the program period, imported
+// evidence is not verified, pilots carry a plan, founders can leave.
+const readiness = readFileSync('supabase/migrations/20261023120000_cohort_pilot_readiness.sql', 'utf8');
+const planPermissions = readFileSync('src/config/planPermissions.ts', 'utf8');
+const subscription = readFileSync('src/hooks/useSubscription.ts', 'utf8');
+const founderView = readFileSync('src/components/cohort/FounderCohortView.tsx', 'utf8');
+
+test('the stage at join uses only results completed before joining', () => {
+  const later = [{ tool: 'icp_builder', status: 'ready', completed_at: '2026-10-03T00:00:00Z' }];
+  assert.equal(memberStageAtJoin(member({ joinedAt: '2026-10-01T10:00:00Z', outcomes: later })).label, 'Identity');
+  assert.equal(memberStageAtJoin(member({ joinedAt: '2026-10-05T10:00:00Z', outcomes: later })).label, 'Prototyping');
+  // Without a completion date a result can't be placed before joining.
+  assert.equal(memberStageAtJoin(member({ outcomes: [{ tool: 'icp_builder', status: 'ready' }] })).label, 'Identity');
+});
+
+test('interview and experiment flags wait for weeks 2 and 3', () => {
+  const active = { lastActivityAt: '2026-10-14T10:00:00Z', outcomes: identityDone };
+  assert.deepEqual(attentionReasons(member(active), 1, NOW), []);
+  const week2 = attentionReasons(member({ ...active, checkins: [{ weekNumber: 1, checkinDate: '2026-10-02', wins: [], blockers: [], nextWeekGoals: [], helpNeeded: null, createdAt: '2026-10-02T09:00:00Z' }] }), 2, NOW).map((reason) => reason.key);
+  assert.deepEqual(week2, ['no_interviews']);
+  // Interviews logged as evidence events count too.
+  const evidenceInterviews = member({ ...active, evidence: { ...member().evidence, interviewsCompleted: 2 } });
+  assert.ok(!attentionReasons(evidenceInterviews, 2, NOW).some((reason) => reason.key === 'no_interviews'));
+  assert.equal(cohortKpis([member({ experimentsRun: 2 }), member({ experimentsRun: 1 })], 3, NOW).experimentsRun, 3);
+});
+
+test('the dashboard counts the program period and never treats imported rows as verified', () => {
+  const fn = readiness.slice(readiness.indexOf('FUNCTION public.cohort_dashboard_v1'));
+  assert.match(fn, /v_until := \(v_cohort\.end_date \+ 1\)::timestamptz;/);
+  for (const window of [/i\.created_at >= m\.joined_at AND i\.created_at < v_until/, /e\.occurred_at >= m\.joined_at AND e\.occurred_at < v_until/, /x\.created_at >= m\.joined_at AND x\.created_at < v_until/, /d\.decided_at >= m\.joined_at AND d\.decided_at < v_until/]) {
+    assert.match(fn, window);
+  }
+  assert.match(fn, /e\.verification_mode IN \('platform_verified', 'customer_action', 'transaction'\)/);
+  assert.doesNotMatch(fn, /verification_mode <> 'founder_reported'/);
+  // Still consented progress only, for staff and admins.
+  assert.match(fn, /IF NOT \(v_is_admin OR public\.is_cohort_staff\(p_cohort_id\)\) THEN/);
+  assert.match(fn, /AND m\.progress_shared_at IS NOT NULL/);
+  assert.doesNotMatch(fn, /hypothesis|statement|main_feedback|messages/);
+});
+
+test('a pilot plan applies for the cohort dates only and never lowers a paid plan', () => {
+  const pilot = readiness.slice(readiness.indexOf('FUNCTION public.cohort_pilot_plan_v1'), readiness.indexOf('REVOKE ALL ON FUNCTION public.cohort_pilot_plan_v1'));
+  assert.match(pilot, /AND current_date BETWEEN c\.start_date AND c\.end_date/);
+  assert.match(pilot, /AND m\.status IN \('active', 'paused'\)/);
+  assert.match(pilot, /auth\.uid\(\) IS DISTINCT FROM p_user_id THEN\s+RETURN NULL;/);
+  assert.match(readiness, /REVOKE ALL ON FUNCTION public\.cohort_pilot_plan_v1\(uuid\) FROM PUBLIC, anon;/);
+  // Read where access is decided; never written to Stripe-owned columns.
+  assert.match(readiness, /v_pilot := public\.cohort_pilot_plan_v1\(p_user_id\);/);
+  assert.match(readiness, /OR public\.cohort_pilot_plan_v1\(p_founder_id\) IN \('rising', 'pro'\)/);
+  assert.doesNotMatch(readiness, /UPDATE public\.(profiles|subscribers|user_credits)/);
+  // The app applies the same rule.
+  assert.match(planPermissions, /export function withPilotPlan/);
+  assert.match(subscription, /supabase\.rpc\('cohort_pilot_plan_v1' as never\)/);
+  assert.match(subscription, /withPilotPlan\(normalizePlan\(normalized\.subscription_tier\), pilot\)/);
+});
+
+test('a founder can leave a cohort, which stops sharing', () => {
+  const leave = readiness.slice(readiness.indexOf('FUNCTION public.leave_cohort_v1'));
+  assert.match(leave, /SET status = 'dropped', progress_shared_at = NULL/);
+  assert.match(leave, /WHERE cohort_id = p_cohort_id AND user_id = v_user/);
+  assert.match(readiness, /REVOKE ALL ON FUNCTION public\.leave_cohort_v1\(uuid\) FROM PUBLIC, anon;/);
+  assert.match(founderView, /supabase\.rpc\('leave_cohort_v1' as never/);
 });

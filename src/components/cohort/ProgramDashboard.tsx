@@ -19,7 +19,9 @@ import {
   cohortKpis,
   cohortTotalWeeks,
   cohortWeek,
+  memberInterviews,
   memberStage,
+  memberStageAtJoin,
   type CohortMemberProgress,
   type CohortSummary,
 } from '@/lib/cohorts';
@@ -93,6 +95,7 @@ export default function ProgramDashboard({
     { label: 'Founders', value: String(kpis.founders) },
     { label: 'Customer profile ready', value: `${kpis.plansReady}/${kpis.founders}` },
     { label: 'Median interviews', value: String(kpis.medianInterviews) },
+    { label: 'Experiments run', value: String(kpis.experimentsRun) },
     { label: week === 0 ? 'Check-ins' : `Check-ins week ${week}`, value: week === 0 ? '—' : `${kpis.checkinsThisWeek}/${kpis.founders}` },
     { label: 'Decisions reached', value: String(kpis.decisions) },
     { label: 'Need attention', value: String(kpis.needAttention), alert: kpis.needAttention > 0 },
@@ -112,6 +115,11 @@ export default function ProgramDashboard({
                 {cohort.programName ? `${cohort.cohortName} · ` : ''}
                 {formatDate(cohort.startDate)} – {formatDate(cohort.endDate)}
               </p>
+              {cohort.pilotPlan ? (
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Founders have the {cohort.pilotPlan.charAt(0).toUpperCase() + cohort.pilotPlan.slice(1)} plan for the cohort dates.
+                </p>
+              ) : null}
               {cohortOptions.length > 1 && onSelectCohort ? (
                 <Select value={cohortId} onValueChange={onSelectCohort}>
                   <SelectTrigger className="mt-3 w-full max-w-xs" aria-label="Choose a cohort">
@@ -152,7 +160,7 @@ export default function ProgramDashboard({
         </CardContent>
       </Card>
 
-      <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
+      <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4 xl:grid-cols-7">
         {tiles.map((tile) => (
           <div key={tile.label} className="rounded-xl border border-border/60 bg-card/70 p-4">
             <p className={cn('font-space-grotesk text-2xl font-semibold tabular-nums', tile.alert ? 'text-destructive' : 'text-foreground')}>
@@ -176,7 +184,7 @@ export default function ProgramDashboard({
             // parent never grows to fit the table; the table scrolls here instead.
             <div className="w-0 min-w-full overflow-x-auto">
               {/* A fixed minimum keeps columns readable; on narrow screens the table scrolls inside its card. */}
-              <table className="w-full text-left text-sm" style={{ minWidth: '54rem' }}>
+              <table className="w-full text-left text-sm" style={{ minWidth: '60rem' }}>
                 <thead>
                   <tr className="border-b border-border/60 text-xs uppercase tracking-wide text-muted-foreground">
                     <th className="px-4 py-3 font-semibold">Founder</th>
@@ -184,6 +192,7 @@ export default function ProgramDashboard({
                     <th className="px-4 py-3 font-semibold">Tasks</th>
                     <th className="px-4 py-3 font-semibold">Interviews</th>
                     <th className="px-4 py-3 font-semibold">Evidence</th>
+                    <th className="px-4 py-3 font-semibold">Experiments</th>
                     <th className="px-4 py-3 font-semibold">Last active</th>
                     <th className="px-4 py-3 font-semibold">{week ? `Week ${week}` : 'Check-in'}</th>
                     <th className="px-4 py-3 font-semibold">Attention</th>
@@ -209,8 +218,8 @@ export default function ProgramDashboard({
       </Card>
 
       <p className="text-xs text-muted-foreground">
-        Interviews and evidence show verified / total: verified means the platform observed it or our team reviewed proof; the rest is reported by the founder.
-        Founders’ files, ideas and messages are never shown here.
+        Interviews, evidence and experiments count what each founder did since joining the cohort. Verified / total: verified means the platform observed it,
+        or a customer action or payment backs it; the rest is reported by the founder. Founders’ files, ideas and messages are never shown here.
       </p>
     </div>
   );
@@ -230,9 +239,10 @@ function MemberRow({
   onToggle: () => void;
 }) {
   const stage = memberStage(member.outcomes);
+  const stageAtJoin = memberStageAtJoin(member);
   const reasons = attentionReasons(member, week, now);
   const thisWeek = week ? checkinForWeek(member, week) : null;
-  const interviewsTotal = member.interviews.total + member.evidence.interviewsCompleted;
+  const interviewsTotal = memberInterviews(member);
 
   return (
     <Fragment>
@@ -246,6 +256,9 @@ function MemberRow({
           <p className="text-xs text-muted-foreground">
             {stage.decisionReached ? 'Decision reached' : stage.planReady ? 'Customer profile ready' : 'No customer profile yet'}
           </p>
+          {stageAtJoin.index !== stage.index ? (
+            <p className="text-xs text-muted-foreground">Joined at {stageAtJoin.label}</p>
+          ) : null}
         </td>
         <td className="px-4 py-3 tabular-nums text-foreground">{member.completedTaskIds.length}</td>
         <td className="px-4 py-3 tabular-nums text-foreground">
@@ -253,6 +266,10 @@ function MemberRow({
         </td>
         <td className="px-4 py-3 tabular-nums text-foreground">
           {member.evidence.verified} / {member.evidence.total}
+        </td>
+        <td className="px-4 py-3 tabular-nums text-foreground">
+          {member.experimentsRun}
+          {member.experimentDecisions ? <p className="text-xs text-muted-foreground">{member.experimentDecisions} decided</p> : null}
         </td>
         <td className="px-4 py-3 text-muted-foreground">
           {member.lastActivityAt ? formatDistanceToNowStrict(new Date(member.lastActivityAt), { addSuffix: true }) : 'Never'}
@@ -292,7 +309,7 @@ function MemberRow({
       </tr>
       {open ? (
         <tr className="border-b border-border/40 bg-background/40">
-          <td colSpan={9} className="px-4 py-4">
+          <td colSpan={10} className="px-4 py-4">
             {member.checkins.length === 0 ? (
               <p className="text-sm text-muted-foreground">No check-ins yet.</p>
             ) : (

@@ -26,7 +26,7 @@ type Invite = {
 };
 
 // What a founder agrees to share by joining; mirrors cohort_dashboard_v1.
-const SHARED = ['Your name and email', 'Your stage and completed tasks', 'Counts of interviews, experiments and decisions', 'Your weekly check-ins'];
+const SHARED = ['Your name and email', 'Your stage and completed tasks', 'Counts of assumptions, interviews, evidence, experiments and decisions', 'Your weekly check-ins'];
 const PRIVATE = ['Your files and saved work', 'The details of your idea', 'Your messages'];
 
 const formatDate = (value: string) =>
@@ -144,6 +144,7 @@ export default function CohortJoinPage() {
                   <label htmlFor="cohort-consent" className="flex cursor-pointer items-start gap-3 text-sm text-foreground">
                     <Checkbox id="cohort-consent" checked={agreed} onCheckedChange={(value) => setAgreed(value === true)} className="mt-0.5" />
                     I agree to share my progress and weekly check-ins with {data.programName || 'this program'} and the Creatives Takeover team.
+                    You can leave the cohort and stop sharing at any time from your dashboard.
                   </label>
                 ) : null}
                 {joinError ? <p className="text-sm text-destructive" role="alert">{joinError}</p> : null}

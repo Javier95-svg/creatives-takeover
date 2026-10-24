@@ -3,14 +3,18 @@
  * program dashboard, kept pure so node tests can check it.
  *
  * Data comes from cohort_context_v1 and cohort_dashboard_v1
- * (supabase/migrations/20261019090000_cohort_mode_v1.sql). Staff see progress,
- * not content: stage results, counts by verification level, decisions,
- * completed tasks, last activity and weekly check-ins.
+ * (supabase/migrations/20261019090000_cohort_mode_v1.sql, counted over the
+ * program period since 20261023120000_cohort_pilot_readiness.sql). Staff see
+ * progress, not content: stage results, counts by verification level,
+ * experiments, decisions, completed tasks, last activity and weekly check-ins.
  */
 import { FOUNDER_STAGE_LABELS } from './bizmapStageOrder.ts';
 import { deriveFounderProgress, OPERATING_STAGE_ORDER, type JourneyOutcomeSignal } from './founderProgress.ts';
 
 export type CohortStatus = 'upcoming' | 'active' | 'completed';
+
+/** The plan a program gives its founders for the cohort dates, or null. */
+export type CohortPilotPlan = 'starter' | 'rising' | 'pro' | null;
 
 export interface CohortSummary {
   cohortId: string;
@@ -21,6 +25,7 @@ export interface CohortSummary {
   status: CohortStatus;
   checkinDay?: string | null;
   joinedAt?: string | null;
+  pilotPlan?: CohortPilotPlan;
 }
 
 export interface CohortContext {
@@ -60,7 +65,11 @@ export interface CohortMemberProgress {
     total: number;
     verified: number;
   };
+  /** Experiments started in the program period (not drafts). */
+  experimentsRun: number;
   experimentDecisions: number;
+  /** Assumptions in the founder's plan, and how many an interview or experiment settled. */
+  assumptions: { total: number; tested: number };
   checkins: CohortCheckin[];
 }
 
@@ -103,6 +112,18 @@ export interface MemberStage {
   decisionReached: boolean;
 }
 
+/**
+ * The stage a founder was at when they joined: the same rules, using only the
+ * stage results completed by then. The report compares it with memberStage.
+ */
+export function memberStageAtJoin(member: Pick<CohortMemberProgress, 'outcomes' | 'joinedAt'>): MemberStage {
+  const joined = Date.parse(member.joinedAt);
+  return memberStage(member.outcomes.filter((outcome) => {
+    const completed = outcome.completed_at ? Date.parse(outcome.completed_at) : Number.NaN;
+    return Number.isFinite(completed) && completed <= joined;
+  }));
+}
+
 /** The founder's stage, worked out with the same rules as their own dashboard. */
 export function memberStage(outcomes: readonly JourneyOutcomeSignal[]): MemberStage {
   const progress = deriveFounderProgress({
@@ -125,7 +146,7 @@ export function checkinForWeek(member: Pick<CohortMemberProgress, 'checkins'>, w
   return member.checkins.find((checkin) => checkin.weekNumber === week) ?? null;
 }
 
-export type AttentionKey = 'quiet' | 'missed_checkin' | 'blocked' | 'help' | 'no_plan';
+export type AttentionKey = 'quiet' | 'missed_checkin' | 'blocked' | 'help' | 'no_plan' | 'no_interviews' | 'no_experiment';
 
 export interface AttentionReason {
   key: AttentionKey;
@@ -134,10 +155,15 @@ export interface AttentionReason {
 
 const QUIET_DAYS = 7;
 
+/** Interviews logged in the program period, in PMF Lab or as evidence. */
+export const memberInterviews = (member: Pick<CohortMemberProgress, 'interviews' | 'evidence'>) =>
+  member.interviews.total + member.evidence.interviewsCompleted;
+
 /**
  * Why a founder needs attention this week. Only rules a program manager can act
  * on: gone quiet, missed last week's check-in, reported a blocker or asked for
- * help, or still has no customer profile after the first week.
+ * help, still has no customer profile after the first week, no interview logged
+ * by week 2, or no experiment started by week 3.
  */
 export function attentionReasons(
   member: CohortMemberProgress,
@@ -167,6 +193,14 @@ export function attentionReasons(
     reasons.push({ key: 'no_plan', label: 'No customer profile yet' });
   }
 
+  if (week >= 2 && memberInterviews(member) === 0) {
+    reasons.push({ key: 'no_interviews', label: 'No interviews logged' });
+  }
+
+  if (week >= 3 && member.experimentsRun === 0) {
+    reasons.push({ key: 'no_experiment', label: 'No experiment started' });
+  }
+
   return reasons;
 }
 
@@ -174,6 +208,7 @@ export interface CohortKpis {
   founders: number;
   plansReady: number;
   medianInterviews: number;
+  experimentsRun: number;
   checkinsThisWeek: number;
   needAttention: number;
   decisions: number;
@@ -191,7 +226,8 @@ export function cohortKpis(members: CohortMemberProgress[], week: number, now: D
   return {
     founders: members.length,
     plansReady: stages.filter((stage) => stage.planReady).length,
-    medianInterviews: median(members.map((member) => member.interviews.total + member.evidence.interviewsCompleted)),
+    medianInterviews: median(members.map(memberInterviews)),
+    experimentsRun: members.reduce((sum, member) => sum + member.experimentsRun, 0),
     checkinsThisWeek: week === 0 ? 0 : members.filter((member) => checkinForWeek(member, week)).length,
     needAttention: members.filter((member) => attentionReasons(member, week, now).length > 0).length,
     decisions: stages.filter((stage) => stage.decisionReached).length,
@@ -203,26 +239,34 @@ const csvCell = (value: string | number | null | undefined) => {
   return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
 };
 
-/** One row per founder, for the weekly summary and the final report. */
+/**
+ * One row per founder, for the weekly summary and the final report. Activity
+ * counts cover the program period only (from joining to the cohort's end).
+ */
 export function cohortCsv(data: CohortDashboardData, week: number, now: Date = new Date()): string {
   const header = [
-    'Founder', 'Email', 'Stage', 'Customer profile', 'Decision reached', 'Tasks completed',
-    'Interviews (verified / total)', 'Evidence (verified / total)', 'Experiment decisions',
+    'Founder', 'Email', 'Joined', 'Stage at join', 'Stage', 'Customer profile', 'Decision reached', 'Tasks completed',
+    'Assumptions (tested / total)', 'Interviews (verified / total)', 'Evidence (verified / total)',
+    'Experiments run', 'Experiment decisions', 'Check-ins',
     'Last activity', `Check-in week ${week}`, 'Needs attention',
   ];
   const rows = data.members.map((member) => {
     const stage = memberStage(member.outcomes);
-    const interviewsTotal = member.interviews.total + member.evidence.interviewsCompleted;
     return [
       member.name,
       member.email,
+      member.joinedAt.slice(0, 10),
+      memberStageAtJoin(member).label,
       stage.label,
       stage.planReady ? 'Yes' : 'No',
       stage.decisionReached ? 'Yes' : 'No',
       member.completedTaskIds.length,
-      `${member.interviews.verified} / ${interviewsTotal}`,
+      `${member.assumptions.tested} / ${member.assumptions.total}`,
+      `${member.interviews.verified} / ${memberInterviews(member)}`,
       `${member.evidence.verified} / ${member.evidence.total}`,
+      member.experimentsRun,
       member.experimentDecisions,
+      member.checkins.length,
       member.lastActivityAt ? member.lastActivityAt.slice(0, 10) : '',
       checkinForWeek(member, week) ? 'Yes' : 'No',
       attentionReasons(member, week, now).map((reason) => reason.label).join('; '),

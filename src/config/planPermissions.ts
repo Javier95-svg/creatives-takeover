@@ -568,6 +568,17 @@ export function normalizePlan(value: string | null | undefined): Plan {
   return 'rookie';
 }
 
+/**
+ * The plan to apply when a program gives a founder a pilot plan for its cohort
+ * dates (cohort_pilot_plan_v1): the higher of the two, so a pilot never lowers
+ * what the founder pays for.
+ */
+export function withPilotPlan(plan: Plan, pilotPlan: string | null | undefined): Plan {
+  if (!pilotPlan) return plan;
+  const pilot = normalizePlan(pilotPlan);
+  return PLAN_SEQUENCE.indexOf(pilot) > PLAN_SEQUENCE.indexOf(plan) ? pilot : plan;
+}
+
 export function getNextPlan(plan: Plan): Plan {
   const currentIndex = PLAN_SEQUENCE.indexOf(plan);
   if (currentIndex < 0 || currentIndex === PLAN_SEQUENCE.length - 1) {

@@ -49,7 +49,17 @@ export function useCohortDashboard(cohortId: string | null) {
     queryFn: async (): Promise<CohortDashboardData> => {
       const { data, error } = await supabase.rpc('cohort_dashboard_v1' as never, { p_cohort_id: cohortId } as never);
       if (error) throw error;
-      return data as unknown as CohortDashboardData;
+      const dashboard = data as unknown as CohortDashboardData;
+      // Before 20261023120000_cohort_pilot_readiness the function returned no
+      // experiment or assumption counts; read those as zero, not as missing.
+      return {
+        ...dashboard,
+        members: (dashboard.members ?? []).map((member) => ({
+          ...member,
+          experimentsRun: Number(member.experimentsRun ?? 0),
+          assumptions: member.assumptions ?? { total: 0, tested: 0 },
+        })),
+      };
     },
   });
 }

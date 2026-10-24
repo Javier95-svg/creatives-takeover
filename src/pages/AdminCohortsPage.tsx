@@ -28,9 +28,20 @@ type CohortRow = {
   join_code: string | null;
   staff_code: string | null;
   weekly_checkin_day: string | null;
+  pilot_plan: 'starter' | 'rising' | 'pro' | null;
 };
 
 const WEEKDAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
+
+// The plan founders get for the cohort dates (cohort_pilot_plan_v1). Rising
+// opens First Customer Proof, the pilot's 30-day demand test.
+const PILOT_PLANS = [
+  { value: 'none', label: 'Their own plan' },
+  { value: 'starter', label: 'Starter' },
+  { value: 'rising', label: 'Rising' },
+  { value: 'pro', label: 'Pro' },
+];
+const pilotPlanValue = (value: string) => (value === 'none' ? null : value);
 const todayIso = () => new Date().toISOString().slice(0, 10);
 const addDays = (iso: string, days: number) => {
   const date = new Date(`${iso}T00:00:00Z`);
@@ -56,13 +67,14 @@ export default function AdminCohortsPage() {
   const [startDate, setStartDate] = useState(todayIso());
   const [endDate, setEndDate] = useState(addDays(todayIso(), 29));
   const [checkinDay, setCheckinDay] = useState('monday');
+  const [pilotPlan, setPilotPlan] = useState('rising');
 
   const cohorts = useQuery({
     queryKey: ['admin-cohorts'],
     queryFn: async () => {
       const { data, error } = await (supabase as any)
         .from('launch_cohorts')
-        .select('id,cohort_name,program_name,start_date,end_date,status,member_count,join_code,staff_code,weekly_checkin_day')
+        .select('id,cohort_name,program_name,start_date,end_date,status,member_count,join_code,staff_code,weekly_checkin_day,pilot_plan')
         .order('start_date', { ascending: false });
       if (error) throw error;
       return (data ?? []) as unknown as CohortRow[];
@@ -84,6 +96,7 @@ export default function AdminCohortsPage() {
         status: startDate <= todayIso() ? 'active' : 'upcoming',
         join_code: joinCode,
         staff_code: staffCode,
+        pilot_plan: pilotPlanValue(pilotPlan),
         created_by: user?.id ?? null,
       } as never);
       if (error) throw error;
@@ -97,14 +110,24 @@ export default function AdminCohortsPage() {
     onError: (error: Error) => toast.error(error.message || 'We couldn’t create the cohort.'),
   });
 
-  const setStatus = useMutation({
-    mutationFn: async ({ id, status }: { id: string; status: CohortRow['status'] }) => {
-      const { error } = await (supabase as any).from('launch_cohorts').update({ status, updated_at: new Date().toISOString() } as never).eq('id', id);
+  const update = useMutation({
+    mutationFn: async ({ id, changes }: { id: string; changes: Partial<Pick<CohortRow, 'status' | 'pilot_plan' | 'join_code' | 'staff_code'>> }) => {
+      const { error } = await (supabase as any).from('launch_cohorts').update({ ...changes, updated_at: new Date().toISOString() } as never).eq('id', id);
       if (error) throw error;
     },
     onSuccess: () => void queryClient.invalidateQueries({ queryKey: ['admin-cohorts'] }),
     onError: () => toast.error('We couldn’t update the cohort.'),
   });
+
+  // After a pilot, new links stop old ones from letting anyone else in.
+  const rotateLinks = (id: string) => {
+    const joinCode = generateInviteCode();
+    let staffCode = generateInviteCode();
+    while (staffCode === joinCode) staffCode = generateInviteCode();
+    update.mutate({ id, changes: { join_code: joinCode, staff_code: staffCode } }, {
+      onSuccess: () => toast.success('New invite links made. The old ones no longer work.'),
+    });
+  };
 
   const onSubmit = (event: FormEvent) => {
     event.preventDefault();
@@ -127,7 +150,7 @@ export default function AdminCohortsPage() {
       <Card className="mt-8 border-border/60 bg-card/70">
         <CardContent className="p-5 sm:p-6">
           <h2 className="font-space-grotesk text-lg font-semibold text-foreground">New cohort</h2>
-          <form onSubmit={onSubmit} className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+          <form onSubmit={onSubmit} className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-6">
             <div className="space-y-1.5 xl:col-span-1">
               <Label htmlFor="cohort-program">Program</Label>
               <Input id="cohort-program" placeholder="e.g. UTEC Ventures" value={programName} onChange={(e) => setProgramName(e.target.value)} />
@@ -155,7 +178,21 @@ export default function AdminCohortsPage() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="md:col-span-2 xl:col-span-5">
+            <div className="space-y-1.5">
+              <Label htmlFor="cohort-pilot-plan">Founders’ plan</Label>
+              <Select value={pilotPlan} onValueChange={setPilotPlan}>
+                <SelectTrigger id="cohort-pilot-plan"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {PILOT_PLANS.map((plan) => (
+                    <SelectItem key={plan.value} value={plan.value}>{plan.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <p className="text-xs text-muted-foreground md:col-span-2 xl:col-span-6">
+              Founders get this plan from the start date to the end date, then return to their own plan. Rising opens First Customer Proof, the pilot’s demand test. It doesn’t add credits.
+            </p>
+            <div className="md:col-span-2 xl:col-span-6">
               <Button type="submit" disabled={create.isPending} className="gap-2">
                 <Plus className="h-4 w-4" aria-hidden="true" />
                 {create.isPending ? 'Creating…' : `Create cohort (${cohortTotalWeeks(startDate, endDate >= startDate ? endDate : startDate)} weeks)`}
@@ -183,7 +220,18 @@ export default function AdminCohortsPage() {
                   {cohort.start_date} → {cohort.end_date} · {cohort.member_count ?? 0} founders · check-ins on {cohort.weekly_checkin_day ?? 'monday'}
                 </p>
               </div>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <Select
+                  value={cohort.pilot_plan ?? 'none'}
+                  onValueChange={(value) => update.mutate({ id: cohort.id, changes: { pilot_plan: pilotPlanValue(value) as CohortRow['pilot_plan'] } })}
+                >
+                  <SelectTrigger className="h-9 w-40" aria-label={`Founders’ plan for ${cohort.cohort_name}`}><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {PILOT_PLANS.map((plan) => (
+                      <SelectItem key={plan.value} value={plan.value}>{plan.value === 'none' ? plan.label : `${plan.label} for the pilot`}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 {cohort.join_code ? (
                   <Button variant="outline" size="sm" className="gap-1.5" onClick={() => copy(cohortInviteUrl(origin, cohort.join_code as string), 'Founder invite link')}>
                     <Copy className="h-3.5 w-3.5" aria-hidden="true" /> Founder link
@@ -194,8 +242,11 @@ export default function AdminCohortsPage() {
                     <Copy className="h-3.5 w-3.5" aria-hidden="true" /> Staff link
                   </Button>
                 ) : null}
+                <Button variant="ghost" size="sm" onClick={() => rotateLinks(cohort.id)}>
+                  New links
+                </Button>
                 {cohort.status !== 'completed' ? (
-                  <Button variant="ghost" size="sm" onClick={() => setStatus.mutate({ id: cohort.id, status: 'completed' })}>
+                  <Button variant="ghost" size="sm" onClick={() => update.mutate({ id: cohort.id, changes: { status: 'completed' } })}>
                     Mark completed
                   </Button>
                 ) : null}

@@ -4,6 +4,17 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowRight, CalendarDays, CheckCircle2, Lock, Send } from 'lucide-react';
 import { toast } from 'sonner';
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -14,6 +25,7 @@ import { Progress } from '@/components/ui/progress';
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/contexts/AuthContext';
 import { useBizMapProgress } from '@/hooks/useBizMapProgress';
+import { COHORT_CONTEXT_QUERY_KEY } from '@/hooks/useCohortContext';
 import { supabase } from '@/integrations/supabase/client';
 import { captureEvent } from '@/lib/analytics';
 import { BIZMAP_STAGES, STAGE_TASKS } from '@/lib/bizmapStages';
@@ -114,6 +126,11 @@ export default function FounderCohortView({ cohort }: { cohort: CohortSummary })
                   {formatDate(cohort.startDate)} – {formatDate(cohort.endDate)}
                 </span>
               </p>
+              {cohort.pilotPlan ? (
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Until {formatDate(cohort.endDate)}, your program gives you the {cohort.pilotPlan.charAt(0).toUpperCase() + cohort.pilotPlan.slice(1)} plan. After that you keep your account, your work and the free plan.
+                </p>
+              ) : null}
             </div>
             <div className="w-full max-w-xs">
               <p className="mb-2 text-sm font-semibold text-foreground">
@@ -173,11 +190,56 @@ export default function FounderCohortView({ cohort }: { cohort: CohortSummary })
 
       <CohortShowcaseOptInCard cohortId={cohort.cohortId} programName={cohort.programName || cohort.cohortName} />
 
-      <p className="mt-6 flex items-start gap-2 text-sm text-muted-foreground">
-        <Lock className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-        Your program sees your stage, progress counts and weekly check-ins. Your files, ideas and messages stay private.
-      </p>
+      <div className="mt-6 flex flex-wrap items-start justify-between gap-3">
+        <p className="flex items-start gap-2 text-sm text-muted-foreground">
+          <Lock className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+          Your program sees your stage, progress counts and weekly check-ins. Your files, ideas and messages stay private.
+        </p>
+        <LeaveCohort cohortId={cohort.cohortId} programName={cohort.programName || cohort.cohortName} />
+      </div>
     </div>
+  );
+}
+
+/** Leaving also stops sharing: the program no longer sees this founder's progress. */
+function LeaveCohort({ cohortId, programName }: { cohortId: string; programName: string }) {
+  const queryClient = useQueryClient();
+  const leave = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.rpc('leave_cohort_v1' as never, { p_cohort_id: cohortId } as never);
+      if (error) throw error;
+    },
+    onSuccess: async () => {
+      captureEvent('cohort_left', { cohort_id: cohortId });
+      toast.success(`You left ${programName}. Your work stays in your account.`);
+      // A pilot plan ends with the membership, so the plan is read again too.
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: [COHORT_CONTEXT_QUERY_KEY] }),
+        queryClient.invalidateQueries({ queryKey: ['subscription-status'] }),
+        queryClient.invalidateQueries({ queryKey: ['workspace-subscription-status'] }),
+      ]);
+    },
+    onError: () => toast.error('We couldn’t take you out of the cohort. Try again.'),
+  });
+
+  return (
+    <AlertDialog>
+      <AlertDialogTrigger asChild>
+        <Button variant="ghost" size="sm" className="text-muted-foreground">Leave cohort</Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Leave {programName}?</AlertDialogTitle>
+          <AlertDialogDescription>
+            Your program will stop seeing your progress and check-ins, and any plan it gives you ends now. Your account and your work stay as they are.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Stay</AlertDialogCancel>
+          <AlertDialogAction onClick={() => leave.mutate()} disabled={leave.isPending}>Leave and stop sharing</AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }
 

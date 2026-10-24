@@ -6,7 +6,7 @@ import type { Json } from '@/integrations/supabase/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { ADMIN_SUBSCRIPTION, isAdminEmail } from '@/lib/admin';
-import { normalizePlan } from '@/config/planPermissions';
+import { normalizePlan, withPilotPlan } from '@/config/planPermissions';
 import { captureEvent } from '@/lib/analytics';
 import {
   redirectToHostedCheckout,
@@ -152,11 +152,19 @@ export function useSubscription(options?: { fetchTiers?: boolean; strictStatus?:
         return normalizeSubscriptionData(user.email, DEFAULT_SUBSCRIPTION);
       }
 
-      const { data, error } = await supabase.functions.invoke('check-subscription', {
-        headers: {
-          Authorization: `Bearer ${accessToken}`
-        }
-      });
+      // A program's pilot plan lives in the database, not in Stripe, so it is
+      // read beside check-subscription. A failed read just means no pilot plan.
+      const [{ data, error }, pilot] = await Promise.all([
+        supabase.functions.invoke('check-subscription', {
+          headers: {
+            Authorization: `Bearer ${accessToken}`
+          }
+        }),
+        supabase.rpc('cohort_pilot_plan_v1' as never).then(
+          (result) => (typeof result.data === 'string' ? result.data : null),
+          () => null,
+        ),
+      ]);
 
       if (error) {
         console.error('Error from check-subscription function:', error);
@@ -165,7 +173,8 @@ export function useSubscription(options?: { fetchTiers?: boolean; strictStatus?:
       }
 
       if (data) {
-        return normalizeSubscriptionData(user.email, data as Partial<SubscriptionData>);
+        const normalized = normalizeSubscriptionData(user.email, data as Partial<SubscriptionData>);
+        return { ...normalized, subscription_tier: withPilotPlan(normalizePlan(normalized.subscription_tier), pilot) };
       }
     } catch (error) {
       console.error('Error checking subscription:', error);
