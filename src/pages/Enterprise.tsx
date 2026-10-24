@@ -364,7 +364,7 @@ const Enterprise = () => {
                 </ol>
 
                 <div className="ent-scope">
-                  <SectionHead eyebrow={ENTERPRISE_SCOPE.eyebrow} title={ENTERPRISE_SCOPE.title} />
+                  <SectionHead eyebrow={ENTERPRISE_SCOPE.eyebrow} title={ENTERPRISE_SCOPE.title} wide />
                   <div className="ent-scope__grid">
                     <div className="ent-scope__card is-in" data-reveal="left">
                       <p className="ent-scope__head">Included</p>

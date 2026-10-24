@@ -158,7 +158,7 @@ export const ENTERPRISE_SCOPE = {
   ],
 };
 
-// What we ask before we start (2026-10-24): what the program provides and
+// Our requirements (2026-10-24): what the program provides and
 // what each startup commits to, so both sides know the pilot's conditions.
 // Grounded in how the pilot runs: we onboard founders at kickoff; each founder
 // joins with their own (free) account and must agree to share progress, and
@@ -166,7 +166,7 @@ export const ENTERPRISE_SCOPE = {
 // check-ins are weekly on the cohort's check-in day; the pilot covers the
 // first three stages. The weekly hours are Javier's call.
 export const ENTERPRISE_CONDITIONS = {
-  title: 'What we ask before we start',
+  title: 'Our requirements',
   program: {
     title: 'Your program provides',
     items: [
