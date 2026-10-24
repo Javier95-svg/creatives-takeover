@@ -1792,91 +1792,178 @@
 }
 
 /* ---------- How the pilot works ---------- */
+/* A numbered timeline. Steps with a product screen sit text beside screen. */
 
-.ent-track {
+.ent-steps {
   position: relative;
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 8px;
-  margin: 0 0 40px;
+  gap: 28px;
+  margin: 0 0 88px;
   padding: 0;
   list-style: none;
 }
 
-.ent-track::before {
+.ent-step {
+  position: relative;
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  gap: 20px;
+}
+
+/* The rail joining one number to the next. */
+.ent-step:not(:last-child)::before {
   content: "";
   position: absolute;
-  top: 9px;
-  left: calc(100% / 12);
-  right: calc(100% / 12);
-  height: 2px;
+  top: 48px;
+  bottom: -24px;
+  left: 21px;
+  width: 2px;
   border-radius: 999px;
-  background: linear-gradient(90deg, var(--ent-blue), var(--ent-violet) 50%, var(--ent-green));
-  opacity: 0.55;
+  background: linear-gradient(180deg, var(--ent-blue), var(--ent-violet));
+  opacity: 0.35;
 }
 
-.ent-track li {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  text-align: center;
-}
-
-.ent-track__dot {
+.ent-step__num {
   position: relative;
   z-index: 1;
-  width: 20px;
-  height: 20px;
-  margin-bottom: 8px;
-  border: 2px solid var(--ent-blue);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--ent-line);
   border-radius: 999px;
   background: var(--ent-card);
+  box-shadow: 0 0 0 6px var(--ent-blue-soft);
+  color: var(--ent-ink);
+  font-family: var(--ent-display);
+  font-size: 15px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
 }
 
-.ent-track li.is-key .ent-track__dot {
-  border-color: transparent;
-  background: linear-gradient(135deg, var(--ent-blue), var(--ent-violet));
-  box-shadow: 0 0 0 5px var(--ent-blue-soft);
+.ent-step:last-child .ent-step__num {
+  box-shadow: 0 0 0 6px var(--ent-green-soft);
 }
 
-.ent-track li:last-child .ent-track__dot {
-  background: linear-gradient(135deg, var(--ent-violet), var(--ent-green));
-  box-shadow: 0 0 0 5px var(--ent-green-soft);
+.ent-step__body {
+  display: grid;
+  gap: 24px;
+  min-width: 0;
+  padding-top: 8px;
 }
 
-.ent-track__when {
+.ent-step.has-visual .ent-step__body {
+  padding-bottom: 20px;
+}
+
+@media (min-width: 1024px) {
+  .ent-step.has-visual:not(.is-wide) .ent-step__body {
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+    gap: 48px;
+    align-items: start;
+  }
+}
+
+/* Dense screens sit under their text at full width so their numbers stay legible. */
+.ent-step.is-wide .ent-step__visual {
+  max-width: 1040px;
+}
+
+.ent-step__text {
+  max-width: 34rem;
+}
+
+.ent-step__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.ent-step__when {
   color: var(--ent-blue);
-  font-size: 11.5px;
+  font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 
-.ent-track__label {
-  color: var(--ent-ink);
-  font-size: 15px;
-  font-weight: 600;
+/* Who does the work, so the team's time is clear at a glance. */
+.ent-step__owner {
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: hsl(var(--foreground) / 0.06);
+  color: var(--ent-muted);
+  font-size: 12.5px;
+  font-weight: 500;
 }
 
-.ent-terms {
+.ent-step__owner.is-us {
+  background: var(--ent-blue-soft);
+  color: var(--ent-blue);
+}
+
+.ent-step__owner.is-you {
+  background: var(--ent-green-soft);
+  color: var(--ent-green);
+}
+
+.ent-step__title {
+  color: var(--ent-ink);
+  font-family: var(--ent-display);
+  font-size: clamp(19px, 2vw, 22px);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+}
+
+.ent-step__copy {
+  margin-top: 8px;
+  color: var(--ent-muted);
+  font-size: 15.5px;
+  line-height: 1.65;
+}
+
+.ent-step__visual {
+  position: relative;
+  min-width: 0;
+}
+
+.ent-step__visual::before {
+  content: "";
+  position: absolute;
+  inset: 10% 4% -6% 4%;
+  border-radius: 40px;
+  background: radial-gradient(50% 50% at 40% 40%, rgba(79, 143, 247, 0.22), transparent 70%);
+  filter: blur(30px);
+  pointer-events: none;
+}
+
+.ent-step__visual > * {
+  position: relative;
+}
+
+/* ---------- Scope: included, not included, you provide ---------- */
+
+.ent-scope .ent-head {
+  margin-bottom: 32px;
+}
+
+.ent-scope__grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: 18px;
 }
 
-@media (min-width: 768px) {
-  .ent-terms {
-    grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr);
-  }
-
-  .ent-terms__card.is-ours ul {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+@media (min-width: 900px) {
+  .ent-scope__grid {
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
   }
 }
 
-.ent-terms__card {
+.ent-scope__card {
   padding: 28px;
   border: 1px solid var(--ent-line);
   border-radius: 22px;
@@ -1884,14 +1971,14 @@
   box-shadow: var(--ent-shadow);
 }
 
-.ent-terms__card.is-ours {
+.ent-scope__card.is-in {
   background:
-    radial-gradient(60% 90% at 0% 0%, var(--ent-blue-soft), transparent 70%),
+    radial-gradient(60% 90% at 0% 0%, var(--ent-green-soft), transparent 70%),
     var(--ent-card);
 }
 
-.ent-terms__head {
-  margin-bottom: 18px;
+.ent-scope__head {
+  margin-bottom: 20px;
   color: var(--ent-ink);
   font-family: var(--ent-display);
   font-size: 19px;
@@ -1899,52 +1986,119 @@
   letter-spacing: -0.02em;
 }
 
-.ent-terms__card ul {
+.ent-scope__card ul {
   display: grid;
-  gap: 14px;
+  gap: 18px;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-.ent-terms__card li {
+.ent-scope__card li {
   display: flex;
-  align-items: center;
-  gap: 11px;
-  color: var(--ent-ink);
-  font-size: 15.5px;
-  font-weight: 500;
+  align-items: flex-start;
+  gap: 12px;
 }
 
-.ent-terms__card li svg {
+.ent-scope__card li svg {
   flex-shrink: 0;
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
+  margin-top: 1px;
   padding: 4px;
   border-radius: 999px;
+}
+
+.ent-scope__card.is-in li svg {
   background: var(--ent-green-soft);
   color: var(--ent-green);
 }
 
-.ent-terms__honest {
+.ent-scope__card.is-out li svg {
+  background: hsl(var(--foreground) / 0.07);
+  color: var(--ent-muted);
+}
+
+.ent-scope__card li strong {
+  display: block;
+  color: var(--ent-ink);
+  font-size: 15.5px;
+  font-weight: 600;
+}
+
+.ent-scope__card li span {
+  display: block;
+  margin-top: 2px;
+  color: var(--ent-muted);
+  font-size: 14.5px;
+  line-height: 1.55;
+}
+
+.ent-scope__you {
   display: flex;
-  align-items: flex-start;
-  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 18px;
   margin-top: 18px;
   padding: 18px 22px;
   border: 1px dashed hsl(var(--foreground) / 0.22);
   border-radius: 18px;
-  color: var(--ent-muted);
-  font-size: 14.5px;
-  line-height: 1.6;
 }
 
-.ent-terms__honest svg {
-  flex-shrink: 0;
+.ent-scope__you-head {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ent-ink);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.ent-scope__you-head svg {
   width: 18px;
   height: 18px;
-  margin-top: 3px;
   color: var(--ent-blue);
+}
+
+.ent-scope__you ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ent-scope__you li {
+  padding: 6px 12px;
+  border: 1px solid var(--ent-line);
+  border-radius: 999px;
+  background: var(--ent-card);
+  color: var(--ent-ink);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+@media (max-width: 640px) {
+  .ent-step {
+    grid-template-columns: 36px minmax(0, 1fr);
+    gap: 14px;
+  }
+
+  .ent-step__num {
+    width: 36px;
+    height: 36px;
+    font-size: 13px;
+  }
+
+  .ent-step:not(:last-child)::before {
+    top: 40px;
+    left: 17px;
+  }
+
+  .ent-scope__card {
+    padding: 22px;
+  }
 }
 
 /* ---------- Built around your program ---------- */
@@ -2517,19 +2671,6 @@
 
   .ent-paper__panel + .ent-paper__panel {
     border-top: 1px solid var(--ent-line-soft);
-  }
-
-  .ent-track {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    row-gap: 26px;
-  }
-
-  .ent-track::before {
-    display: none;
-  }
-
-  .ent-terms__card {
-    padding: 22px;
   }
 
   .ent-setup__row {

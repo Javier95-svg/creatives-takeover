@@ -7,6 +7,7 @@ import {
   Check,
   Info,
   Mail,
+  Minus,
   Target,
   Users,
 } from "lucide-react";
@@ -35,6 +36,12 @@ import pmfLabShot from "@/assets/enterprise/pmf-lab.webp";
 import pmfLabLightShot from "@/assets/enterprise/pmf-lab-light.webp";
 import founderWorkspaceShot from "@/assets/enterprise/founder-workspace.webp";
 import founderWorkspaceLightShot from "@/assets/enterprise/founder-workspace-light.webp";
+import cohortJoinShot from "@/assets/enterprise/cohort-join.webp";
+import cohortJoinLightShot from "@/assets/enterprise/cohort-join-light.webp";
+import cohortFounderShot from "@/assets/enterprise/cohort-founder.webp";
+import cohortFounderLightShot from "@/assets/enterprise/cohort-founder-light.webp";
+import cohortProgramShot from "@/assets/enterprise/cohort-program.webp";
+import cohortProgramLightShot from "@/assets/enterprise/cohort-program-light.webp";
 import { usePageAnalytics } from "@/hooks/usePageAnalytics";
 import { captureEvent } from "@/lib/analytics";
 import {
@@ -46,6 +53,7 @@ import {
   ENTERPRISE_OUTCOMES,
   ENTERPRISE_PATH,
   ENTERPRISE_PILOT,
+  ENTERPRISE_SCOPE,
   ENTERPRISE_SEO,
 } from "@/data/enterprisePage";
 import "@/components/enterprise/enterprise.css";
@@ -92,6 +100,46 @@ const OUTCOME_VISUALS: Record<string, ReactNode> = {
       />
       <CheckInCard />
     </div>
+  ),
+};
+
+// Dense screens get the full width under their step, so their numbers stay legible.
+const WIDE_STEP_VISUALS = new Set(["founder", "program"]);
+
+// The pilot steps a program can see in the product: cohort mode on sample data.
+const STEP_VISUALS: Record<string, ReactNode> = {
+  join: (
+    <ProductShot
+      src={cohortJoinShot}
+      lightSrc={cohortJoinLightShot}
+      width={712}
+      height={594}
+      title="Founder invitation"
+      fade={false}
+      alt="The cohort invitation a founder opens: what is shared with the program (name and email, stage and tasks, counts of interviews, evidence and experiments, weekly check-ins), what stays private (files, idea details, messages) and the consent to join."
+    />
+  ),
+  founder: (
+    <ProductShot
+      src={cohortFounderShot}
+      lightSrc={cohortFounderLightShot}
+      width={1176}
+      height={727}
+      title="Founder view"
+      fade={false}
+      alt="A founder's cohort view in week 2 of 4: the Rising plan given by the program until the pilot ends, this week's tasks for their stage, and the week 2 check-in sent to the program with wins, a blocker, next week's goal and the help needed."
+    />
+  ),
+  program: (
+    <ProductShot
+      src={cohortProgramShot}
+      lightSrc={cohortProgramLightShot}
+      width={1176}
+      height={955}
+      title="Program dashboard"
+      fade={false}
+      alt="The program dashboard for five startups: customer profiles ready, median interviews, experiments run, check-ins this week and startups that need attention, then one row per startup with stage, tasks, interviews, evidence, experiments, last activity, check-in and attention flags such as a reported blocker or no interviews logged."
+    />
   ),
 };
 
@@ -299,53 +347,95 @@ const Enterprise = () => {
               </div>
             </section>
 
-            {/* How the pilot runs: the 30 days, who brings what, and what it won't do. */}
+            {/* How the pilot runs, step by step with who does the work, then
+                exactly what it includes, what it doesn't and what the program brings. */}
             <section className="ent-section ent-section--tint">
               <div className="ent-container">
-                <SectionHead eyebrow={ENTERPRISE_PILOT.eyebrow} title={ENTERPRISE_PILOT.title} accent={ENTERPRISE_PILOT.titleAccent} />
-                <ol className="ent-track">
-                  {ENTERPRISE_PILOT.track.map((step, index) => (
-                    <li
-                      key={step.when}
-                      className={index === 0 || index === ENTERPRISE_PILOT.track.length - 1 ? "is-key" : undefined}
-                      data-reveal="up"
-                      style={revealDelay(index * 90)}
-                    >
-                      <span className="ent-track__dot" aria-hidden="true" />
-                      <span className="ent-track__when">{step.when}</span>
-                      <span className="ent-track__label">{step.label}</span>
-                    </li>
-                  ))}
+                <SectionHead
+                  eyebrow={ENTERPRISE_PILOT.eyebrow}
+                  title={ENTERPRISE_PILOT.title}
+                  accent={ENTERPRISE_PILOT.titleAccent}
+                  copy={ENTERPRISE_PILOT.copy}
+                />
+                <ol className="ent-steps">
+                  {ENTERPRISE_PILOT.steps.map((step, index) => {
+                    const visualKey = "visual" in step && step.visual ? step.visual : null;
+                    const visual = visualKey ? STEP_VISUALS[visualKey] : null;
+                    const stepClass = ["ent-step", visual && "has-visual", visualKey && WIDE_STEP_VISUALS.has(visualKey) && "is-wide"]
+                      .filter(Boolean)
+                      .join(" ");
+                    return (
+                      <li key={step.key} className={stepClass}>
+                        <span className="ent-step__num" aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
+                        <div className="ent-step__body">
+                          <div className="ent-step__text" data-reveal="up">
+                            <p className="ent-step__meta">
+                              <span className="ent-step__when">{step.when}</span>
+                              <span className={`ent-step__owner is-${step.owner === "Your team" ? "you" : step.owner === "Our team" ? "us" : "other"}`}>
+                                {step.owner}
+                              </span>
+                            </p>
+                            <h3 className="ent-step__title">
+                              <span className="sr-only">Step {index + 1}: </span>
+                              {step.title}
+                            </h3>
+                            <p className="ent-step__copy">{step.body}</p>
+                          </div>
+                          {visual ? (
+                            <div className="ent-step__visual" data-reveal="zoom" style={revealDelay(120)}>
+                              {visual}
+                            </div>
+                          ) : null}
+                        </div>
+                      </li>
+                    );
+                  })}
                 </ol>
 
-                <div className="ent-terms">
-                  <div className="ent-terms__card is-ours" data-reveal="left">
-                    <p className="ent-terms__head">We provide</p>
-                    <ul>
-                      {ENTERPRISE_PILOT.weProvide.map((item) => (
-                        <li key={item}>
-                          <Check aria-hidden="true" />
-                          {item}
-                        </li>
-                      ))}
-                    </ul>
+                <div className="ent-scope">
+                  <SectionHead eyebrow={ENTERPRISE_SCOPE.eyebrow} title={ENTERPRISE_SCOPE.title} />
+                  <div className="ent-scope__grid">
+                    <div className="ent-scope__card is-in" data-reveal="left">
+                      <p className="ent-scope__head">Included</p>
+                      <ul>
+                        {ENTERPRISE_SCOPE.included.map((item) => (
+                          <li key={item.title}>
+                            <Check aria-hidden="true" />
+                            <div>
+                              <strong>{item.title}</strong>
+                              <span>{item.body}</span>
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div className="ent-scope__card is-out" data-reveal="right" style={revealDelay(120)}>
+                      <p className="ent-scope__head">Not included</p>
+                      <ul>
+                        {ENTERPRISE_SCOPE.excluded.map((item) => (
+                          <li key={item.title}>
+                            <Minus aria-hidden="true" />
+                            <div>
+                              <strong>{item.title}</strong>
+                              <span>{item.body}</span>
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
                   </div>
-                  <div className="ent-terms__card" data-reveal="right" style={revealDelay(120)}>
-                    <p className="ent-terms__head">You provide</p>
+                  <div className="ent-scope__you" data-reveal="up">
+                    <p className="ent-scope__you-head">
+                      <Info aria-hidden="true" />
+                      You provide
+                    </p>
                     <ul>
                       {ENTERPRISE_PILOT.youProvide.map((item) => (
-                        <li key={item}>
-                          <Check aria-hidden="true" />
-                          {item}
-                        </li>
+                        <li key={item}>{item}</li>
                       ))}
                     </ul>
                   </div>
                 </div>
-                <p className="ent-terms__honest" data-reveal="up">
-                  <Info aria-hidden="true" />
-                  {ENTERPRISE_PILOT.honesty}
-                </p>
               </div>
             </section>
 

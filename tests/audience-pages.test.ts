@@ -101,3 +101,30 @@ test('the institution form reuses the contact function with known roles', () => 
   assert.ok(AUDIENCE_PAGES.investors.contact);
   assert.equal(AUDIENCE_PAGES.founders.contact, undefined);
 });
+
+test('the pilot is explained step by step, with who does the work and its scope', () => {
+  // A program manager follows the pilot from setup to after day 30
+  // (2026-10-23), each step owned by someone so their team's time is clear.
+  assert.deepEqual(
+    enterprise.ENTERPRISE_PILOT.steps.map((step) => step.key),
+    ['setup', 'join', 'work', 'track', 'weekly', 'report', 'after'],
+  );
+  for (const step of enterprise.ENTERPRISE_PILOT.steps) {
+    assert.ok(['Our team', 'Your team', 'Your founders', 'Automatic'].includes(step.owner), step.key);
+    if ('visual' in step && step.visual) assert.match(enterprisePage, new RegExp(`\\b${step.visual}: \\(`), `${step.key} has a screen`);
+  }
+  // Each screen is the real product, captured light and dark.
+  for (const asset of ['cohort-join', 'cohort-founder', 'cohort-program']) {
+    assert.match(enterprisePage, new RegExp(`@/assets/enterprise/${asset}\.webp`));
+    assert.match(enterprisePage, new RegExp(`@/assets/enterprise/${asset}-light\.webp`));
+  }
+  // What the program can't see or expect is said plainly, next to what it gets.
+  const scope = JSON.stringify(enterprise.ENTERPRISE_SCOPE);
+  assert.ok(enterprise.ENTERPRISE_SCOPE.included.length >= 5);
+  assert.match(scope, /First Customer Proof/);
+  assert.match(scope, /Files, idea details and messages stay private/);
+  assert.match(scope, /only if its founder agrees/);
+  assert.match(scope, /won’t prove product-market fit/);
+  assert.match(enterprisePage, /ENTERPRISE_SCOPE\.excluded\.map/);
+  assert.match(enterprisePage, /ENTERPRISE_PILOT\.youProvide\.map/);
+});

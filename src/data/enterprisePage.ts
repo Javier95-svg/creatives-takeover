@@ -95,23 +95,102 @@ export const ENTERPRISE_OUTCOMES = {
   ],
 };
 
+// The pilot step by step, as a program manager lives it (2026-10-23). Each
+// step says who does the work, so the team's time is clear. Verified against
+// cohort mode: separate founder and staff invite links, consent to join,
+// leaving at any time, the cohort's founders' plan (Rising: its tools,
+// including First Customer Proof, for the cohort dates, then back to their own
+// plan), counts since joining, verified vs founder-reported. Reminders, the
+// weekly summary and the report are done by our team (pilot playbook).
+// `visual` names the real product screen shown beside the step.
+// Said once and shown in the scope section: what 30 days can't do.
+const PILOT_HONESTY =
+  'Thirty days won’t prove product-market fit, guarantee paying customers or make a startup investment-ready. They give every founder a disciplined process and documented evidence.';
+
 export const ENTERPRISE_PILOT = {
   eyebrow: 'How the pilot works',
   title: 'We run it. You bring the founders.',
   // The end of the title, set in the hero's accent gradient on the page.
   titleAccent: 'You bring the founders.',
-  track: [
-    { when: 'Day 1', label: 'Kickoff' },
-    { when: 'Week 1', label: 'Check-in' },
-    { when: 'Week 2', label: 'Check-in' },
-    { when: 'Week 3', label: 'Check-in' },
-    { when: 'Week 4', label: 'Check-in' },
-    { when: 'Day 30', label: 'Cohort report' },
+  copy: 'Seven steps, from setup to the day your founders carry on without you.',
+  steps: [
+    {
+      key: 'setup',
+      when: 'Before day 1',
+      owner: 'Our team',
+      title: 'We set up your cohort',
+      body: 'Your dates, your check-in day and the plan your founders get. You get two links: one to share with your founders, and a private one for your team.',
+    },
+    {
+      key: 'join',
+      when: 'Day 1',
+      owner: 'Your founders',
+      title: 'Founders join, with their consent',
+      body: 'Each founder signs up with their own account and sees exactly what your program will see before agreeing. They can leave at any time.',
+      visual: 'join',
+    },
+    {
+      key: 'work',
+      when: 'Weeks 1–4',
+      owner: 'Your founders',
+      title: 'Founders do the validation work',
+      body: 'A weekly plan for their stage, the Rising plan’s tools free for the pilot dates, including First Customer Proof, and a two-minute weekly check-in.',
+      visual: 'founder',
+    },
+    {
+      key: 'track',
+      when: 'Any time',
+      owner: 'Your team',
+      title: 'You see every startup on one screen',
+      body: 'Stage, interviews, experiments, check-ins and who needs attention. Numbers cover the pilot only, and verified evidence is shown apart from what founders report.',
+      visual: 'program',
+    },
+    {
+      key: 'weekly',
+      when: 'Every week',
+      owner: 'Our team',
+      title: 'We follow up. You get a summary.',
+      body: 'We remind every team, follow up with anyone who goes quiet and send you a short summary: progress, highlights and where your help is needed.',
+    },
+    {
+      key: 'report',
+      when: 'Day 30',
+      owner: 'Our team',
+      title: 'Your cohort report',
+      body: 'Written from each startup’s recorded work, with a next step for every startup. In your funder’s format if you share it.',
+    },
+    {
+      key: 'after',
+      when: 'After day 30',
+      owner: 'Automatic',
+      title: 'Founders keep going',
+      body: 'The pilot plan ends on its own. Founders keep their account, their work and the free plan.',
+    },
   ],
-  weProvide: ['Platform access for every founder', 'A structured validation workflow', 'Weekly check-ins with every team', 'The final cohort report'],
-  youProvide: ['5 to 10 startups', 'One contact from your team'],
-  honesty:
-    'Thirty days won’t prove product-market fit, guarantee paying customers or make a startup investment-ready. They give every founder a disciplined process and documented evidence.',
+  youProvide: ['5 to 10 startups', 'One contact from your team', 'Your funder’s report template, if you have one'],
+  honesty: PILOT_HONESTY,
+};
+
+// What the pilot includes and what it doesn't (2026-10-23), so a program
+// manager can take it to leadership as is. "Not included" says what to expect
+// instead, never only "no".
+export const ENTERPRISE_SCOPE = {
+  eyebrow: 'Scope',
+  title: 'What the pilot includes, and what it doesn’t',
+  included: [
+    { title: 'A program dashboard for your team', body: 'Every startup’s stage, interviews, experiments, check-ins and who needs attention. Export it as a spreadsheet at any time.' },
+    { title: 'Free access for every founder', body: 'The Rising plan’s tools for the pilot dates, including First Customer Proof. Founders don’t pay.' },
+    { title: 'Kickoff and onboarding', body: 'We onboard your founders at kickoff.' },
+    { title: 'Weekly follow-up and a summary', body: 'We remind and follow up with every team, and send your team a summary every week.' },
+    { title: 'The final cohort report', body: 'Written by our team, with a next step for every startup, in your funder’s format if you share it.' },
+    { title: 'After the pilot', body: 'Founders keep their account, their work and the free plan.' },
+  ],
+  excluded: [
+    { title: 'Founders’ private work', body: 'Files, idea details and messages stay private. A startup’s plan summary goes in your report only if its founder agrees.' },
+    { title: 'Promised results', body: PILOT_HONESTY },
+    { title: 'Funding or investor introductions', body: 'The pilot produces evidence of demand, not fundraising.' },
+    { title: 'A replacement for your curriculum', body: 'It works alongside your sessions and mentors.' },
+  ],
 };
 
 export const ENTERPRISE_ADAPT = {
