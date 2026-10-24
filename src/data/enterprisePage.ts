@@ -65,7 +65,8 @@ export const ENTERPRISE_HERO = {
 // including First Customer Proof, for the cohort dates, then back to their own
 // plan), counts since joining, verified vs founder-reported. Reminders, the
 // weekly summary and the report are done by our team (pilot playbook).
-// `visual` names the real product screen shown beside the step.
+// `visual` names the real product screen shown beside the step, which the
+// visitor can use (the live demo); `tryIt` says what to do there.
 // Said once and shown in the scope section: what 30 days can't do.
 const PILOT_HONESTY =
   'Thirty days won’t prove product-market fit, guarantee paying customers or make a startup investment-ready. They give every founder a disciplined process and documented evidence.';
@@ -91,6 +92,7 @@ export const ENTERPRISE_PILOT = {
       title: 'Founders join, with their consent',
       body: 'Each founder signs up with their own account and sees exactly what your program will see before agreeing. They can leave at any time.',
       visual: 'join',
+      tryIt: 'Try it: tick the box, then join.',
     },
     {
       key: 'work',
@@ -99,6 +101,7 @@ export const ENTERPRISE_PILOT = {
       title: 'Founders do the validation work',
       body: 'A weekly plan for their stage, the Rising plan’s tools free for the pilot dates, including First Customer Proof, and a two-minute weekly check-in.',
       visual: 'founder',
+      tryIt: 'Try it: tick a task, then send your check-in.',
     },
     {
       key: 'track',
@@ -107,6 +110,8 @@ export const ENTERPRISE_PILOT = {
       title: 'You see every startup on one screen',
       body: 'Stage, interviews, experiments, check-ins and who needs attention. Numbers cover the pilot only, and verified evidence is shown apart from what founders report.',
       visual: 'program',
+      tryIt: 'Try it: open a row to read its check-ins, or export the spreadsheet.',
+      tryItJoined: 'Your row is first and highlighted. Open it to see what your program reads.',
     },
     {
       key: 'weekly',
@@ -132,6 +137,18 @@ export const ENTERPRISE_PILOT = {
   ],
   youProvide: ['5 to 10 startups', 'One contact from your team', 'Your funder’s report template, if you have one'],
   honesty: PILOT_HONESTY,
+};
+
+// The live demo in place of the three screens (2026-10-24): the real cohort
+// screens on sample data, played by the visitor. Nothing is saved.
+export const ENTERPRISE_DEMO = {
+  tag: 'Live demo',
+  tagMore: ' · nothing is saved',
+  locked: 'Join the cohort above to open your founder view.',
+  lockedCta: 'Go to the invitation',
+  joinedCta: 'Go to your founder view',
+  sentCta: 'See it on the program dashboard',
+  reset: 'Start over',
 };
 
 // What the pilot includes and what it doesn't (2026-10-23), so a program

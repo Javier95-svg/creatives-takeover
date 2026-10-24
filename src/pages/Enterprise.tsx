@@ -1,4 +1,4 @@
-import { useEffect, useRef, type CSSProperties, type MouseEvent, type ReactNode, type RefObject } from "react";
+import { lazy, useEffect, useRef, type CSSProperties, type MouseEvent, type ReactNode, type RefObject } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
   ArrowRight,
@@ -18,6 +18,7 @@ import Footer from "@/components/Footer";
 import HomeWallpaper from "@/components/wallpapers/HomeWallpaper";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import InstitutionContactForm from "@/components/audience/InstitutionContactForm";
+import { NearViewSlot, PilotDemoProvider } from "@/components/enterprise/PilotDemoContext";
 import {
   AfterProgramFlow,
   AfterProgramKeeps,
@@ -53,8 +54,14 @@ const CONTACT_ID = "talk";
 // Dense screens get the full width under their step, so their numbers stay legible.
 const WIDE_STEP_VISUALS = new Set(["founder", "program"]);
 
-// The pilot steps a program can see in the product: cohort mode on sample data.
-const STEP_VISUALS: Record<string, ReactNode> = {
+// The pilot steps a program can try: the real cohort screens on sample data
+// (PilotDemo), loaded when the section nears view. Until then, and for
+// crawlers, each shows its screenshot.
+const JoinDemo = lazy(() => import("@/components/enterprise/PilotDemo").then((module) => ({ default: module.JoinDemo })));
+const FounderDemo = lazy(() => import("@/components/enterprise/PilotDemo").then((module) => ({ default: module.FounderDemo })));
+const ProgramDemo = lazy(() => import("@/components/enterprise/PilotDemo").then((module) => ({ default: module.ProgramDemo })));
+
+const STEP_SCREENSHOTS: Record<string, ReactNode> = {
   join: (
     <ProductShot
       src={cohortJoinShot}
@@ -63,10 +70,6 @@ const STEP_VISUALS: Record<string, ReactNode> = {
       height={594}
       title="Founder invitation"
       fade={false}
-      hotspots={[
-        { left: 75, top: 49.3, label: "Never shared", side: "below" },
-        { left: 10.5, top: 85.7, label: "Joins only with consent" },
-      ]}
       alt="The cohort invitation a founder opens: what is shared with the program (name and email, stage and tasks, counts of interviews, evidence and experiments, weekly check-ins), what stays private (files, idea details, messages) and the consent to join."
     />
   ),
@@ -78,10 +81,6 @@ const STEP_VISUALS: Record<string, ReactNode> = {
       height={727}
       title="Founder view"
       fade={false}
-      hotspots={[
-        { left: 70, top: 19, label: "Rising plan, free for the pilot" },
-        { left: 69.5, top: 45.7, label: "Check-in sent to the program" },
-      ]}
       alt="A founder's cohort view in week 2 of 4: the Rising plan given by the program until the pilot ends, this week's tasks for their stage, and the week 2 check-in sent to the program with wins, a blocker, next week's goal and the help needed."
     />
   ),
@@ -93,13 +92,23 @@ const STEP_VISUALS: Record<string, ReactNode> = {
       height={955}
       title="Program dashboard"
       fade={false}
-      hotspots={[
-        { left: 83, top: 37.6, label: "Needs attention" },
-        { left: 40.5, top: 45.1, label: "Verified / total", side: "below" },
-      ]}
       alt="The program dashboard for five startups: customer profiles ready, median interviews, experiments run, check-ins this week and startups that need attention, then one row per startup with stage, tasks, interviews, evidence, experiments, last activity, check-in and attention flags such as a reported blocker or no interviews logged."
     />
   ),
+};
+
+type PilotStep = (typeof ENTERPRISE_PILOT.steps)[number];
+
+/** The live demo for a step, with its screenshot as the stand-in. */
+const stepVisual = (step: PilotStep): ReactNode => {
+  if (!("visual" in step) || !step.visual) return null;
+  const shot = STEP_SCREENSHOTS[step.visual];
+  const tryIt = ("tryIt" in step ? step.tryIt : undefined) ?? "";
+  let demo: ReactNode = null;
+  if (step.visual === "join") demo = <JoinDemo tryIt={tryIt} />;
+  if (step.visual === "founder") demo = <FounderDemo tryIt={tryIt} />;
+  if (step.visual === "program") demo = <ProgramDemo tryIt={tryIt} tryItJoined={("tryItJoined" in step ? step.tryItJoined : undefined) ?? tryIt} />;
+  return demo ? <NearViewSlot fallback={shot}>{demo}</NearViewSlot> : shot;
 };
 
 const ADAPT_ICONS: Record<string, typeof Users> = {
@@ -278,40 +287,42 @@ const Enterprise = () => {
                   copy={ENTERPRISE_PILOT.copy}
                   wide
                 />
-                <ol className="ent-steps">
-                  {ENTERPRISE_PILOT.steps.map((step, index) => {
-                    const visualKey = "visual" in step && step.visual ? step.visual : null;
-                    const visual = visualKey ? STEP_VISUALS[visualKey] : null;
-                    const stepClass = ["ent-step", visual && "has-visual", visualKey && WIDE_STEP_VISUALS.has(visualKey) && "is-wide"]
-                      .filter(Boolean)
-                      .join(" ");
-                    return (
-                      <li key={step.key} className={stepClass}>
-                        <span className="ent-step__num" aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
-                        <div className="ent-step__body">
-                          <div className="ent-step__text" data-reveal="up">
-                            <p className="ent-step__meta">
-                              <span className="ent-step__when">{step.when}</span>
-                              <span className={`ent-step__owner is-${step.owner === "Your team" ? "you" : step.owner === "Our team" ? "us" : "other"}`}>
-                                {step.owner}
-                              </span>
-                            </p>
-                            <h3 className="ent-step__title">
-                              <span className="sr-only">Step {index + 1}: </span>
-                              {step.title}
-                            </h3>
-                            <p className="ent-step__copy">{step.body}</p>
-                          </div>
-                          {visual ? (
-                            <div className="ent-step__visual" data-reveal="tilt" style={revealDelay(120)}>
-                              {visual}
+                <PilotDemoProvider>
+                  <ol className="ent-steps">
+                    {ENTERPRISE_PILOT.steps.map((step, index) => {
+                      const visualKey = "visual" in step && step.visual ? step.visual : null;
+                      const visual = stepVisual(step);
+                      const stepClass = ["ent-step", visual && "has-visual", visualKey && WIDE_STEP_VISUALS.has(visualKey) && "is-wide"]
+                        .filter(Boolean)
+                        .join(" ");
+                      return (
+                        <li key={step.key} className={stepClass}>
+                          <span className="ent-step__num" aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
+                          <div className="ent-step__body">
+                            <div className="ent-step__text" data-reveal="up">
+                              <p className="ent-step__meta">
+                                <span className="ent-step__when">{step.when}</span>
+                                <span className={`ent-step__owner is-${step.owner === "Your team" ? "you" : step.owner === "Our team" ? "us" : "other"}`}>
+                                  {step.owner}
+                                </span>
+                              </p>
+                              <h3 className="ent-step__title">
+                                <span className="sr-only">Step {index + 1}: </span>
+                                {step.title}
+                              </h3>
+                              <p className="ent-step__copy">{step.body}</p>
                             </div>
-                          ) : null}
-                        </div>
-                      </li>
-                    );
-                  })}
-                </ol>
+                            {visual ? (
+                              <div className="ent-step__visual" data-reveal="tilt" style={revealDelay(120)}>
+                                {visual}
+                              </div>
+                            ) : null}
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ol>
+                </PilotDemoProvider>
 
                 <div className="ent-scope">
                   <SectionHead eyebrow={ENTERPRISE_SCOPE.eyebrow} title={ENTERPRISE_SCOPE.title} />

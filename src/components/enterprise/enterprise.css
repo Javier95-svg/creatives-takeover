@@ -1246,25 +1246,40 @@
 
 /* A screen lifts a little under the pointer. */
 @media (hover: hover) and (prefers-reduced-motion: no-preference) {
-  .ent-step__visual .ent-shot {
+  .ent-step__visual .ent-shot,
+  .ent-step__visual .ent-demo {
     transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.45s ease;
   }
 
-  .ent-step__visual:hover .ent-shot {
-    transform: translateY(-6px);
+  .ent-step__visual:hover .ent-shot,
+  .ent-step__visual:hover .ent-demo {
+    transform: translateY(-4px);
     box-shadow: 0 28px 70px -30px rgba(79, 143, 247, 0.45), var(--ent-shadow);
   }
 }
 
-/* ---------- Product screen hotspots ---------- */
-/* Markers on what to look at; the screen itself is the image below them. */
+/* ---------- Live pilot demo ---------- */
+/* The real cohort screens on sample data (PilotDemo.tsx), in the same window
+   frame as the screenshots they replace. */
 
-.ent-shot__media {
+.ent-shot__media,
+.ent-demo__body {
   position: relative;
 }
 
+.ent-demo__body {
+  padding: 20px;
+  background: hsl(var(--background));
+}
+
+/* Inside the window the dashboard's own page margins aren't needed. */
+.ent-demo__body > :last-child > :last-child {
+  margin-bottom: 0;
+}
+
 /* One sweep of light across a screen as it arrives. */
-.ent-shot__media::after {
+.ent-shot__media::after,
+.ent-demo__body::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -1273,50 +1288,102 @@
   pointer-events: none;
 }
 
-.dark .ent-shot__media::after {
+.dark .ent-shot__media::after,
+.dark .ent-demo__body::after {
   background: linear-gradient(105deg, transparent 35%, rgba(150, 190, 255, 0.14) 50%, transparent 65%);
 }
 
-.ent-hotspot {
+.ent-example.is-live {
+  border-style: solid;
+  border-color: var(--ent-blue-soft);
+  background: var(--ent-blue-soft);
+  color: var(--ent-blue);
+  letter-spacing: 0.06em;
+}
+
+/* What to try next, above each live screen. */
+.ent-demo__cue {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-bottom: 14px;
+  color: var(--ent-ink);
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.ent-demo__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ent-blue);
+  font: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  cursor: pointer;
+}
+
+.ent-demo__link svg {
+  width: 15px;
+  height: 15px;
+}
+
+.ent-demo__link:focus-visible {
+  outline: 2px solid var(--ent-blue);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* The founder view waits for the visitor to join. */
+.ent-demo__locked {
+  position: relative;
+}
+
+.ent-demo__locked > [aria-hidden="true"] {
+  filter: blur(3px) saturate(0.8);
+  opacity: 0.55;
+  pointer-events: none;
+  user-select: none;
+}
+
+.ent-demo__lock {
   position: absolute;
+  inset: 0;
   z-index: 2;
   display: flex;
-  align-items: center;
-  gap: 8px;
-  transform: translate(-7px, -50%);
-  pointer-events: none;
-}
-
-.ent-hotspot.is-left {
-  flex-direction: row-reverse;
-  transform: translate(calc(-100% + 7px), -50%);
-}
-
-.ent-hotspot.is-below,
-.ent-hotspot.is-below-left {
   flex-direction: column;
-  gap: 6px;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 24px;
+  text-align: center;
 }
 
-.ent-hotspot.is-below {
-  align-items: flex-start;
-  transform: translate(-7px, -7px);
+.ent-demo__lock p {
+  max-width: 28rem;
+  color: var(--ent-ink);
+  font-family: var(--ent-display);
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
 }
 
-.ent-hotspot.is-below-left {
-  align-items: flex-end;
-  transform: translate(calc(-100% + 7px), -7px);
-}
-
+/* The pulsing dot that marks what to try. */
 .ent-hotspot__dot {
   position: relative;
+  display: inline-block;
   flex-shrink: 0;
-  width: 14px;
-  height: 14px;
-  border: 2px solid #ffffff;
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--ent-card);
   border-radius: 999px;
   background: var(--ent-blue);
-  box-shadow: 0 2px 10px rgba(16, 24, 40, 0.3);
+  box-shadow: 0 0 0 1px var(--ent-blue-soft);
 }
 
 .ent-hotspot__dot::before,
@@ -1329,60 +1396,19 @@
   opacity: 0;
 }
 
-.ent-hotspot__label {
-  padding: 5px 11px;
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  border-radius: 999px;
-  background: rgba(20, 26, 38, 0.88);
-  box-shadow: 0 6px 18px rgba(16, 24, 40, 0.28);
-  color: #ffffff;
-  font-size: 12.5px;
-  font-weight: 600;
-  white-space: nowrap;
-  -webkit-backdrop-filter: blur(6px);
-  backdrop-filter: blur(6px);
-}
-
-.dark .ent-hotspot__label {
-  border-color: rgba(106, 166, 255, 0.45);
-  background: rgba(14, 20, 32, 0.9);
-}
-
-/* Small screens: the dots stay, the labels would cover the screen. */
-@media (max-width: 640px) {
-  .ent-hotspot__label {
-    display: none;
-  }
-
-  .ent-hotspot__dot {
-    width: 11px;
-    height: 11px;
-  }
-}
-
 @media (prefers-reduced-motion: no-preference) {
   .ent-hotspot__dot::before,
   .ent-hotspot__dot::after {
     animation: ent-hotspot-pulse 2.6s cubic-bezier(0.22, 1, 0.36, 1) infinite;
-    animation-delay: var(--hotspot-delay, 0ms);
   }
 
   .ent-hotspot__dot::after {
-    animation-delay: calc(var(--hotspot-delay, 0ms) + 1.3s);
+    animation-delay: 1.3s;
   }
 
-  /* Until the screen has arrived, its markers wait; then they pop in one by one. */
-  .ent.is-reveal-ready .ent-step__visual:not(.is-in) .ent-hotspot {
-    opacity: 0;
-  }
-
-  .ent.is-reveal-ready .ent-step__visual.is-in .ent-hotspot {
-    animation: ent-hotspot-in 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
-    animation-delay: var(--hotspot-delay, 0ms);
-  }
-
-  .ent.is-reveal-ready .ent-step__visual.is-in .ent-shot__media::after {
-    animation: ent-sheen 1.5s cubic-bezier(0.4, 0, 0.2, 1) 0.45s both;
+  .ent.is-reveal-ready .ent-step__visual.is-in .ent-shot__media::after,
+  .ent.is-reveal-ready .ent-step__visual.is-in .ent-demo__body::after {
+    animation: ent-screen-sheen 1.5s cubic-bezier(0.4, 0, 0.2, 1) 0.45s both;
   }
 }
 
@@ -1397,23 +1423,19 @@
   }
 }
 
-@keyframes ent-hotspot-in {
-  from {
-    opacity: 0;
-    scale: 0.5;
-  }
-  to {
-    opacity: 1;
-    scale: 1;
-  }
-}
-
-@keyframes ent-sheen {
+/* Named apart from the button's ent-sheen, which pauses between sweeps. */
+@keyframes ent-screen-sheen {
   from {
     transform: translateX(-120%);
   }
   to {
     transform: translateX(120%);
+  }
+}
+
+@media (max-width: 640px) {
+  .ent-demo__body {
+    padding: 12px;
   }
 }
 

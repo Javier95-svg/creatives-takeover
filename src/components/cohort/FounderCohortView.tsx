@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowRight, CalendarDays, CheckCircle2, Lock, Send } from 'lucide-react';
@@ -28,12 +28,12 @@ import { useBizMapProgress } from '@/hooks/useBizMapProgress';
 import { COHORT_CONTEXT_QUERY_KEY } from '@/hooks/useCohortContext';
 import { supabase } from '@/integrations/supabase/client';
 import { captureEvent } from '@/lib/analytics';
-import { BIZMAP_STAGES, STAGE_TASKS } from '@/lib/bizmapStages';
+import { BIZMAP_STAGES, STAGE_TASKS, type BizMapStage } from '@/lib/bizmapStages';
 import { cohortTotalWeeks, cohortWeek, linesToList, type CohortSummary } from '@/lib/cohorts';
 import { checkinUpdateDraft, ownProfileComposePath, stageJourneyDraft } from '@/lib/profileUpdateDraft';
 import { CohortShowcaseOptInCard } from './CohortShowcaseControls';
 
-type CheckinRow = {
+export type CohortCheckinRow = {
   week_number: number;
   wins: string[] | null;
   blockers: string[] | null;
@@ -41,26 +41,45 @@ type CheckinRow = {
   help_needed: string | null;
 };
 
+/** What the founder typed in a check-in, one item per line already split. */
+export type CohortCheckinValues = {
+  wins: string[];
+  blockers: string[];
+  nextWeekGoals: string[];
+  helpNeeded: string | null;
+};
+
+/**
+ * Where the founder's cohort view reads and writes: the database for a real
+ * founder (useLiveFounderCohortSource), local state for the /enterprise demo.
+ */
+export interface FounderCohortSource {
+  stage: BizMapStage;
+  doneTaskIds: ReadonlySet<string>;
+  toggleTask: (taskId: string, completed: boolean) => void;
+  togglingTask: boolean;
+  /** False while the founder can't act yet (no signed-in user). */
+  canAct: boolean;
+  /** This week's check-in, if sent. */
+  checkin: CohortCheckinRow | null;
+  /** Sends the check-in; rejects when it couldn't be saved. */
+  submitCheckin: (values: CohortCheckinValues) => Promise<void>;
+  /** Whose profile "Share on your profile" drafts to; null hides the button. */
+  shareUserId: string | null;
+}
+
 const formatDate = (value: string) =>
   new Date(`${value.slice(0, 10)}T00:00:00Z`).toLocaleDateString(undefined, { day: 'numeric', month: 'short', timeZone: 'UTC' });
 
 const titleCase = (title: string) => title.charAt(0) + title.slice(1).toLowerCase();
 
-/**
- * A founder's dashboard in cohort mode: where they are in the program, this
- * week's plan (the tasks of their current stage) and the weekly check-in their
- * program reads.
- */
-export default function FounderCohortView({ cohort }: { cohort: CohortSummary }) {
+/** The signed-in founder's tasks and check-ins, read from and written to the database. */
+function useLiveFounderCohortSource(cohort: CohortSummary): FounderCohortSource {
   const { user } = useAuth();
   const userId = user?.id ?? null;
   const queryClient = useQueryClient();
   const { currentStage } = useBizMapProgress();
-
   const week = cohortWeek(cohort.startDate, cohort.endDate);
-  const totalWeeks = cohortTotalWeeks(cohort.startDate, cohort.endDate);
-  const stage = BIZMAP_STAGES.find((item) => item.id === currentStage) ?? BIZMAP_STAGES[0];
-  const tasks = STAGE_TASKS[currentStage] ?? [];
 
   const taskProgress = useQuery({
     queryKey: ['cohort-task-progress', userId],
@@ -85,7 +104,7 @@ export default function FounderCohortView({ cohort }: { cohort: CohortSummary })
         .eq('cohort_id', cohort.cohortId)
         .eq('user_id', userId as string);
       if (error) throw error;
-      return (data ?? []) as unknown as CheckinRow[];
+      return (data ?? []) as unknown as CohortCheckinRow[];
     },
   });
 
@@ -107,7 +126,86 @@ export default function FounderCohortView({ cohort }: { cohort: CohortSummary })
     onError: () => toast.error('We couldn’t save that task. Try again.'),
   });
 
-  const doneCount = tasks.filter((task) => taskProgress.data?.has(task.id)).length;
+  const existing = checkins.data?.find((row) => row.week_number === week) ?? null;
+
+  const submitCheckin = async (values: CohortCheckinValues) => {
+    const { error } = await (supabase as any).from('cohort_checkins').upsert(
+      {
+        cohort_id: cohort.cohortId,
+        user_id: userId,
+        week_number: week,
+        checkin_date: new Date().toISOString().slice(0, 10),
+        wins: values.wins,
+        blockers: values.blockers,
+        next_week_goals: values.nextWeekGoals,
+        help_needed: values.helpNeeded,
+      } as never,
+      { onConflict: 'cohort_id,user_id,week_number' },
+    );
+    if (error) throw error;
+    captureEvent('cohort_checkin_submitted', { week, edited: Boolean(existing) });
+    toast.success(`Week ${week} check-in sent to your program.`);
+    void queryClient.invalidateQueries({ queryKey: ['cohort-own-checkins', cohort.cohortId, userId] });
+  };
+
+  return {
+    stage: currentStage,
+    doneTaskIds: taskProgress.data ?? new Set<string>(),
+    toggleTask: (taskId, completed) => toggleTask.mutate({ taskId, completed }),
+    togglingTask: toggleTask.isPending,
+    canAct: Boolean(userId),
+    checkin: existing,
+    submitCheckin,
+    shareUserId: userId,
+  };
+}
+
+/**
+ * A founder's dashboard in cohort mode: where they are in the program, this
+ * week's plan (the tasks of their current stage) and the weekly check-in their
+ * program reads.
+ */
+export default function FounderCohortView({ cohort }: { cohort: CohortSummary }) {
+  const source = useLiveFounderCohortSource(cohort);
+  const programName = cohort.programName || cohort.cohortName;
+  return (
+    <FounderCohortScreen
+      cohort={cohort}
+      source={source}
+      extras={<CohortShowcaseOptInCard cohortId={cohort.cohortId} programName={programName} />}
+      noteAction={<LeaveCohort cohortId={cohort.cohortId} programName={programName} />}
+    />
+  );
+}
+
+/**
+ * The founder's cohort view itself, whatever it reads from. The /enterprise
+ * demo renders this same screen on sample data, so the two never drift apart.
+ */
+export function FounderCohortScreen({
+  cohort,
+  source,
+  taskLinks = true,
+  extras,
+  noteAction,
+  headingLevel = 'h1',
+}: {
+  cohort: CohortSummary;
+  source: FounderCohortSource;
+  /** Whether each task's "Open" links to its tool. */
+  taskLinks?: boolean;
+  /** Shown under the plan and check-in, before the privacy note. */
+  extras?: ReactNode;
+  /** Shown beside the privacy note. */
+  noteAction?: ReactNode;
+  headingLevel?: 'h1' | 'h2' | 'h3';
+}) {
+  const week = cohortWeek(cohort.startDate, cohort.endDate);
+  const totalWeeks = cohortTotalWeeks(cohort.startDate, cohort.endDate);
+  const stage = BIZMAP_STAGES.find((item) => item.id === source.stage) ?? BIZMAP_STAGES[0];
+  const tasks = STAGE_TASKS[source.stage] ?? [];
+  const doneCount = tasks.filter((task) => source.doneTaskIds.has(task.id)).length;
+  const Heading = headingLevel;
 
   return (
     <div>
@@ -116,9 +214,9 @@ export default function FounderCohortView({ cohort }: { cohort: CohortSummary })
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="min-w-0">
               <Badge variant="secondary" className="mb-3 rounded-full">Cohort mode</Badge>
-              <h1 className="font-space-grotesk text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
+              <Heading className="font-space-grotesk text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
                 {cohort.programName || cohort.cohortName}
-              </h1>
+              </Heading>
               <p className="mt-1 flex flex-wrap items-center gap-x-2 text-sm text-muted-foreground">
                 {cohort.programName ? <span>{cohort.cohortName}</span> : null}
                 <span className="inline-flex items-center gap-1">
@@ -156,22 +254,24 @@ export default function FounderCohortView({ cohort }: { cohort: CohortSummary })
             </p>
             <ul className="mt-4 space-y-2">
               {tasks.map((task) => {
-                const checked = Boolean(taskProgress.data?.has(task.id));
+                const checked = source.doneTaskIds.has(task.id);
                 return (
                   <li key={task.id} className="flex items-start gap-3 rounded-xl border border-border/60 bg-background/60 p-3">
                     <Checkbox
                       id={`cohort-task-${task.id}`}
                       checked={checked}
-                      disabled={toggleTask.isPending || !userId}
-                      onCheckedChange={(value) => toggleTask.mutate({ taskId: task.id, completed: value === true })}
+                      disabled={source.togglingTask || !source.canAct}
+                      onCheckedChange={(value) => source.toggleTask(task.id, value === true)}
                       className="mt-0.5"
                     />
                     <label htmlFor={`cohort-task-${task.id}`} className="min-w-0 flex-1 cursor-pointer text-sm text-foreground">
                       <span className={checked ? 'text-muted-foreground line-through' : undefined}>{task.title}</span>
                     </label>
-                    <Link to={task.route} className="inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-primary hover:underline">
-                      Open <ArrowRight className="h-3 w-3" aria-hidden="true" />
-                    </Link>
+                    {taskLinks ? (
+                      <Link to={task.route} className="inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-primary hover:underline">
+                        Open <ArrowRight className="h-3 w-3" aria-hidden="true" />
+                      </Link>
+                    ) : null}
                   </li>
                 );
               })}
@@ -180,22 +280,23 @@ export default function FounderCohortView({ cohort }: { cohort: CohortSummary })
         </Card>
 
         <WeeklyCheckin
-          cohortId={cohort.cohortId}
           week={week}
           startDate={cohort.startDate}
-          userId={userId}
-          existing={checkins.data?.find((row) => row.week_number === week) ?? null}
+          canAct={source.canAct}
+          shareUserId={source.shareUserId}
+          existing={source.checkin}
+          onSubmit={source.submitCheckin}
         />
       </div>
 
-      <CohortShowcaseOptInCard cohortId={cohort.cohortId} programName={cohort.programName || cohort.cohortName} />
+      {extras}
 
       <div className="mt-6 flex flex-wrap items-start justify-between gap-3">
         <p className="flex items-start gap-2 text-sm text-muted-foreground">
           <Lock className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
           Your program sees your stage, progress counts and weekly check-ins. Your files, ideas and messages stay private.
         </p>
-        <LeaveCohort cohortId={cohort.cohortId} programName={cohort.programName || cohort.cohortName} />
+        {noteAction}
       </div>
     </div>
   );
@@ -244,21 +345,23 @@ function LeaveCohort({ cohortId, programName }: { cohortId: string; programName:
 }
 
 function WeeklyCheckin({
-  cohortId,
   week,
   startDate,
-  userId,
+  canAct,
+  shareUserId,
   existing,
+  onSubmit: submitValues,
 }: {
-  cohortId: string;
   week: number;
   startDate: string;
-  userId: string | null;
-  existing: CheckinRow | null;
+  canAct: boolean;
+  shareUserId: string | null;
+  existing: CohortCheckinRow | null;
+  onSubmit: (values: CohortCheckinValues) => Promise<void>;
 }) {
-  const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [editing, setEditing] = useState(false);
+  const [sending, setSending] = useState(false);
   const [openingProfile, setOpeningProfile] = useState(false);
   const [wins, setWins] = useState('');
   const [blockers, setBlockers] = useState('');
@@ -274,32 +377,6 @@ function WeeklyCheckin({
     setHelp(existing.help_needed ?? '');
   }, [existing]);
 
-  const submit = useMutation({
-    mutationFn: async () => {
-      const { error } = await (supabase as any).from('cohort_checkins').upsert(
-        {
-          cohort_id: cohortId,
-          user_id: userId,
-          week_number: week,
-          checkin_date: new Date().toISOString().slice(0, 10),
-          wins: linesToList(wins),
-          blockers: linesToList(blockers),
-          next_week_goals: linesToList(goals),
-          help_needed: help.trim() || null,
-        } as never,
-        { onConflict: 'cohort_id,user_id,week_number' },
-      );
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      captureEvent('cohort_checkin_submitted', { week, edited: Boolean(existing) });
-      toast.success(`Week ${week} check-in sent to your program.`);
-      setEditing(false);
-      void queryClient.invalidateQueries({ queryKey: ['cohort-own-checkins', cohortId, userId] });
-    },
-    onError: () => toast.error('We couldn’t send your check-in. Try again.'),
-  });
-
   const summary = useMemo(() => {
     if (!existing) return null;
     return [
@@ -313,6 +390,7 @@ function WeeklyCheckin({
   // The check-in goes to the program only. Sharing it publicly is a separate,
   // explicit step: the founder gets a draft without the blockers and edits it.
   const shareOnProfile = async () => {
+    const userId = shareUserId;
     if (!userId || !existing) return;
     setOpeningProfile(true);
     stageJourneyDraft(
@@ -324,13 +402,26 @@ function WeeklyCheckin({
     navigate(await ownProfileComposePath(userId, 'checkin'));
   };
 
-  const onSubmit = (event: FormEvent) => {
+  const onSubmit = async (event: FormEvent) => {
     event.preventDefault();
     if (!linesToList(wins).length && !linesToList(blockers).length && !linesToList(goals).length && !help.trim()) {
       toast.error('Add at least one line before sending.');
       return;
     }
-    submit.mutate();
+    setSending(true);
+    try {
+      await submitValues({
+        wins: linesToList(wins),
+        blockers: linesToList(blockers),
+        nextWeekGoals: linesToList(goals),
+        helpNeeded: help.trim() || null,
+      });
+      setEditing(false);
+    } catch {
+      toast.error('We couldn’t send your check-in. Try again.');
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
@@ -359,13 +450,15 @@ function WeeklyCheckin({
               <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
                 Edit check-in
               </Button>
-              <Button variant="outline" size="sm" onClick={() => void shareOnProfile()} disabled={openingProfile || !userId}>
-                Share on your profile
-              </Button>
+              {shareUserId ? (
+                <Button variant="outline" size="sm" onClick={() => void shareOnProfile()} disabled={openingProfile}>
+                  Share on your profile
+                </Button>
+              ) : null}
             </div>
           </div>
         ) : (
-          <form onSubmit={onSubmit} className="mt-3 space-y-4">
+          <form onSubmit={(event) => void onSubmit(event)} className="mt-3 space-y-4">
             <p className="text-sm text-muted-foreground">Two minutes. One item per line.</p>
             <div className="space-y-1.5">
               <Label htmlFor="checkin-wins">What did you get done?</Label>
@@ -383,9 +476,9 @@ function WeeklyCheckin({
               <Label htmlFor="checkin-help">What help do you need from the program?</Label>
               <Input id="checkin-help" value={help} onChange={(event) => setHelp(event.target.value)} />
             </div>
-            <Button type="submit" disabled={submit.isPending || !userId} className="w-full gap-2">
+            <Button type="submit" disabled={sending || !canAct} className="w-full gap-2">
               <Send className="h-4 w-4" aria-hidden="true" />
-              {submit.isPending ? 'Sending…' : existing ? 'Update check-in' : `Send week ${week} check-in`}
+              {sending ? 'Sending…' : existing ? 'Update check-in' : `Send week ${week} check-in`}
             </Button>
           </form>
         )}

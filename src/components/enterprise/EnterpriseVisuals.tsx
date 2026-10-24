@@ -26,7 +26,7 @@ const ExampleTag = ({ className }: { className?: string }) => (
   <span className={cn("ent-example", className)}>Example</span>
 );
 
-const WindowDots = () => (
+export const WindowDots = () => (
   <span className="ent-window__dots" aria-hidden="true">
     <i />
     <i />
@@ -189,18 +189,11 @@ export const CycleStrip = ({ label, pilotStages, pilotLabel }: { label: string; 
 );
 
 /**
- * A real product screen from the platform tour, framed as an app window.
- * `src` is the dark capture and `lightSrc` the same screen in light theme;
- * CSS shows the one that matches the page.
+ * A real product screen on sample data, framed as an app window. `src` is the
+ * dark capture and `lightSrc` the same screen in light theme; CSS shows the
+ * one that matches the page. On /enterprise it stands in for the live demo
+ * until that loads, and for crawlers.
  */
-/**
- * A pulsing marker on a product screen, at a point given in percent of the
- * screen (the same for its light and dark capture). `side` puts the label
- * where the screen is empty, so it never covers what it points at: right of
- * the dot (default), left of it, below it, or below and to the left.
- */
-export type ShotHotspot = { left: number; top: number; label: string; side?: "right" | "left" | "below" | "below-left" };
-
 export const ProductShot = ({
   src,
   lightSrc,
@@ -209,7 +202,6 @@ export const ProductShot = ({
   title,
   alt,
   fade = true,
-  hotspots = [],
 }: {
   src: string;
   lightSrc: string;
@@ -219,8 +211,6 @@ export const ProductShot = ({
   alt: string;
   /** Fade the bottom edge, for screens cropped mid-page. */
   fade?: boolean;
-  /** What to look at on the screen. Decorative: the alt text already says it. */
-  hotspots?: ShotHotspot[];
 }) => (
   <figure className={cn("ent-window ent-shot", fade && "is-faded")}>
     <div className="ent-window__bar">
@@ -233,17 +223,6 @@ export const ProductShot = ({
     <div className="ent-shot__media">
       <img className="is-light" src={lightSrc} width={width} height={height} alt={alt} loading="lazy" decoding="async" />
       <img className="is-dark" src={src} width={width} height={height} alt="" aria-hidden="true" loading="lazy" decoding="async" />
-      {hotspots.map((spot, index) => (
-        <span
-          key={spot.label}
-          className={cn("ent-hotspot", spot.side && spot.side !== "right" && `is-${spot.side}`)}
-          style={{ left: `${spot.left}%`, top: `${spot.top}%`, "--hotspot-delay": `${600 + index * 260}ms` } as CSSProperties}
-          aria-hidden="true"
-        >
-          <i className="ent-hotspot__dot" />
-          <span className="ent-hotspot__label">{spot.label}</span>
-        </span>
-      ))}
     </div>
   </figure>
 );
