@@ -22,7 +22,6 @@ import {
   memberInterviews,
   memberStage,
   memberStageAtJoin,
-  type CohortDashboardData,
   type CohortMemberProgress,
   type CohortSummary,
 } from '@/lib/cohorts';
@@ -44,43 +43,24 @@ const copyText = async (text: string, what: string) => {
 /**
  * The program dashboard: every founder in a cohort, their progress (never their
  * content), this week's check-ins and who needs attention. Used by program staff
- * in cohort mode, by our team from /admin/cohorts, and on sample data by the
- * /enterprise demo (`data` + `demo`), so visitors try the real screen.
+ * in cohort mode and by our team from /admin/cohorts.
  */
 export default function ProgramDashboard({
   cohortId,
   cohortOptions = [],
   onSelectCohort,
-  data: sampleData,
-  demo = false,
-  highlightUserId,
-  onDemoAction,
-  headingLevel = 'h1',
 }: {
   cohortId: string;
   /** Other cohorts this person staffs, for the selector. */
   cohortOptions?: CohortSummary[];
   onSelectCohort?: (cohortId: string) => void;
-  /** Shown instead of loading the cohort (the /enterprise demo). */
-  data?: CohortDashboardData;
-  /** Demo: no product analytics, invite links or showcase settings. */
-  demo?: boolean;
-  /** A row to mark as the viewer's own. */
-  highlightUserId?: string;
-  onDemoAction?: (action: 'row_opened' | 'csv_exported') => void;
-  headingLevel?: 'h1' | 'h2' | 'h3';
 }) {
-  const query = useCohortDashboard(sampleData ? null : cohortId);
-  const data = sampleData ?? query.data;
-  const isLoading = !sampleData && query.isLoading;
-  const error = sampleData ? null : query.error;
+  const { data, isLoading, error } = useCohortDashboard(cohortId);
   const [openRow, setOpenRow] = useState<string | null>(null);
-  const Heading = headingLevel;
 
   useEffect(() => {
-    if (demo) return;
     captureEvent('program_dashboard_viewed', { cohort_id: cohortId });
-  }, [cohortId, demo]);
+  }, [cohortId]);
 
   if (isLoading) return <Skeleton className="mb-6 h-96 rounded-xl" />;
   if (error || !data) {
@@ -108,8 +88,7 @@ export default function ProgramDashboard({
     link.download = `${(cohort.programName || cohort.cohortName).replace(/[^a-z0-9]+/gi, '-').toLowerCase()}-week-${week}.csv`;
     link.click();
     URL.revokeObjectURL(url);
-    if (demo) onDemoAction?.('csv_exported');
-    else captureEvent('cohort_export_downloaded', { cohort_id: cohortId, week });
+    captureEvent('cohort_export_downloaded', { cohort_id: cohortId, week });
   };
 
   const tiles = [
@@ -129,9 +108,9 @@ export default function ProgramDashboard({
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="min-w-0">
               <Badge variant="secondary" className="mb-3 rounded-full">Program dashboard</Badge>
-              <Heading className="font-space-grotesk text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
+              <h1 className="font-space-grotesk text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
                 {cohort.programName || cohort.cohortName}
-              </Heading>
+              </h1>
               <p className="mt-1 text-sm text-muted-foreground">
                 {cohort.programName ? `${cohort.cohortName} · ` : ''}
                 {formatDate(cohort.startDate)} – {formatDate(cohort.endDate)}
@@ -162,12 +141,12 @@ export default function ProgramDashboard({
               </p>
               <Progress value={week === 0 ? 0 : (week / totalWeeks) * 100} aria-label="Cohort progress" />
               <div className="mt-4 flex flex-wrap gap-2">
-                {cohort.joinCode && !demo ? (
+                {cohort.joinCode ? (
                   <Button variant="outline" size="sm" className="gap-1.5" onClick={() => copyText(cohortInviteUrl(origin, cohort.joinCode as string), 'Founder invite link')}>
                     <Copy className="h-3.5 w-3.5" aria-hidden="true" /> Founder invite link
                   </Button>
                 ) : null}
-                {cohort.staffCode && !demo ? (
+                {cohort.staffCode ? (
                   <Button variant="outline" size="sm" className="gap-1.5" onClick={() => copyText(cohortInviteUrl(origin, cohort.staffCode as string), 'Staff invite link')}>
                     <Copy className="h-3.5 w-3.5" aria-hidden="true" /> Staff invite link
                   </Button>
@@ -192,7 +171,7 @@ export default function ProgramDashboard({
         ))}
       </div>
 
-      {demo ? null : <CohortShowcaseStaffCard cohortId={cohortId} />}
+      <CohortShowcaseStaffCard cohortId={cohortId} />
 
       <Card className="mb-6 border-border/60 bg-card/70">
         <CardContent className="p-0">
@@ -228,12 +207,7 @@ export default function ProgramDashboard({
                       week={week}
                       now={now}
                       open={openRow === member.userId}
-                      highlighted={member.userId === highlightUserId}
-                      onToggle={() => {
-                        const opening = openRow !== member.userId;
-                        setOpenRow(opening ? member.userId : null);
-                        if (opening && demo) onDemoAction?.('row_opened');
-                      }}
+                      onToggle={() => setOpenRow(openRow === member.userId ? null : member.userId)}
                     />
                   ))}
                 </tbody>
@@ -256,14 +230,12 @@ function MemberRow({
   week,
   now,
   open,
-  highlighted = false,
   onToggle,
 }: {
   member: CohortMemberProgress;
   week: number;
   now: Date;
   open: boolean;
-  highlighted?: boolean;
   onToggle: () => void;
 }) {
   const stage = memberStage(member.outcomes);
@@ -274,12 +246,9 @@ function MemberRow({
 
   return (
     <Fragment>
-      <tr className={cn('border-b border-border/40 align-top', highlighted && 'bg-primary/5')}>
+      <tr className="border-b border-border/40 align-top">
         <td className="px-4 py-3">
-          <p className="flex items-center gap-2 font-semibold text-foreground">
-            {member.name}
-            {highlighted ? <Badge className="rounded-full px-2 py-0 text-xs">You</Badge> : null}
-          </p>
+          <p className="font-semibold text-foreground">{member.name}</p>
           {member.email ? <p className="text-xs text-muted-foreground">{member.email}</p> : null}
         </td>
         <td className="px-4 py-3">
