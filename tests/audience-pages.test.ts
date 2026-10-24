@@ -74,14 +74,10 @@ test('the enterprise page lands the pilot offer in the hero', () => {
 
 test('the pilot promises a process and evidence, and adapts to each program', () => {
   // Thirty days can't prove product-market fit, so the page says so instead of
-  // implying it. Every outcome is shown with a visual.
-  assert.deepEqual(
-    enterprise.ENTERPRISE_OUTCOMES.items.map((outcome) => outcome.key),
-    ['plan', 'evidence', 'report', 'admin'],
-  );
-  for (const outcome of enterprise.ENTERPRISE_OUTCOMES.items) {
-    assert.match(enterprisePage, new RegExp(`\\b${outcome.key}: `), `${outcome.key} has a visual`);
-  }
+  // implying it. The steps and the scope explain the pilot (2026-10-23); the
+  // separate outcomes section was removed as redundant.
+  assert.equal('ENTERPRISE_OUTCOMES' in enterprise, false);
+  assert.doesNotMatch(enterprisePage, /ENTERPRISE_OUTCOMES/);
   assert.match(enterprise.ENTERPRISE_PILOT.honesty, /won’t prove product-market fit/);
   assert.doesNotMatch(JSON.stringify(enterprise), /guaranteed|get funded|achieve product-market fit/i);
   // Programs differ in size, founder focus and length.

@@ -21,21 +21,12 @@ import InstitutionContactForm from "@/components/audience/InstitutionContactForm
 import {
   AfterProgramFlow,
   AfterProgramKeeps,
-  CheckInCard,
-  CohortReportMock,
   CycleStrip,
-  EvidenceCallouts,
   PilotBoardMock,
   PilotSetupMock,
   ProductShot,
 } from "@/components/enterprise/EnterpriseVisuals";
 import javierPhoto from "@/assets/team-javier-pena-profile.jpg";
-import icpBuilderShot from "@/assets/enterprise/icp-builder.webp";
-import icpBuilderLightShot from "@/assets/enterprise/icp-builder-light.webp";
-import pmfLabShot from "@/assets/enterprise/pmf-lab.webp";
-import pmfLabLightShot from "@/assets/enterprise/pmf-lab-light.webp";
-import founderWorkspaceShot from "@/assets/enterprise/founder-workspace.webp";
-import founderWorkspaceLightShot from "@/assets/enterprise/founder-workspace-light.webp";
 import cohortJoinShot from "@/assets/enterprise/cohort-join.webp";
 import cohortJoinLightShot from "@/assets/enterprise/cohort-join-light.webp";
 import cohortFounderShot from "@/assets/enterprise/cohort-founder.webp";
@@ -50,7 +41,6 @@ import {
   ENTERPRISE_CONTACT,
   ENTERPRISE_FAQS,
   ENTERPRISE_HERO,
-  ENTERPRISE_OUTCOMES,
   ENTERPRISE_PATH,
   ENTERPRISE_PILOT,
   ENTERPRISE_SCOPE,
@@ -59,49 +49,6 @@ import {
 import "@/components/enterprise/enterprise.css";
 
 const CONTACT_ID = "talk";
-
-// Each outcome is shown, not described: the real product screen that produces
-// it, or an example of what the program receives.
-const OUTCOME_VISUALS: Record<string, ReactNode> = {
-  plan: (
-    <ProductShot
-      src={icpBuilderShot}
-      lightSrc={icpBuilderLightShot}
-      width={1152}
-      height={1137}
-      title="ICP Builder"
-      alt="ICP Builder in the sample workspace: an idea score, a draft ideal customer, and the steps from market to experiment and recommendation."
-    />
-  ),
-  evidence: (
-    <div className="ent-outcome__stack ent-outcome__stack--evidence">
-      <ProductShot
-        src={pmfLabShot}
-        lightSrc={pmfLabLightShot}
-        width={1400}
-        height={1178}
-        title="PMF Lab · Evidence"
-        fade={false}
-        alt="PMF Lab's evidence log in the sample workspace: calls, newsletter replies, an objection and an out-of-segment signal, 21 of 25 signals logged, with the verdict locked until the threshold is met."
-      />
-      <EvidenceCallouts />
-    </div>
-  ),
-  report: <CohortReportMock />,
-  admin: (
-    <div className="ent-outcome__stack">
-      <ProductShot
-        src={founderWorkspaceShot}
-        lightSrc={founderWorkspaceLightShot}
-        width={1200}
-        height={1044}
-        title="Founder workspace"
-        alt="A founder's workspace in the sample workspace: today's focus with the next tasks in PMF Lab and Demo Studio, and shortcuts to find a mentor or a co-founder."
-      />
-      <CheckInCard />
-    </div>
-  ),
-};
 
 // Dense screens get the full width under their step, so their numbers stay legible.
 const WIDE_STEP_VISUALS = new Set(["founder", "program"]);
@@ -305,45 +252,6 @@ const Enterprise = () => {
                 <div className="ent-hero__visual" data-reveal="zoom" style={revealDelay(150)}>
                   <PilotBoardMock />
                 </div>
-              </div>
-            </section>
-
-            {/* The four outcomes, each with the screen or document that delivers it. */}
-            <section className="ent-section">
-              <div className="ent-container">
-                <SectionHead
-                  eyebrow={ENTERPRISE_OUTCOMES.eyebrow}
-                  title={ENTERPRISE_OUTCOMES.title}
-                  accent={ENTERPRISE_OUTCOMES.titleAccent}
-                  wide
-                />
-                <ol className="ent-outcomes">
-                  {ENTERPRISE_OUTCOMES.items.map((outcome, index) => (
-                    <li key={outcome.key} className="ent-outcome">
-                      {/* Text slides in from its own side; the screen rises and grows in beside it. */}
-                      <div className="ent-outcome__grid">
-                        <div className="ent-outcome__text" data-reveal={index % 2 === 0 ? "left" : "right"}>
-                          <p className="ent-outcome__meta">
-                            <span className="ent-outcome__num">{String(index + 1).padStart(2, "0")}</span>
-                            <span className="ent-outcome__when">{outcome.when}</span>
-                          </p>
-                          <h3 className="ent-outcome__title">{outcome.title}</h3>
-                          <ul className="ent-outcome__includes">
-                            {outcome.includes.map((item, itemIndex) => (
-                              <li key={item} data-reveal="up" style={revealDelay(250 + itemIndex * 80)}>
-                                <Check aria-hidden="true" />
-                                {item}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                        <div className="ent-outcome__visual" data-reveal="zoom" style={revealDelay(120)}>
-                          {OUTCOME_VISUALS[outcome.key]}
-                        </div>
-                      </div>
-                    </li>
-                  ))}
-                </ol>
               </div>
             </section>
 

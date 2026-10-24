@@ -58,43 +58,6 @@ export const ENTERPRISE_HERO = {
   ],
 };
 
-// The four outcomes, in the order the 30 days produce them. `includes` lists
-// what each one contains, shown as chips instead of sentences.
-// Written for program managers (2026-10-16): each title says what the
-// program gets, not what the founder does.
-export const ENTERPRISE_OUTCOMES = {
-  eyebrow: 'What you get',
-  title: 'A unified system to measure your cohort progress and outcomes.',
-  // The end of the title, set in the hero's accent gradient on the page.
-  titleAccent: 'cohort progress and outcomes.',
-  items: [
-    {
-      key: 'plan',
-      when: 'Week 1',
-      title: 'A validation plan for every startup',
-      includes: ['Ideal customer', 'The customer’s problem', 'Assumptions to test', 'A 30-day demand test'],
-    },
-    {
-      key: 'evidence',
-      when: 'Weeks 1–4',
-      title: 'Every interview and experiment on record',
-      includes: ['Interviews', 'Experiments', 'Feedback', 'Findings and decisions'],
-    },
-    {
-      key: 'report',
-      when: 'Day 30',
-      title: 'A cohort report ready for your funders',
-      includes: ['Participation', 'Completed activities', 'Key findings', 'Next steps per startup'],
-    },
-    {
-      key: 'admin',
-      when: 'Every week',
-      title: 'Updates without chasing anyone',
-      includes: ['One workflow for every startup', 'Weekly check-ins run by us', 'A weekly summary for your team'],
-    },
-  ],
-};
-
 // The pilot step by step, as a program manager lives it (2026-10-23). Each
 // step says who does the work, so the team's time is clear. Verified against
 // cohort mode: separate founder and staff invite links, consent to join,
