@@ -13,8 +13,7 @@ import {
   AUDIENCE_LABELS,
   AUDIENCE_ORDER,
   PEDIA_BASE_PATH,
-  ctaHref,
-  ctaSignupHref,
+  pediaCtaHref,
   entryPath,
   entryWordCount,
   getEntry,
@@ -211,13 +210,13 @@ export default function StartupPediaEntry() {
                 <p className="text-xs font-semibold uppercase tracking-[0.16em] opacity-80">Put it into practice</p>
                 <p className="mt-2 max-w-xl text-base leading-relaxed">{entry.cta.description}</p>
                 <Link
-                  to={user ? ctaHref(entry.cta.href, entry.slug) : ctaSignupHref(entry.cta.href, entry.slug)}
+                  to={pediaCtaHref(entry.cta.href, entry.slug, Boolean(user))}
                   className="sp-cta-button"
                   onClick={() =>
                     captureEvent("startup_pedia_cta_click", {
                       entry_slug: entry.slug,
                       target: entry.cta?.href,
-                      destination: user ? "tool" : "signup",
+                      destination: pediaCtaHref(entry.cta?.href ?? "", entry.slug, Boolean(user)).startsWith("/signup") ? "signup" : "page",
                     })
                   }
                 >

@@ -2,6 +2,76 @@ import type { PediaEntry } from "../types.ts";
 
 export const validationEntries: PediaEntry[] = [
   {
+    slug: "startup-idea-validation-tools",
+    kind: "guide",
+    topic: "validation",
+    audiences: ["founder", "builder", "mentor", "program"],
+    title: "Startup Idea Validation Tools: What to Use at Each Step",
+    metaTitle: "Startup Idea Validation Tools: What to Use at Each Step",
+    metaDescription:
+      "Tools to validate a startup idea at each step: defining your customer, interviews, demand tests and scoring evidence. Plus a lean setup for solo founders.",
+    aliases: ["idea validation tool", "business idea validation tool", "startup validation software", "validation tools for solo founders", "ai idea validator"],
+    answer:
+      "No single tool validates an idea for you. You need one tool for each step: defining the customer, finding and interviewing them, testing demand with a page or offer, and scoring the evidence. Choose the simplest tool that does each job, and judge any tool by whether it gets you real customer behavior, not just an opinion about your idea.",
+    sections: [
+      {
+        id: "by-step",
+        heading: "Tools for each step",
+        body: "### 1. Define who you are validating with\nA worksheet or an ICP tool that makes you choose one segment, its pain and where to find it. See [ideal customer profile](/startup-pedia/ideal-customer-profile).\n\n### 2. Find people to talk to\nProfessional networks, communities, forums and search tools where your segment already gathers, plus a simple tracker of who you contacted. See [how to find your target audience](/startup-pedia/how-to-find-your-target-audience).\n\n### 3. Run and record interviews\nA scheduling link, a video-call tool, and somewhere to keep notes in the customer's own words. Record only with permission. Use these [interview questions](/startup-pedia/customer-interview-questions).\n\n### 4. Test demand\nA landing-page or form builder for a [waitlist](/startup-pedia/waitlist-before-mvp), a clickable demo, or a payment link for pre-orders. A small, targeted ad budget can bring qualified visitors if your channels are slow.\n\n### 5. Measure and decide\nA survey tool for the [PMF survey](/startup-pedia/product-market-fit-survey-questions) once you have users, analytics on your page, and a written decision rule: build, narrow, change direction or stop.",
+      },
+      {
+        id: "ai-validators",
+        heading: "What about AI idea validators?",
+        body: "AI tools can quickly draft a customer profile, list risky assumptions, suggest interview questions and summarise notes, which saves real time. What they cannot produce is evidence: only real customers' behavior tells you whether people will act. Use AI to prepare and organise the work, then spend the saved time talking to customers.",
+      },
+      {
+        id: "solo-founders",
+        heading: "For solo founders",
+        body: "Working alone, the risk is spending weeks on setup instead of evidence. Keep the stack small:\n\n- one place for your customer profile, interview notes and decisions,\n- one page or demo to test demand,\n- a fixed weekly rhythm, for example three hours: two for conversations, one for reviewing what you learned.\n\nIf a tool takes longer to set up than the test it supports, skip it.",
+      },
+      {
+        id: "creatives-takeover",
+        heading: "Doing it in Creatives Takeover",
+        body: "Creatives Takeover puts these steps in one place, so the evidence from each step carries into the next:\n\n- [ICP Builder](/icp-builder) turns your idea into a saved customer profile (included in the free plan).\n- [Validate](/validate) gives you a structured plan to test demand and log what you find.\n- [Demo Studio](/demo-studio) builds an interactive demo and a public page with signup capture.\n- [PMF Lab](/pmf-lab) scores the evidence you collected.\n- [Decision Sprint](/decision-sprint) compares several ideas against the same criteria.\n\nIt is **not** a survey panel, an ad platform or a call-recording tool. If you need those, use a specialised tool alongside it.",
+      },
+    ],
+    roleNotes: {
+      founder: "Pick tools after you choose the test, not before. The test decides what you need.",
+      mentor: "When a founder asks which tool to use, ask which step they are on first. Most are trying to automate a step they have not done by hand yet.",
+      program: "Giving every team in a cohort the same validation workflow makes their evidence comparable. See how accelerators measure startup progress.",
+    },
+    faqs: [
+      {
+        question: "What is the best tool to validate a startup idea?",
+        answer: "There is no single best tool. Use one for each step: defining the customer, interviewing, testing demand and scoring evidence. The best setup is the simplest one that gets you real customer behavior.",
+      },
+      {
+        question: "Can an AI tool validate my startup idea?",
+        answer: "It can help you prepare: drafting a customer profile, assumptions and interview questions. Validation itself needs evidence from real customers, such as conversations, signups or payments.",
+      },
+      {
+        question: "Which validation tools suit solo founders?",
+        answer: "A small stack: one place for your customer profile, notes and decisions, one landing page or demo for demand tests, and a fixed weekly rhythm for customer conversations.",
+      },
+    ],
+    sources: [
+      { title: "The Mom Test", publisher: "Rob Fitzpatrick", url: "https://www.momtestbook.com/" },
+      {
+        title: "How to Test Your Idea: Start With the Most Critical Hypotheses",
+        publisher: "Strategyzer",
+        url: "https://www.strategyzer.com/library/how-to-test-your-idea-start-with-the-most-critical-hypotheses",
+      },
+    ],
+    relatedSlugs: ["how-to-validate-a-startup-idea", "customer-interview-questions", "waitlist-before-mvp", "product-market-fit-survey-questions"],
+    cta: {
+      label: "Start with your customer",
+      href: "/icp-builder",
+      description: "ICP Builder is the first step: it turns your idea into a saved customer profile you can validate. Included in the free plan.",
+    },
+    publishedAt: "2026-10-25",
+    modifiedAt: "2026-10-25",
+  },
+  {
     slug: "how-to-validate-a-startup-idea",
     kind: "guide",
     topic: "validation",

@@ -9,7 +9,7 @@ import {
   STARTUP_SHORTCUTS,
   AUDIENCE_LABELS,
   AUDIENCE_ORDER,
-  ctaSignupHref,
+  pediaCtaHref,
   entryPath,
   getEntriesByTopic,
   getRelatedEntries,
@@ -190,7 +190,7 @@ const PEDIA_ENTRY_ROUTES = PEDIA_ENTRIES.map((entry) => {
     sources: entry.sources,
     faqs: entry.faqs,
     ...(entry.cta
-      ? { cta: { label: entry.cta.label, href: ctaSignupHref(entry.cta.href, entry.slug), description: entry.cta.description } }
+      ? { cta: { label: entry.cta.label, href: pediaCtaHref(entry.cta.href, entry.slug, false), description: entry.cta.description } }
       : {}),
     relatedLinks: [
       ...getRelatedEntries(entry).map((related) => ({ href: entryPath(related.slug), label: related.title })),

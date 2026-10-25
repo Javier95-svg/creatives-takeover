@@ -8,8 +8,7 @@ import NotFound from "@/pages/NotFound";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   PEDIA_BASE_PATH,
-  ctaHref,
-  ctaSignupHref,
+  pediaCtaHref,
   entryPath,
   getEntriesByTopic,
   getTopic,
@@ -19,8 +18,6 @@ import {
   type PediaEntry,
 } from "@/data/startupPedia";
 import "@/components/startup-pedia/startup-pedia.css";
-
-const PUBLIC_PAGES = new Set(["/enterprise", "/mentorship"]);
 
 function EntryList({ title, entries }: { title: string; entries: PediaEntry[] }) {
   if (!entries.length) return null;
@@ -49,10 +46,8 @@ export default function StartupPediaTopic() {
   if (!topic) return <NotFound />;
 
   // Tools need an account, so signed-out readers go straight to /signup and on
-  // to the tool afterwards. Public pages (the programs page, mentor browsing)
-  // stay direct links.
-  const toolHref = (href: string) =>
-    user || PUBLIC_PAGES.has(href) ? ctaHref(href, `topic-${topic.key}`) : ctaSignupHref(href, `topic-${topic.key}`);
+  // to the tool afterwards; public pages stay direct links (pediaCtaHref).
+  const toolHref = (href: string) => pediaCtaHref(href, `topic-${topic.key}`, Boolean(user));
 
   const entries = getEntriesByTopic(topic.key);
   const url = topicPath(topic.key);

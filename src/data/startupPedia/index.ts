@@ -74,6 +74,13 @@ export const ctaHref = (href: string, slug: string) => {
 export const ctaSignupHref = (href: string, slug: string) =>
   `/signup?source=startup_pedia&utm_source=seo&utm_medium=startup_pedia&utm_campaign=${slug}&return=${encodeURIComponent(ctaHref(href, slug))}`;
 
+/** Public pages need no account, so their links never detour through signup (a program manager must not land on founder signup). */
+export const PUBLIC_CTA_PAGES = new Set(["/enterprise", "/for-investors", "/mentorship"]);
+
+/** The one rule every "Put it into practice" link follows. */
+export const pediaCtaHref = (href: string, slug: string, signedIn: boolean) =>
+  signedIn || PUBLIC_CTA_PAGES.has(href) ? ctaHref(href, slug) : ctaSignupHref(href, slug);
+
 const stripMarkdown = (text: string) =>
   text
     .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")

@@ -135,6 +135,11 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://creatives-takeover.com/startup-pedia/topics/programs</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://creatives-takeover.com/tech-stack</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
@@ -165,6 +170,12 @@
   </url>
   <url>
     <loc>https://creatives-takeover.com/about</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://creatives-takeover.com/startup-pedia/startup-idea-validation-tools</loc>
+    <lastmod>2026-10-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -404,6 +415,24 @@
   </url>
   <url>
     <loc>https://creatives-takeover.com/startup-pedia/how-to-find-investors</loc>
+    <lastmod>2026-10-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://creatives-takeover.com/startup-pedia/how-accelerators-measure-startup-progress</loc>
+    <lastmod>2026-10-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://creatives-takeover.com/startup-pedia/startup-cohort-progress-report-template</loc>
+    <lastmod>2026-10-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://creatives-takeover.com/startup-pedia/founder-progress-tracking-software</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>

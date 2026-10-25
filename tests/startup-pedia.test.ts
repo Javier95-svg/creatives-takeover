@@ -8,6 +8,7 @@ import {
   PEDIA_TOPICS,
   STARTUP_SHORTCUTS,
   ctaSignupHref,
+  pediaCtaHref,
   entryPlainText,
   entryWordCount,
   getEntriesByTopic,
@@ -149,10 +150,14 @@ test("signed-out readers go from a CTA straight to signup, then on to the tool",
     url.searchParams.get("return"),
     "/mvp-scope?utm_source=seo&utm_medium=startup_pedia&utm_campaign=minimum-viable-product",
   );
-  // Both pages pick the destination by sign-in state: tool for members, signup for visitors.
-  assert.match(read("src/pages/StartupPediaEntry.tsx"), /user \? ctaHref\(entry\.cta\.href, entry\.slug\) : ctaSignupHref\(entry\.cta\.href, entry\.slug\)/);
-  assert.match(read("src/pages/StartupPediaTopic.tsx"), /ctaSignupHref\(href, `topic-\$\{topic\.key\}`\)/);
-  assert.match(read("scripts/seo-route-config.mjs"), /href: ctaSignupHref\(entry\.cta\.href, entry\.slug\)/);
+  // One rule for every "Put it into practice" link: members go to the page,
+  // visitors to signup, and public pages (the programs page) never detour.
+  assert.match(pediaCtaHref("/mvp-scope", "x", false), /^\/signup\?/);
+  assert.match(pediaCtaHref("/mvp-scope", "x", true), /^\/mvp-scope\?utm_source=seo/);
+  assert.match(pediaCtaHref("/enterprise", "x", false), /^\/enterprise\?utm_source=seo/);
+  assert.match(read("src/pages/StartupPediaEntry.tsx"), /to=\{pediaCtaHref\(entry\.cta\.href, entry\.slug, Boolean\(user\)\)\}/);
+  assert.match(read("src/pages/StartupPediaTopic.tsx"), /pediaCtaHref\(href, `topic-\$\{topic\.key\}`, Boolean\(user\)\)/);
+  assert.match(read("scripts/seo-route-config.mjs"), /href: pediaCtaHref\(entry\.cta\.href, entry\.slug, false\)/);
 });
 
 test("every retired /answers URL 301s to an existing entry", () => {
