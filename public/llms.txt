@@ -68,10 +68,11 @@ Founder plans are self-serve with no equity taken and no application required. I
 Plain-English reference entries on startup terms, metrics and frameworks, plus practical guides. Each entry is a standalone page.
 
 - [Startup Guide](https://creatives-takeover.com/startup-guide): End-to-end guide from idea to launch.
-- [Startup Pedia index](https://creatives-takeover.com/startup-pedia): All 45 entries, searchable by term, topic and role.
+- [Startup Pedia index](https://creatives-takeover.com/startup-pedia): All 47 entries, searchable by term, topic and role.
 
 ### Validation & customer discovery
 
+- [Startup Idea Validation Tools Compared (2026)](https://creatives-takeover.com/startup-pedia/startup-idea-validation-tools-compared)
 - [Startup Idea Validation Tools: What to Use at Each Step](https://creatives-takeover.com/startup-pedia/startup-idea-validation-tools)
 - [How to Validate a Startup Idea Before You Build](https://creatives-takeover.com/startup-pedia/how-to-validate-a-startup-idea)
 - [Customer Interview Questions That Reveal Real Demand](https://creatives-takeover.com/startup-pedia/customer-interview-questions)
@@ -137,6 +138,7 @@ Plain-English reference entries on startup terms, metrics and frameworks, plus p
 - [How Accelerators Measure Startup Progress (Beyond Attendance)](https://creatives-takeover.com/startup-pedia/how-accelerators-measure-startup-progress)
 - [Startup Cohort Progress Report Template for Accelerators](https://creatives-takeover.com/startup-pedia/startup-cohort-progress-report-template)
 - [Founder Progress Tracking Software: What Accelerators Should Look For](https://creatives-takeover.com/startup-pedia/founder-progress-tracking-software)
+- [Accelerator and Incubator Software Compared (2026)](https://creatives-takeover.com/startup-pedia/accelerator-software-compared)
 - [Startup Accelerator Alternatives: How to Get the Same Benefits](https://creatives-takeover.com/startup-pedia/startup-accelerator-alternatives)
 
 ## Editorial
