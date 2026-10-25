@@ -67,8 +67,9 @@ const PurchaseHistory = lazy(() => import("./pages/PurchaseHistory"));
 const Contact = lazy(() => import("./pages/Contact"));
 const FAQPage = lazy(() => import("./pages/FAQPage"));
 const Resources = lazy(() => import("./pages/Resources"));
-const FounderAnswerLibrary = lazy(() => import("./pages/FounderAnswerLibrary"));
-const FounderAnswerPage = lazy(() => import("./pages/FounderAnswerPage"));
+const StartupPediaHub = lazy(() => import("./pages/StartupPediaHub"));
+const StartupPediaTopic = lazy(() => import("./pages/StartupPediaTopic"));
+const StartupPediaEntry = lazy(() => import("./pages/StartupPediaEntry"));
 const StartupGuide = lazy(() => import("./pages/StartupGuide"));
 const Services = lazy(() => import("./pages/Services"));
 const Software = lazy(() => import("./pages/Software"));
@@ -383,8 +384,10 @@ function App() {
                         <Route path="/contact" element={<Contact />} />
                         <Route path="/faq" element={<FAQPage />} />
                         <Route path="/resources" element={<Resources />} />
-                        <Route path="/answers" element={<FounderAnswerLibrary />} />
-                        <Route path="/answers/:slug" element={<FounderAnswerPage />} />
+                        {/* /answers and /answers/:slug 301 here from vercel.json. */}
+                        <Route path="/startup-pedia" element={<StartupPediaHub />} />
+                        <Route path="/startup-pedia/topics/:topic" element={<StartupPediaTopic />} />
+                        <Route path="/startup-pedia/:slug" element={<StartupPediaEntry />} />
                         <Route path="/startup-guide" element={<StartupGuide />} />
                         <Route path="/services" element={<Services />} />
                         <Route path="/software" element={<Software />} />

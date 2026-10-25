@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Menu, X, LogIn, LogOut, User, Settings, Gift, UserPlus, MessageCircle, BookOpen, Users as UsersIcon, Newspaper, DollarSign, ChevronDown, Rocket, FlaskConical, Lightbulb, Target, BriefcaseBusiness, GraduationCap, Handshake, BarChart3, Filter, CheckSquare, LineChart, CalendarCheck, HeartHandshake, Sparkles, Mic, Lock, Compass, Telescope, Clapperboard } from "lucide-react";
+import { Menu, X, LogIn, LogOut, User, Settings, Gift, UserPlus, MessageCircle, BookMarked, BookOpen, Users as UsersIcon, Newspaper, DollarSign, ChevronDown, Rocket, FlaskConical, Lightbulb, Target, BriefcaseBusiness, GraduationCap, Handshake, BarChart3, Filter, CheckSquare, LineChart, CalendarCheck, HeartHandshake, Sparkles, Mic, Lock, Compass, Telescope, Clapperboard } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -274,6 +274,7 @@ const LegacyNavigation = () => {
     { name: "Network", href: "/mentorship", tooltip: "Mentors, angel investors, and co-founder matchmaking", icon: UsersIcon },
     { name: "Insighta", href: "/insighta", tooltip: "Funding opportunities and investment resources", icon: Telescope },
     { name: "Content", href: "/podcast", tooltip: "Podcast conversations and founder stories", icon: Clapperboard },
+    { name: "Startup Pedia", href: "/startup-pedia", tooltip: "Startup terms, metrics and how-to guides", icon: BookMarked },
     { name: "Resources", href: "/accelerator-hunt", tooltip: "Practical tools and opportunities for founders", icon: BookOpen },
     { name: "Pricing", href: "/pricing", tooltip: "View plans and pricing options", icon: DollarSign }
   ];

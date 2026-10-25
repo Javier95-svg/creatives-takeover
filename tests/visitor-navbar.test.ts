@@ -29,11 +29,13 @@ test('visitor navigation keeps the intended public destinations', () => {
   }
 });
 
-test('the bar runs How it works, For founders, Enterprise, Explore, About, Pricing', () => {
+test('the bar runs How it works, For founders, Enterprise, Explore, Startup Pedia, About, Pricing', () => {
   // Order requested 2026-10-17. Tour became "How it works" on the same route,
   // and Enterprise is the programs page. For founders and Explore are menus.
+  // Startup Pedia added 2026-10-25 as its own tab, as requested.
   const { table, labels } = linkTable('visitorEntries');
-  assert.deepEqual(labels, ['How it works', 'For founders', 'Enterprise', 'Explore', 'About', 'Pricing']);
+  assert.deepEqual(labels, ['How it works', 'For founders', 'Enterprise', 'Explore', 'Startup Pedia', 'About', 'Pricing']);
+  assert.match(table, /label: "Startup Pedia", href: "\/startup-pedia"/);
   assert.match(table, /label: "For founders", links: founderLinks/);
   assert.match(table, /label: "Explore", links: exploreLinks/);
   assert.match(table, /label: "Enterprise", href: "\/enterprise"/);
@@ -42,12 +44,14 @@ test('the bar runs How it works, For founders, Enterprise, Explore, About, Prici
 
 test('every bar entry keeps its icon on the left', () => {
   // Requested 2026-10-17: the icons were lost in the redesign. Menus carry one
-  // too, and the desktop bar shows them from 2xl, where six entries fit.
+  // too, and the desktop bar shows them from the width where every entry fits.
   const { table } = linkTable('visitorEntries');
   const entries = table.split('\n').filter((line) => line.includes('label: "'));
-  assert.equal(entries.length, 6);
+  assert.equal(entries.length, 7);
   for (const line of entries) assert.match(line, /icon: [A-Z]\w+/, line.trim());
-  assert.equal(source.match(/<entry\.icon className="hidden h-4 w-4 shrink-0 2xl:block"/g)?.length, 2, 'icon on links and on menu triggers');
+  // With the seventh entry (Startup Pedia, 2026-10-25) the icons only fit from
+  // 3xl (1600px); below that they overlapped the brand lockup and the theme toggle.
+  assert.equal(source.match(/<entry\.icon className="hidden h-4 w-4 shrink-0 3xl:block"/g)?.length, 2, 'icon on links and on menu triggers');
 });
 
 test('For founders holds Build, Collab and Founder ID', () => {

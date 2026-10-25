@@ -146,7 +146,7 @@ export const createWebSiteSchema = () => ({
   "url": "https://creatives-takeover.com/",
   "potentialAction": {
     "@type": "SearchAction",
-    "target": { "@type": "EntryPoint", "urlTemplate": "https://creatives-takeover.com/answers?q={search_term_string}" },
+    "target": { "@type": "EntryPoint", "urlTemplate": "https://creatives-takeover.com/startup-pedia?q={search_term_string}" },
     "query-input": "required name=search_term_string"
   }
 });

@@ -3,14 +3,27 @@ import { ArrowRight, Search } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { FOUNDER_ANSWER_CLUSTERS, founderAnswerPages } from "@/data/founderAnswerPages";
+import { PEDIA_ENTRIES, entryPath, getTopic, type PediaEntry } from "@/data/startupPedia";
+
+// Startup Pedia replaced the Founder Answer Library (2026-10-25). The section,
+// its layout and its place on the homepage and /resources are unchanged; only
+// the entries it features and the links point at the new library.
+const FEATURED_SLUGS = [
+  "ideal-customer-profile",
+  "how-to-validate-a-startup-idea",
+  "minimum-viable-product",
+  "go-to-market-strategy",
+  "pitch-deck-outline",
+];
 
 interface FounderAnswerLibraryTeaserProps {
   compact?: boolean;
 }
 
 export default function FounderAnswerLibraryTeaser({ compact = false }: FounderAnswerLibraryTeaserProps) {
-  const featuredPages = founderAnswerPages.slice(0, compact ? 3 : 5);
+  const featuredPages = FEATURED_SLUGS.slice(0, compact ? 3 : 5)
+    .map((slug) => PEDIA_ENTRIES.find((entry) => entry.slug === slug))
+    .filter((entry): entry is PediaEntry => Boolean(entry));
 
   return (
     <section className={compact ? "py-12" : "py-16 lg:py-20"}>
@@ -20,7 +33,7 @@ export default function FounderAnswerLibraryTeaser({ compact = false }: FounderA
             <div>
               <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-primary">
                 <Search className="h-3.5 w-3.5" />
-                Startup guides
+                Startup Pedia
               </div>
               <h2 className="mt-4 font-space-grotesk text-3xl font-semibold tracking-tight sm:text-4xl">
                 Practical answers for your next decision
@@ -31,8 +44,8 @@ export default function FounderAnswerLibraryTeaser({ compact = false }: FounderA
               </p>
               <div className="mt-6 flex flex-col gap-3 sm:flex-row">
                 <Button asChild>
-                  <Link to="/answers">
-                    Explore the library
+                  <Link to="/startup-pedia">
+                    Explore Startup Pedia
                     <ArrowRight className="h-4 w-4" />
                   </Link>
                 </Button>
@@ -50,12 +63,12 @@ export default function FounderAnswerLibraryTeaser({ compact = false }: FounderA
                   <CardContent className="flex items-start justify-between gap-4 p-4">
                     <div>
                       <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">
-                        {FOUNDER_ANSWER_CLUSTERS[page.cluster].label}
+                        {getTopic(page.topic)?.label}
                       </p>
                       <h3 className="mt-1 text-base font-semibold">{page.title}</h3>
                     </div>
                     <Link
-                      to={`/answers/${page.slug}`}
+                      to={entryPath(page.slug)}
                       className="mt-1 flex-none text-sm font-semibold text-primary hover:underline"
                     >
                       Read

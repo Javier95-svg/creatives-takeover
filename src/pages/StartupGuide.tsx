@@ -21,9 +21,9 @@ const STAGES = [
     borderColor: "border-violet-500/30",
     bgColor: "bg-violet-500/10",
     pages: [
-      { slug: "how-to-define-icp-for-startup", label: "How to Define an ICP for Your Startup" },
-      { slug: "ideal-customer-profile-template", label: "Ideal Customer Profile Template" },
-      { slug: "startup-positioning-examples", label: "Startup Positioning Examples" },
+      { slug: "ideal-customer-profile", label: "Ideal Customer Profile (ICP): What It Is and How to Define One" },
+      { slug: "ideal-customer-profile-template", label: "Ideal Customer Profile Template for Early-Stage Founders" },
+      { slug: "startup-positioning-examples", label: "Startup Positioning: A Simple Formula and Examples" },
     ],
     cta: { label: "Build My ICP Free", href: "/icp-builder" },
     checklist: [
@@ -43,9 +43,9 @@ const STAGES = [
     borderColor: "border-success/30",
     bgColor: "bg-success/10",
     pages: [
-      { slug: "how-to-validate-startup-idea", label: "How to Validate a Startup Idea Before Building" },
-      { slug: "waitlist-before-mvp", label: "Waitlist or MVP: What Should You Build First?" },
-      { slug: "product-market-fit-survey-questions", label: "Product-Market Fit Survey Questions" },
+      { slug: "how-to-validate-a-startup-idea", label: "How to Validate a Startup Idea Before You Build" },
+      { slug: "waitlist-before-mvp", label: "Waitlist or MVP: Which Should You Build First?" },
+      { slug: "product-market-fit-survey-questions", label: "Product-Market Fit Survey Questions for Early Startups" },
     ],
     cta: { label: "Validate This Idea", href: "/validate" },
     checklist: [
@@ -65,8 +65,8 @@ const STAGES = [
     borderColor: "border-info/30",
     bgColor: "bg-info/10",
     pages: [
-      { slug: "mvp-builder-for-startups", label: "MVP Builder for Startups: What to Build First" },
-      { slug: "tech-stack-for-startup", label: "How to Choose a Tech Stack for Your Startup" },
+      { slug: "how-to-build-an-mvp", label: "How to Build an MVP: A Step-by-Step Guide" },
+      { slug: "how-to-choose-a-startup-tech-stack", label: "How to Choose a Tech Stack for Your Startup" },
     ],
     cta: { label: "Scope My MVP", href: "/mvp-builder" },
     checklist: [
@@ -86,8 +86,8 @@ const STAGES = [
     borderColor: "border-warning/30",
     bgColor: "bg-warning/10",
     pages: [
-      { slug: "go-to-market-strategy-for-startup", label: "Go-to-Market Strategy for an Early-Stage Startup" },
-      { slug: "first-users-for-saas", label: "How to Find the First Users for a SaaS Startup" },
+      { slug: "go-to-market-strategy", label: "Go-to-Market (GTM) Strategy: What It Is and How to Build One" },
+      { slug: "how-to-get-your-first-100-users", label: "How to Get Your First 100 Users" },
       { slug: "startup-launch-checklist", label: "Startup Launch Checklist for First-Time Founders" },
     ],
     cta: { label: "Map My GTM Strategy", href: "/go-to-market" },
@@ -108,9 +108,9 @@ const STAGES = [
     borderColor: "border-pink-500/30",
     bgColor: "bg-pink-500/10",
     pages: [
-      { slug: "pitch-deck-feedback-for-startups", label: "Pitch Deck Feedback: What Investors Notice First" },
-      { slug: "vc-search-for-startups", label: "VC Search for Startups: Build a Better Investor List" },
-      { slug: "accelerator-alternatives", label: "Accelerator Alternatives for Founders Who Want to Build Now" },
+      { slug: "how-to-get-pitch-deck-feedback", label: "How to Get Useful Pitch Deck Feedback" },
+      { slug: "how-to-find-investors", label: "How to Find Investors for Your Startup" },
+      { slug: "startup-accelerator-alternatives", label: "Startup Accelerator Alternatives: How to Get the Same Benefits" },
     ],
     cta: { label: "Search Investors", href: "/insighta/vc-search" },
     checklist: [
@@ -231,7 +231,7 @@ export default function StartupGuide() {
                 </Link>
               </Button>
               <Button asChild variant="outline" size="lg">
-                <Link to="/answers">Browse All Founder Answers</Link>
+                <Link to="/startup-pedia">Browse Startup Pedia</Link>
               </Button>
             </div>
             <p className="mt-5 text-sm text-muted-foreground">
@@ -279,7 +279,7 @@ export default function StartupGuide() {
                   {stage.pages.map((page) => (
                     <Link
                       key={page.slug}
-                      to={`/answers/${page.slug}`}
+                      to={`/startup-pedia/${page.slug}`}
                       className="flex items-center gap-3 rounded-xl border border-border/60 bg-card/80 p-4 text-sm font-medium transition-colors hover:bg-card hover:border-primary/30"
                     >
                       <ChevronRight className={`h-4 w-4 flex-none ${stage.color}`} />

@@ -4,57 +4,48 @@ import test from "node:test";
 
 const read = (path: string) => readFileSync(path, "utf8");
 
-test("founder answer library exposes the intended acquisition clusters", () => {
-  const data = read("src/data/founderAnswerPages.ts");
+test("Startup Pedia covers the priority topics and the 30 startup shortcuts", () => {
+  const topics = read("src/data/startupPedia/topics.ts");
+  const shortcuts = read("src/data/startupPedia/shortcuts.ts");
 
-  [
-    "how-to-define-icp-for-startup",
-    "how-to-validate-startup-idea",
-    "mvp-builder-for-startups",
-    "go-to-market-strategy-for-startup",
-    "pitch-deck-feedback-for-startups",
-  ].forEach((slug) => {
-    assert.match(data, new RegExp(`slug: "${slug}"`));
+  ["validation", "customers", "product", "growth", "metrics", "business-models", "fundraising", "programs"].forEach((key) => {
+    assert.match(topics, new RegExp(`key: "${key}"`));
   });
-
-  assert.match(data, /label: "ICP \/ Customer Clarity"/);
-  assert.match(data, /label: "Validation"/);
-  assert.match(data, /label: "Build"/);
-  assert.match(data, /label: "Launch \/ GTM"/);
-  assert.match(data, /label: "Fundraising"/);
+  assert.equal((shortcuts.match(/acronym: "/g) || []).length, 30);
 });
 
-test("answer pages route to tool-specific conversion paths", () => {
-  const data = read("src/data/founderAnswerPages.ts");
+test("Startup Pedia entries route to tool-specific conversion paths", () => {
+  const entries = ["validation", "customers", "product", "growth", "metrics", "fundraising", "programs"]
+    .map((file) => read(`src/data/startupPedia/entries/${file}.ts`))
+    .join("\n");
 
-  [
-    "/icp-builder?utm_source=seo",
-    "/demo-studio?utm_source=seo",
-    "/pmf-lab?utm_source=seo",
-    "/mvp-builder?utm_source=seo",
-    "/go-to-market?utm_source=seo",
-    "/pitch-deck-analyzer?utm_source=seo",
-    "/vc-search?utm_source=seo",
-  ].forEach((href) => {
-    assert.match(data, new RegExp(href.replace(/[?]/g, "\\?")));
-  });
+  ["/icp-builder", "/demo-studio", "/pmf-lab", "/mvp-builder", "/go-to-market", "/pitch-deck-analyzer", "/vc-search", "/validate"].forEach(
+    (href) => {
+      assert.match(entries, new RegExp(`href: "${href}"`));
+    },
+  );
+  // Tracking parameters are added once, at render time.
+  assert.match(read("src/data/startupPedia/index.ts"), /utm_source=seo&utm_medium=startup_pedia/);
 });
 
-test("public routing and sitemap include the answer library", () => {
+test("public routing and sitemap include Startup Pedia", () => {
   const app = read("src/App.tsx");
   const sitemapIndex = read("public/sitemap.xml");
   const sitemap = read("public/sitemap-pages.xml");
   const seoConfig = read("scripts/seo-route-config.mjs");
 
-  assert.match(app, /path="\/answers"/);
-  assert.match(app, /path="\/answers\/:slug"/);
+  assert.match(app, /path="\/startup-pedia"/);
+  assert.match(app, /path="\/startup-pedia\/:slug"/);
+  assert.match(app, /path="\/startup-pedia\/topics\/:topic"/);
+  assert.doesNotMatch(app, /path="\/answers/);
   assert.match(sitemapIndex, /sitemap-pages\.xml/);
-  assert.match(sitemap, /https:\/\/creatives-takeover\.com\/answers/);
-  assert.match(sitemap, /https:\/\/creatives-takeover\.com\/answers\/how-to-define-icp-for-startup/);
-  assert.match(seoConfig, /FOUNDER_ANSWER_ROUTES/);
+  assert.match(sitemap, /https:\/\/creatives-takeover\.com\/startup-pedia</);
+  assert.match(sitemap, /https:\/\/creatives-takeover\.com\/startup-pedia\/ideal-customer-profile</);
+  assert.doesNotMatch(sitemap, /creatives-takeover\.com\/answers/);
+  assert.match(seoConfig, /STARTUP_PEDIA_ROUTES/);
 });
 
-test("resources and homepage link internally to the founder answer library", () => {
+test("resources and homepage link internally to Startup Pedia", () => {
   assert.match(read("src/pages/Resources.tsx"), /FounderAnswerLibraryTeaser/);
   assert.match(read("src/pages/Index.tsx"), /FounderAnswerLibraryTeaser/);
 });
@@ -130,11 +121,12 @@ test("founder and MVP indexing are review-gated server-side", () => {
   assert.match(read("middleware.ts"), /'\/robots\.txt', '\/sitemap\.xml'/);
 });
 
-test("answer-page schema keeps publication and revision provenance separate", () => {
-  const data = read("src/data/founderAnswerPages.ts");
+test("Startup Pedia schema keeps publication and revision provenance separate", () => {
+  const data = read("src/data/startupPedia/entries/customers.ts").replace(/\r\n/g, "\n");
   const prerender = read("scripts/generate-prerendered-pages.mjs");
 
-  assert.match(data, /"how-to-define-icp-for-startup": \{ publishedAt: "2026-05-17", modifiedAt: "2026-07-22" \}/);
+  // Migrated guides keep their original publication date; the rewrite is the revision.
+  assert.match(data, /publishedAt: "2026-05-17",\n    modifiedAt: "2026-10-25",\n    legacySlugs: \["how-to-define-icp-for-startup"\]/);
   assert.match(prerender, /datePublished: routeConfig\.publishedAt/);
   assert.match(prerender, /dateModified: routeConfig\.modifiedAt/);
 });

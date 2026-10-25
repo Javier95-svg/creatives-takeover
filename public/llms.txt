@@ -1,6 +1,6 @@
 # Creatives Takeover
 
-> Last updated: 2026-10-17
+> Last updated: 2026-10-25
 
 > Creatives Takeover is the startup ecosystem workspace. Founders test and build their ideas with AI tools that draft startup artifacts (ideal customer profile, MVP scope, go-to-market plan, pitch deck review) and a marketplace of reviewed human startup mentors who can be booked directly. Incubators, accelerators and universities use it to see how every team in a cohort is progressing, and VCs and family offices use it to meet founders who are executing. Founders can start free without applying and keep 100% equity.
 
@@ -63,37 +63,77 @@ Founder plans are self-serve with no equity taken and no application required. I
 - [Co-founder Matching](https://creatives-takeover.com/co-founder): Listings from founders looking for a technical or commercial co-founder.
 - [Investor Directory](https://creatives-takeover.com/investors): Public investor profiles with stage and sector focus.
 
-## Founder guides and answers
+## Startup Pedia
 
-Reference articles written for specific founder questions. Each is a standalone answer page.
+Plain-English reference entries on startup terms, metrics and frameworks, plus practical guides. Each entry is a standalone page.
 
 - [Startup Guide](https://creatives-takeover.com/startup-guide): End-to-end guide from idea to launch.
-- [Founder Answers index](https://creatives-takeover.com/answers): All 25 answer pages.
-- [How to validate a startup idea](https://creatives-takeover.com/answers/how-to-validate-startup-idea)
-- [How to define your ICP](https://creatives-takeover.com/answers/how-to-define-icp-for-startup)
-- [Ideal customer profile template](https://creatives-takeover.com/answers/ideal-customer-profile-template)
-- [Startup positioning examples](https://creatives-takeover.com/answers/startup-positioning-examples)
-- [How to find your target audience](https://creatives-takeover.com/answers/how-to-find-your-target-audience)
-- [Customer interview questions](https://creatives-takeover.com/answers/customer-interview-questions)
-- [Signs your startup idea is good](https://creatives-takeover.com/answers/signs-your-startup-idea-is-good)
-- [Should you build a waitlist before an MVP](https://creatives-takeover.com/answers/waitlist-before-mvp)
-- [Product-market-fit survey questions](https://creatives-takeover.com/answers/product-market-fit-survey-questions)
-- [No-code vs code for an MVP](https://creatives-takeover.com/answers/no-code-vs-code-for-mvp)
-- [MVP feature prioritization](https://creatives-takeover.com/answers/mvp-feature-prioritization)
-- [MVP builder for startups](https://creatives-takeover.com/answers/mvp-builder-for-startups)
-- [Choosing a tech stack for a startup](https://creatives-takeover.com/answers/tech-stack-for-startup)
-- [Go-to-market strategy for a startup](https://creatives-takeover.com/answers/go-to-market-strategy-for-startup)
-- [Getting first users for a SaaS](https://creatives-takeover.com/answers/first-users-for-saas)
-- [How to get your first 100 users](https://creatives-takeover.com/answers/how-to-get-first-100-users)
-- [Cold email for startups](https://creatives-takeover.com/answers/cold-email-for-startups)
-- [Product Hunt launch guide](https://creatives-takeover.com/answers/product-hunt-launch-guide)
-- [Startup launch checklist](https://creatives-takeover.com/answers/startup-launch-checklist)
-- [Pitch deck feedback for startups](https://creatives-takeover.com/answers/pitch-deck-feedback-for-startups)
-- [Startup pitch deck outline](https://creatives-takeover.com/answers/startup-pitch-deck-outline)
-- [How to find investors for a startup](https://creatives-takeover.com/answers/how-to-find-investors-for-startup)
-- [Pre-seed vs seed funding](https://creatives-takeover.com/answers/pre-seed-vs-seed-funding)
-- [VC search for startups](https://creatives-takeover.com/answers/vc-search-for-startups)
-- [Accelerator alternatives](https://creatives-takeover.com/answers/accelerator-alternatives)
+- [Startup Pedia index](https://creatives-takeover.com/startup-pedia): All 41 entries, searchable by term, topic and role.
+
+### Validation & customer discovery
+
+- [How to Validate a Startup Idea Before You Build](https://creatives-takeover.com/startup-pedia/how-to-validate-a-startup-idea)
+- [Customer Interview Questions That Reveal Real Demand](https://creatives-takeover.com/startup-pedia/customer-interview-questions)
+- [Waitlist or MVP: Which Should You Build First?](https://creatives-takeover.com/startup-pedia/waitlist-before-mvp)
+- [Signs Your Startup Idea Is Good (and When to Drop It)](https://creatives-takeover.com/startup-pedia/signs-your-startup-idea-is-good)
+- [Product-Market Fit Survey Questions for Early Startups](https://creatives-takeover.com/startup-pedia/product-market-fit-survey-questions)
+
+### Customers & positioning
+
+- [Ideal Customer Profile (ICP): What It Is and How to Define One](https://creatives-takeover.com/startup-pedia/ideal-customer-profile)
+- [Unique Selling Proposition (USP): Meaning and Examples](https://creatives-takeover.com/startup-pedia/unique-selling-proposition)
+- [TAM, SAM and SOM: How to Size Your Market](https://creatives-takeover.com/startup-pedia/tam-sam-som)
+- [Ideal Customer Profile Template for Early-Stage Founders](https://creatives-takeover.com/startup-pedia/ideal-customer-profile-template)
+- [How to Find Your Target Audience as a Startup](https://creatives-takeover.com/startup-pedia/how-to-find-your-target-audience)
+- [Startup Positioning: A Simple Formula and Examples](https://creatives-takeover.com/startup-pedia/startup-positioning-examples)
+
+### MVP & product
+
+- [Minimum Viable Product (MVP): Meaning and Examples](https://creatives-takeover.com/startup-pedia/minimum-viable-product)
+- [Product-Market Fit (PMF): What It Means and How to Measure It](https://creatives-takeover.com/startup-pedia/product-market-fit)
+- [How to Build an MVP: A Step-by-Step Guide](https://creatives-takeover.com/startup-pedia/how-to-build-an-mvp)
+- [How to Prioritize MVP Features](https://creatives-takeover.com/startup-pedia/mvp-feature-prioritization)
+- [No-Code vs Code for Your MVP: How to Choose](https://creatives-takeover.com/startup-pedia/no-code-vs-code-for-mvp)
+- [How to Choose a Tech Stack for Your Startup](https://creatives-takeover.com/startup-pedia/how-to-choose-a-startup-tech-stack)
+
+### Go-to-market & growth
+
+- [Go-to-Market (GTM) Strategy: What It Is and How to Build One](https://creatives-takeover.com/startup-pedia/go-to-market-strategy)
+- [How to Get Your First 100 Users](https://creatives-takeover.com/startup-pedia/how-to-get-your-first-100-users)
+- [Cold Email for Startups: How to Write One That Gets Replies](https://creatives-takeover.com/startup-pedia/cold-email-for-startups)
+- [Product Hunt Launch Guide for Founders](https://creatives-takeover.com/startup-pedia/product-hunt-launch-guide)
+- [Startup Launch Checklist for First-Time Founders](https://creatives-takeover.com/startup-pedia/startup-launch-checklist)
+
+### Metrics & progress tracking
+
+- [Customer Acquisition Cost (CAC): Formula and Examples](https://creatives-takeover.com/startup-pedia/customer-acquisition-cost)
+- [Customer Lifetime Value (LTV): Formula and the LTV:CAC Ratio](https://creatives-takeover.com/startup-pedia/customer-lifetime-value)
+- [Average Order Value (AOV): Formula and How to Increase It](https://creatives-takeover.com/startup-pedia/average-order-value)
+- [ROI vs ROAS: Return on Investment and Return on Ad Spend](https://creatives-takeover.com/startup-pedia/roi-and-roas)
+- [KPIs vs OKRs: What They Are and Which Ones a Startup Needs](https://creatives-takeover.com/startup-pedia/kpis-and-okrs)
+- [DAU and MAU: Daily and Monthly Active Users Explained](https://creatives-takeover.com/startup-pedia/dau-and-mau)
+- [Net Promoter Score (NPS): Formula, Survey and Examples](https://creatives-takeover.com/startup-pedia/net-promoter-score)
+
+### Business models & pricing
+
+- [B2B vs B2C vs D2C: Business Models Explained](https://creatives-takeover.com/startup-pedia/b2b-b2c-d2c)
+- [SaaS (Software as a Service): Meaning and How It Works](https://creatives-takeover.com/startup-pedia/saas)
+- [MRR and ARR: Monthly and Annual Recurring Revenue](https://creatives-takeover.com/startup-pedia/mrr-and-arr)
+
+### Fundraising, equity & legal
+
+- [Startup Funding Stages: From Pre-Seed to IPO](https://creatives-takeover.com/startup-pedia/startup-funding-stages)
+- [Venture Capital vs Private Equity: Key Differences](https://creatives-takeover.com/startup-pedia/venture-capital-vs-private-equity)
+- [Employee Stock Option Plan (ESOP): How Startup Equity Works](https://creatives-takeover.com/startup-pedia/employee-stock-option-plan)
+- [NDAs and Intellectual Property for Startups](https://creatives-takeover.com/startup-pedia/nda-and-intellectual-property)
+- [Pre-Seed vs Seed Funding: What's the Difference?](https://creatives-takeover.com/startup-pedia/pre-seed-vs-seed-funding)
+- [Pitch Deck Outline: What to Put on Each Slide](https://creatives-takeover.com/startup-pedia/pitch-deck-outline)
+- [How to Get Useful Pitch Deck Feedback](https://creatives-takeover.com/startup-pedia/how-to-get-pitch-deck-feedback)
+- [How to Find Investors for Your Startup](https://creatives-takeover.com/startup-pedia/how-to-find-investors)
+
+### Accelerators, incubators & mentors
+
+- [Startup Accelerator Alternatives: How to Get the Same Benefits](https://creatives-takeover.com/startup-pedia/startup-accelerator-alternatives)
 
 ## Editorial
 

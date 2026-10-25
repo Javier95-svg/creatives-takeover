@@ -2,7 +2,7 @@ import { readFile, writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 
-import { founderAnswerPages } from "../src/data/founderAnswerPages.ts";
+import { PEDIA_ENTRIES, PEDIA_TOPICS, getEntriesByTopic } from "../src/data/startupPedia/index.ts";
 import { PLAN_MONTHLY_CREDITS, PLAN_PRICING } from "../src/config/pricing.ts";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -58,7 +58,28 @@ content = content.replace(
   ].join("\n"),
 );
 
-content = content.replace(/\[Founder Answers index\]\(([^)]+)\): All \d+ answer pages\./, `[Founder Answers index]($1): All ${founderAnswerPages.length} answer pages.`);
+// The guides section is generated from Startup Pedia, which replaced the
+// Founder Answer Library (/answers) on 2026-10-25.
+const pediaSection = [
+  "## Startup Pedia",
+  "",
+  "Plain-English reference entries on startup terms, metrics and frameworks, plus practical guides. Each entry is a standalone page.",
+  "",
+  "- [Startup Guide](https://creatives-takeover.com/startup-guide): End-to-end guide from idea to launch.",
+  `- [Startup Pedia index](https://creatives-takeover.com/startup-pedia): All ${PEDIA_ENTRIES.length} entries, searchable by term, topic and role.`,
+  ...PEDIA_TOPICS.flatMap((topic) => {
+    const entries = getEntriesByTopic(topic.key);
+    if (!entries.length) return [];
+    return [
+      "",
+      `### ${topic.label}`,
+      "",
+      ...entries.map((entry) => `- [${entry.title}](https://creatives-takeover.com/startup-pedia/${entry.slug})`),
+    ];
+  }),
+  "",
+].join("\n");
+content = content.replace(/## (?:Founder guides and answers|Startup Pedia)\r?\n[\s\S]*?(?=\r?\n## Editorial)/, pediaSection);
 content = content.replace(/^- \[Community\]\(https:\/\/creatives-takeover\.com\/community\):.*\r?\n/m, "");
 content = content.replace(
   "- [Co-founder Matching](https://creatives-takeover.com/co-founder): Listings from founders looking for a technical or commercial co-founder.",
@@ -102,4 +123,4 @@ if ([mentorCount, vcCount, angelCount, opportunityCount].every((count) => count 
 }
 
 await writeFile(outputPath, `${content.trim()}\n`, "utf8");
-console.log(`Generated public/llms.txt (${generatedDate}) from pricing and answer-page sources.`);
+console.log(`Generated public/llms.txt (${generatedDate}) from pricing and Startup Pedia sources.`);

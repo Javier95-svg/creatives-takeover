@@ -36,7 +36,7 @@ const PRIMARY_NAV = [
   { href: "/mentorship", label: "Collab" },
   { href: "/founder-id", label: "Founder ID" },
   { href: "/bizmap-ai", label: "Startup Cycle" },
-  { href: "/answers", label: "Founder Answers" },
+  { href: "/startup-pedia", label: "Startup Pedia" },
   { href: "/newspaper", label: "Newspaper" },
   { href: "/podcast", label: "Podcast" },
   { href: "/resources", label: "Resources" },
@@ -64,7 +64,7 @@ const FOOTER_GROUPS = [
     links: [
       { href: "/bizmap-ai", label: "Startup Development Cycle" },
       { href: "/build", label: "Build" },
-      { href: "/answers", label: "Founder Answer Library" },
+      { href: "/startup-pedia", label: "Startup Pedia" },
       { href: "/startup-guide", label: "Startup Guide" },
       { href: "/resources", label: "Resources" },
     ],
@@ -141,9 +141,12 @@ function buildFallbackHtml(routeConfig, hubChildren = {}) {
           </form>
           <p>I have a product: <a href="/#get-started">Build my demo</a>. One sentence to start; see your result before signup.</p>`
     : `<p>${routeConfig.heroCopy || routeConfig.description}</p>`;
-  const authorByline = routeConfig.path.startsWith("/answers/")
-    ? `<p>By <a href="/about#founder">Javier Peña, Founder &amp; CEO</a></p>`
+  const authorByline = routeConfig.pediaEntry
+    ? `<p>By <a href="/about#founder">Javier Peña, Founder &amp; CEO</a>. Updated <time datetime="${routeConfig.modifiedAt}">${routeConfig.modifiedAt}</time>.</p>`
     : "";
+  // Startup Pedia ships its full article body as HTML (built from the same data
+  // as the React page), so crawlers read the whole entry without JavaScript.
+  const body = routeConfig.bodyHtml ? `        <section>\n${routeConfig.bodyHtml}\n        </section>` : "";
   const quickAnswer = routeConfig.quickAnswer
     ? `        <section>
           <h2>Quick answer: ${routeConfig.quickAnswer.title}</h2>
@@ -191,7 +194,7 @@ ${routeConfig.sources
     .join("\n");
   const cta = routeConfig.cta
     ? `        <section>
-          <h2>Turn the answer into action</h2>
+          <h2>Put it into practice</h2>
           <p>${routeConfig.cta.description}</p>
           <p><a href="${routeConfig.cta.href}">${routeConfig.cta.label}</a></p>
         </section>`
@@ -255,6 +258,7 @@ ${childLinks
         </section>
 ${quickAnswer}
 ${pricingSummary}
+${body}
 ${sections}
 ${sources}
 ${checklist}
@@ -410,24 +414,20 @@ function buildStructuredData(routeConfig) {
     });
   }
 
-  // Founder answer guides mirror FounderAnswerPage.tsx: HowTo + Article.
-  if (routeConfig.path.startsWith("/answers/")) {
+  // Startup Pedia entries mirror StartupPediaEntry.tsx: Article, plus a
+  // DefinedTerm for term entries. (The old answer pages also emitted HowTo,
+  // which Google no longer shows as a rich result.)
+  if (routeConfig.pediaEntry) {
     const updatedIso = routeConfig.lastmod || new Date().toISOString().split("T")[0];
-    if (routeConfig.sections && routeConfig.sections.length) {
+    if (routeConfig.pediaEntry.kind === "term") {
       data.push({
         "@context": "https://schema.org",
-        "@type": "HowTo",
-        name: routeConfig.heroHeading,
-        description: routeConfig.heroCopy,
+        "@type": "DefinedTerm",
+        name: routeConfig.pediaEntry.acronyms.length ? routeConfig.pediaEntry.acronyms.join(", ") : routeConfig.heroHeading,
+        ...(routeConfig.pediaEntry.aliases.length ? { alternateName: routeConfig.pediaEntry.aliases } : {}),
+        description: routeConfig.pediaEntry.answer,
         url: canonical,
-        publisher: { "@type": "Organization", name: SITE_NAME, url: BASE_URL },
-        step: routeConfig.sections.map((section, index) => ({
-          "@type": "HowToStep",
-          position: index + 1,
-          name: section.heading,
-          text: section.copy,
-          url: `${canonical}#step-${index + 1}`,
-        })),
+        inDefinedTermSet: `${BASE_URL}/startup-pedia#terms`,
       });
     }
     data.push({
@@ -437,6 +437,7 @@ function buildStructuredData(routeConfig) {
       description: routeConfig.description,
       datePublished: routeConfig.publishedAt || updatedIso,
       dateModified: routeConfig.modifiedAt || updatedIso,
+      ...(routeConfig.pediaEntry.topicLabel ? { articleSection: routeConfig.pediaEntry.topicLabel } : {}),
       author: {
         "@type": "Person",
         "@id": `${BASE_URL}/about#founder`,

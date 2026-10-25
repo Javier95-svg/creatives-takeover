@@ -1,11 +1,24 @@
 // Node 22.18+ strips TypeScript types natively, so the build scripts can import
-// the app's founder-answer content directly. Single source of truth: the same
-// data renders the React pages (FounderAnswerPage.tsx) and the prerendered HTML.
+// the app's Startup Pedia content directly. Single source of truth: the same
+// data renders the React pages (StartupPedia*.tsx) and the prerendered HTML.
 import {
-  founderAnswerPages,
-  getFounderAnswerProvenance,
-  getRelatedFounderAnswerPages,
-} from "../src/data/founderAnswerPages.ts";
+  PEDIA_BASE_PATH,
+  PEDIA_ENTRIES,
+  PEDIA_HUB_SEO,
+  PEDIA_TOPICS,
+  STARTUP_SHORTCUTS,
+  AUDIENCE_LABELS,
+  AUDIENCE_ORDER,
+  ctaHref,
+  entryPath,
+  getEntriesByTopic,
+  getRelatedEntries,
+  indexableTopics,
+  isTopicIndexable,
+  shortcutHref,
+  topicPath,
+} from "../src/data/startupPedia/index.ts";
+import { markdownToHtml } from "../src/lib/markdownToHtml.ts";
 import { FOUNDER_ID_FAQS } from "../src/data/founderIdPage.ts";
 
 export const BASE_URL = "https://creatives-takeover.com";
@@ -18,7 +31,7 @@ const truncateTitle = (title) => (title.length > 60 ? `${title.substring(0, 57)}
 const truncateDescription = (description) =>
   description.length > 160 ? `${description.substring(0, 157)}...` : description;
 
-// Mirror updatedLabelToIso in src/pages/FounderAnswerPage.tsx ("May 2026" -> "2026-05-01").
+// Turns a route's updatedLabel into a sitemap lastmod ("May 2026" -> "2026-05-01").
 const MONTHS = {
   january: "01", february: "02", march: "03", april: "04", may: "05", june: "06",
   july: "07", august: "08", september: "09", october: "10", november: "11", december: "12",
@@ -64,46 +77,131 @@ export const ROBOTS_DISALLOW = [
   "/test-phase1",
 ];
 
-// Each answer route carries the page's real, hand-written meta and body content
-// so the prerendered HTML is unique per page and matches the hydrated React page.
-const FOUNDER_ANSWER_ROUTES = founderAnswerPages.map((page) => ({
-  path: `/answers/${page.slug}`,
-  title: truncateTitle(page.metaTitle),
-  description: truncateDescription(page.metaDescription),
-  changefreq: "monthly",
-  priority: 0.65,
-  lastmod: updatedLabelToIso(page.updatedLabel),
-  publishedAt: page.publishedAt || getFounderAnswerProvenance(page).publishedAt,
-  modifiedAt: page.modifiedAt || getFounderAnswerProvenance(page).modifiedAt,
-  heroHeading: page.title,
-  heroCopy: page.summary,
-  updatedLabel: page.updatedLabel,
-  keyword: page.keyword,
-  quickAnswer: {
-    title: page.keyword,
-    items: page.quickAnswerItems,
-  },
-  sections: page.sections.map((section) => ({
-    heading: section.title,
-    copy: section.description,
-  })),
-  sources: page.sources,
-  checklist: page.checklist,
-  cta: page.cta,
-  faqs: page.faqs,
-  relatedLinks: [
-    ...getRelatedFounderAnswerPages(page).map((related) => ({
-      href: `/answers/${related.slug}`,
-      label: related.title,
-    })),
-    { href: "/answers", label: "Founder Answer Library" },
-  ],
+// Startup Pedia: the hub, every indexable topic and every entry, built from the
+// same data as the React pages. Entries carry their full body as HTML so the
+// crawler reads the whole article without running JavaScript.
+const escapeHtml = (value) =>
+  String(value ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+const pediaEntryBodyHtml = (entry) => {
+  const parts = [];
+  if (entry.formulas?.length) {
+    parts.push(`<h2 id="formula">${entry.formulas.length > 1 ? "Formulas" : "Formula"}</h2>`);
+    parts.push(
+      `<dl>${entry.formulas
+        .map((formula) => `<dt>${escapeHtml(formula.label)}</dt><dd>${escapeHtml(formula.expression)}${formula.note ? ` (${escapeHtml(formula.note)})` : ""}</dd>`)
+        .join("")}</dl>`,
+    );
+  }
+  if (entry.steps?.length) {
+    parts.push('<h2 id="steps">Step by step</h2>');
+    parts.push(
+      `<ol>${entry.steps.map((step) => `<li><h3>${escapeHtml(step.title)}</h3>${markdownToHtml(step.body)}</li>`).join("")}</ol>`,
+    );
+  }
+  for (const section of entry.sections) {
+    parts.push(`<h2 id="${section.id}">${escapeHtml(section.heading)}</h2>`);
+    parts.push(markdownToHtml(section.body));
+  }
+  const roles = AUDIENCE_ORDER.filter((key) => entry.roleNotes?.[key]);
+  if (roles.length) {
+    parts.push('<h2 id="for-your-role">For your role</h2>');
+    parts.push(`<dl>${roles.map((key) => `<dt>${AUDIENCE_LABELS[key]}</dt><dd>${escapeHtml(entry.roleNotes[key])}</dd>`).join("")}</dl>`);
+  }
+  return parts.join("\n");
+};
+
+const PEDIA_HUB_ROUTE = {
+  // Written out (it equals PEDIA_BASE_PATH) because internal-linking-seo.test.ts
+  // checks that every sitewide nav href appears as a literal indexable path.
+  path: "/startup-pedia",
+  title: PEDIA_HUB_SEO.title,
+  description: PEDIA_HUB_SEO.description,
+  changefreq: "weekly",
+  priority: 0.85,
+  heroHeading: `Startup Pedia: ${PEDIA_HUB_SEO.heading}`,
+  heroCopy: PEDIA_HUB_SEO.intro,
+  schemaType: "collection",
   breadcrumb: [
     { name: "Home", url: "/" },
-    { name: "Founder Answer Library", url: "/answers" },
-    { name: page.title, url: `/answers/${page.slug}` },
+    { name: "Startup Pedia", url: PEDIA_BASE_PATH },
+  ],
+  bodyHtml: [
+    "<h2>Startup Shortcuts: 30 terms every founder should know</h2>",
+    `<ul>${STARTUP_SHORTCUTS.map((shortcut) => `<li><a href="${shortcutHref(shortcut)}"><abbr title="${escapeHtml(shortcut.expansion)}">${shortcut.acronym}</abbr> ${escapeHtml(shortcut.expansion)}</a></li>`).join("")}</ul>`,
+    "<h2>Topics</h2>",
+    `<ul>${indexableTopics().map((topic) => `<li><a href="${topicPath(topic.key)}">${escapeHtml(topic.label)}</a></li>`).join("")}</ul>`,
+  ].join("\n"),
+  // The hub's whole job is to point at its entries: without these, every entry
+  // would depend on the sitemap alone for discovery.
+  childLinksHeading: "Every Startup Pedia entry",
+  childLinks: PEDIA_ENTRIES.map((entry) => ({ href: entryPath(entry.slug), label: entry.title })),
+};
+
+const PEDIA_TOPIC_ROUTES = PEDIA_TOPICS.filter((topic) => isTopicIndexable(topic.key)).map((topic) => ({
+  path: topicPath(topic.key),
+  title: topic.metaTitle,
+  description: topic.metaDescription,
+  changefreq: "weekly",
+  priority: 0.75,
+  heroHeading: topic.heading,
+  heroCopy: topic.intro,
+  schemaType: "collection",
+  breadcrumb: [
+    { name: "Home", url: "/" },
+    { name: "Startup Pedia", url: PEDIA_BASE_PATH },
+    { name: topic.label, url: topicPath(topic.key) },
+  ],
+  childLinksHeading: `${topic.label}: terms and guides`,
+  childLinks: getEntriesByTopic(topic.key).map((entry) => ({ href: entryPath(entry.slug), label: entry.title })),
+  relatedLinks: [
+    ...topic.tools.map((tool) => ({ href: tool.href, label: tool.label })),
+    { href: PEDIA_BASE_PATH, label: "Startup Pedia" },
   ],
 }));
+
+const PEDIA_ENTRY_ROUTES = PEDIA_ENTRIES.map((entry) => {
+  const topic = PEDIA_TOPICS.find((item) => item.key === entry.topic);
+  const topicCrumb = topic && isTopicIndexable(topic.key) ? [{ name: topic.label, url: topicPath(topic.key) }] : [];
+  return {
+    path: entryPath(entry.slug),
+    title: truncateTitle(entry.metaTitle),
+    description: truncateDescription(entry.metaDescription),
+    changefreq: "monthly",
+    priority: 0.7,
+    lastmod: entry.modifiedAt,
+    publishedAt: entry.publishedAt,
+    modifiedAt: entry.modifiedAt,
+    heroHeading: entry.title,
+    heroCopy: entry.answer,
+    pediaEntry: {
+      kind: entry.kind,
+      acronyms: entry.acronyms || [],
+      aliases: entry.aliases || [],
+      answer: entry.answer,
+      topicLabel: topic?.label,
+    },
+    bodyHtml: pediaEntryBodyHtml(entry),
+    sources: entry.sources,
+    faqs: entry.faqs,
+    ...(entry.cta
+      ? { cta: { label: entry.cta.label, href: ctaHref(entry.cta.href, entry.slug), description: entry.cta.description } }
+      : {}),
+    relatedLinks: [
+      ...getRelatedEntries(entry).map((related) => ({ href: entryPath(related.slug), label: related.title })),
+      ...(topicCrumb.length ? [{ href: topicCrumb[0].url, label: topicCrumb[0].name }] : []),
+      { href: PEDIA_BASE_PATH, label: "Startup Pedia" },
+    ],
+    breadcrumb: [
+      { name: "Home", url: "/" },
+      { name: "Startup Pedia", url: PEDIA_BASE_PATH },
+      ...topicCrumb,
+      { name: entry.title, url: entryPath(entry.slug) },
+    ],
+  };
+});
+
+export const STARTUP_PEDIA_ROUTES = [PEDIA_HUB_ROUTE, ...PEDIA_TOPIC_ROUTES, ...PEDIA_ENTRY_ROUTES];
 
 export const INDEXABLE_ROUTES = [
   {
@@ -250,26 +348,7 @@ export const INDEXABLE_ROUTES = [
     heroCopy:
       "Browse practical tutorials, downloads, and startup learning resources designed to help founders move faster with less guesswork.",
   },
-  {
-    path: "/answers",
-    title: "Founder Answer Library | Creatives Takeover",
-    description:
-      "Searchable startup guides for founders defining an ICP, validating demand, planning an MVP, launching, and preparing for fundraising.",
-    changefreq: "weekly",
-    priority: 0.85,
-    heroHeading: "Answers founders search for before they build",
-    heroCopy:
-      "Browse practical startup guides for ICP clarity, validation, MVP scope, go-to-market strategy, and fundraising preparation.",
-    // The library's whole job is to point at its guides. Without these the
-    // prerendered hub linked to none of them and every guide depended on the
-    // sitemap alone for discovery.
-    childLinksHeading: "Every founder guide",
-    childLinks: founderAnswerPages.map((page) => ({
-      href: `/answers/${page.slug}`,
-      label: page.title,
-    })),
-  },
-  ...FOUNDER_ANSWER_ROUTES,
+  ...STARTUP_PEDIA_ROUTES,
   {
     path: "/startup-guide",
     title: "How to Build a Startup: First-Time Founder Guide",

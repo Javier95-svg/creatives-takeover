@@ -1,0 +1,443 @@
+/*
+ * Startup Pedia (2026-10-25). The look comes from the "Startup Shortcuts"
+ * notebook sheet the section grew out of: warm paper, faint blue rules, a red
+ * margin line and fountain-pen blue ink. Reading pages stay quiet so the text
+ * leads; the ruled paper is reserved for the shortcuts sheet and small accents.
+ * Light follows the paper; dark is the same notebook under a desk lamp.
+ */
+
+.sp {
+  --sp-paper: #fbf9f3;
+  --sp-paper-deep: #f3efe4;
+  --sp-surface: #ffffff;
+  --sp-rule: rgba(47, 75, 179, 0.11);
+  --sp-margin: rgba(214, 72, 72, 0.38);
+  --sp-ink: #213a8f;
+  --sp-ink-hi: #2f4bb3;
+  --sp-ink-soft: rgba(33, 58, 143, 0.08);
+  --sp-text: #1b1d24;
+  --sp-muted: #5c6070;
+  --sp-line: rgba(33, 41, 72, 0.12);
+  --sp-shadow: 0 1px 2px rgba(23, 30, 60, 0.05), 0 12px 32px -18px rgba(23, 30, 60, 0.25);
+
+  position: relative;
+  isolation: isolate;
+  min-height: 100vh;
+  background:
+    radial-gradient(1100px 520px at 50% -10%, rgba(47, 75, 179, 0.07), transparent 65%),
+    linear-gradient(180deg, var(--sp-paper) 0%, var(--sp-paper-deep) 100%);
+  color: var(--sp-text);
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.dark .sp {
+  --sp-paper: #0e1220;
+  --sp-paper-deep: #0b0e19;
+  --sp-surface: #141a2c;
+  --sp-rule: rgba(160, 182, 255, 0.07);
+  --sp-margin: rgba(255, 118, 118, 0.28);
+  --sp-ink: #a9bcff;
+  --sp-ink-hi: #c9d5ff;
+  --sp-ink-soft: rgba(169, 188, 255, 0.1);
+  --sp-text: #e7e9f2;
+  --sp-muted: #9aa2b8;
+  --sp-line: rgba(169, 188, 255, 0.14);
+  --sp-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 16px 40px -20px rgba(0, 0, 0, 0.7);
+}
+
+.sp-main {
+  margin: 0 auto;
+  max-width: 72rem;
+  padding: 7rem 1rem 5rem;
+}
+
+@media (min-width: 640px) {
+  .sp-main { padding-left: 1.5rem; padding-right: 1.5rem; }
+}
+
+.sp-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--sp-ink);
+}
+
+.sp-eyebrow::before {
+  content: "";
+  width: 1.5rem;
+  height: 1px;
+  background: currentColor;
+  opacity: 0.6;
+}
+
+.sp-title {
+  font-family: "Space Grotesk", Inter, sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.08;
+  color: var(--sp-text);
+}
+
+.sp-muted { color: var(--sp-muted); }
+
+.sp-link {
+  color: var(--sp-ink);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--sp-ink) 35%, transparent);
+  text-underline-offset: 3px;
+  transition: color 0.15s ease, text-decoration-color 0.15s ease;
+}
+
+.sp-link:hover { color: var(--sp-ink-hi); text-decoration-color: currentColor; }
+
+.sp-card {
+  background: var(--sp-surface);
+  border: 1px solid var(--sp-line);
+  border-radius: 1.25rem;
+  box-shadow: var(--sp-shadow);
+}
+
+.sp-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 2.25rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  border: 1px solid var(--sp-line);
+  background: var(--sp-surface);
+  color: var(--sp-muted);
+  font-size: 0.84rem;
+  font-weight: 500;
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+
+/* Filter rows wrap and centre from tablet up; on phones each row scrolls
+   sideways so the filters do not push the content below the fold. */
+.sp-chip-row {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+  margin: 0 -1rem;
+  padding: 0.15rem 1rem;
+}
+
+.sp-chip-row::-webkit-scrollbar { display: none; }
+.sp-chip-row > * { flex: none; }
+
+@media (min-width: 640px) {
+  .sp-chip-row { flex-wrap: wrap; justify-content: center; overflow: visible; margin: 0; padding: 0; }
+}
+
+.sp-chip:hover { color: var(--sp-text); border-color: color-mix(in srgb, var(--sp-ink) 40%, transparent); }
+
+.sp-chip[aria-pressed="true"] {
+  background: var(--sp-ink);
+  border-color: var(--sp-ink);
+  color: var(--sp-paper);
+}
+
+.sp-kind {
+  display: inline-block;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: var(--sp-ink-soft);
+  color: var(--sp-ink);
+}
+
+/* ---------------------------------------------------------------- search -- */
+
+.sp-search {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.25rem 0.5rem 0.25rem 1.1rem;
+  border-radius: 1rem;
+  border: 1px solid var(--sp-line);
+  background: var(--sp-surface);
+  box-shadow: var(--sp-shadow);
+}
+
+.sp-search:focus-within { border-color: var(--sp-ink); }
+
+.sp-search input {
+  flex: 1;
+  min-width: 0;
+  height: 3.25rem;
+  background: transparent;
+  border: 0;
+  outline: none;
+  font-size: 1rem;
+  color: var(--sp-text);
+}
+
+.sp-search input::placeholder { color: var(--sp-muted); }
+
+/* The container shows focus, and the page has its own clear button. */
+.sp-search input:focus,
+.sp-search input:focus-visible { outline: none; box-shadow: none; }
+.sp-search input::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; display: none; }
+
+/* ------------------------------------------------------- shortcuts sheet -- */
+
+.sp-sheet {
+  position: relative;
+  padding: 2rem 1.25rem 1.75rem 2.75rem;
+  border-radius: 1.25rem;
+  border: 1px solid var(--sp-line);
+  box-shadow: var(--sp-shadow);
+  background-color: var(--sp-surface);
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 2.15rem,
+    var(--sp-rule) 2.15rem,
+    var(--sp-rule) calc(2.15rem + 1px)
+  );
+  background-position: 0 1.6rem;
+}
+
+.sp-sheet::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 1.75rem;
+  width: 1px;
+  background: var(--sp-margin);
+}
+
+@media (min-width: 640px) {
+  .sp-sheet { padding: 2.25rem 2rem 2rem 4rem; }
+  .sp-sheet::before { left: 2.75rem; }
+}
+
+.sp-sheet-title {
+  font-family: "Space Grotesk", Inter, sans-serif;
+  font-weight: 700;
+  font-size: clamp(1.6rem, 3vw, 2.2rem);
+  letter-spacing: -0.02em;
+  color: var(--sp-ink);
+}
+
+.sp-shortcuts {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  column-gap: 2rem;
+  margin-top: 1.25rem;
+}
+
+@media (min-width: 640px) { .sp-shortcuts { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1024px) { .sp-shortcuts { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+.sp-shortcut {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  min-height: 2.15rem;
+  padding: 0.35rem 0;
+  color: var(--sp-text);
+  border-radius: 0.4rem;
+}
+
+.sp-shortcut abbr {
+  min-width: 3.4rem;
+  font-family: "Space Grotesk", Inter, sans-serif;
+  font-weight: 700;
+  font-size: 1rem;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+  color: var(--sp-ink);
+}
+
+.sp-shortcut span { font-size: 0.92rem; color: var(--sp-muted); transition: color 0.15s ease; }
+.sp-shortcut:hover span { color: var(--sp-ink-hi); }
+.sp-shortcut:focus-visible { outline: 2px solid var(--sp-ink); outline-offset: 2px; }
+
+/* ---------------------------------------------------------- entry lists -- */
+
+.sp-list { border-top: 1px solid var(--sp-line); }
+
+.sp-row {
+  display: block;
+  padding: 1rem 0.25rem;
+  border-bottom: 1px solid var(--sp-line);
+  transition: background 0.15s ease;
+}
+
+.sp-row:hover { background: var(--sp-ink-soft); }
+
+.sp-row-title {
+  font-weight: 600;
+  font-size: 1.02rem;
+  color: var(--sp-text);
+}
+
+.sp-row:hover .sp-row-title { color: var(--sp-ink-hi); }
+
+.sp-row-text {
+  margin-top: 0.3rem;
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: var(--sp-muted);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* --------------------------------------------------------- entry article -- */
+
+.sp-entry-grid {
+  display: grid;
+  gap: 2.5rem;
+}
+
+@media (min-width: 1024px) {
+  .sp-entry-grid { grid-template-columns: minmax(0, 1fr) 15rem; gap: 3.5rem; }
+}
+
+.sp-answer {
+  position: relative;
+  padding: 1.25rem 1.25rem 1.25rem 1.5rem;
+  border-radius: 1rem;
+  background: var(--sp-surface);
+  border: 1px solid var(--sp-line);
+  box-shadow: var(--sp-shadow);
+  font-size: 1.08rem;
+  line-height: 1.65;
+}
+
+.sp-answer::before {
+  content: "";
+  position: absolute;
+  top: 1rem;
+  bottom: 1rem;
+  left: 0;
+  width: 3px;
+  border-radius: 3px;
+  background: var(--sp-ink);
+}
+
+.sp-prose {
+  font-size: 1.02rem;
+  line-height: 1.75;
+  color: var(--sp-text);
+}
+
+.sp-prose h2 {
+  margin: 2.5rem 0 0.75rem;
+  font-family: "Space Grotesk", Inter, sans-serif;
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  line-height: 1.25;
+  scroll-margin-top: 6rem;
+}
+
+.sp-prose h3 {
+  margin: 1.5rem 0 0.5rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.sp-prose p { margin: 0.85rem 0; }
+.sp-prose ul, .sp-prose ol { margin: 0.85rem 0; padding-left: 1.35rem; }
+.sp-prose ul { list-style: disc; }
+.sp-prose ol { list-style: decimal; }
+.sp-prose li { margin: 0.4rem 0; padding-left: 0.2rem; }
+.sp-prose li::marker { color: var(--sp-ink); }
+.sp-prose strong { font-weight: 600; }
+.sp-prose a { color: var(--sp-ink); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: color-mix(in srgb, var(--sp-ink) 35%, transparent); }
+.sp-prose a:hover { color: var(--sp-ink-hi); text-decoration-color: currentColor; }
+.sp-prose code { font-size: 0.9em; padding: 0.1rem 0.35rem; border-radius: 0.35rem; background: var(--sp-ink-soft); }
+
+.sp-formula {
+  padding: 1rem 1.15rem;
+  border-radius: 0.9rem;
+  border: 1px dashed color-mix(in srgb, var(--sp-ink) 45%, transparent);
+  background: var(--sp-ink-soft);
+}
+
+.sp-formula-label { font-size: 0.75rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--sp-ink); }
+.sp-formula-expr { margin-top: 0.3rem; font-family: "Space Grotesk", Inter, sans-serif; font-size: 1.08rem; font-weight: 500; }
+
+.sp-step-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  border: 1.5px solid var(--sp-ink);
+  color: var(--sp-ink);
+  font-family: "Space Grotesk", Inter, sans-serif;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.sp-toc { position: sticky; top: 6.5rem; }
+.sp-toc a { display: block; padding: 0.3rem 0 0.3rem 0.75rem; border-left: 1px solid var(--sp-line); font-size: 0.86rem; color: var(--sp-muted); }
+.sp-toc a:hover { color: var(--sp-ink); border-left-color: var(--sp-ink); }
+
+.sp-faq details {
+  border-bottom: 1px solid var(--sp-line);
+  padding: 0.9rem 0;
+}
+
+.sp-faq summary {
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  font-weight: 600;
+}
+
+.sp-faq summary::-webkit-details-marker { display: none; }
+.sp-faq summary::after { content: "+"; color: var(--sp-ink); font-weight: 500; font-size: 1.2rem; line-height: 1; }
+.sp-faq details[open] summary::after { content: "–"; }
+.sp-faq details p { margin-top: 0.6rem; color: var(--sp-muted); line-height: 1.65; }
+
+.sp-cta {
+  position: relative;
+  overflow: hidden;
+  padding: 1.5rem;
+  border-radius: 1.25rem;
+  background: var(--sp-ink);
+  color: #f6f7fb;
+}
+
+.dark .sp-cta { background: #1d2a5e; }
+
+.sp-cta-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+  margin-top: 1rem;
+  padding: 0 1.15rem;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #1b2a6b;
+  font-weight: 600;
+  font-size: 0.92rem;
+  transition: transform 0.15s ease;
+}
+
+.sp-cta-button:hover { transform: translateY(-1px); }
+
+@media (prefers-reduced-motion: reduce) {
+  .sp-cta-button:hover { transform: none; }
+}

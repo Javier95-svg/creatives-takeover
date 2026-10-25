@@ -130,7 +130,7 @@ test("no prerendered shell is thin", { skip: !hasDist && "run npm run build firs
 
 test("hubs link to their children", { skip: !hasDist && "run npm run build first" }, () => {
   const shells = collectShells();
-  for (const hub of ["/newspaper", "/mentorship", "/answers"]) {
+  for (const hub of ["/newspaper", "/mentorship", "/startup-pedia"]) {
     const shell = shells.find((s) => s.route === hub);
     assert.ok(shell, `${hub} shell missing`);
     const deep = shell.hrefs.filter((h) => h.startsWith(`${hub}/`));
