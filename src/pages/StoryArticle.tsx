@@ -15,6 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { createArticleSchema, createBreadcrumbSchema } from "@/components/SEO";
 import { slugifyTag } from "@/utils/hashtagUtils";
 import { openingText, stripEmoji, truncateAtWord } from "@/utils/storyMeta";
+import { linkPediaTerms } from "@/lib/pediaTermLinks";
 import RelatedStories from "@/components/stories/RelatedStories";
 import { LinkedInPostEmbed } from "@/components/stories/LinkedInPostEmbed";
 import { ArticleBody } from "@/components/stories/ArticleBody";
@@ -397,7 +398,7 @@ const StoryArticle = () => {
                 embed is only a fallback for articles without a body yet. */}
             {article.body_content ? (
               <section className="mt-2">
-                <ArticleBody content={article.body_content} title={article.title} />
+                <ArticleBody content={linkPediaTerms(article.body_content)} title={article.title} />
               </section>
             ) : article.linkedin_post_url ? (
               <div className="my-8">

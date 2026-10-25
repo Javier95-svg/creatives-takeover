@@ -1,6 +1,7 @@
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkBreaks from "remark-breaks";
+import { Link } from "react-router-dom";
 
 import { normalizeArticleMarkdown } from "@/lib/articleContent";
 
@@ -56,14 +57,24 @@ export function ArticleBody({ content, title, className }: ArticleBodyProps) {
               {...props}
             />
           ),
-          a: ({ node, ...props }) => (
-            <a
-              {...props}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-primary underline-offset-2 hover:underline"
-            />
-          ),
+          // Links inside the site (such as Startup Pedia terms) stay in the app;
+          // external sources open in a new tab.
+          a: ({ node, href = "", children, ...props }) =>
+            href.startsWith("/") ? (
+              <Link to={href} className="text-primary underline underline-offset-2 decoration-primary/40 hover:decoration-primary">
+                {children}
+              </Link>
+            ) : (
+              <a
+                {...props}
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary underline-offset-2 hover:underline"
+              >
+                {children}
+              </a>
+            ),
           strong: ({ node, ...props }) => <strong className="font-bold text-foreground" {...props} />,
           em: ({ node, ...props }) => <em className="italic" {...props} />,
           code: ({ node, ...props }) => (
