@@ -133,7 +133,7 @@ function buildFallbackHtml(routeConfig, hubChildren = {}) {
     ? `<p>Creatives Takeover &middot; Founders Compass</p>
           <p>Customized workspace for startup founders, product managers and indie builders.</p>
           <p>Identify what’s worth building, validate demand with reliable evidence, and turn insights into products and go-to-market strategies.</p>
-          <p><strong>No application. No cohort. No equity.</strong></p>
+          <p><strong>Free to start. No equity.</strong></p>
           <form action="/icp-builder" method="get">
             <label for="seo-hero-seed">What is your idea?</label>
             <textarea id="seo-hero-seed" name="seed" minlength="3" required></textarea>

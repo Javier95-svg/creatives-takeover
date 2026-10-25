@@ -30,7 +30,10 @@ const frozenFiles = {
   // Rehashed 2026-10-13 for the requested second lede line "Identify what's
   // worth building, validate demand with reliable evidence, and turn
   // insights into products and go-to-market strategies." The rest of the copy and the layout are unchanged.
-  '../src/components/Hero.tsx': 'dce6dd492ed5bfed3b502883f5ddf91607d671f5bf6a32da0737f69b1d7b2820',
+  // Rehashed 2026-10-24 for the requested closing line "Free to start. No
+  // equity.", which replaces "No application. No cohort. No equity." now that
+  // programs run cohorts on the platform. The rest of the hero is unchanged.
+  '../src/components/Hero.tsx': '281b069383bd0e1b4bb3346276c612613d693115da7fd65edf4eb939ad3f2def',
   // Rehashed 2026-07-28 for the performance audit: mobile and desktop journey
   // branches are now mutually exclusive, preventing duplicate 147 MB GIF loads.
   // Content, visual order, actions, and responsive layout remain unchanged.

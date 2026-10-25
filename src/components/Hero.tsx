@@ -88,7 +88,7 @@ const DEFAULT_LEDE = (
     <span className="ct-hero__lede-block">
       Identify what’s worth building, validate demand with reliable evidence, and turn insights into products and go-to-market strategies.
     </span>
-    <strong className="ct-hero__lede-final">No application. No cohort. No equity.</strong>
+    <strong className="ct-hero__lede-final">Free to start. No equity.</strong>
   </>
 );
 

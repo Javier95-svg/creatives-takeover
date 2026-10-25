@@ -83,7 +83,7 @@ test('fixed hero copy and server rendered pricing remain available without JavaS
   const paragraphs = [
     'Customized workspace for startup founders, product managers and indie builders.',
     'Identify what’s worth building, validate demand with reliable evidence, and turn insights into products and go-to-market strategies.',
-    'No application. No cohort. No equity.',
+    'Free to start. No equity.',
   ];
   const renderedSources = [hero, fallback, prerender].map((source) =>
     source.replaceAll('&apos;', "'").replaceAll('&amp;', '&'),
