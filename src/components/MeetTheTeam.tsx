@@ -20,7 +20,7 @@ type TeamMember = {
 const teamMembers: TeamMember[] = [
   {
     id: "founder",
-    name: "Javier Peña",
+    name: "Javier Alonso",
     role: "Founder (CEO & CTO)",
     linkedin: "https://www.linkedin.com/in/javier-digital-marketing/",
     x: "https://x.com/JavierForge",

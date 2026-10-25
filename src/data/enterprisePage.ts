@@ -281,7 +281,7 @@ export const ENTERPRISE_CONTACT = {
     'A final cohort report',
   ],
   person: {
-    name: 'Javier Peña',
+    name: 'Javier Alonso',
     role: 'Founder & CEO',
     line: 'You’ll talk to me directly. I reply within 1–2 business days.',
     email: 'javier@creatives-takeover.com',

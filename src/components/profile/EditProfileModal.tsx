@@ -59,6 +59,7 @@ interface EditProfileModalProps {
     user_preferences?: Record<string, unknown> | null;
     search_indexing_requested?: boolean | null;
     search_indexing_review_status?: 'not_requested' | 'pending' | 'approved' | 'rejected' | null;
+    search_indexing_opt_out?: boolean | null;
   };
   /** Receives the saved username, which a name change can rewrite server side. */
   onSuccess: (username?: string | null) => void;
@@ -157,7 +158,7 @@ export const EditProfileModal = ({ open, onClose, profile, onSuccess }: EditProf
     public_stage_visible: accountabilityPreferences.public_stage_visible,
     public_progress_visible: accountabilityPreferences.public_progress_visible,
     timezone: accountabilityPreferences.timezone,
-    search_indexing_requested: profile.search_indexing_requested === true,
+    search_indexing_opt_out: profile.search_indexing_opt_out === true,
   });
   const [avatarFile, setAvatarFile] = useState<string | null>(null);
   const [showCropModal, setShowCropModal] = useState(false);
@@ -302,7 +303,7 @@ export const EditProfileModal = ({ open, onClose, profile, onSuccess }: EditProf
           demo: formData.demo_url || undefined,
           loom: formData.loom_url || undefined,
         },
-        search_indexing_requested: formData.search_indexing_requested,
+        search_indexing_opt_out: formData.search_indexing_opt_out,
       };
 
       // update_profile_username_trigger can rename a name-derived username when
@@ -505,20 +506,15 @@ export const EditProfileModal = ({ open, onClose, profile, onSuccess }: EditProf
               <div className="space-y-4">
                 <div className="flex items-center justify-between rounded-xl border border-border/60 bg-background/70 p-4">
                   <div className="space-y-1 pr-4">
-                    <p className="text-sm font-medium text-foreground">Request search engine visibility</p>
+                    <p className="text-sm font-medium text-foreground">Show my Founder ID in search engines</p>
                     <p className="text-xs text-muted-foreground">
-                      Opt in to a quality review for Google and AI answer engines. Your profile stays noindex until it is complete and approved.
+                      On by default. Google and AI search can show your Founder ID once it has a bio of at least 120 characters, a one-line pitch and your project or niche. Turn this off any time to keep it out of search.
                     </p>
-                    {profile.search_indexing_review_status && profile.search_indexing_review_status !== 'not_requested' ? (
-                      <p className="text-xs font-medium capitalize text-primary">
-                        Review status: {profile.search_indexing_review_status}
-                      </p>
-                    ) : null}
                   </div>
                   <Switch
-                    checked={formData.search_indexing_requested}
-                    onCheckedChange={(checked) => setFormData({ ...formData, search_indexing_requested: checked })}
-                    aria-label="Request search engine visibility"
+                    checked={!formData.search_indexing_opt_out}
+                    onCheckedChange={(checked) => setFormData({ ...formData, search_indexing_opt_out: !checked })}
+                    aria-label="Show my Founder ID in search engines"
                   />
                 </div>
 

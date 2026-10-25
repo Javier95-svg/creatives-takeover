@@ -195,6 +195,7 @@ interface Profile {
   seo_indexable: boolean;
   search_indexing_requested?: boolean | null;
   search_indexing_review_status?: 'not_requested' | 'pending' | 'approved' | 'rejected' | null;
+  search_indexing_opt_out?: boolean | null;
 }
 
 const mapPublicProfile = (profile: PublicProfileRow, stageIsGated: boolean): Profile => ({
@@ -243,6 +244,7 @@ const mapPublicProfile = (profile: PublicProfileRow, stageIsGated: boolean): Pro
   seo_indexable: profile.seo_indexable === true,
   search_indexing_requested: null,
   search_indexing_review_status: null,
+  search_indexing_opt_out: null,
 });
 
 const Profile = () => {

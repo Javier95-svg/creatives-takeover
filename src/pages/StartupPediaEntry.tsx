@@ -27,7 +27,7 @@ import "@/components/startup-pedia/startup-pedia.css";
 const SITE = "https://creatives-takeover.com";
 // The byline links to the author's Founder ID profile (requested 2026-10-25).
 const AUTHOR_PROFILE_PATH = "/profile/javier";
-const AUTHOR = { "@type": "Person", "@id": `${SITE}/about#founder`, name: "Javier Peña", jobTitle: "Founder & CEO", url: `${SITE}${AUTHOR_PROFILE_PATH}` };
+const AUTHOR = { "@type": "Person", "@id": `${SITE}/about#founder`, name: "Javier Alonso", jobTitle: "Founder & CEO", url: `${SITE}${AUTHOR_PROFILE_PATH}` };
 
 const formatDate = (iso: string) =>
   new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric", timeZone: "UTC" });
@@ -111,7 +111,7 @@ export default function StartupPediaEntry() {
         description={entry.metaDescription}
         url={url}
         type="article"
-        author="Javier Peña"
+        author="Javier Alonso"
         publishedTime={entry.publishedAt}
         modifiedTime={entry.modifiedAt}
         structuredData={structuredData}
@@ -144,7 +144,7 @@ export default function StartupPediaEntry() {
               <p className="sp-muted mt-4 text-sm">
                 By{" "}
                 <Link to={AUTHOR_PROFILE_PATH} className="sp-link">
-                  Javier Peña
+                  Javier Alonso
                 </Link>{" "}
                 · Updated <time dateTime={entry.modifiedAt}>{formatDate(entry.modifiedAt)}</time> · {minutes} min read
               </p>
