@@ -33,13 +33,17 @@ const frozenFiles = {
   // Rehashed 2026-10-24 for the requested closing line "Free to start. No
   // equity.", which replaces "No application. No cohort. No equity." now that
   // programs run cohorts on the platform. The rest of the hero is unchanged.
-  '../src/components/Hero.tsx': '281b069383bd0e1b4bb3346276c612613d693115da7fd65edf4eb939ad3f2def',
+  // Rehashed 2026-10-24 (copy audit): the dashboard preview's third stat reads
+  // "open tasks" instead of "open coach reviews", a feature the product lacks.
+  '../src/components/Hero.tsx': '7b5537fadea96e52d0a02f2947e74ab368bc868d564636057597fa6cb23ed3b5',
   // Rehashed 2026-07-28 for the performance audit: mobile and desktop journey
   // branches are now mutually exclusive, preventing duplicate 147 MB GIF loads.
   // Content, visual order, actions, and responsive layout remain unchanged.
   // Rehashed 2026-08-25 for the approved copy-only replacement of the Tech
   // Stack row with the MVP Builder offer and its /build destination.
-  '../src/components/EntrepreneurProblems.tsx': '6185e02284d0487acb29e5f66b339e6a819ad2672f51d1389cb89ce93b62b2ad',
+  // Rehashed 2026-10-24 (copy audit): the subtitle and two card descriptions
+  // describe what the tools do instead of promising speed or a clear path.
+  '../src/components/EntrepreneurProblems.tsx': 'e13e2ed8a1cee6b26fe52e01031bbf5bc9405787b7830ae1189d2e27036da116',
   // Updated for the canonical core-tool navigation: support tools no longer
   // appear as stage prerequisites, while Stage VII retains its original name
   // and order.

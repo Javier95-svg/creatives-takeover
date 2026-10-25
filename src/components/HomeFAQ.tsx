@@ -9,15 +9,15 @@ const HomeFAQ = () => {
   const faqs = [
     {
       question: "What is Creatives Takeover?",
-      answer: "Think of us as your AI powered startup support system. We help founders, indie hackers, and builders go from a rough idea to a real startup without needing to stitch together ten different tools on their own.\n\nOur moat is not just writing business plans. It is helping you build your startup from scratch through the Startup Development Cycle: clarify the problem, validate demand, define your ideal customer, shape the offer, choose the right stack, build the MVP, and keep moving with focus. You get AI guidance, practical tools, mentors, co-founders, and fundraising support in one place."
+      answer: "Creatives Takeover is a SaaS platform where founders and indie builders start and test their projects. It brings the tools for each stage into one workspace: defining your customer, testing demand, building a first version, planning your launch, measuring traction, and preparing to raise.\n\nAround the tools you also have Pulse, an assistant that reads your project, plus mentors, cofounders, service providers and investors. The Rookie plan is free; some tools use monthly credits."
     },
     {
       question: "How does the Startup Development Cycle work?",
-      answer: "The Startup Development Cycle is our step by step way of helping you build from zero instead of getting stuck in random advice.\n\nYou start by clarifying the problem, customer, and offer. Then you pressure test the idea using tools like ICP Builder and PMF Lab. From there, BizMap AI helps you make the practical decisions that matter next: your MVP scope, launch priorities, messaging, and execution plan. Tech Stack Builder helps with tool choices, while Focus Funnel and Core Metrics help you stay accountable once you're building.\n\nThe point is momentum. Every stage is designed to move you one step closer to a real startup people want, not just a document that looks impressive."
+      answer: "It splits the work of building a startup into seven stages: Identity, Prototyping, Validation, Building, Launch, Traction and Fundraising. Each stage has a clear goal and the tools for it, for example ICP Builder for Identity, PMF Lab for Validation, MVP Builder for Building, and GTM Strategist and Traction Engine for Launch and Traction.\n\nYou don't have to follow it in order. Start at the stage that matches where your project is; your dashboard keeps the tasks and progress for each one."
     },
     {
       question: "I don't have a clear business idea yet. Can this platform still help me?",
-      answer: "100%. This is actually one of the best places to start when you're still figuring things out.\n\nYou can use the Prompt Library to explore business directions, talk things through with BizMap AI, and quickly pressure test rough concepts before you waste months building the wrong thing. It is designed to turn fuzzy thinking into concrete next steps.\n\nYou can also browse Founder Stories, connect with mentors, and learn from what other builders are actually doing. The platform meets you where you are, whether that's 'I have a vague idea' or 'I'm ready to launch.'"
+      answer: "Yes. You can start with a rough idea. Describe it in the box at the top of this page and ICP Builder gives you a first assessment of who it could serve, before you create an account.\n\nYou can also explore business directions in the Prompt Library, work through a first plan with BizMap AI, and read Founder Stories to see how others started."
     },
     {
       question: "Is Creatives Takeover only for tech startups?",
@@ -29,11 +29,11 @@ const HomeFAQ = () => {
     },
     {
       question: "How can I discover investors and funding opportunities?",
-      answer: "Insighta is your fundraising toolkit with multiple tools.\n\nVC Search lets you browse and filter venture capitalists by industry, stage, location, and check size. Rookie can browse only, Starter can open 2 profiles per billing cycle, Rising gets 10, and Pro is unlimited.\n\nAccelerator Hunt follows the same model: Rookie browse only, Starter gets 2 profiles, Rising gets 10, and Pro is unlimited. Pair those with the Pitch Deck Analyzer and Email Templates so your outreach is sharper and more targeted."
+      answer: "Insighta groups the fundraising tools.\n\nVC Search lets you browse and filter venture capital firms by industry, stage, location and check size. Every plan can browse; opening full profiles takes a paid plan: 5 a month on Starter, 10 on Rising, unlimited on Pro. Accelerator Hunt works the same way.\n\nPitch Deck Analyzer and Insighta Test help you prepare before you reach out, and Find Your Angel, on Pro, connects you with angel investors. We can't promise investment; these tools help you find the right people and prepare for the conversation."
     },
     {
-      question: "What kind of community can I expect on the platform?",
-      answer: "Our community is built around practical support, not passive scrolling.\n\nYou can find mentors, look for co-founders, read Founder Stories, and connect with investors through Find your Angel. The goal is to give founders real people around them while they build.\n\nThe vibe is collaboration over competition. You are not expected to figure everything out alone."
+      question: "Will I be working on my own?",
+      answer: "No. Besides the tools, the platform connects you with people: mentors you can book for focused advice, a cofounder marketplace, service providers for sales, marketing, operations and tech support, and Rooms and Launchpad to work next to other founders. On Pro, Find Your Angel connects you with angel investors.\n\nYour Founder ID gives you a public page to share your progress with all of them."
     },
     {
       question: "What tools help me validate my startup idea?",
@@ -45,7 +45,7 @@ const HomeFAQ = () => {
     },
     {
       question: "How much does it cost and what do I get?",
-      answer: "Rookie is free forever with 50 credits per month, standard AI models, 3 directory visits, and investor and accelerator browsing.\n\nStarter is $9/month or $79/year with 100 credits per month. It adds the PROVE workspace, Email Templates, 2 VC profiles, 2 accelerator profiles, and 10 directory visits.\n\nRising is $29/month or $239/year with 250 credits per month. It adds advanced MVP models, the complete First Customer Proof workflow, full Prompt Library and exports, and expanded research quotas.\n\nPro is $65/month or $589/year with 600 credits per month. It adds Find Your Angel and unlimited VC profiles, accelerator profiles, and directory visits. Core founder tools are available across plans and use credits where noted. Mentor marketplace access is also shared; mentor services are priced and paid separately."
+      answer: "Rookie is free forever with 50 credits per month, standard AI models, 3 directory visits, and investor and accelerator browsing.\n\nStarter is $9/month or $79/year with 100 credits per month. It adds the PROVE workspace, Email Templates, 5 VC profiles, 5 accelerator profiles, and 10 directory visits a month.\n\nRising is $29/month or $239/year with 250 credits per month. It adds advanced MVP models, the complete First Customer Proof workflow, full Prompt Library and exports, and expanded research quotas.\n\nPro is $65/month or $589/year with 600 credits per month. It adds Find Your Angel and unlimited VC profiles, accelerator profiles, and directory visits. Core founder tools are available across plans and use credits where noted. Mentor marketplace access is also shared; mentor services are priced and paid separately."
     }
   ];
 

@@ -297,7 +297,7 @@ const Hero = ({
               <div className="ct-hero__st-row">
                 <DashStat value="68" unit="%" label="MVP scope" trend="up" trendLabel="▲ on track" />
                 <DashStat value="14" label="user interviews" trend="up" trendLabel="▲ +6 wk" />
-                <DashStat value="3" label="open coach reviews" trend="down" trendLabel="▼ overdue" />
+                <DashStat value="3" label="open tasks" trend="down" trendLabel="▼ overdue" />
               </div>
 
               <div className="ct-hero__st-chart">

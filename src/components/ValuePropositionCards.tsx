@@ -51,7 +51,7 @@ const ValuePropositionCards = () => {
       title: "One workspace for your project",
       subtitle: "Workspace",
       buttonLabel: "Validate, Build, Launch",
-      description: "Every tool works on the same project. ICP Builder defines who you serve, Demo Studio gives people something to try, PMF Lab turns their feedback into a Build, Narrow, Pivot or Stop decision, then MVP Builder, GTM Strategist and Traction Engine take you to your first buyers and beyond.\n\nEach tool starts from what the last one saved, so you never begin from a blank page. Your dashboard keeps tasks, weekly progress and the evidence you collect in one place.",
+      description: "Every tool works on the same project. ICP Builder defines who you serve, Demo Studio gives people something to try, PMF Lab turns their feedback into a Build, Narrow, Pivot or Stop decision, then MVP Builder, GTM Strategist and Traction Engine help you plan your launch and measure your first sales.\n\nEach tool starts from what the last one saved, so you never begin from a blank page. Your dashboard keeps tasks, weekly progress and the evidence you collect in one place.",
       link: "/demo",
       linkLabel: "Explore a sample workspace",
       image: "https://images.unsplash.com/photo-1553877522-43269d4ea984?w=800&h=600&fit=crop&q=80&fm=webp",
@@ -63,7 +63,7 @@ const ValuePropositionCards = () => {
       title: "An assistant that knows your project",
       subtitle: "Pulse",
       buttonLabel: "Meet Pulse",
-      description: "Pulse reads your project before you ask: your customer profile, demo, validation, product, go to market plan, traction, tasks and open assumptions. You never have to explain your idea again.\n\nIt keeps the decisions and facts you choose to save, adds up to three notes a day on risks, opportunities or contradictions in your evidence, and shows the sources behind every answer. Pulse is included on every plan and its replies use no credits.",
+      description: "Pulse reads your project before you ask: your customer profile, demo, validation, product, go to market plan, traction, tasks and open assumptions. You don't have to explain your idea every time you ask.\n\nIt keeps the decisions and facts you choose to save, adds up to three notes a day on risks, opportunities or contradictions in your evidence, and shows the sources behind every answer. Pulse is included on every plan and its replies use no credits.",
       link: "/demo",
       linkLabel: "See Pulse in the sample workspace",
       image: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=800&h=600&fit=crop&q=80&fm=webp",
@@ -75,7 +75,7 @@ const ValuePropositionCards = () => {
       title: "Mentors, cofounders and experts",
       subtitle: "People",
       buttonLabel: "Find Help",
-      description: "You don't have to figure everything out alone. Book mentors who have solved the problem you are stuck on, and find a cofounder whose skills fill the gaps in your team.\n\nWhen you need hands, the service marketplace connects you with providers in sales, marketing, operations and tech support. They are all in the same workspace where you build, so help arrives with the context of your project.",
+      description: "You don't have to figure everything out alone. Book mentors who have solved the problem you are stuck on, and find a cofounder whose skills fill the gaps in your team.\n\nWhen you need hands, the service marketplace connects you with providers in sales, marketing, operations and tech support. They are on the same platform where you build, so you don't have to look for help elsewhere.",
       link: "/mentorship",
       linkLabel: "Find a mentor",
       image: "https://images.unsplash.com/photo-1587614382346-4ec70e388b28?w=800&h=600&fit=crop&q=80&fm=webp",
@@ -386,7 +386,7 @@ const ValuePropositionCards = () => {
         {/* Section Header */}
         <div className="max-w-3xl mx-auto text-center mb-12 sm:mb-16">
           <Badge variant="outline" className="homepage-section-badge mb-5">
-            The Perfect Ecosystem
+            What's Inside
           </Badge>
           <h2 className="homepage-section-title value-prop-section__title text-3xl sm:text-4xl lg:text-[2.9rem] mb-4">
             Creatives Takeover in a Nutshell

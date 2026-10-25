@@ -220,7 +220,7 @@ const journeyActions: JourneyAction[] = [
     to: "/build",
     title: "Build Your MVP",
     outcome: "Working product",
-    description: "Create a working MVP, launch sooner, and improve it with real feedback.",
+    description: "Build a working first version, share it with users, and improve it with their feedback.",
     icon: Boxes,
     accentName: "indigo-steel",
     accent: "226 31% 57%",
@@ -242,7 +242,7 @@ const journeyActions: JourneyAction[] = [
     to: "/co-founder",
     title: "Find a Co-Founder",
     outcome: "Shared execution",
-    description: "Find a complementary founder to share responsibilities and move faster together.",
+    description: "Find a founder with complementary skills to share the work and the decisions.",
     icon: Handshake,
     accentName: "raspberry",
     accent: "338 72% 58%",
@@ -359,7 +359,7 @@ const EntrepreneurProblems = () => {
             Every Founder's Journey is Unique
           </h2>
           <p className="homepage-section-copy founder-journey-section__copy mx-auto text-base sm:text-lg">
-            But the challenges are universal. Here's how we clear the path from idea to launch, removing bottlenecks at every stage.
+            But most founders run into the same problems. Here is each one, and the part of the platform that helps you work through it.
           </p>
         </ScrollReveal>
 

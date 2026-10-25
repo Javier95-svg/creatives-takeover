@@ -49,9 +49,9 @@ const AISpecializationTrends = () => {
   const prefersReducedMotion = usePrefersReducedMotion();
   const typingSpeed = 24;
   const firstNarrative =
-    "It has never been a better time to be a founder. Markets are unbundling, and software is breaking into focused, founder-sized opportunities instead of being dominated by a few general-purpose giants.";
+    "Starting a software business takes less money and fewer people than it used to. AI tools now handle work that once needed a team, and focused products for a specific group of people can reach customers anywhere.";
   const secondNarrative =
-    "The data shows that niche, specialized products are the ones growing fastest, raising capital, and building loyal communities of users who feel truly understood. For creative entrepreneurs, that means the barrier to starting is lower than ever, and the upside for solving a specific problem for a specific group of people has never been higher.";
+    "Lower costs also mean more competition and less room for guesswork. Founders who learn what their customers need before they build are better placed to succeed, and that is the work Creatives Takeover is built to support.";
   const secondStartDelay = firstNarrative.length * typingSpeed + 600;
 
   // Scroll-triggered animations
@@ -148,10 +148,10 @@ const AISpecializationTrends = () => {
             The Power of Small Teams
           </Badge>
           <h2 className="homepage-section-title text-3xl sm:text-4xl lg:text-[2.9rem] mb-5">
-            The Future of Work Is Here
+            What AI Changes for Small Teams
           </h2>
           <p className="homepage-section-copy text-base sm:text-lg max-w-3xl mx-auto px-4">
-            Technology is enabling small teams to build exceptional products and business models that can successfully compete with large enterprises.
+            AI tools let small teams do research, building, marketing and support work that used to need a much larger team.
           </p>
         </div>
 
@@ -280,7 +280,7 @@ const AISpecializationTrends = () => {
                 </div>
               )}
               <p className="text-sm text-muted-foreground mt-4">
-                AI turns one founder into a multi-function operating team, compounding output across research, product, marketing, and support.
+                Illustration, not measured data. AI tools can take on work across research, product, marketing and support, so one founder can cover more ground.
               </p>
             </CardContent>
           </Card>
@@ -379,7 +379,7 @@ const AISpecializationTrends = () => {
                 </div>
               )}
               <p className="text-sm text-muted-foreground mt-4">
-                AI tooling gives small teams access to research, production, support, and distribution workflows once reserved for larger companies.
+                Illustration, not measured data. AI tools give small teams access to research, production, support and distribution work that once needed a larger company.
               </p>
             </CardContent>
           </Card>
@@ -390,7 +390,7 @@ const AISpecializationTrends = () => {
         <div ref={textSectionRef} className="mt-12 max-w-4xl mx-auto">
           <div className="surface-panel trust-outline rounded-2.5xl sm:rounded-4xl p-5 sm:p-10">
             <h3 className="font-space-grotesk text-2xl font-semibold mb-4 text-center text-foreground tracking-tight">
-              A Lifetime Opportunity
+              Why It Matters Now
             </h3>
             {textSectionVisible && (
               <>

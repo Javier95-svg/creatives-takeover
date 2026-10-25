@@ -69,7 +69,7 @@ const cycleSteps: CycleStep[] = [
     shortLabel: "Traction",
     title: "Stage 6: Traction",
     description:
-      "Launch got you users. Traction gets you a business. This stage is about finding the acquisition channel that fits your specific product, mapping what retention looks like in the first 30 days, and separating real growth from constant effort. Use the GTM Strategist to narrow the field and the Traction Engine to run the plays week by week.\n\nThree consecutive weeks above the score threshold is your milestone. It means your product retains users, your channel converts them, and you execute without burning out. That combination is what turns early traction into a fundable story.",
+      "Launch brings your first users. Traction is about learning which of them stay and which channel keeps bringing more. In this stage you choose one acquisition channel that fits your product, track retention in the first 30 days, and tell real growth apart from constant effort. GTM Strategist helps you choose the channel, and Traction Engine helps you run and measure it week by week.\n\nThe milestone is three consecutive weeks above your score threshold: people come back, your channel converts, and you can keep up the pace.",
     icon: ChartNoAxesCombined,
     color: "from-pink-500/20 to-pink-600/20"
   },
@@ -77,7 +77,7 @@ const cycleSteps: CycleStep[] = [
     shortLabel: "Fundraising",
     title: "Stage 7: Fundraising",
     description:
-      "This is the final stage of the cycle, where founders raise capital to accelerate growth. It typically comes after proving the fundamentals, meaning you have a functional MVP, clear demand, early paying customers, and a solid plan for product and business development.\n\nFundraising provides the resources to scale faster, keep improving the product, and expand the team or operations. It also adds credibility, since investment often attracts more investment, and can help founders sustain themselves while they build and deliver on what they promised.",
+      "Not every business needs to raise money. If yours does, this is the stage to prepare: a working product, evidence of demand, early paying customers, and a clear plan for what the money is for.\n\nInsighta helps you check your readiness, improve your pitch deck, and find investors and accelerators that match your stage and sector. No platform can guarantee funding; the stronger your evidence, the better your conversations with investors will be.",
     icon: TrendingUp,
     color: "from-indigo-500/20 to-indigo-600/20"
   }
@@ -128,10 +128,10 @@ const UserReviews = () => {
         Startup Development Cycle
       </h2>
       <p className="homepage-section-copy startup-cycle-copy text-base sm:text-lg max-w-3xl mx-auto animate-in fade-in slide-in-from-bottom duration-700 delay-200">
-        The Startup Development Cycle is a 7-stage roadmap built by Creatives Takeover to guide first-time founders from raw idea to funded startup.
+        The Startup Development Cycle is a 7-stage roadmap that breaks building a startup into concrete tasks, from defining your customer to preparing to raise.
         <br />
         <br />
-        We divide it into two phases: Phase A (BizMap AI) takes founders from ideation to launch, covering validation, MVP, and early distribution. Phase B (Insighta) focuses on traction and fundraising, building the repeatable acquisition systems that attract investors.
+        We divide it into two phases: Phase A (BizMap AI) takes founders from ideation to launch, covering validation, MVP, and early distribution. Phase B (Insighta) focuses on traction and fundraising: finding a channel that brings users, measuring who stays, and preparing to talk to investors.
       </p>
     </div>
   );
