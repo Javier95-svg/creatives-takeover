@@ -15,6 +15,7 @@ export const WORKSPACE_ROUTES: Record<string, string> = {
   Marketplace: '/marketplace',
   Newspaper: '/newspaper',
   Podcast: '/podcast',
+  'Startup Pedia': '/startup-pedia',
   Rooms: '/rooms',
   Launchpad: '/launchpad',
   Settings: '/dashboard/settings',

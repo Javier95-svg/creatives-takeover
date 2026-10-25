@@ -5,7 +5,6 @@ import SEO, { createBreadcrumbSchema, createCollectionSchema } from "@/component
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import NotFound from "@/pages/NotFound";
-import { useAuth } from "@/contexts/AuthContext";
 import {
   PEDIA_BASE_PATH,
   pediaCtaHref,
@@ -41,13 +40,11 @@ function EntryList({ title, entries }: { title: string; entries: PediaEntry[] })
 export default function StartupPediaTopic() {
   const { topic: topicKey = "" } = useParams<{ topic: string }>();
   const topic = getTopic(topicKey);
-  const { user } = useAuth();
 
   if (!topic) return <NotFound />;
 
-  // Tools need an account, so signed-out readers go straight to /signup and on
-  // to the tool afterwards; public pages stay direct links (pediaCtaHref).
-  const toolHref = (href: string) => pediaCtaHref(href, `topic-${topic.key}`, Boolean(user));
+  // Every "Put it into practice" link goes straight to /signup (pediaCtaHref).
+  const toolHref = (href: string) => pediaCtaHref(href, `topic-${topic.key}`);
 
   const entries = getEntriesByTopic(topic.key);
   const url = topicPath(topic.key);

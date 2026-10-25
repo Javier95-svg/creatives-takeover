@@ -22,7 +22,7 @@ export const WORKSPACE_SECTION_TOOLS: Record<AdoptionSection, string[]> = {
   Insighta: ['Traction Engine', 'VC Search', 'Pitch Deck Analyzer', 'Insighta Test'],
   Community: ['Rooms', 'Launchpad'],
   Content: ['Newspaper', 'Podcast'],
-  Bonus: ['Accelerator Hunt', 'Tech Stack Builder'],
+  Bonus: ['Accelerator Hunt', 'Tech Stack Builder', 'Startup Pedia'],
 };
 
 /**

@@ -25,7 +25,7 @@ const MENTOR: NavSlice = {
     Network: ['Find a Mentor', 'Find a Co-Founder', 'Marketplace'],
     Community: ['Rooms', 'Launchpad'],
     Content: ['Newspaper', 'Podcast'],
-    Bonus: ['Accelerator Hunt', 'Tech Stack Builder'],
+    Bonus: ['Accelerator Hunt', 'Tech Stack Builder', 'Startup Pedia'],
   },
 };
 
@@ -36,7 +36,7 @@ const MARKETPLACE: NavSlice = {
     Network: ['Find a Mentor', 'Find a Co-Founder', 'Marketplace'],
     Community: ['Rooms', 'Launchpad'],
     Content: ['Newspaper', 'Podcast'],
-    Bonus: ['Accelerator Hunt', 'Tech Stack Builder'],
+    Bonus: ['Accelerator Hunt', 'Tech Stack Builder', 'Startup Pedia'],
   },
 };
 

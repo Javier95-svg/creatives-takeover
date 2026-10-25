@@ -210,15 +210,16 @@ export default function StartupPediaEntry() {
             {entry.cta ? (
               <aside className="sp-cta mt-12" aria-label="Put it into practice">
                 <p className="text-xs font-semibold uppercase tracking-[0.16em] opacity-80">Put it into practice</p>
-                <p className="mt-2 max-w-xl text-base leading-relaxed">{entry.cta.description}</p>
+                <p className="mt-2 text-base leading-relaxed">{entry.cta.description}</p>
                 <Link
-                  to={pediaCtaHref(entry.cta.href, entry.slug, Boolean(user))}
+                  to={pediaCtaHref(entry.cta.href, entry.slug)}
                   className="sp-cta-button"
                   onClick={() =>
                     captureEvent("startup_pedia_cta_click", {
                       entry_slug: entry.slug,
                       target: entry.cta?.href,
-                      destination: pediaCtaHref(entry.cta?.href ?? "", entry.slug, Boolean(user)).startsWith("/signup") ? "signup" : "page",
+                      destination: "signup",
+                      signed_in: Boolean(user),
                     })
                   }
                 >

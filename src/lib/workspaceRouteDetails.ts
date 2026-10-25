@@ -1,5 +1,5 @@
 import { BIZMAP_STAGES, BIZMAP_TOOLS } from './bizmapStages';
-import { BarChart3, BriefcaseBusiness, CalendarClock, CheckSquare, FolderOpen, Gift, GraduationCap, Handshake, Inbox, LayoutDashboard, LineChart, MessageSquare, MessagesSquare, Mic, Newspaper, Repeat, Rocket, Settings, Sparkles, Users, type LucideIcon } from 'lucide-react';
+import { BarChart3, BookMarked, BriefcaseBusiness, CalendarClock, CheckSquare, FolderOpen, Gift, GraduationCap, Handshake, Inbox, LayoutDashboard, LineChart, MessageSquare, MessagesSquare, Mic, Newspaper, Repeat, Rocket, Settings, Sparkles, Users, type LucideIcon } from 'lucide-react';
 
 export const WORKSPACE_ROUTE_ICONS: Record<string, LucideIcon> = {
   ...Object.fromEntries(BIZMAP_TOOLS.map(tool => [tool.name, tool.icon])),
@@ -16,6 +16,7 @@ export const WORKSPACE_ROUTE_ICONS: Record<string, LucideIcon> = {
   Launchpad: Rocket,
   'Accelerator Hunt': Rocket,
   'Tech Stack Builder': Settings,
+  'Startup Pedia': BookMarked,
   Overview: LayoutDashboard,
   Tasks: CheckSquare,
   Routine: Repeat,
@@ -53,6 +54,7 @@ export const WORKSPACE_ROUTE_DESCRIPTIONS: Record<string, string> = {
   Launchpad: 'Weekly launch rounds from founders on CT.',
   'Accelerator Hunt': 'Find accelerator programs matched to your startup.',
   'Tech Stack Builder': 'Choose a practical stack for your product.',
+  'Startup Pedia': 'Startup terms, metrics and how-to guides.',
   Overview: 'Track your progress and see what to work on next.',
   Tasks: 'Plan, prioritize, and complete your next actions.',
   Routine: 'Build consistent habits and manage recurring work.',

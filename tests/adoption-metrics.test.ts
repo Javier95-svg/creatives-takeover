@@ -9,7 +9,7 @@ const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf
 const sectionMigration = read('../supabase/migrations/20261012120000_adoption_by_section.sql');
 const timeMigration = read('../supabase/migrations/20261013120000_consent_and_section_time.sql');
 // The latest definition of admin_adoption_metrics().
-const segmentMigration = read('../supabase/migrations/20261014130000_adoption_by_segment.sql');
+const segmentMigration = read('../supabase/migrations/20261025130000_adoption_startup_pedia.sql');
 
 test('adoption helpers format shares, find the leading section and only total finished cohorts', () => {
   assert.equal(share(2, 6), '2 of 6 (33%)');

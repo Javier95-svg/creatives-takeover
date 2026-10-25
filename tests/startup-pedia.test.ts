@@ -150,14 +150,24 @@ test("signed-out readers go from a CTA straight to signup, then on to the tool",
     url.searchParams.get("return"),
     "/mvp-scope?utm_source=seo&utm_medium=startup_pedia&utm_campaign=minimum-viable-product",
   );
-  // One rule for every "Put it into practice" link: members go to the page,
-  // visitors to signup, and public pages (the programs page) never detour.
-  assert.match(pediaCtaHref("/mvp-scope", "x", false), /^\/signup\?/);
-  assert.match(pediaCtaHref("/mvp-scope", "x", true), /^\/mvp-scope\?utm_source=seo/);
-  assert.match(pediaCtaHref("/enterprise", "x", false), /^\/enterprise\?utm_source=seo/);
-  assert.match(read("src/pages/StartupPediaEntry.tsx"), /to=\{pediaCtaHref\(entry\.cta\.href, entry\.slug, Boolean\(user\)\)\}/);
-  assert.match(read("src/pages/StartupPediaTopic.tsx"), /pediaCtaHref\(href, `topic-\$\{topic\.key\}`, Boolean\(user\)\)/);
-  assert.match(read("scripts/seo-route-config.mjs"), /href: pediaCtaHref\(entry\.cta\.href, entry\.slug, false\)/);
+  // Every "Put it into practice" link goes straight to /signup, whatever the
+  // topic or the reader (Javier, 2026-10-25). /signup forwards members on.
+  for (const href of ["/mvp-scope", "/enterprise", "/icp-builder"]) {
+    assert.match(pediaCtaHref(href, "x"), /^\/signup\?source=startup_pedia/);
+  }
+  assert.match(read("src/pages/StartupPediaEntry.tsx"), /to=\{pediaCtaHref\(entry\.cta\.href, entry\.slug\)\}/);
+  assert.match(read("src/pages/StartupPediaTopic.tsx"), /pediaCtaHref\(href, `topic-\$\{topic\.key\}`\)/);
+  assert.match(read("scripts/seo-route-config.mjs"), /href: pediaCtaHref\(entry\.cta\.href, entry\.slug\)/);
+  // Signed-in members who land on /signup are sent on to the return page.
+  assert.match(read("src/pages/Signup.tsx"), /const targetAfterAuth = sanitizeReturnPath\(conversionSource\.returnUrl/);
+  // The description uses the full width of the box (it was cut in half).
+  assert.doesNotMatch(read("src/pages/StartupPediaEntry.tsx"), /max-w-xl text-base leading-relaxed">\{entry\.cta\.description\}/);
+});
+
+test("Startup Pedia sits in the workspace Bonus section, under Tech Stack Builder", () => {
+  assert.match(read("src/lib/workspaceSections.ts"), /Bonus: \['Accelerator Hunt', 'Tech Stack Builder', 'Startup Pedia'\]/);
+  assert.match(read("src/lib/workspaceNavigation.ts"), /'Startup Pedia': '\/startup-pedia'/);
+  assert.match(read("src/lib/workspaceRouteDetails.ts"), /'Startup Pedia': BookMarked/);
 });
 
 test("every retired /answers URL 301s to an existing entry", () => {
