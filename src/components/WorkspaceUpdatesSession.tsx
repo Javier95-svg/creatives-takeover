@@ -14,14 +14,18 @@ function sessionIdentity(token: string, fallback?: string) {
 
 const memoryDismissals = new Map<string, string>();
 
-function SessionCard({ userId, sessionId, children }: {
-  userId: string; sessionId: string; children: (dismiss: () => void) => ReactNode;
+function SessionCard({ userId, sessionId, latestId, children }: {
+  userId: string; sessionId: string; latestId: string; children: (dismiss: () => void) => ReactNode;
 }) {
   const storageKey = `ct-sidebar-updates-dismissed:${userId}`;
+  // A dismissal covers the updates seen so far in this session. A newer update
+  // (e.g. the Startup Pedia launch) changes latestId and brings the card back;
+  // keyed on the session alone, it stayed hidden until the next sign-in.
+  const dismissalKey = `${sessionId}:${latestId}`;
   const readDismissed = useCallback(() => {
-    try { return localStorage.getItem(storageKey) === sessionId || memoryDismissals.get(userId) === sessionId; }
-    catch { return memoryDismissals.get(userId) === sessionId; }
-  }, [storageKey, sessionId, userId]);
+    try { return localStorage.getItem(storageKey) === dismissalKey || memoryDismissals.get(userId) === dismissalKey; }
+    catch { return memoryDismissals.get(userId) === dismissalKey; }
+  }, [storageKey, dismissalKey, userId]);
   const [dismissed, setDismissed] = useState(readDismissed);
   useEffect(() => {
     const sync = (event: StorageEvent) => {
@@ -32,16 +36,16 @@ function SessionCard({ userId, sessionId, children }: {
   }, [storageKey, readDismissed]);
   if (dismissed) return null;
   return children(() => {
-    memoryDismissals.set(userId, sessionId);
-    try { localStorage.setItem(storageKey, sessionId); } catch { /* Keep dismissed in memory if storage is unavailable. */ }
+    memoryDismissals.set(userId, dismissalKey);
+    try { localStorage.setItem(storageKey, dismissalKey); } catch { /* Keep dismissed in memory if storage is unavailable. */ }
     setDismissed(true);
   });
 }
 
-export default function WorkspaceUpdatesSession({ children }: { children: (dismiss: () => void) => ReactNode }) {
+export default function WorkspaceUpdatesSession({ latestId, children }: { latestId: string; children: (dismiss: () => void) => ReactNode }) {
   const { user, session, loading } = useAuth();
   if (loading || !user || !session) return null;
   const id = sessionIdentity(session.access_token, user.last_sign_in_at);
   if (!id) return null;
-  return <SessionCard key={`${user.id}:${id}`} userId={user.id} sessionId={id}>{children}</SessionCard>;
+  return <SessionCard key={`${user.id}:${id}:${latestId}`} userId={user.id} sessionId={id} latestId={latestId}>{children}</SessionCard>;
 }

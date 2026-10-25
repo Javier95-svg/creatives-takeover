@@ -53,7 +53,7 @@ function LatestUpdates() {
   const current = index % Math.max(1, updates.length);
   const update = updates[current];
   if (!update) return null;
-  return <WorkspaceUpdatesSession>{dismiss => <section aria-label="Latest platform update" className="my-2 rounded-xl border border-border/60 bg-muted/20 p-3">
+  return <WorkspaceUpdatesSession latestId={updates[0].id}>{dismiss => <section aria-label="Latest platform update" className="my-2 rounded-xl border border-border/60 bg-muted/20 p-3">
     <div className="mb-2 flex items-center justify-between gap-2"><span className="text-xs font-medium">{update.section}</span><div className="flex items-center gap-1"><span className="text-xs">{current + 1}/{updates.length}</span><button aria-label="Next notification" onClick={() => setIndex(current + 1)} className="rounded p-1 hover:bg-muted"><ChevronRight className="h-4 w-4" /></button><button aria-label="Dismiss notification card" onClick={dismiss} className="rounded p-1 hover:bg-muted"><X className="h-4 w-4" /></button></div></div>
     <Link to={update.route} className="flex items-start gap-2 rounded text-xs focus-visible:outline focus-visible:outline-primary"><FileText className="h-4 w-4 shrink-0 text-primary" /><span><span className="block font-medium">{update.title}</span><span className="mt-1 block leading-5">{update.detail}</span></span></Link>
   </section>}</WorkspaceUpdatesSession>;
