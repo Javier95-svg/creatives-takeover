@@ -53,7 +53,12 @@ export const ROBOTS_DISALLOW = [
   "/forgot-password",
   "/reset-password",
   "/onboarding",
-  "/start",
+  // Robots rules match by prefix: a bare "/start" also blocked /startup-pedia
+  // and /startup-guide. These three block only the onboarding page (/start),
+  // its query-string links (/start?return=...) and the pages under it.
+  "/start$",
+  "/start?",
+  "/start/",
   "/dashboard",
   "/account",
   "/messages",
