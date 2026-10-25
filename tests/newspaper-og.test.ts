@@ -71,12 +71,13 @@ test('newspaper OG handler injects article-specific social metadata', async (t) 
 
   assert.equal(response.status, 200);
   assert.match(html, /<meta property="og:type" content="article" \/>/);
-  assert.match(html, /<meta property="og:title" content="SaaS Pricing Is Dying\. The Founders Who See It Coming Are Already Switching Models\. \| Growth" \/>/);
+  assert.match(html, /<title>SaaS Pricing Is Dying\. The Founders Who See It Coming Are Already Switching Models\. \| Creatives Takeover<\/title>/);
+  assert.match(html, /<meta property="og:title" content="SaaS Pricing Is Dying\. The Founders Who See It Coming Are Already Switching Models\." \/>/);
   assert.match(html, /<meta property="og:description" content="Usage-based pricing is changing how founders package and monetize software for a new era of AI products and customer expectations\." \/>/);
   assert.match(html, /<meta property="og:image" content="https:\/\/creatives-takeover\.com\/story-banners\/saas-pricing\.jpg" \/>/);
   assert.match(html, /<meta property="og:url" content="https:\/\/creatives-takeover\.com\/newspaper\/saas-pricing-is-dying-founders-who-see-it-coming-are-already" \/>/);
   assert.match(html, /<meta name="twitter:card" content="summary_large_image" \/>/);
-  assert.match(html, /<meta name="twitter:title" content="SaaS Pricing Is Dying\. The Founders Who See It Coming Are Already Switching Models\. \| Growth" \/>/);
+  assert.match(html, /<meta name="twitter:title" content="SaaS Pricing Is Dying\. The Founders Who See It Coming Are Already Switching Models\." \/>/);
   assert.match(html, /<meta name="twitter:image" content="https:\/\/creatives-takeover\.com\/story-banners\/saas-pricing\.jpg" \/>/);
   assert.match(html, /<link rel="canonical" href="https:\/\/creatives-takeover\.com\/newspaper\/saas-pricing-is-dying-founders-who-see-it-coming-are-already" \/>/);
   assert.doesNotMatch(html, /<meta property="og:title" content="AI Startup Builder \| Creatives Takeover" \/>/);

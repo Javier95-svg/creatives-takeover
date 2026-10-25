@@ -131,7 +131,7 @@ export default function ICPBuilderPage() {
   return (
     <div className="relative min-h-screen overflow-x-hidden bg-background">
       <SEO
-        title="Build your ICP Draft | Creatives Takeover"
+        title="ICP Builder: Define Your Ideal Customer | Creatives Takeover"
         description="Build a founder-specific ICP Draft in one guided flow and turn it into a usable customer document."
         url="/icp-builder"
         structuredData={structuredData}

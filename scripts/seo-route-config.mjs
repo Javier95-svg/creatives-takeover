@@ -390,7 +390,7 @@ export const INDEXABLE_ROUTES = [
     path: "/co-founder",
     title: "Find a Co-Founder | Creatives Takeover",
     description:
-      "Meet potential startup co-founders, browse founder profiles, and discover collaborators across product, growth, design, and engineering.",
+      "Say what you are building or what you want to join, see transparent compatibility signals, and send interest to founders who fit. No credits used.",
     changefreq: "weekly",
     priority: 0.7,
     heroHeading: "Find the right co-founder",
@@ -630,7 +630,7 @@ export const INDEXABLE_ROUTES = [
   },
   {
     path: "/icp-builder",
-    title: "Ideal Customer Profile Builder | Creatives Takeover",
+    title: "ICP Builder: Define Your Ideal Customer | Creatives Takeover",
     description:
       "Define your ideal customer profile, sharpen positioning, and choose the customer segment your startup should target first.",
     changefreq: "weekly",
@@ -754,7 +754,7 @@ export const INDEXABLE_ROUTES = [
     path: "/directories",
     title: "Startup Launch Directories | Creatives Takeover",
     description:
-      "Browse startup launch directories, communities, and listing platforms to promote your product and reach early users.",
+      "Find the best platforms to submit and promote your startup or product launch. Filterable directory of 30+ communities, aggregators, review sites, and more.",
     changefreq: "weekly",
     priority: 0.7,
     heroHeading: "Startup Launch Directories",

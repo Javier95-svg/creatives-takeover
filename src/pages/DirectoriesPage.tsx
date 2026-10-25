@@ -41,7 +41,7 @@ export default function DirectoriesPage() {
   return (
     <div className="relative min-h-screen overflow-hidden bg-background">
       <SEO
-        title="Directories - Creatives Takeover"
+        title="Startup Launch Directories | Creatives Takeover"
         description="Find the best platforms to submit and promote your startup or product launch. Filterable directory of 30+ communities, aggregators, review sites, and more."
         keywords="product launch directories, startup directories, product hunt, launch platforms"
         url="/directories"

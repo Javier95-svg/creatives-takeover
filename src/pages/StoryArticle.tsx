@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { createArticleSchema, createBreadcrumbSchema } from "@/components/SEO";
 import { slugifyTag } from "@/utils/hashtagUtils";
+import { openingText, stripEmoji, truncateAtWord } from "@/utils/storyMeta";
 import RelatedStories from "@/components/stories/RelatedStories";
 import { LinkedInPostEmbed } from "@/components/stories/LinkedInPostEmbed";
 import { ArticleBody } from "@/components/stories/ArticleBody";
@@ -132,34 +133,23 @@ const StoryArticle = () => {
   };
   const readingTime = calculateReadingTime(article.body_content || article.excerpt);
 
-  // Optimize meta title - include primary keyword (first hashtag) if available
-  const primaryTag = article.hashtags && article.hashtags.length > 0 
-    ? article.hashtags[0].replace('#', '') 
+  const primaryTag = article.hashtags && article.hashtags.length > 0
+    ? article.hashtags[0].replace('#', '')
     : '';
+  // Mirrors buildMeta in api/newspaper-og.ts so the crawler's first response
+  // and the hydrated page carry the same title and description.
   const metaTitle = article.meta_title || article.title;
-  const optimizedMetaTitle = primaryTag && !metaTitle.toLowerCase().includes(primaryTag.toLowerCase())
-    ? `${metaTitle} | ${primaryTag}`
-    : metaTitle;
-  
-  // Optimize meta description - ensure 150-160 characters, keyword-rich
-  let metaDescription = article.meta_description || article.excerpt || article.title;
-  if (metaDescription.length < 120) {
-    // Enhance short descriptions
-    const tagKeywords = article.hashtags?.slice(0, 2).map(t => t.replace('#', '')).join(', ') || '';
-    metaDescription = tagKeywords 
-      ? `${metaDescription} Learn about ${tagKeywords} and more from Creatives Takeover.`
-      : `${metaDescription} Read insights and stories from Creatives Takeover.`;
-  }
-  // Ensure description is within optimal length (150-160 chars)
-  if (metaDescription.length > 160) {
-    metaDescription = metaDescription.substring(0, 157) + '...';
-  } else if (metaDescription.length < 120) {
-    metaDescription = metaDescription + ' Discover expert insights and actionable advice.';
-    if (metaDescription.length > 160) {
-      metaDescription = metaDescription.substring(0, 157) + '...';
-    }
-  }
-  
+  const optimizedMetaTitle = stripEmoji(metaTitle);
+  const excerpt = (article.excerpt || '').trim();
+  const metaDescription = truncateAtWord(
+    article.meta_description ||
+      (excerpt.length >= 120 ? excerpt : '') ||
+      openingText(article.body_content) ||
+      excerpt ||
+      article.title,
+    160,
+  );
+
   // Get primary hashtag for article:section
   const articleSection = primaryTag || 'General';
   
@@ -171,7 +161,7 @@ const StoryArticle = () => {
   return (
     <>
       <Helmet>
-        <title>{optimizedMetaTitle} | Creatives Takeover Stories</title>
+        <title>{`${optimizedMetaTitle} | Creatives Takeover`}</title>
         <meta name="description" content={metaDescription} />
         {article.hashtags && article.hashtags.length > 0 && (
           <meta name="keywords" content={article.hashtags.map(t => t.replace('#', '')).join(', ')} />

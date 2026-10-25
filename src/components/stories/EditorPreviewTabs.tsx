@@ -122,7 +122,7 @@ export const EditorPreviewTabs = ({
             <label className="text-sm font-medium">Page Title</label>
             <div className="mt-1 p-3 bg-muted rounded border">
               <p className="text-sm font-medium">
-                {formData.meta_title || formData.title || "Untitled Article"} | Creatives Takeover Stories
+                {formData.meta_title || formData.title || "Untitled Article"} | Creatives Takeover
               </p>
             </div>
           </div>

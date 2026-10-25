@@ -160,26 +160,53 @@ function toSocialCardImage(imageUrl: string): string {
 
 // Mirrors the meta-title/description logic in src/pages/StoryArticle.tsx so the
 // crawler preview matches what users see once the SPA hydrates.
+// Copies of src/utils/storyMeta.ts; tests/story-meta.test.ts keeps them equal.
+// Excerpts are one-line teasers, so the description falls back to the
+// article's opening paragraphs rather than padding the teaser with filler.
+function openingText(markdown: string | null | undefined): string {
+  if (!markdown) return '';
+  const paragraphs = markdown
+    .split(/\n\s*\n/)
+    .map((block) => block.trim())
+    .filter((block) => block && !/^(#|!\[|>|\||```|---)/.test(block))
+    .map((block) =>
+      block
+        .replace(/<[^>]+>/g, '')
+        .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
+        .replace(/[*_`~]+/g, '')
+        .replace(/\s+/g, ' ')
+        .trim(),
+    )
+    .filter(Boolean);
+  let text = '';
+  for (const paragraph of paragraphs) {
+    text = text ? `${text} ${paragraph}` : paragraph;
+    if (text.length >= 120) break;
+  }
+  return text;
+}
+
+function truncateAtWord(text: string, max: number): string {
+  if (text.length <= max) return text;
+  const cut = text.substring(0, max - 3);
+  const lastSpace = cut.lastIndexOf(' ');
+  return `${(lastSpace > max / 2 ? cut.substring(0, lastSpace) : cut).replace(/[\s,;:.]+$/, '')}...`;
+}
+
+const stripEmoji = (text: string) => text.replace(/\s*\p{Extended_Pictographic}️?/gu, '').trim();
+
 function buildMeta(article: StoryRecord) {
-  const primaryTag = article.hashtags && article.hashtags.length > 0
-    ? article.hashtags[0].replace('#', '')
-    : '';
+  const optimizedMetaTitle = stripEmoji(article.meta_title || article.title);
 
-  const metaTitle = article.meta_title || article.title;
-  const optimizedMetaTitle = primaryTag && !metaTitle.toLowerCase().includes(primaryTag.toLowerCase())
-    ? `${metaTitle} | ${primaryTag}`
-    : metaTitle;
-
-  let metaDescription = article.meta_description || article.excerpt || article.title;
-  if (metaDescription.length < 120) {
-    const tagKeywords = (article.hashtags ?? []).slice(0, 2).map((t) => t.replace('#', '')).join(', ');
-    metaDescription = tagKeywords
-      ? `${metaDescription} Learn about ${tagKeywords} and more from Creatives Takeover.`
-      : `${metaDescription} Read insights and stories from Creatives Takeover.`;
-  }
-  if (metaDescription.length > 160) {
-    metaDescription = `${metaDescription.substring(0, 157)}...`;
-  }
+  const excerpt = (article.excerpt || '').trim();
+  const metaDescription = truncateAtWord(
+    article.meta_description ||
+      (excerpt.length >= 120 ? excerpt : '') ||
+      openingText(article.body_content) ||
+      excerpt ||
+      article.title,
+    160,
+  );
 
   const banner = article.banner_image_url || '';
   const absoluteBanner = banner
@@ -234,6 +261,16 @@ export default async function handler(request: Request): Promise<Response> {
     return passthrough();
   }
 
+  // An article was once published with backticks around its slug, and Google
+  // indexed that URL. The slug is clean now; send the old address to it.
+  const cleanSlug = slug.replace(/[`'"]/g, '');
+  if (cleanSlug !== slug && cleanSlug) {
+    return new Response(null, {
+      status: 301,
+      headers: { location: `${SITE_ORIGIN}/newspaper/${encodeURIComponent(cleanSlug)}` },
+    });
+  }
+
   let article: StoryRecord | null = null;
   try {
     const res = await fetch(
@@ -271,7 +308,7 @@ export default async function handler(request: Request): Promise<Response> {
   const { optimizedMetaTitle, metaDescription, ogImageUrl } = buildMeta(article);
   const articleUrl = `${SITE_ORIGIN}/newspaper/${article.slug}`;
 
-  html = setTitle(html, `${optimizedMetaTitle} | Creatives Takeover Stories`);
+  html = setTitle(html, `${optimizedMetaTitle} | Creatives Takeover`);
   html = setMeta(html, 'name', 'description', metaDescription);
   html = setCanonical(html, articleUrl);
 

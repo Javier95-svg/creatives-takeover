@@ -249,7 +249,7 @@ export default function PitchDeckAnalyzerPage() {
   return (
     <div className="min-h-screen bg-background">
       <SEO
-        title="Pitch Deck Analyzer - AI-Powered Assessment"
+        title="Pitch Deck Analyzer & Score Tool | Creatives Takeover"
         description="Get instant AI-powered analysis of your pitch deck. Comprehensive scoring across story, market, traction, business model, team, and fundraising readiness."
         keywords="pitch deck analyzer, pitch deck score, investor presentation analysis, fundraising assessment, startup pitch analysis"
         url="/pitch-deck-analyzer"
