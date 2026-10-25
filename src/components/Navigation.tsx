@@ -132,6 +132,7 @@ const LegacyNavigation = () => {
   const contentSubmenu = [
     { name: "Newspaper", href: "/newspaper", icon: Newspaper, description: "Read business cases and founder stories." },
     { name: "Podcast", href: "/podcast", icon: Mic, description: "Hear candid conversations with founders." },
+    { name: "Startup Pedia", href: "/startup-pedia", icon: BookMarked, description: "Startup terms, metrics and how-to guides." },
   ];
 
   // Practical founder resources that sit outside the core guided journeys.
@@ -274,7 +275,6 @@ const LegacyNavigation = () => {
     { name: "Network", href: "/mentorship", tooltip: "Mentors, angel investors, and co-founder matchmaking", icon: UsersIcon },
     { name: "Insighta", href: "/insighta", tooltip: "Funding opportunities and investment resources", icon: Telescope },
     { name: "Content", href: "/podcast", tooltip: "Podcast conversations and founder stories", icon: Clapperboard },
-    { name: "Startup Pedia", href: "/startup-pedia", tooltip: "Startup terms, metrics and how-to guides", icon: BookMarked },
     { name: "Resources", href: "/accelerator-hunt", tooltip: "Practical tools and opportunities for founders", icon: BookOpen },
     { name: "Pricing", href: "/pricing", tooltip: "View plans and pricing options", icon: DollarSign }
   ];
@@ -290,7 +290,7 @@ const LegacyNavigation = () => {
       );
     }
     if (href === "/podcast") {
-      return ["/podcast", "/newspaper"].some((path) => location.pathname.startsWith(path));
+      return ["/podcast", "/newspaper", "/startup-pedia"].some((path) => location.pathname.startsWith(path));
     }
     if (href === "/accelerator-hunt") {
       return ["/accelerator-hunt", "/tech-stack"].some((path) => location.pathname.startsWith(path));

@@ -52,6 +52,8 @@ const founderLinks: VisitorLink[] = [
 const exploreLinks: VisitorLink[] = [
   { label: "Newspaper", href: "/newspaper", icon: Newspaper },
   { label: "Podcast", href: "/podcast", icon: Mic },
+  // Startup Pedia, the knowledge hub that replaced /answers (2026-10-25).
+  { label: "Startup Pedia", href: "/startup-pedia", icon: BookMarked },
 ];
 
 // The bar in display order (2026-10-17). Home is covered by the brand lockup.
@@ -64,8 +66,6 @@ const visitorEntries: VisitorEntry[] = [
   { label: "For founders", links: founderLinks, icon: Lightbulb },
   { label: "Enterprise", href: "/enterprise", icon: Building2 },
   { label: "Explore", links: exploreLinks, icon: Compass },
-  // Startup Pedia, the knowledge hub that replaced /answers (2026-10-25).
-  { label: "Startup Pedia", href: "/startup-pedia", icon: BookMarked },
   { label: "About", href: "/about", icon: Info },
   { label: "Pricing", href: "/pricing", icon: DollarSign },
 ];
@@ -132,7 +132,7 @@ const LegacyVisitorNavbar = () => {
 
   const navItemClass = (active: boolean) =>
     cn(
-      "rounded-2xl px-1.5 py-2 text-[13px] font-medium transition-colors xl:px-2.5 xl:text-sm 2xl:px-3.5 3xl:px-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+      "rounded-2xl px-2 py-2 text-sm font-medium transition-colors xl:px-3.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
       active
         ? "bg-background text-foreground shadow-sm"
         : "text-muted-foreground hover:bg-background/80 hover:text-foreground"
@@ -199,7 +199,7 @@ const LegacyVisitorNavbar = () => {
               </span>
             </Link>
 
-            <div className="hidden min-w-0 flex-1 items-center justify-center gap-0.5 lg:flex xl:gap-2 2xl:gap-3 3xl:gap-1">
+            <div className="hidden min-w-0 flex-1 items-center justify-center gap-1 lg:flex xl:gap-2 2xl:gap-3">
               {/* Each entry keeps its icon on the left. Six entries only fit with
                   icons from 2xl; below that the labels carry it. */}
               {visitorEntries.map((entry) =>
@@ -212,7 +212,7 @@ const LegacyVisitorNavbar = () => {
                       )}
                       onClick={() => trackNavClick(entry.label)}
                     >
-                      <entry.icon className="hidden h-4 w-4 shrink-0 3xl:block" aria-hidden="true" />
+                      <entry.icon className="hidden h-4 w-4 shrink-0 2xl:block" aria-hidden="true" />
                       {entry.label}
                       <ChevronDown
                         className="h-3.5 w-3.5 opacity-70 transition-transform group-data-[state=open]:rotate-180"
@@ -240,7 +240,7 @@ const LegacyVisitorNavbar = () => {
                     className={cn(linkClassName(entry.href, entry.sectionId, entry.exact), "inline-flex items-center gap-2 whitespace-nowrap")}
                     onClick={(event) => handleNavClick(event, entry)}
                   >
-                    <entry.icon className="hidden h-4 w-4 shrink-0 3xl:block" aria-hidden="true" />
+                    <entry.icon className="hidden h-4 w-4 shrink-0 2xl:block" aria-hidden="true" />
                     {entry.label}
                   </Link>
                 )

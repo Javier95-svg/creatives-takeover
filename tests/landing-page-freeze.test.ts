@@ -54,10 +54,10 @@ const frozenFiles = {
   // existing linked logo. The signed-out navbar remains unchanged.
   // Rehashed 2026-10-04: 83728f13 (2026-09-16) only returns null inside the
   // signed-in workspace frame; visitors get the same navbar as before.
-  // Rehashed 2026-10-25 for the requested Startup Pedia tab: one plain link
-  // (/startup-pedia) added after Content in the signed-in bar. Nothing else
-  // in the file changed.
-  '../src/components/Navigation.tsx': '70c977b80dd3f24ceca1cfa2cd5212abc292e5a40b5b13af44ac4da61ae8c691',
+  // Rehashed 2026-10-25: Startup Pedia sits in the Content submenu under
+  // Newspaper and Podcast (as requested, instead of its own tab), and Content
+  // is active on /startup-pedia. Nothing else in the file changed.
+  '../src/components/Navigation.tsx': '22c6530d03c88e88259aeca21adb71cdb7090bd5161e76181833c9f32ceaa396',
   // Re-pinned 2026-07-25 (delivery audit, Phase 1): AISpecializationTrends moved
   // from a static import to lazy() + Suspense, matching how HomeFAQ and
   // FounderAnswerLibraryTeaser are already loaded. It is the only homepage

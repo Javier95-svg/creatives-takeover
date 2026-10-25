@@ -160,7 +160,8 @@ test("every retired /answers URL 301s to an existing entry", () => {
 
 test("navigation and site search point at Startup Pedia", () => {
   assert.match(read("src/components/VisitorNavbar.tsx"), /label: "Startup Pedia", href: "\/startup-pedia"/);
-  assert.match(read("src/components/Navigation.tsx"), /name: "Startup Pedia", href: "\/startup-pedia"/);
+  // In the Content submenu, under Newspaper and Podcast (requested 2026-10-25).
+  assert.match(read("src/components/Navigation.tsx"), /name: "Startup Pedia", href: "\/startup-pedia", icon: BookMarked, description:/);
   assert.match(read("src/components/SEO.tsx"), /startup-pedia\?q=\{search_term_string\}/);
   assert.match(read("index.html"), /startup-pedia\?q=\{search_term_string\}/);
 });
