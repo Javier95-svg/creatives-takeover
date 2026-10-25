@@ -1,18 +1,16 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Target, Zap } from "lucide-react";
+import { Timer, User } from "lucide-react";
 import {
-  LineChart,
-  Line,
-  AreaChart,
-  Area,
+  BarChart,
+  Bar,
+  Cell,
+  LabelList,
   XAxis,
   YAxis,
   CartesianGrid,
-  Tooltip,
   ResponsiveContainer,
-  Legend
 } from "recharts";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { useTypingAnimation } from "@/hooks/useTypingAnimation";
@@ -80,20 +78,26 @@ const AISpecializationTrends = () => {
     }
   }, [textSectionIsVisible, textSectionVisible, prefersReducedMotion]);
 
-  const founderLeverageData = [
-    { stage: 'Manual Ops', traditional: 1, aiEnabled: 1.2 },
-    { stage: 'AI Assist', traditional: 1.3, aiEnabled: 3.5 },
-    { stage: 'AI Workflows', traditional: 1.6, aiEnabled: 8 },
-    { stage: 'Agent Stack', traditional: 1.9, aiEnabled: 16 },
+  // Published figures only (checked 2026-10-24). Carta, Solo Founders Report
+  // 2025 (9 Dec 2025): "From 2019 to H1 2025, the share of new startups with a
+  // solo founder has risen from 23.7% to 36.3%" and "solo-led companies
+  // represented 30% of startups founded in 2024". U.S. startups on Carta.
+  const soloFounderData = [
+    { period: '2019', share: 23.7 },
+    { period: '2024', share: 30 },
+    { period: 'H1 2025', share: 36.3 },
   ];
 
-  const marketReachData = [
-    { stage: 'Local', enterpriseOnly: 18, smallTeamAccess: 22 },
-    { stage: 'Niche', enterpriseOnly: 36, smallTeamAccess: 55 },
-    { stage: 'National', enterpriseOnly: 64, smallTeamAccess: 78 },
-    { stage: 'Global', enterpriseOnly: 88, smallTeamAccess: 96 },
+  // Stripe, "Indexing the AI economy": the top 100 AI companies on Stripe
+  // reached $1M in annualized revenue in a median 11.5 months, "four months
+  // ahead of the fastest-growing SaaS companies" (so about 15.5 months).
+  const timeToRevenueData = [
+    { group: 'Top 100 AI companies', months: 11.5 },
+    { group: 'Fastest-growing SaaS', months: 15.5 },
   ];
 
+  const axisStyle = { fontSize: '12px' };
+  const valueLabelStyle = { fill: 'hsl(var(--foreground))', fontSize: 13, fontWeight: 600 };
 
   return (
     <section className="section-shell relative overflow-hidden">
@@ -156,230 +160,97 @@ const AISpecializationTrends = () => {
         </div>
 
         <div ref={chartAnimationRef}>
-        {/* Charts Grid */}
+        {/* Charts Grid: published figures, each with its source */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
-          {/* Chart 1: Founder Leverage */}
+          {/* Chart 1: Solo founders */}
           <Card className="surface-panel trust-outline overflow-hidden hover:shadow-[0_22px_44px_-30px_rgba(15,23,42,0.2)] transition-shadow">
             <CardHeader>
               <CardTitle className="font-space-grotesk text-base sm:text-lg flex items-center gap-2">
-                <Zap className="w-5 h-5 text-primary" />
-                AI Leverage Per Founder
+                <User className="w-5 h-5 text-primary" />
+                More Startups Begin With One Founder
               </CardTitle>
             </CardHeader>
             <CardContent className={isMobile ? "px-4 pb-5" : undefined}>
               {chartVisible && (
                 <div className="chart-container mx-auto w-full max-w-[340px] sm:max-w-none">
                   <ResponsiveContainer width="100%" height={isMobile ? 220 : 300}>
-                    <LineChart data={founderLeverageData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
-                      <defs>
-                        <linearGradient id="nicheGradient" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={1} />
-                          <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.6} />
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
-                      <XAxis
-                        dataKey="stage"
-                        stroke="hsl(var(--muted-foreground))"
-                        style={{ fontSize: '12px' }}
-                      />
-                      <YAxis
-                        stroke="hsl(var(--muted-foreground))"
-                        style={{ fontSize: '12px' }}
-                        unit="x"
-                      />
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: 'hsl(var(--card))',
-                          border: '1px solid hsl(var(--border))',
-                          borderRadius: '8px',
-                          boxShadow: '0 8px 16px rgba(0, 0, 0, 0.15)',
-                          transition: prefersReducedMotion ? 'none' : 'all 0.3s ease'
-                        }}
-                        animationDuration={400}
-                        animationEasing="ease-out"
-                        cursor={{
-                          fill: 'hsl(var(--primary) / 0.1)',
-                          stroke: 'hsl(var(--primary))',
-                          strokeWidth: 2,
-                          strokeDasharray: '5 5'
-                        }}
-                      />
-                      <Legend
-                        wrapperStyle={{
-                          transition: 'all 0.3s ease',
-                          paddingTop: '10px'
-                        }}
-                      />
-                      <Line
-                        type="monotone"
-                        dataKey="aiEnabled"
-                        stroke="hsl(var(--primary))"
-                        strokeWidth={3}
-                        className="chart-line"
-                        dot={{
-                          fill: 'hsl(var(--primary))',
-                          r: 5,
-                          strokeWidth: 2,
-                          stroke: 'hsl(var(--background))',
-                          style: {
-                            transition: 'all 0.3s ease'
-                          }
-                        }}
-                        activeDot={{
-                          r: 7,
-                          fill: 'hsl(var(--primary))',
-                          stroke: 'hsl(var(--background))',
-                          strokeWidth: 2,
-                          style: {
-                            transition: 'all 0.3s ease'
-                          }
-                        }}
-                        name="AI-Enabled Solo Founder"
-                        animationBegin={0}
-                        animationDuration={prefersReducedMotion ? 0 : 2500}
-                        animationEasing="ease-out"
-                        style={{
-                          transition: 'all 0.3s ease'
-                        }}
-                      />
-                      <Line
-                        type="monotone"
-                        dataKey="traditional"
-                        stroke="hsl(var(--muted-foreground))"
-                        strokeWidth={2.5}
-                        strokeDasharray="5 5"
-                        dot={{
-                          fill: 'hsl(var(--muted-foreground))',
-                          r: 4,
-                          strokeWidth: 2,
-                          stroke: 'hsl(var(--background))',
-                          style: {
-                            transition: 'all 0.3s ease'
-                          }
-                        }}
-                        activeDot={{
-                          r: 6,
-                          fill: 'hsl(var(--muted-foreground))',
-                          stroke: 'hsl(var(--background))',
-                          strokeWidth: 2,
-                          style: {
-                            transition: 'all 0.3s ease'
-                          }
-                        }}
-                        name="Traditional Solo Founder"
-                        animationBegin={prefersReducedMotion ? 0 : 600}
-                        animationDuration={prefersReducedMotion ? 0 : 2500}
-                        animationEasing="ease-out"
-                        style={{
-                          transition: 'all 0.3s ease'
-                        }}
-                      />
-                    </LineChart>
+                    <BarChart data={soloFounderData} margin={{ top: 28, right: 10, left: 0, bottom: 5 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} vertical={false} />
+                      <XAxis dataKey="period" stroke="hsl(var(--muted-foreground))" style={axisStyle} tickLine={false} />
+                      <YAxis stroke="hsl(var(--muted-foreground))" style={axisStyle} unit="%" domain={[0, 40]} ticks={[0, 10, 20, 30, 40]} tickLine={false} />
+                      <Bar
+                        dataKey="share"
+                        radius={[8, 8, 0, 0]}
+                        maxBarSize={72}
+                        animationDuration={prefersReducedMotion ? 0 : 1200}
+                        isAnimationActive={!prefersReducedMotion}
+                      >
+                        {soloFounderData.map((entry, index) => (
+                          <Cell
+                            key={entry.period}
+                            fill={index === soloFounderData.length - 1 ? 'hsl(var(--primary))' : 'hsl(var(--primary) / 0.45)'}
+                          />
+                        ))}
+                        <LabelList dataKey="share" position="top" formatter={(value: number) => `${value}%`} style={valueLabelStyle} />
+                      </Bar>
+                    </BarChart>
                   </ResponsiveContainer>
                 </div>
               )}
               <p className="text-sm text-muted-foreground mt-4">
-                Illustration, not measured data. AI tools can take on work across research, product, marketing and support, so one founder can cover more ground.
+                Share of new startups with a solo founder. Starting a company now takes fewer people.
+              </p>
+              <p className="text-xs text-muted-foreground/80 mt-2">
+                Source:{" "}
+                <a href="https://carta.com/data/solo-founders-report/" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-foreground">
+                  Carta, Solo Founders Report 2025
+                </a>
+                , U.S. startups on Carta.
               </p>
             </CardContent>
           </Card>
 
-          {/* Chart 2: Market Reach */}
+          {/* Chart 2: Time to first $1M */}
           <Card className="surface-panel trust-outline overflow-hidden hover:shadow-[0_22px_44px_-30px_rgba(15,23,42,0.2)] transition-shadow">
             <CardHeader>
               <CardTitle className="font-space-grotesk text-base sm:text-lg flex items-center gap-2">
-                <Target className="w-5 h-5 text-primary" />
-                Market Reach Without Headcount
+                <Timer className="w-5 h-5 text-primary" />
+                AI Products Reach Revenue Sooner
               </CardTitle>
             </CardHeader>
             <CardContent className={isMobile ? "px-4 pb-5" : undefined}>
               {chartVisible && (
                 <div className="chart-container mx-auto w-full max-w-[340px] sm:max-w-none" style={{ animationDelay: '0.2s' }}>
                   <ResponsiveContainer width="100%" height={isMobile ? 220 : 300}>
-                    <AreaChart data={marketReachData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
-                      <defs>
-                        <linearGradient id="specializedGradient" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.9} />
-                          <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.4} />
-                        </linearGradient>
-                        <linearGradient id="generalGradient" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="hsl(var(--muted-foreground))" stopOpacity={0.6} />
-                          <stop offset="100%" stopColor="hsl(var(--muted-foreground))" stopOpacity={0.15} />
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
-                      <XAxis
-                        dataKey="stage"
-                        stroke="hsl(var(--muted-foreground))"
-                        style={{ fontSize: '12px' }}
-                      />
-                      <YAxis
-                        stroke="hsl(var(--muted-foreground))"
-                        style={{ fontSize: '12px' }}
-                        unit="%"
-                      />
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: 'hsl(var(--card))',
-                          border: '1px solid hsl(var(--border))',
-                          borderRadius: '8px',
-                          boxShadow: '0 8px 16px rgba(0, 0, 0, 0.15)',
-                          transition: 'all 0.3s ease'
-                        }}
-                        animationDuration={400}
-                        animationEasing="ease-out"
-                        cursor={{
-                          fill: 'hsl(var(--primary) / 0.1)',
-                          stroke: 'hsl(var(--primary))',
-                          strokeWidth: 2,
-                          strokeDasharray: '5 5'
-                        }}
-                      />
-                      <Legend
-                        wrapperStyle={{
-                          transition: 'all 0.3s ease',
-                          paddingTop: '10px'
-                        }}
-                      />
-                      <Area
-                        type="monotone"
-                        dataKey="smallTeamAccess"
-                        stroke="hsl(var(--primary))"
-                        strokeWidth={2.5}
-                        fill="url(#specializedGradient)"
-                        fillOpacity={0.7}
-                        name="Small Team Access"
-                        className="chart-area"
-                        animationBegin={0}
-                        animationDuration={prefersReducedMotion ? 0 : 2800}
-                        animationEasing="ease-out"
-                        style={{
-                          transition: 'all 0.3s ease'
-                        }}
-                      />
-                      <Area
-                        type="monotone"
-                        dataKey="enterpriseOnly"
-                        stroke="hsl(var(--muted-foreground))"
-                        strokeWidth={2}
-                        fill="url(#generalGradient)"
-                        fillOpacity={0.4}
-                        name="Enterprise-Only Access"
-                        className="chart-area"
-                        animationBegin={prefersReducedMotion ? 0 : 500}
-                        animationDuration={prefersReducedMotion ? 0 : 2800}
-                        animationEasing="ease-out"
-                        style={{
-                          transition: 'all 0.3s ease'
-                        }}
-                      />
-                    </AreaChart>
+                    <BarChart data={timeToRevenueData} layout="vertical" margin={{ top: 5, right: isMobile ? 84 : 72, left: 0, bottom: 5 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} horizontal={false} />
+                      <XAxis type="number" stroke="hsl(var(--muted-foreground))" style={axisStyle} domain={[0, 18]} ticks={[0, 6, 12, 18]} unit=" mo" tickLine={false} />
+                      <YAxis type="category" dataKey="group" stroke="hsl(var(--muted-foreground))" style={axisStyle} width={isMobile ? 120 : 150} tickLine={false} />
+                      <Bar
+                        dataKey="months"
+                        radius={[0, 8, 8, 0]}
+                        maxBarSize={56}
+                        animationDuration={prefersReducedMotion ? 0 : 1200}
+                        isAnimationActive={!prefersReducedMotion}
+                      >
+                        {timeToRevenueData.map((entry, index) => (
+                          <Cell key={entry.group} fill={index === 0 ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground) / 0.45)'} />
+                        ))}
+                        <LabelList dataKey="months" position="right" formatter={(value: number) => `${value} months`} style={valueLabelStyle} />
+                      </Bar>
+                    </BarChart>
                   </ResponsiveContainer>
                 </div>
               )}
               <p className="text-sm text-muted-foreground mt-4">
-                Illustration, not measured data. AI tools give small teams access to research, production, support and distribution work that once needed a larger company.
+                Median time to reach $1M in annualized revenue. Stripe reports the top AI companies got there four months ahead of the fastest-growing SaaS companies.
+              </p>
+              <p className="text-xs text-muted-foreground/80 mt-2">
+                Source:{" "}
+                <a href="https://stripe.com/guides/indexing-the-ai-economy" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-foreground">
+                  Stripe, Indexing the AI economy
+                </a>
+                , top 100 AI companies on Stripe.
               </p>
             </CardContent>
           </Card>
