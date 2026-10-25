@@ -119,7 +119,7 @@ const PEDIA_HUB_ROUTE = {
   description: PEDIA_HUB_SEO.description,
   changefreq: "weekly",
   priority: 0.85,
-  heroHeading: `Startup Pedia: ${PEDIA_HUB_SEO.heading}`,
+  heroHeading: PEDIA_HUB_SEO.heading,
   heroCopy: PEDIA_HUB_SEO.intro,
   schemaType: "collection",
   breadcrumb: [

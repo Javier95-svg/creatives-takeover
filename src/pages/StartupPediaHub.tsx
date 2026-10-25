@@ -119,7 +119,7 @@ export default function StartupPediaHub() {
       <Navigation />
       <main className="sp-main">
         <header className="mx-auto max-w-3xl text-center">
-          <p className="sp-eyebrow justify-center">Startup Pedia</p>
+          <p className="sp-eyebrow justify-center">{PEDIA_HUB_SEO.eyebrow}</p>
           <h1 className="sp-title mt-5 text-4xl sm:text-6xl">{PEDIA_HUB_SEO.heading}</h1>
           <p className="sp-muted mx-auto mt-5 max-w-2xl text-base leading-relaxed sm:text-lg">
             {PEDIA_HUB_SEO.intro}

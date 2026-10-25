@@ -19,7 +19,8 @@ export const PEDIA_HUB_SEO = {
   title: "Startup Pedia: Startup Terms, Metrics & How-To Guides",
   description:
     "Plain-English explanations of startup terms, metrics and frameworks, with practical guides on validation, MVPs, go-to-market and fundraising.",
-  heading: "The founder's reference",
+  heading: "Startup Pedia",
+  eyebrow: "The founder's reference",
   intro:
     "Short, accurate explanations of the terms, metrics and frameworks you meet while building a startup, plus practical guides for validation, MVPs, go-to-market and fundraising.",
 };
