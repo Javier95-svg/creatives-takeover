@@ -7,12 +7,14 @@ import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import PediaMarkdown from "@/components/startup-pedia/PediaMarkdown";
 import NotFound from "@/pages/NotFound";
+import { useAuth } from "@/contexts/AuthContext";
 import { captureEvent } from "@/lib/analytics";
 import {
   AUDIENCE_LABELS,
   AUDIENCE_ORDER,
   PEDIA_BASE_PATH,
   ctaHref,
+  ctaSignupHref,
   entryPath,
   entryWordCount,
   getEntry,
@@ -32,6 +34,7 @@ const formatDate = (iso: string) =>
 export default function StartupPediaEntry() {
   const { slug = "" } = useParams<{ slug: string }>();
   const { hash } = useLocation();
+  const { user } = useAuth();
   const entry = getEntry(slug);
 
   // Shortcut links point at section anchors (/startup-pedia/tam-sam-som#sam);
@@ -208,9 +211,15 @@ export default function StartupPediaEntry() {
                 <p className="text-xs font-semibold uppercase tracking-[0.16em] opacity-80">Put it into practice</p>
                 <p className="mt-2 max-w-xl text-base leading-relaxed">{entry.cta.description}</p>
                 <Link
-                  to={ctaHref(entry.cta.href, entry.slug)}
+                  to={user ? ctaHref(entry.cta.href, entry.slug) : ctaSignupHref(entry.cta.href, entry.slug)}
                   className="sp-cta-button"
-                  onClick={() => captureEvent("startup_pedia_cta_click", { entry_slug: entry.slug, target: entry.cta?.href })}
+                  onClick={() =>
+                    captureEvent("startup_pedia_cta_click", {
+                      entry_slug: entry.slug,
+                      target: entry.cta?.href,
+                      destination: user ? "tool" : "signup",
+                    })
+                  }
                 >
                   {entry.cta.label} <ArrowRight className="h-4 w-4" />
                 </Link>

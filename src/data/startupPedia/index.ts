@@ -66,6 +66,14 @@ export const ctaHref = (href: string, slug: string) => {
   return `${href}${separator}utm_source=seo&utm_medium=startup_pedia&utm_campaign=${slug}`;
 };
 
+/**
+ * Where a "Put it into practice" link sends a signed-out reader: straight to
+ * /signup, then on to the tool once the account exists. Opening the tool first
+ * only showed a "Sign in to access" screen, an extra step before signup.
+ */
+export const ctaSignupHref = (href: string, slug: string) =>
+  `/signup?source=startup_pedia&utm_source=seo&utm_medium=startup_pedia&utm_campaign=${slug}&return=${encodeURIComponent(ctaHref(href, slug))}`;
+
 const stripMarkdown = (text: string) =>
   text
     .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")

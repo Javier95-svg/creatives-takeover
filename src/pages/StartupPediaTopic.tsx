@@ -5,8 +5,11 @@ import SEO, { createBreadcrumbSchema, createCollectionSchema } from "@/component
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import NotFound from "@/pages/NotFound";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   PEDIA_BASE_PATH,
+  ctaHref,
+  ctaSignupHref,
   entryPath,
   getEntriesByTopic,
   getTopic,
@@ -16,6 +19,8 @@ import {
   type PediaEntry,
 } from "@/data/startupPedia";
 import "@/components/startup-pedia/startup-pedia.css";
+
+const PUBLIC_PAGES = new Set(["/enterprise", "/mentorship"]);
 
 function EntryList({ title, entries }: { title: string; entries: PediaEntry[] }) {
   if (!entries.length) return null;
@@ -39,8 +44,15 @@ function EntryList({ title, entries }: { title: string; entries: PediaEntry[] })
 export default function StartupPediaTopic() {
   const { topic: topicKey = "" } = useParams<{ topic: string }>();
   const topic = getTopic(topicKey);
+  const { user } = useAuth();
 
   if (!topic) return <NotFound />;
+
+  // Tools need an account, so signed-out readers go straight to /signup and on
+  // to the tool afterwards. Public pages (the programs page, mentor browsing)
+  // stay direct links.
+  const toolHref = (href: string) =>
+    user || PUBLIC_PAGES.has(href) ? ctaHref(href, `topic-${topic.key}`) : ctaSignupHref(href, `topic-${topic.key}`);
 
   const entries = getEntriesByTopic(topic.key);
   const url = topicPath(topic.key);
@@ -93,7 +105,7 @@ export default function StartupPediaTopic() {
                 <ul className="mt-4 space-y-4">
                   {topic.tools.map((tool) => (
                     <li key={tool.href}>
-                      <Link to={tool.href} className="group block">
+                      <Link to={toolHref(tool.href)} className="group block">
                         <span className="inline-flex items-center gap-1 font-semibold group-hover:text-[color:var(--sp-ink)]">
                           {tool.label} <ArrowRight className="h-4 w-4" />
                         </span>

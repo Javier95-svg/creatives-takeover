@@ -7,6 +7,7 @@ import {
   PEDIA_ENTRIES,
   PEDIA_TOPICS,
   STARTUP_SHORTCUTS,
+  ctaSignupHref,
   entryPlainText,
   entryWordCount,
   getEntriesByTopic,
@@ -136,6 +137,22 @@ test("internal links in entry bodies and CTAs point at real routes", () => {
   for (const topic of PEDIA_TOPICS) {
     for (const tool of topic.tools) assert.ok(routeExists(tool.href), `${topic.key}: ${tool.href}`);
   }
+});
+
+test("signed-out readers go from a CTA straight to signup, then on to the tool", () => {
+  const href = ctaSignupHref("/mvp-scope", "minimum-viable-product");
+  const url = new URL(href, "https://creatives-takeover.com");
+  assert.equal(url.pathname, "/signup");
+  assert.equal(url.searchParams.get("source"), "startup_pedia");
+  assert.equal(url.searchParams.get("utm_campaign"), "minimum-viable-product");
+  assert.equal(
+    url.searchParams.get("return"),
+    "/mvp-scope?utm_source=seo&utm_medium=startup_pedia&utm_campaign=minimum-viable-product",
+  );
+  // Both pages pick the destination by sign-in state: tool for members, signup for visitors.
+  assert.match(read("src/pages/StartupPediaEntry.tsx"), /user \? ctaHref\(entry\.cta\.href, entry\.slug\) : ctaSignupHref\(entry\.cta\.href, entry\.slug\)/);
+  assert.match(read("src/pages/StartupPediaTopic.tsx"), /ctaSignupHref\(href, `topic-\$\{topic\.key\}`\)/);
+  assert.match(read("scripts/seo-route-config.mjs"), /href: ctaSignupHref\(entry\.cta\.href, entry\.slug\)/);
 });
 
 test("every retired /answers URL 301s to an existing entry", () => {

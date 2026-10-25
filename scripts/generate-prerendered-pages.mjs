@@ -196,7 +196,7 @@ ${routeConfig.sources
     ? `        <section>
           <h2>Put it into practice</h2>
           <p>${routeConfig.cta.description}</p>
-          <p><a href="${routeConfig.cta.href}">${routeConfig.cta.label}</a></p>
+          <p><a href="${routeConfig.cta.href.replace(/&/g, "&amp;")}">${routeConfig.cta.label}</a></p>
         </section>`
     : "";
   const pricingSummary = routeConfig.path === "/pricing"
