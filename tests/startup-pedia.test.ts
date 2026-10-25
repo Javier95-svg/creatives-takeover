@@ -180,6 +180,14 @@ test("every retired /answers URL 301s to an existing entry", () => {
   for (const { from } of redirects) assert.ok(sources.indexOf(from) < catchAll, `${from} is shadowed by the catch-all`);
 });
 
+test("the author byline links to the Founder ID profile in the page and the crawler HTML", () => {
+  assert.match(read("src/pages/StartupPediaEntry.tsx"), /AUTHOR_PROFILE_PATH = "\/profile\/javier"/);
+  assert.match(read("src/pages/StartupPediaEntry.tsx"), /<Link to=\{AUTHOR_PROFILE_PATH\} className="sp-link">/);
+  const prerender = read("scripts/generate-prerendered-pages.mjs");
+  assert.match(prerender, /<p>By <a href="\/profile\/javier">/);
+  assert.match(prerender, /url: `\$\{BASE_URL\}\/profile\/javier`/);
+});
+
 test("navigation and site search point at Startup Pedia", () => {
   assert.match(read("src/components/VisitorNavbar.tsx"), /label: "Startup Pedia", href: "\/startup-pedia"/);
   // In the Content submenu, under Newspaper and Podcast (requested 2026-10-25).

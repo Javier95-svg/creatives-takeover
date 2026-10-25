@@ -142,7 +142,7 @@ function buildFallbackHtml(routeConfig, hubChildren = {}) {
           <p>I have a product: <a href="/#get-started">Build my demo</a>. One sentence to start; see your result before signup.</p>`
     : `<p>${routeConfig.heroCopy || routeConfig.description}</p>`;
   const authorByline = routeConfig.pediaEntry
-    ? `<p>By <a href="/about#founder">Javier Peña, Founder &amp; CEO</a>. Updated <time datetime="${routeConfig.modifiedAt}">${routeConfig.modifiedAt}</time>.</p>`
+    ? `<p>By <a href="/profile/javier">Javier Peña, Founder &amp; CEO</a>. Updated <time datetime="${routeConfig.modifiedAt}">${routeConfig.modifiedAt}</time>.</p>`
     : "";
   // Startup Pedia ships its full article body as HTML (built from the same data
   // as the React page), so crawlers read the whole entry without JavaScript.
@@ -443,7 +443,8 @@ function buildStructuredData(routeConfig) {
         "@id": `${BASE_URL}/about#founder`,
         name: "Javier Peña",
         jobTitle: "Founder & CEO",
-        url: `${BASE_URL}/about#founder`,
+        // Mirrors StartupPediaEntry.tsx: the byline links to the Founder ID profile.
+        url: `${BASE_URL}/profile/javier`,
       },
       publisher: {
         "@type": "Organization",
