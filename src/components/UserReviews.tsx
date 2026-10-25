@@ -128,10 +128,7 @@ const UserReviews = () => {
         Startup Development Cycle
       </h2>
       <p className="homepage-section-copy startup-cycle-copy text-base sm:text-lg max-w-3xl mx-auto animate-in fade-in slide-in-from-bottom duration-700 delay-200">
-        The Startup Development Cycle is a 7-stage roadmap that breaks building a startup into concrete tasks, from defining your customer to preparing to raise.
-        <br />
-        <br />
-        We divide it into two phases: Phase A (BizMap AI) takes founders from ideation to launch, covering validation, MVP, and early distribution. Phase B (Insighta) focuses on traction and fundraising: finding a channel that brings users, measuring who stays, and preparing to talk to investors.
+        A 7-stage roadmap in two phases: Phase A (BizMap AI) covers validation, MVP and launch; Phase B (Insighta) covers traction and preparing to raise.
       </p>
     </div>
   );

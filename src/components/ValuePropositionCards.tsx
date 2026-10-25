@@ -391,9 +391,6 @@ const ValuePropositionCards = () => {
           <h2 className="homepage-section-title value-prop-section__title text-3xl sm:text-4xl lg:text-[2.9rem] mb-4">
             Creatives Takeover in a Nutshell
           </h2>
-          <p className="homepage-section-copy value-prop-section__copy text-base sm:text-lg">
-            One workspace for your project, an assistant that already knows it, and the people who help you move it forward.
-          </p>
         </div>
 
         {/* Horizontal Carousel */}
