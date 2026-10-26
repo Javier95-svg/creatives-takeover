@@ -53,7 +53,7 @@ test('workspace requires resolved authentication, configuration and an explicit 
   assert.equal(defaultWorkspaceDestination(true), '/');
 });
 test('application route catalog includes details and all dashboard destinations', () => {
-  for (const path of ['/', '/dashboard', '/dashboard/tasks', '/dashboard/routine', '/dashboard/files', '/dashboard/referral', '/icp-builder', '/demo-studio/projects/123/demos/456/edit', '/mentorship/mentors/123', '/co-founder/create', '/messages/name', '/profile/name', '/account', '/pricing']) assert.ok(isWorkspaceRoute(path), path);
+  for (const path of ['/', '/dashboard', '/dashboard/tasks', '/dashboard/routine', '/dashboard/files', '/dashboard/referral', '/icp-builder', '/demo-studio/projects/123/demos/456/edit', '/mentorship/mentors/123', '/co-founder/create', '/messages/name', '/profile/name', '/account', '/pricing', '/startup-pedia', '/startup-pedia/topics/validation', '/startup-pedia/minimum-viable-product']) assert.ok(isWorkspaceRoute(path), path);
 });
 test('public, authentication, onboarding, administration and callback routes retain legacy layouts', () => {
   for (const path of ['/build', '/about', '/login', '/signup', '/auth/callback', '/app-entry', '/onboarding', '/setup-quiz', '/reset-password', '/subscription-success', '/p/slug', '/demo/123', '/embed/demo/123', '/w/slug', '/icp/123/public', '/pmf-survey/slug', '/newspaper/rss.xml', '/newspaper/admin', '/demo-studio/try', '/creatives-takeover', '/prototypes/founder-guide', '/dashboard-unrelated']) assert.equal(isWorkspaceRoute(path), false, path);
