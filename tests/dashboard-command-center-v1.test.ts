@@ -66,6 +66,7 @@ test('activity endpoint derives identity from JWT and sanitizes metadata', () =>
   assert.match(source, /supabase\.auth\.getUser\(token\)/);
   assert.match(source, /const user_id = authData\.user\.id/);
   assert.match(source, /isAllowedEventType/);
+  assert.match(source, /"workspace_"/);
   assert.match(source, /sanitizeActivityData/);
   assert.doesNotMatch(source, /const \{ user_id, activity_type/);
 });

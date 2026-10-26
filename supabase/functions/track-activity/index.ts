@@ -20,6 +20,7 @@ const ALLOWED_EVENT_PREFIXES = [
   "onboarding_",
   "saved_mentors_",
   "tool_",
+  "workspace_",
 ] as const;
 
 const SENSITIVE_KEYS = new Set([
