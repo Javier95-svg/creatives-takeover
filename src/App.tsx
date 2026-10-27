@@ -251,7 +251,9 @@ const LegacyFirstCustomerProofRedirect = () => {
 const PulseWidgetWrapper = () => {
   const location = useLocation();
   const { enabled, pending } = useWorkspaceRollout();
+  const { user, loading } = useAuth();
 
+  if (loading || !user) return null;
   if (!shouldShowPulseForPath(location.pathname)) return null;
   if (location.pathname.startsWith('/prototypes/') || (location.pathname === '/' && (enabled || pending))) return null;
 

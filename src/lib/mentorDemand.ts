@@ -236,10 +236,8 @@ export function rankMentorsForContext(
       score += matchedExpertise.length * 18;
       score += keywordHits * 3;
       score += matchedIndustry ? 10 : 0;
-      score += mentor.is_featured ? 12 : 0;
-      score += (mentor.rating ?? 0) * 4;
-      score += Math.min(mentor.review_count ?? 0, 20) * 0.4;
-      score += mentor.calendly_url ? 4 : 0;
+      // Popularity and merchandising are not evidence of fit. Pulse performs
+      // exposure rotation separately, after relevance has been established.
 
       return {
         mentor,

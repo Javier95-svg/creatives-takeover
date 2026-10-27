@@ -20,6 +20,33 @@ export interface PulseSourceReference {
   updatedAt?: string | null;
   basis?: string;
 }
+export interface PulseRetrievalReference {
+  kind: 'pedia' | 'article' | 'podcast' | 'service' | 'mentor' | 'investor' | 'cofounder' | 'vc' | 'accelerator' | 'directory' | 'community';
+  id: string;
+  title: string;
+  route: string;
+  basis: string;
+  updatedAt?: string | null;
+}
+
+export function validatePulseRetrievalSources(value: unknown): PulseRetrievalReference[] {
+  if (!Array.isArray(value)) return [];
+  const allowed = new Set(['pedia', 'article', 'podcast', 'service', 'mentor', 'investor', 'cofounder', 'vc', 'accelerator', 'directory', 'community']);
+  return value.slice(0, 6).flatMap(item => {
+    if (!item || typeof item !== 'object') return [];
+    const source = item as PulseRetrievalReference;
+    if (!allowed.has(source.kind) || typeof source.id !== 'string' || typeof source.title !== 'string' || typeof source.basis !== 'string') return [];
+    const expected = source.kind === 'pedia' ? `/startup-pedia/${encodeURIComponent(source.id)}`
+      : source.kind === 'cofounder' && PULSE_UUID.test(source.id) ? `/co-founder/listing/${source.id}`
+      : source.kind === 'community' && PULSE_UUID.test(source.id) ? `/rooms/posts/${source.id}`
+      : source.kind === 'directory' && /^[a-z0-9-]+$/.test(source.id) ? `/directories?source=pulse&directory=${encodeURIComponent(source.id)}`
+      : (source.kind === 'vc' || source.kind === 'accelerator') && PULSE_UUID.test(source.id) && /^\/insighta\/(?:vc|accelerator)\/[a-z0-9_-]+$/i.test(source.route)
+        ? source.route : null;
+    if (!expected) return [];
+    return [{ kind: source.kind, id: source.id, title: source.title.slice(0, 180), route: expected,
+      basis: source.basis.slice(0, 120), updatedAt: typeof source.updatedAt === 'string' ? source.updatedAt : null }];
+  });
+}
 export function validatePulseSources(value: unknown): PulseSourceReference[] {
   if (!Array.isArray(value)) return [];
   const seen = new Set<string>();

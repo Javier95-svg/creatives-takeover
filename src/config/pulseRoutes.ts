@@ -1,4 +1,5 @@
 import { getFounderTool, type FounderToolKey } from '@/config/founderToolCatalog';
+import { workspaceCapabilityForPath } from '@/lib/workspaceCapabilities';
 
 export interface PulseRouteContext {
   pathPrefix: string;
@@ -60,6 +61,9 @@ export const PULSE_ROUTE_CONTEXTS: PulseRouteContext[] = [
     toolName: "Validate Journey",
     toolPurpose: "helping the founder test demand and make evidence-based decisions",
   },
+  { pathPrefix: '/pricing', toolName: 'Pricing', toolPurpose: 'comparing plans and understanding workspace access' },
+  { pathPrefix: '/account', toolName: 'Account', toolPurpose: 'managing the signed-in account and profile' },
+  { pathPrefix: '/dashboard/settings', toolName: 'Settings', toolPurpose: 'managing workspace preferences' },
 ];
 
 function matchesPathPrefix(pathname: string, pathPrefix: string): boolean {
@@ -67,9 +71,15 @@ function matchesPathPrefix(pathname: string, pathPrefix: string): boolean {
 }
 
 export function getPulseRouteContext(pathname: string): PulseRouteContext | null {
+  const capability = workspaceCapabilityForPath(pathname);
+  if (capability) return { pathPrefix: capability.route, toolName: capability.name, toolPurpose: capability.purpose };
   return PULSE_ROUTE_CONTEXTS.find(({ pathPrefix }) => matchesPathPrefix(pathname, pathPrefix)) ?? null;
 }
 
 export function shouldShowPulseForPath(pathname: string): boolean {
-  return getPulseRouteContext(pathname) !== null;
+  const clean = pathname.split(/[?#]/)[0];
+  if (/^\/(admin|auth|login|signup|onboarding|prototypes|embed|share)(?:\/|$)/.test(clean)) return false;
+  if (/(?:^|\/)(?:admin|embed|share)(?:\/|$)/.test(clean)) return false;
+  if (clean === '/mvp-builder' || clean.startsWith('/mvp-builder/')) return false;
+  return getPulseRouteContext(clean) !== null;
 }

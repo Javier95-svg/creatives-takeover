@@ -47,6 +47,12 @@ export interface Mentor {
   discovery_call_available?: boolean;
   nationality?: string; // Country name or code (e.g., "USA", "US", "United States")
   universities?: string[]; // Array of universities/educational institutions
+  industries?: string[];
+  languages?: string[]; // ISO 639-1 language codes
+  startup_stages?: string[];
+  coaching_formats?: string[];
+  timezone?: string; // IANA timezone, e.g. America/Lima
+  location?: string;
   created_at: string;
   updated_at: string;
 }

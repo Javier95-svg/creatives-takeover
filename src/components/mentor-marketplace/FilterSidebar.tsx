@@ -11,6 +11,11 @@ export interface MentorFilters {
   expertise: string[];
   coachingFormat: string[]; // "8 Week Coaching Program" or "Hourly Rate Basis"
   timezone: string | null; // Selected exact current GMT offset (e.g., "-5", "0", "1")
+  industries?: string[];
+  languages?: string[];
+  startupStages?: string[];
+  location?: string | null;
+  maxRate?: number | null;
 }
 
 interface FilterSidebarProps {

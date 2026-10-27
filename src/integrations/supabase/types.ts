@@ -5086,19 +5086,25 @@ export type Database = {
           calendly_url: string | null
           created_at: string
           currency: string | null
+          coaching_formats: string[]
           expertise: string[] | null
           hourly_rate: number
           hourly_rate_per_hour: number | null
           id: string
+          industries: string[]
           is_active: boolean | null
           is_featured: boolean | null
           linkedin_url: string | null
+          languages: string[]
+          location: string | null
           name: string
           nationality: string | null
           picture: string | null
           rating: number | null
           review_count: number | null
           stripe_connected_account_id: string | null
+          startup_stages: string[]
+          timezone: string | null
           twitter_x_url: string | null
           universities: string[] | null
           updated_at: string
@@ -5112,19 +5118,25 @@ export type Database = {
           calendly_url?: string | null
           created_at?: string
           currency?: string | null
+          coaching_formats?: string[]
           expertise?: string[] | null
           hourly_rate?: number
           hourly_rate_per_hour?: number | null
           id?: string
+          industries?: string[]
           is_active?: boolean | null
           is_featured?: boolean | null
           linkedin_url?: string | null
+          languages?: string[]
+          location?: string | null
           name: string
           nationality?: string | null
           picture?: string | null
           rating?: number | null
           review_count?: number | null
           stripe_connected_account_id?: string | null
+          startup_stages?: string[]
+          timezone?: string | null
           twitter_x_url?: string | null
           universities?: string[] | null
           updated_at?: string
@@ -5138,19 +5150,25 @@ export type Database = {
           calendly_url?: string | null
           created_at?: string
           currency?: string | null
+          coaching_formats?: string[]
           expertise?: string[] | null
           hourly_rate?: number
           hourly_rate_per_hour?: number | null
           id?: string
+          industries?: string[]
           is_active?: boolean | null
           is_featured?: boolean | null
           linkedin_url?: string | null
+          languages?: string[]
+          location?: string | null
           name?: string
           nationality?: string | null
           picture?: string | null
           rating?: number | null
           review_count?: number | null
           stripe_connected_account_id?: string | null
+          startup_stages?: string[]
+          timezone?: string | null
           twitter_x_url?: string | null
           universities?: string[] | null
           updated_at?: string

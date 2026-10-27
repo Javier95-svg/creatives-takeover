@@ -147,6 +147,12 @@ export interface CreateMentorInput {
   twitter_x_url?: string | null;
   website_url?: string | null;
   nationality?: string | null;
+  industries?: string[];
+  languages?: string[];
+  startup_stages?: string[];
+  coaching_formats?: string[];
+  timezone?: string | null;
+  location?: string | null;
 }
 
 // Helper function to format error messages
@@ -246,7 +252,7 @@ const convertToMentor = (data: any): Mentor => {
   };
 };
 
-const PUBLIC_MENTOR_COLUMNS = 'id, user_id, name, picture, bio, hourly_rate, hourly_rate_per_hour, currency, stripe_connected_account_id, expertise, rating, review_count, availability, is_active, is_featured, linkedin_url, twitter_x_url, website_url, nationality, universities, created_at, updated_at';
+const PUBLIC_MENTOR_COLUMNS = 'id, user_id, name, picture, bio, hourly_rate, hourly_rate_per_hour, currency, stripe_connected_account_id, expertise, rating, review_count, availability, is_active, is_featured, linkedin_url, twitter_x_url, website_url, nationality, universities, industries, languages, startup_stages, coaching_formats, timezone, location, created_at, updated_at';
 
 const attachDiscoveryCallAvailability = async (mentor: Mentor): Promise<Mentor> => {
   const { data, error } = await (supabase as any).rpc('get_mentor_discovery_call_availability', {
@@ -449,6 +455,12 @@ export const useMentors = () => {
         twitter_x_url: input.twitter_x_url || null,
         website_url: input.website_url || null,
         nationality: input.nationality || null,
+        industries: input.industries || [],
+        languages: input.languages || [],
+        startup_stages: input.startup_stages || [],
+        coaching_formats: input.coaching_formats || [],
+        timezone: input.timezone || null,
+        location: input.location || null,
       };
       
       console.log('Creating mentor with data:', {
@@ -543,6 +555,12 @@ export const useMentors = () => {
       if (input.twitter_x_url !== undefined) cleanInput.twitter_x_url = input.twitter_x_url;
       if (input.website_url !== undefined) cleanInput.website_url = input.website_url;
       if (input.nationality !== undefined) cleanInput.nationality = input.nationality;
+      if (input.industries !== undefined) cleanInput.industries = input.industries;
+      if (input.languages !== undefined) cleanInput.languages = input.languages;
+      if (input.startup_stages !== undefined) cleanInput.startup_stages = input.startup_stages;
+      if (input.coaching_formats !== undefined) cleanInput.coaching_formats = input.coaching_formats;
+      if (input.timezone !== undefined) cleanInput.timezone = input.timezone;
+      if (input.location !== undefined) cleanInput.location = input.location;
       
       // Debug: Log the clean input
       console.log('Updating mentor with clean input:', {

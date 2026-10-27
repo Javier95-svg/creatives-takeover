@@ -1,6 +1,6 @@
 import { getSessionSafely } from '@/integrations/supabase/auth';
 import { validateHomeActions, type PulseHomeAction } from '@/lib/pulseHome';
-import { validatePulseSources, type PulseSourceReference } from '@/lib/pulseSources';
+import { validatePulseRetrievalSources, validatePulseSources, type PulseRetrievalReference, type PulseSourceReference } from '@/lib/pulseSources';
 import { parseCommitmentCheck, parseMemorySuggestions, type CommitmentCheck, type MemorySuggestion } from '@/lib/pulseMemory';
 
 // Pulse Home uses the existing Pulse endpoint, with a durable turn identifier
@@ -10,6 +10,7 @@ export async function streamPulseHome(input: {
   signal: AbortSignal; onText: (text: string) => void; onActions: (actions: PulseHomeAction[]) => void;
   onContext?: (unavailableSources: string[]) => void;
   onSources?: (sources: PulseSourceReference[]) => void;
+  onRetrievedSources?: (sources: PulseRetrievalReference[]) => void;
   onMemorySuggestions?: (suggestions: MemorySuggestion[]) => void;
   onCommitmentCheck?: (commitment: CommitmentCheck) => void;
   surface?: 'pulse_home' | 'pulse_widget'; pagePath?: string;
@@ -41,6 +42,7 @@ export async function streamPulseHome(input: {
         if (event.type === 'delta' && typeof event.content === 'string') input.onText(event.content);
         if (event.type === 'recommendations') input.onActions(validateHomeActions(event.actions));
         if (event.type === 'sources') input.onSources?.(validatePulseSources(event.sources));
+        if (event.type === 'retrieved_sources') input.onRetrievedSources?.(validatePulseRetrievalSources(event.sources));
         if (event.type === 'context' && Array.isArray(event.unavailableSources)) input.onContext?.(event.unavailableSources.filter((value: unknown): value is string => typeof value === 'string'));
         if (event.type === 'memory_suggestions') { const suggestions = parseMemorySuggestions(event.suggestions); if (suggestions.length) input.onMemorySuggestions?.(suggestions); }
         if (event.type === 'commitment_check') { const commitment = parseCommitmentCheck(event.commitment); if (commitment) input.onCommitmentCheck?.(commitment); }

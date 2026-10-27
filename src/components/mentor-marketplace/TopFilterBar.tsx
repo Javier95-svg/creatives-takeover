@@ -19,6 +19,7 @@ import { X, ChevronDown } from "lucide-react";
 import { MentorFilters } from "./FilterSidebar";
 import { cn } from "@/lib/utils";
 import { TIMEZONE_OPTIONS } from "@/utils/mentorTimezone";
+import { MENTOR_LANGUAGE_OPTIONS, MENTOR_STARTUP_STAGES } from "@/data/mentorTraits";
 
 interface TopFilterBarProps {
   filters: MentorFilters;
@@ -60,6 +61,7 @@ export const TopFilterBar = ({
       expertise: [],
       coachingFormat: [],
       timezone: null,
+      industries: [], languages: [], startupStages: [], location: null, maxRate: null,
     });
   };
 
@@ -73,11 +75,16 @@ export const TopFilterBar = ({
   const hasActiveFilters =
     filters.expertise.length > 0 ||
     filters.coachingFormat.length > 0 ||
-    !!filters.timezone;
+    !!filters.timezone || Boolean(filters.industries?.length) || Boolean(filters.languages?.length) || Boolean(filters.startupStages?.length) || Boolean(filters.location) || Boolean(filters.maxRate);
 
   const expertiseCount = filters.expertise.length;
   const coachingFormatCount = filters.coachingFormat.length;
   const hasTimezoneFilter = !!filters.timezone;
+  const traitCount = (filters.industries?.length || 0) + (filters.languages?.length || 0) + (filters.startupStages?.length || 0) + (filters.location ? 1 : 0) + (filters.maxRate ? 1 : 0);
+  const toggleArray = (field: 'languages' | 'startupStages', value: string) => {
+    const current = filters[field] || [];
+    onFiltersChange({ ...filters, [field]: current.includes(value) ? current.filter(item => item !== value) : [...current, value] });
+  };
 
   return (
     <div className="responsive-filter-row flex flex-wrap items-center gap-3 mb-6">
@@ -205,6 +212,16 @@ export const TopFilterBar = ({
             </div>
           </div>
         </PopoverContent>
+      </Popover>
+
+      <Popover>
+        <PopoverTrigger asChild><Button variant="outline" className={cn('h-9', traitCount > 0 && 'border-primary bg-primary/5')}>Traits{traitCount > 0 && <Badge variant="secondary" className="ml-2 h-5 px-1.5">{traitCount}</Badge>}<ChevronDown className="ml-2 h-4 w-4" /></Button></PopoverTrigger>
+        <PopoverContent className="w-80" align="start"><div className="space-y-4">
+          <div className="flex items-center justify-between"><Label className="font-semibold">Languages and startup stages</Label>{traitCount > 0 && <Button variant="ghost" size="sm" onClick={() => onFiltersChange({ ...filters, industries: [], languages: [], startupStages: [], location: null, maxRate: null })}>Clear</Button>}</div>
+          {(filters.industries?.length || filters.location || filters.maxRate) && <div className="flex flex-wrap gap-1">{filters.industries?.map(value => <Badge key={value} variant="outline">{value}</Badge>)}{filters.location && <Badge variant="outline">{filters.location}</Badge>}{filters.maxRate && <Badge variant="outline">Max {Math.round(filters.maxRate / 100)}/hour</Badge>}</div>}
+          <Separator /><Label className="text-xs uppercase text-muted-foreground">Languages</Label><div className="grid max-h-40 grid-cols-2 gap-2 overflow-y-auto">{MENTOR_LANGUAGE_OPTIONS.map(([code, label]) => <label key={code} className="flex items-center gap-2 text-sm"><Checkbox checked={filters.languages?.includes(code)} onCheckedChange={() => toggleArray('languages', code)} />{label}</label>)}</div>
+          <Separator /><Label className="text-xs uppercase text-muted-foreground">Startup stages</Label><div className="grid grid-cols-2 gap-2">{MENTOR_STARTUP_STAGES.map(stage => <label key={stage} className="flex items-center gap-2 text-sm"><Checkbox checked={filters.startupStages?.includes(stage)} onCheckedChange={() => toggleArray('startupStages', stage)} />{stage}</label>)}</div>
+        </div></PopoverContent>
       </Popover>
 
       {/* Time Zone Filter */}

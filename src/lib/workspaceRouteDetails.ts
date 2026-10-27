@@ -1,5 +1,6 @@
 import { BIZMAP_STAGES, BIZMAP_TOOLS } from './bizmapStages';
 import { BarChart3, BookMarked, BriefcaseBusiness, CalendarClock, CheckSquare, FolderOpen, Gift, GraduationCap, Handshake, Inbox, LayoutDashboard, LineChart, MessageSquare, MessagesSquare, Mic, Newspaper, Repeat, Rocket, Settings, Sparkles, Users, type LucideIcon } from 'lucide-react';
+import { WORKSPACE_CAPABILITY_PURPOSES } from './workspaceCapabilities';
 
 export const WORKSPACE_ROUTE_ICONS: Record<string, LucideIcon> = {
   ...Object.fromEntries(BIZMAP_TOOLS.map(tool => [tool.name, tool.icon])),
@@ -41,6 +42,7 @@ export const WORKSPACE_SECTION_SLOGANS: Record<string, string> = {
 };
 
 export const WORKSPACE_ROUTE_DESCRIPTIONS: Record<string, string> = {
+  ...WORKSPACE_CAPABILITY_PURPOSES,
   ...Object.fromEntries(BIZMAP_TOOLS.map(tool => [tool.name, tool.description])),
   'Traction Engine': 'Track weekly distribution and retention signals.',
   'VC Search': 'Build a focused investor list.',

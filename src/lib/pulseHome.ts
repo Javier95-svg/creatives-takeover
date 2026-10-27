@@ -1,12 +1,15 @@
 import { FOUNDER_TOOL_CATALOG } from '../config/founderToolCatalog.ts';
 import type { DashboardAction, DashboardSnapshot } from '../types/dashboardSnapshot.ts';
 import { PULSE_UUID } from './pulseScope.ts';
-import type { PulseSourceReference } from './pulseSources.ts';
+import type { PulseRetrievalReference, PulseSourceReference } from './pulseSources.ts';
 import type { CommitmentCheck, MemorySuggestion } from './pulseMemory.ts';
+import { workspaceCapabilityById } from './workspaceCapabilities.ts';
+import { PEDIA_ENTRIES } from '../data/startupPedia/index.ts';
+import { LAUNCH_DIRECTORIES } from '../data/launchDirectories.ts';
 
 export type PulseHomeConcept = 'founder-guide' | 'command-center' | 'guided-journey';
 export interface PulseHomeAction {
-  kind: 'tool' | 'mentor' | 'investor' | 'browse' | 'article' | 'podcast' | 'service';
+  kind: 'tool' | 'mentor' | 'investor' | 'browse' | 'article' | 'podcast' | 'service' | 'pedia' | 'cofounder' | 'vc' | 'accelerator' | 'directory' | 'community';
   id: string;
   title: string;
   reason: string;
@@ -15,6 +18,10 @@ export interface PulseHomeAction {
   slug?: string;
   /** Investor cards: opening the profile needs the Pro plan for this account. */
   locked?: boolean;
+  /** Verified, display-only reasons derived from stored fields. */
+  badges?: string[];
+  /** Mentor fit band: exact structured fit, partial fit, or legacy text fallback. */
+  confidence?: 'A' | 'B' | 'C';
 }
 export interface PulseHomeMessage {
   id: string;
@@ -22,6 +29,7 @@ export interface PulseHomeMessage {
   content: string;
   actions?: PulseHomeAction[];
   sources?: PulseSourceReference[];
+  retrievedSources?: PulseRetrievalReference[];
   /** Things Pulse offers to remember from this turn; the founder decides. */
   memorySuggestions?: MemorySuggestion[];
   /** A saved commitment this answer asked about. */
@@ -33,22 +41,48 @@ export interface PulseHomePriority { id: string; title: string; route: string }
 // and canonical mentor slugs can be rendered as actions.
 export function validateHomeActions(value: unknown): PulseHomeAction[] {
   if (!Array.isArray(value)) return [];
-  return value.slice(0, 3).flatMap((item) => {
+  // Three primary results plus one optional browse/more action.
+  return value.slice(0, 4).flatMap((item) => {
     if (!item || typeof item !== 'object') return [];
     const action = item as PulseHomeAction;
     if (typeof action.id !== 'string' || typeof action.title !== 'string' || typeof action.reason !== 'string') return [];
     if (action.kind === 'tool') {
       const tool = FOUNDER_TOOL_CATALOG.find(tool => tool.key === action.id);
-      return tool ? [{ ...action, title: tool.name, route: tool.route }] : [];
+      const capability = workspaceCapabilityById(action.id);
+      const resolved = tool ?? capability;
+      return resolved ? [{ ...action, title: resolved.name, route: resolved.route, badges: undefined }] : [];
     }
     if (action.kind === 'browse') {
       const routes: Record<string, string> = { mentorship: '/mentorship', investors: '/investors', newspaper: '/newspaper', podcast: '/podcast', marketplace: '/marketplace', tasks: '/dashboard/tasks', bookings: '/mentor/bookings', enquiries: '/marketplace/enquiries', matches: '/investors/matches' };
-      return Object.prototype.hasOwnProperty.call(routes, action.id) ? [{ ...action, route: routes[action.id], image: undefined }] : [];
+      if (!Object.prototype.hasOwnProperty.call(routes, action.id)) return [];
+      let route = routes[action.id];
+      if (action.id === 'mentorship' && typeof action.route === 'string' && action.route.startsWith('/mentorship?')) {
+        const input = new URLSearchParams(action.route.slice(action.route.indexOf('?') + 1));
+        const output = new URLSearchParams();
+        const allowed = new Set(['mentorSource', 'mentorTrack', 'expertise', 'industries', 'languages', 'stages', 'coachingFormats', 'timezone', 'location', 'maxRate', 'sort']);
+        for (const [key, value] of input) if (allowed.has(key) && value.length <= 300) output.set(key, value);
+        route = `/mentorship?${output.toString()}`;
+      }
+      return [{ ...action, route, image: undefined }];
     }
     if (['article', 'podcast', 'service'].includes(action.kind) && PULSE_UUID.test(action.id)) {
       if (action.kind === 'podcast') return [{ ...action, route: `/podcast?episode=${encodeURIComponent(action.id)}`, image: undefined }];
       if (typeof action.slug !== 'string' || !/^[a-z0-9][a-z0-9_-]{0,199}$/i.test(action.slug)) return [];
       return [{ ...action, route: `${action.kind === 'article' ? '/newspaper' : '/marketplace'}/${encodeURIComponent(action.slug)}`, image: undefined }];
+    }
+    if (action.kind === 'pedia' && PEDIA_ENTRIES.some(entry => entry.slug === action.id)) {
+      return [{ ...action, slug: action.id, route: `/startup-pedia/${encodeURIComponent(action.id)}`, image: undefined,
+        badges: Array.isArray(action.badges) ? action.badges.filter(value => typeof value === 'string').slice(0, 4) : undefined }];
+    }
+    if (action.kind === 'directory' && LAUNCH_DIRECTORIES.some(directory => directory.id === action.id)) {
+      return [{ ...action, route: `/directories?source=pulse&directory=${encodeURIComponent(action.id)}`, image: undefined }];
+    }
+    if ((action.kind === 'cofounder' || action.kind === 'community') && PULSE_UUID.test(action.id)) {
+      return [{ ...action, route: action.kind === 'cofounder' ? `/co-founder/listing/${action.id}` : `/rooms/posts/${action.id}`, image: undefined }];
+    }
+    if ((action.kind === 'vc' || action.kind === 'accelerator') && PULSE_UUID.test(action.id) && typeof action.slug === 'string' && /^[a-z0-9][a-z0-9_-]{0,199}$/i.test(action.slug)) {
+      return [{ ...action, route: action.kind === 'vc' ? `/insighta/vc/${encodeURIComponent(action.slug)}` : `/insighta/accelerator/${encodeURIComponent(action.slug)}`,
+        image: typeof action.image === 'string' && /^https:\/\//.test(action.image) ? action.image : undefined }];
     }
     // Angels have no profile page of their own: the route is always rebuilt as
     // Find your Angel filtered to that name, never taken from the payload.
@@ -57,7 +91,9 @@ export function validateHomeActions(value: unknown): PulseHomeAction[] {
         image: typeof action.image === 'string' && /^https:\/\//.test(action.image) ? action.image : undefined }];
     }
     if (action.kind === 'mentor' && /^[a-z0-9-]+$/i.test(action.id) && /^\/mentorship\/[a-z0-9-]+$/.test(action.route)) {
-      return [{ ...action, image: typeof action.image === 'string' && /^https:\/\//.test(action.image) ? action.image : undefined }];
+      return [{ ...action, image: typeof action.image === 'string' && /^https:\/\//.test(action.image) ? action.image : undefined,
+        badges: Array.isArray(action.badges) ? action.badges.filter(value => typeof value === 'string').slice(0, 5) : undefined,
+        confidence: ['A', 'B', 'C'].includes(action.confidence ?? '') ? action.confidence : undefined }];
     }
     return [];
   });

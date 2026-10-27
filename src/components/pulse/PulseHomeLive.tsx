@@ -24,7 +24,8 @@ import { parseCommitmentCheck, parseMemorySuggestions } from '@/lib/pulseMemory'
 import { enterWorkspaceRoute } from '@/lib/workspaceNavigation';
 import { captureEvent, trackPulseInvestorProfileClicked } from '@/lib/analytics';
 import { trackInvestorCards } from '@/lib/pulseInvestorTracking';
-import { pulseSourceNotice, validatePulseSources } from '@/lib/pulseSources';
+import { pulseSourceNotice, validatePulseRetrievalSources, validatePulseSources } from '@/lib/pulseSources';
+import { trackPulseMentorClicked, trackPulseSourceOpened } from '@/lib/pulseMentorTracking';
 
 // Explicit schema keeps these queries typed against the generated public tables.
 const homeDb = supabase.schema('public');
@@ -104,7 +105,7 @@ function LiveConversation({ concept, scope }: { concept: PulseHomeConcept; scope
       setHistoryReady(true);
       const history = [...(data ?? [])].reverse().filter(row => row.role === 'user' || row.role === 'assistant').map(row => {
         const metadata = row.metadata as Record<string, unknown> | null;
-        return { id: metadata?.homeTurnId ? `${metadata.homeTurnId}:${row.role}` : row.id, role: row.role as 'user' | 'assistant', content: row.content, actions: validateHomeActions(metadata?.homeActions), sources: validatePulseSources(metadata?.contextSources),
+        return { id: metadata?.homeTurnId ? `${metadata.homeTurnId}:${row.role}` : row.id, role: row.role as 'user' | 'assistant', content: row.content, actions: validateHomeActions(metadata?.homeActions), sources: validatePulseSources(metadata?.contextSources), retrievedSources: validatePulseRetrievalSources(metadata?.retrievalSources),
           memorySuggestions: parseMemorySuggestions(metadata?.memorySuggestions), commitmentCheck: parseCommitmentCheck(metadata?.commitmentCheck) };
       });
       setMessages(history);
@@ -138,6 +139,7 @@ function LiveConversation({ concept, scope }: { concept: PulseHomeConcept; scope
       await streamPulseHome({ sessionId: id, turnId: turn.turnId, message: turn.text, signal: controller.current.signal, projectId: scope.projectId,
         onContext: unavailable => { if (alive.current) setContextNotice(unavailable.length ? 'Some saved context is unavailable. Pulse will identify gaps rather than guess.' : ''); },
         onSources: sources => { if (alive.current) { setContextNotice(pulseSourceNotice(sources)); setMessages(previous => previous.map(message => message.id === assistantId ? { ...message, sources } : message)); } },
+        onRetrievedSources: retrievedSources => { if (alive.current) setMessages(previous => previous.map(message => message.id === assistantId ? { ...message, retrievedSources } : message)); },
         onText: chunk => { if (alive.current) setMessages(previous => previous.map(message => message.id === assistantId ? { ...message, content: message.content + chunk } : message)); },
         onActions: actions => {
           if (!alive.current) return;
@@ -185,6 +187,8 @@ function LiveConversation({ concept, scope }: { concept: PulseHomeConcept; scope
       <PulseInsights projectId={scope.projectId} onAsk={text => { void send(text); }} navigate={enterWorkspaceRoute} />
     </> : undefined}
     onInvestorClick={(action, rank) => trackPulseInvestorProfileClicked({ surface: 'home', investor_id: action.id, rank, is_pro: !action.locked })}
+    onMentorClick={(action, rank, turnId) => trackPulseMentorClicked(action.id, turnId, 'home', rank)}
+    onSourceClick={action => trackPulseSourceOpened(action.kind, action.id, 'home')}
     onSend={text => { void send(text); }} onNew={() => { void newConversation(); }} onRetry={() => {
       if (retryAction.current === 'new') void newConversation();
       else if (retryAction.current === 'send' && pending.current) void send(pending.current.text, true);

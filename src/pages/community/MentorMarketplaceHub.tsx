@@ -75,6 +75,11 @@ const MentorMarketplaceHub = () => {
     expertise: [],
     coachingFormat: [],
     timezone: null,
+    industries: [],
+    languages: [],
+    startupStages: [],
+    location: null,
+    maxRate: null,
   });
 
   useEffect(() => {
@@ -98,17 +103,29 @@ const MentorMarketplaceHub = () => {
       ...expertiseFromQuery,
     ]);
     const nextTimezone = searchParams.get("timezone");
+    const listParam = (name: string) => (searchParams.get(name) || '').split(',').map(value => decodeURIComponent(value).trim()).filter(Boolean);
 
     setFilters((prev) => {
       const nextFilters: MentorFilters = {
         ...prev,
         expertise: nextExpertise,
         timezone: nextTimezone || null,
+        industries: listParam('industries'),
+        languages: listParam('languages'),
+        startupStages: listParam('stages'),
+        coachingFormat: listParam('coachingFormats'),
+        location: searchParams.get('location'),
+        maxRate: searchParams.get('maxRate') ? Number(searchParams.get('maxRate')) : null,
       };
 
       if (
         prev.expertise.join("|") === nextFilters.expertise.join("|") &&
-        prev.timezone === nextFilters.timezone
+        prev.timezone === nextFilters.timezone &&
+        JSON.stringify(prev.industries) === JSON.stringify(nextFilters.industries) &&
+        JSON.stringify(prev.languages) === JSON.stringify(nextFilters.languages) &&
+        JSON.stringify(prev.startupStages) === JSON.stringify(nextFilters.startupStages) &&
+        JSON.stringify(prev.coachingFormat) === JSON.stringify(nextFilters.coachingFormat) &&
+        prev.location === nextFilters.location && prev.maxRate === nextFilters.maxRate
       ) {
         return prev;
       }
@@ -315,20 +332,21 @@ const MentorMarketplaceHub = () => {
 
       // Coaching Format filter
       if (filters.coachingFormat.length > 0) {
-        const mentorNameLower = mentor.name.toLowerCase();
-        const isMarcBright = mentorNameLower.includes('marc') && mentorNameLower.includes('bright');
-        const mentorFormat = isMarcBright ? 'Hourly Rate Basis' : '8 Week Coaching Program';
-        const hasFormat = filters.coachingFormat.includes(mentorFormat);
+        const hasFormat = filters.coachingFormat.some(format => mentor.coaching_formats?.includes(format));
         if (!hasFormat) return false;
       }
 
+      if (filters.industries?.length && !filters.industries.every(industry => mentor.industries?.some(value => value.toLowerCase() === industry.toLowerCase()))) return false;
+      if (filters.languages?.length && !filters.languages.every(language => mentor.languages?.includes(language))) return false;
+      if (filters.startupStages?.length && !filters.startupStages.every(stage => mentor.startup_stages?.includes(stage))) return false;
+      if (filters.location && !`${mentor.location || ''} ${mentor.nationality || ''}`.toLowerCase().includes(filters.location.toLowerCase())) return false;
+      if (filters.maxRate && (mentor.hourly_rate_per_hour || mentor.hourly_rate) > filters.maxRate) return false;
+
       // Time zone filter (exact current GMT offset)
       if (filters.timezone) {
-        if (selectedTimezoneOffset === null) return false;
-        const isExactTimezone = isMentorInExactTimezone(
-          mentor,
-          selectedTimezoneOffset
-        );
+        const isExactTimezone = selectedTimezoneOffset === null
+          ? mentor.timezone?.toLowerCase() === filters.timezone.toLowerCase()
+          : isMentorInExactTimezone(mentor, selectedTimezoneOffset);
         if (!isExactTimezone) return false;
       }
 

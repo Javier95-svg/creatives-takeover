@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { streamPulseHome } from '@/services/pulseHomeStream';
 import { validateHomeActions, type PulseHomeMessage } from '@/lib/pulseHome';
-import { pulseSourceNotice, validatePulseSources } from '@/lib/pulseSources';
+import { pulseSourceNotice, validatePulseRetrievalSources, validatePulseSources } from '@/lib/pulseSources';
 import { trackInvestorCards } from '@/lib/pulseInvestorTracking';
 import { parseCommitmentCheck, parseMemorySuggestions } from '@/lib/pulseMemory';
 import type { PulseScope } from '@/lib/pulseScope';
@@ -41,7 +41,7 @@ export function usePulseConversation(userId: string | undefined, scope: PulseSco
         const messages = [...(data ?? [])].reverse().filter(row => row.role === 'user' || row.role === 'assistant').map(row => {
           const metadata = row.metadata as Record<string, unknown> | null;
           return { id: metadata?.homeTurnId ? `${metadata.homeTurnId}:${row.role}` : row.id, role: row.role as 'user' | 'assistant', content: row.content,
-            actions: validateHomeActions(metadata?.homeActions), sources: validatePulseSources(metadata?.contextSources),
+            actions: validateHomeActions(metadata?.homeActions), sources: validatePulseSources(metadata?.contextSources), retrievedSources: validatePulseRetrievalSources(metadata?.retrievalSources),
             memorySuggestions: parseMemorySuggestions(metadata?.memorySuggestions), commitmentCheck: parseCommitmentCheck(metadata?.commitmentCheck) };
         });
         const last = data?.[0];
@@ -82,6 +82,7 @@ export function usePulseConversation(userId: string | undefined, scope: PulseSco
         onText: chunk => update(message => ({ ...message, content: message.content + chunk })),
         onActions: actions => { update(message => ({ ...message, actions })); trackInvestorCards(actions, 'widget'); },
         onSources: sources => { update(message => ({ ...message, sources })); if (alive()) setState(previous => ({ ...previous, notice: pulseSourceNotice(sources) })); },
+        onRetrievedSources: retrievedSources => update(message => ({ ...message, retrievedSources })),
         onMemorySuggestions: memorySuggestions => update(message => ({ ...message, memorySuggestions })),
         onCommitmentCheck: commitmentCheck => update(message => ({ ...message, commitmentCheck })),
       });

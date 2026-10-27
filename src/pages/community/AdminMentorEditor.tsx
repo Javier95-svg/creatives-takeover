@@ -20,6 +20,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Mentor, CURRENCY_OPTIONS, MentorCurrency, getCurrencySymbol } from "@/types/mentor";
 import { logInfo, logError, logWarn } from "@/lib/logger";
 import { handleError } from "@/lib/errors";
+import { MENTOR_COACHING_FORMATS, MENTOR_LANGUAGE_OPTIONS, MENTOR_STARTUP_STAGES } from "@/data/mentorTraits";
 import {
   getAdminMentorDiscoverySettings,
   createMentorAvailabilityAccess,
@@ -87,6 +88,12 @@ const AdminMentorEditor = () => {
     twitter_x_url: null,
     website_url: null,
     nationality: null,
+    industries: [],
+    languages: [],
+    startup_stages: [],
+    coaching_formats: [],
+    timezone: null,
+    location: null,
   });
 
   useEffect(() => {
@@ -129,6 +136,12 @@ const AdminMentorEditor = () => {
         twitter_x_url: found.twitter_x_url || null,
         website_url: found.website_url || null,
         nationality: found.nationality || null,
+        industries: found.industries || [],
+        languages: found.languages || [],
+        startup_stages: found.startup_stages || [],
+        coaching_formats: found.coaching_formats || [],
+        timezone: found.timezone || null,
+        location: found.location || null,
       });
       if (found.picture) {
         setPicturePreview(found.picture);
@@ -312,6 +325,13 @@ const AdminMentorEditor = () => {
     });
   };
 
+  const toggleTrait = (field: 'languages' | 'startup_stages' | 'coaching_formats', value: string) => {
+    setFormData((prev) => {
+      const current = prev[field] || [];
+      return { ...prev, [field]: current.includes(value) ? current.filter(item => item !== value) : [...current, value] };
+    });
+  };
+
   const [universityInput, setUniversityInput] = useState("");
 
   const addUniversity = () => {
@@ -373,6 +393,12 @@ const AdminMentorEditor = () => {
         twitter_x_url: formData.twitter_x_url || null,
         website_url: formData.website_url || null,
         nationality: formData.nationality || null,
+        industries: formData.industries || [],
+        languages: formData.languages || [],
+        startup_stages: formData.startup_stages || [],
+        coaching_formats: formData.coaching_formats || [],
+        timezone: formData.timezone || null,
+        location: formData.location || null,
       };
 
       // Debug: Log saveData to verify all fields are included
@@ -796,6 +822,18 @@ const AdminMentorEditor = () => {
                 <p className="text-xs text-muted-foreground mt-2">
                   Select all relevant expertise areas for this mentor.
                 </p>
+              </div>
+
+              <div className="space-y-4 rounded-xl border p-4">
+                <div><h3 className="font-semibold">Pulse discovery traits</h3><p className="text-xs text-muted-foreground">Structured values are treated as verified matching evidence. Leave unknown values empty.</p></div>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div><Label htmlFor="mentor_industries">Industries</Label><Input id="mentor_industries" value={(formData.industries || []).join(', ')} onChange={(e) => setFormData(prev => ({ ...prev, industries: e.target.value.split(',').map(value => value.trim()).filter(Boolean) }))} placeholder="SaaS, FinTech" className="mt-1" /><p className="mt-1 text-xs text-muted-foreground">Comma-separated canonical sectors.</p></div>
+                  <div><Label htmlFor="mentor_location">Location</Label><Input id="mentor_location" value={formData.location || ''} onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value || null }))} placeholder="Lima, Peru" className="mt-1" /></div>
+                  <div><Label htmlFor="mentor_timezone">Public discovery timezone</Label><Input id="mentor_timezone" value={formData.timezone || ''} onChange={(e) => setFormData(prev => ({ ...prev, timezone: e.target.value || null }))} placeholder="America/Lima" className="mt-1" /><p className="mt-1 text-xs text-muted-foreground">Use an IANA timezone. This does not reveal calendar availability.</p></div>
+                </div>
+                <div><Label>Languages</Label><div className="mt-2 flex flex-wrap gap-2">{MENTOR_LANGUAGE_OPTIONS.map(([code, label]) => <Button key={code} type="button" size="sm" variant={formData.languages?.includes(code) ? 'default' : 'outline'} onClick={() => toggleTrait('languages', code)}>{label}</Button>)}</div></div>
+                <div><Label>Startup stages</Label><div className="mt-2 flex flex-wrap gap-2">{MENTOR_STARTUP_STAGES.map(stage => <Button key={stage} type="button" size="sm" variant={formData.startup_stages?.includes(stage) ? 'default' : 'outline'} onClick={() => toggleTrait('startup_stages', stage)}>{stage}</Button>)}</div></div>
+                <div><Label>Coaching formats</Label><div className="mt-2 flex flex-wrap gap-2">{MENTOR_COACHING_FORMATS.map(format => <Button key={format} type="button" size="sm" variant={formData.coaching_formats?.includes(format) ? 'default' : 'outline'} onClick={() => toggleTrait('coaching_formats', format)}>{format}</Button>)}</div></div>
               </div>
 
               {/* Universities */}

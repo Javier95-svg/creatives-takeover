@@ -1,4 +1,5 @@
 import { FOUNDER_TOOL_CATALOG } from '../config/founderToolCatalog.ts';
+import { workspaceCapabilityById } from './workspaceCapabilities.ts';
 import { rankMentorsForContext, type MentorRecommendationContext } from './mentorDemand.ts';
 import { getMentorProfileUrl } from '../utils/mentorSlug.ts';
 import type { Mentor } from '../types/mentor.ts';
@@ -8,8 +9,8 @@ import { ANGEL_SECTOR_OPTIONS, type AngelSector } from '../data/angelSectors.ts'
 export function homeToolActions(keys: unknown): PulseHomeAction[] {
   if (!Array.isArray(keys)) return [];
   return [...new Set(keys)].flatMap(key => {
-    const tool = FOUNDER_TOOL_CATALOG.find(tool => tool.key === key);
-    return tool ? [{ kind: 'tool' as const, id: tool.key, title: tool.name, reason: tool.purpose, route: tool.route }] : [];
+    const tool = typeof key === 'string' ? (FOUNDER_TOOL_CATALOG.find(tool => tool.key === key) ?? workspaceCapabilityById(key)) : undefined;
+    return tool ? [{ kind: 'tool' as const, id: 'key' in tool ? tool.key : tool.id, title: tool.name, reason: tool.purpose, route: tool.route }] : [];
   }).slice(0, 3);
 }
 
