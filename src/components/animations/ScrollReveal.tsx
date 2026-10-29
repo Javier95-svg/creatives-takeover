@@ -1,4 +1,4 @@
-import { motion, type Variants } from "framer-motion";
+import { LazyMotion, domAnimation, m, type Variants } from "framer-motion";
 import { Children, type ReactNode } from "react";
 
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
@@ -7,6 +7,10 @@ import { cn } from "@/lib/utils";
 type RevealVariant = "default" | "card" | "scale" | "fade" | "slide-left" | "slide-right";
 
 const EASE_OUT = [0.22, 1, 0.36, 1] as const;
+
+// m + LazyMotion(domAnimation) renders the same variants and whileInView reveal
+// as motion.div, without bundling drag, layout and the other features this
+// never uses. It is on the homepage's first-load path.
 
 const revealVariants: Record<RevealVariant, Variants> = {
   default: {
@@ -72,16 +76,18 @@ export const ScrollReveal = ({
       : variant;
 
   return (
-    <motion.div
-      className={className}
-      initial="hidden"
-      whileInView="visible"
-      viewport={{ once, amount, margin: "0px 0px -8% 0px" }}
-      variants={revealVariants[effectiveVariant]}
-      transition={{ duration, delay, ease: EASE_OUT }}
-    >
-      {children}
-    </motion.div>
+    <LazyMotion features={domAnimation}>
+      <m.div
+        className={className}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once, amount, margin: "0px 0px -8% 0px" }}
+        variants={revealVariants[effectiveVariant]}
+        transition={{ duration, delay, ease: EASE_OUT }}
+      >
+        {children}
+      </m.div>
+    </LazyMotion>
   );
 };
 
@@ -111,30 +117,32 @@ export const RevealGroup = ({
   }
 
   return (
-    <motion.div
-      className={cn(className)}
-      initial="hidden"
-      whileInView="visible"
-      viewport={{ once, amount, margin: "0px 0px -8% 0px" }}
-      variants={{
-        hidden: {},
-        visible: {
-          transition: {
-            staggerChildren: stagger,
-            delayChildren,
+    <LazyMotion features={domAnimation}>
+      <m.div
+        className={cn(className)}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once, amount, margin: "0px 0px -8% 0px" }}
+        variants={{
+          hidden: {},
+          visible: {
+            transition: {
+              staggerChildren: stagger,
+              delayChildren,
+            },
           },
-        },
-      }}
-    >
-      {Children.toArray(children).map((child, index) => (
-        <motion.div
-          key={index}
-          variants={revealVariants[variant]}
-          transition={{ duration: 0.65, ease: EASE_OUT }}
-        >
-          {child}
-        </motion.div>
-      ))}
-    </motion.div>
+        }}
+      >
+        {Children.toArray(children).map((child, index) => (
+          <m.div
+            key={index}
+            variants={revealVariants[variant]}
+            transition={{ duration: 0.65, ease: EASE_OUT }}
+          >
+            {child}
+          </m.div>
+        ))}
+      </m.div>
+    </LazyMotion>
   );
 };

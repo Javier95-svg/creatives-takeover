@@ -7,6 +7,7 @@ import EntrepreneurProblems from "@/components/EntrepreneurProblems";
 import { PullToRefresh } from "@/components/mobile/PullToRefresh";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ScrollReveal } from "@/components/animations/ScrollReveal";
+import { LoadWhenNear } from "@/components/LoadWhenNear";
 
 import SEO, { createOrganizationSchema, createWebSiteSchema, createBreadcrumbSchema } from "@/components/SEO";
 import Footer from "@/components/Footer";
@@ -23,6 +24,13 @@ import { trackLandingViewed } from "@/lib/analytics";
 const AISpecializationTrends = lazy(() => import("@/components/AISpecializationTrends"));
 const HomeFAQ = lazy(() => import("@/components/HomeFAQ"));
 const FounderAnswerLibraryTeaser = lazy(() => import("@/components/seo/FounderAnswerLibraryTeaser"));
+
+// lazy() alone still fetched all three chunks on first render (~190KB gz with
+// Recharts), before the visitor scrolled. LoadWhenNear defers each until it is
+// 800px from the viewport; the placeholders keep the heights above.
+const trendsPlaceholder = <div className="min-h-[969px] lg:min-h-[753px] animate-pulse bg-muted/20" />;
+const teaserPlaceholder = <div className="h-64 animate-pulse bg-muted/20" />;
+const faqPlaceholder = <div className="h-96 animate-pulse bg-muted/20" />;
 
 const Index = () => {
   const isMobile = useIsMobile();
@@ -83,24 +91,30 @@ const Index = () => {
             </ScrollReveal>
             <ScrollReveal variant="fade" amount={0.05}>
               <div className="homepage-band-muted">
-                <Suspense fallback={<div className="min-h-[969px] lg:min-h-[753px] animate-pulse bg-muted/20" />}>
-                  <AISpecializationTrends />
-                </Suspense>
+                <LoadWhenNear id="ai-trends" placeholder={trendsPlaceholder}>
+                  <Suspense fallback={trendsPlaceholder}>
+                    <AISpecializationTrends />
+                  </Suspense>
+                </LoadWhenNear>
               </div>
             </ScrollReveal>
             <ScrollReveal variant="fade" amount={0.05}>
               <ValuePropositionCards />
             </ScrollReveal>
             <ScrollReveal variant="fade" amount={0.05}>
-              <Suspense fallback={<div className="h-64 animate-pulse bg-muted/20" />}>
-                <FounderAnswerLibraryTeaser compact />
-              </Suspense>
+              <LoadWhenNear id="pedia-teaser" placeholder={teaserPlaceholder}>
+                <Suspense fallback={teaserPlaceholder}>
+                  <FounderAnswerLibraryTeaser compact />
+                </Suspense>
+              </LoadWhenNear>
             </ScrollReveal>
             <ScrollReveal variant="fade" amount={0.05}>
               <div className="homepage-band-muted">
-                <Suspense fallback={<div className="h-96 animate-pulse bg-muted/20" />}>
-                  <HomeFAQ />
-                </Suspense>
+                <LoadWhenNear id="home-faq" placeholder={faqPlaceholder}>
+                  <Suspense fallback={faqPlaceholder}>
+                    <HomeFAQ />
+                  </Suspense>
+                </LoadWhenNear>
               </div>
             </ScrollReveal>
           </PullToRefresh>
@@ -117,24 +131,30 @@ const Index = () => {
             </ScrollReveal>
             <ScrollReveal variant="fade" amount={0.05}>
               <div className="homepage-band-muted">
-                <Suspense fallback={<div className="min-h-[969px] lg:min-h-[753px] animate-pulse bg-muted/20" />}>
-                  <AISpecializationTrends />
-                </Suspense>
+                <LoadWhenNear id="ai-trends" placeholder={trendsPlaceholder}>
+                  <Suspense fallback={trendsPlaceholder}>
+                    <AISpecializationTrends />
+                  </Suspense>
+                </LoadWhenNear>
               </div>
             </ScrollReveal>
             <ScrollReveal variant="fade" amount={0.05}>
               <ValuePropositionCards />
             </ScrollReveal>
             <ScrollReveal variant="fade" amount={0.05}>
-              <Suspense fallback={<div className="h-64 animate-pulse bg-muted/20" />}>
-                <FounderAnswerLibraryTeaser compact />
-              </Suspense>
+              <LoadWhenNear id="pedia-teaser" placeholder={teaserPlaceholder}>
+                <Suspense fallback={teaserPlaceholder}>
+                  <FounderAnswerLibraryTeaser compact />
+                </Suspense>
+              </LoadWhenNear>
             </ScrollReveal>
             <ScrollReveal variant="fade" amount={0.05}>
               <div className="homepage-band-muted">
-                <Suspense fallback={<div className="h-96 animate-pulse bg-muted/20" />}>
-                  <HomeFAQ />
-                </Suspense>
+                <LoadWhenNear id="home-faq" placeholder={faqPlaceholder}>
+                  <Suspense fallback={faqPlaceholder}>
+                    <HomeFAQ />
+                  </Suspense>
+                </LoadWhenNear>
               </div>
             </ScrollReveal>
           </>

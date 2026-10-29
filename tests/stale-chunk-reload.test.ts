@@ -29,7 +29,9 @@ test('reloads once, then leaves repeat failures within a minute to the error scr
 
 test('a missing /assets file is a 404, not the app shell served as HTML', () => {
   const config = JSON.parse(readFileSync(new URL('../vercel.json', import.meta.url), 'utf8'));
-  const fallback = config.rewrites.at(-1);
-  assert.equal(fallback.destination, '/app-shell.html');
-  assert.equal(fallback.source, '/((?!assets/).*)');
+  const shellRewrites = config.rewrites.filter((rule: { destination: string }) => rule.destination === '/app-shell.html');
+  assert.ok(shellRewrites.length > 0);
+  for (const rule of shellRewrites) {
+    assert.doesNotMatch('/assets/PlatformTour.CDLvjnJF.js', new RegExp(`^${rule.source}$`), rule.source);
+  }
 });

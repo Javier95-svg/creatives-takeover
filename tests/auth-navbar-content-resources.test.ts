@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
-const source = readFileSync(new URL('../src/components/Navigation.tsx', import.meta.url), 'utf8');
+const source = readFileSync(new URL('../src/components/navigation/MemberNavigation.tsx', import.meta.url), 'utf8');
 const tabletSource = readFileSync(new URL('../src/components/navigation/TabletNavigation.tsx', import.meta.url), 'utf8');
 
 test('authenticated navbar groups content and resources in the intended order', () => {

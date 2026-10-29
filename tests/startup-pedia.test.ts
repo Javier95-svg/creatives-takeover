@@ -201,7 +201,7 @@ test("the author byline links to the Founder ID profile in the page and the craw
 test("navigation and site search point at Startup Pedia", () => {
   assert.match(read("src/components/VisitorNavbar.tsx"), /label: "Startup Pedia", href: "\/startup-pedia"/);
   // In the Content submenu, under Newspaper and Podcast (requested 2026-10-25).
-  assert.match(read("src/components/Navigation.tsx"), /name: "Startup Pedia", href: "\/startup-pedia", icon: BookMarked, description:/);
+  assert.match(read("src/components/navigation/MemberNavigation.tsx"), /name: "Startup Pedia", href: "\/startup-pedia", icon: BookMarked, description:/);
   assert.match(read("src/components/SEO.tsx"), /startup-pedia\?q=\{search_term_string\}/);
   assert.match(read("index.html"), /startup-pedia\?q=\{search_term_string\}/);
 });
@@ -216,4 +216,17 @@ test("markdownToHtml escapes text and keeps internal links relative", () => {
   assert.doesNotMatch(html, /<script>/);
   assert.match(markdownToHtml("[x](https://example.com)"), /<a href="https:\/\/example.com" rel="noopener">x<\/a>/);
   assert.doesNotMatch(markdownToHtml("[x](javascript:alert(1))"), /<a /);
+});
+
+test("the homepage teaser's light copy of featured entries matches the library", async () => {
+  const { FEATURED_PEDIA_ENTRIES } = await import("../src/data/startupPedia/featured.ts");
+  const { getTopic } = await import("../src/data/startupPedia/index.ts");
+  for (const featured of FEATURED_PEDIA_ENTRIES) {
+    const entry = getEntry(featured.slug);
+    assert.ok(entry, `${featured.slug} is not a Startup Pedia entry`);
+    assert.equal(featured.title, entry.title, featured.slug);
+    assert.equal(featured.topicLabel, getTopic(entry.topic)?.label, featured.slug);
+  }
+  // The point of the light copy: the homepage section must not import the dataset.
+  assert.doesNotMatch(read("src/components/seo/FounderAnswerLibraryTeaser.tsx"), /from "@\/data\/startupPedia"/);
 });

@@ -82,8 +82,14 @@ function getManualChunk(id: string) {
     return "data-clients";
   }
 
-  if (packageName.startsWith("@radix-ui/")) {
-    return "radix-ui";
+  // Icons and Radix primitives used to be pinned to two app-wide chunks
+  // (ui-foundation and radix-ui) that every page preloaded, so the homepage paid
+  // for every icon and dialog primitive in the app (~94KB gz, mostly unused).
+  // Both are left to Rollup, which places each module with the routes that use
+  // it. (One vendor chunk per Radix package instead made 16 tiny requests for
+  // the tooltip alone.)
+  if (packageName === "lucide-react" || packageName.startsWith("@radix-ui/")) {
+    return undefined;
   }
 
   if (
@@ -99,15 +105,17 @@ function getManualChunk(id: string) {
     packageName === "clsx" ||
     packageName === "class-variance-authority" ||
     packageName === "tailwind-merge" ||
-    packageName === "lucide-react" ||
     packageName === "next-themes" ||
     packageName === "sonner"
   ) {
     return "ui-foundation";
   }
 
+  // framer-motion is left to Rollup too: a single "motion" chunk held every
+  // feature any page uses, so the homepage's lean m/LazyMotion reveal still
+  // downloaded drag, layout and the full motion component.
   if (packageName === "framer-motion" || packageName === "motion-dom" || packageName === "motion-utils") {
-    return "motion";
+    return undefined;
   }
 
   if (packageName.startsWith("@dnd-kit/")) {
@@ -226,6 +234,9 @@ export default defineConfig(({ mode }) => {
       'import.meta.env.VITE_APP_VERSION': JSON.stringify(process.env.npm_package_version || new Date().toISOString()),
     },
     build: {
+      // Read by scripts/generate-prerendered-pages.mjs to preload the homepage
+      // route chunks, then deleted so it is not deployed.
+      manifest: true,
       rollupOptions: {
         output: {
           manualChunks: getManualChunk,

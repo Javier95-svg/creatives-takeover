@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Code2, Eye } from 'lucide-react';
 import { toast } from 'sonner';
@@ -14,24 +14,40 @@ import { usePlanAccess } from '@/hooks/usePlanAccess';
 import { supabase } from '@/integrations/supabase/client';
 import { captureEvent, trackMVPBuilderOpened, trackToolOpened } from '@/lib/analytics';
 
+// Previews here need what the rest of the site forbids: inline scripts, the
+// Tailwind CDN, eval and WebContainer, plus cross-origin isolation. vercel.json
+// sends that CSP and COOP/COEP only on /mvp-builder documents, and headers are
+// fixed per document, so arriving by client-side navigation would keep the strict
+// policy of the page the visitor came from. One reload fetches this route's own.
+function documentLoadedOnMvpBuilder() {
+  const entry = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined;
+  if (!entry?.name) return true;
+  return new URL(entry.name).pathname.startsWith('/mvp-builder');
+}
+
 export default function AppBuilderPage() {
   const { user } = useAuth();
   const publicTab = getPublicTabConfig('/mvp-builder');
   const { hasAccess, upgradeTarget } = usePlanAccess('mvp_builder');
   const giftAttemptedRef = useRef(false);
   const openedTrackedRef = useRef(false);
+  const [needsDocumentReload] = useState(() => !documentLoadedOnMvpBuilder());
 
   useEffect(() => {
-    if (openedTrackedRef.current) return;
+    if (needsDocumentReload) window.location.reload();
+  }, [needsDocumentReload]);
+
+  useEffect(() => {
+    if (needsDocumentReload || openedTrackedRef.current) return;
     openedTrackedRef.current = true;
     trackMVPBuilderOpened({ is_authenticated: Boolean(user) });
     trackToolOpened('mvp_builder');
-  }, [user]);
+  }, [user, needsDocumentReload]);
 
   // First MVP generation on us: claim the one-time gift (server grants the
   // generation's credit cost). Idempotent server-side; guard the double-mount.
   useEffect(() => {
-    if (!user || giftAttemptedRef.current) return;
+    if (needsDocumentReload || !user || giftAttemptedRef.current) return;
     giftAttemptedRef.current = true;
     void (async () => {
       try {
@@ -44,7 +60,9 @@ export default function AppBuilderPage() {
         /* the gift is a nicety; never block the builder */
       }
     })();
-  }, [user]);
+  }, [user, needsDocumentReload]);
+
+  if (needsDocumentReload) return null;
 
   const structuredData = [
     createSoftwareApplicationSchema({

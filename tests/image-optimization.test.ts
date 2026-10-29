@@ -21,9 +21,9 @@ test('every optimized image target has an up-to-date .webp beside it', () => {
   const stale: string[] = [];
   const missing: string[] = [];
 
-  for (const { input } of TARGETS) {
+  for (const { input, output } of TARGETS as Array<{ input: string; output?: string }>) {
     const sourcePath = resolve(input);
-    const webpPath = resolve(input.replace(/\.(png|jpe?g)$/i, '.webp'));
+    const webpPath = resolve(output ?? input.replace(/\.(png|jpe?g)$/i, '.webp'));
 
     let source;
     try {

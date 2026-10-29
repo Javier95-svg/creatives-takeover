@@ -1,5 +1,4 @@
 import type * as AmplitudeBrowser from '@amplitude/analytics-browser';
-import { recordRoadmapAnalyticsEvent } from '@/lib/roadmapRetentionTracking';
 import { getSafeSessionStorage, getSafeLocalStorage } from '@/lib/safeStorage';
 import { logWarn } from '@/lib/logger';
 import { captureFirstTouch } from '@/lib/attribution';
@@ -7,6 +6,12 @@ import { sanitizeAnalyticsValue } from '@/lib/analyticsSanitization';
 import { hasAnalyticsConsent, onConsentChange } from '@/lib/consent';
 
 type AnalyticsProperties = Record<string, unknown>;
+
+// The only events recordRoadmapAnalyticsEvent acts on. Checking here lets that
+// module (Supabase writes, retention mapping) load on demand instead of in the
+// entry chunk every page downloads first.
+const ROADMAP_ACTIVITY_EVENTS = new Set(['tool_opened', 'tool_output_created', 'icp_builder_step_completed']);
+
 type PostHogClient = (typeof import('posthog-js'))['default'];
 type PostHogWithLoaded = PostHogClient & { __loaded?: boolean };
 type StoredAuthMethod = 'google' | 'linkedin' | 'email' | 'github' | 'x';
@@ -424,7 +429,7 @@ const registerFirstTouchUtms = () => {
 };
 
 /** Interaction capture that needs consent; visits and our own events do not. */
-const CONSENT_ONLY_EVENTS = new Set(['$autocapture', '$rageclick', '$dead_click', '$copy_autocapture']);
+const CONSENT_ONLY_EVENTS = new Set(['$autocapture', '$rageclick', '$dead_click', '$copy_autocapture', '$web_vitals']);
 
 /**
  * Point PostHog at the visitor's decision. Accepted: full tracking with
@@ -473,7 +478,10 @@ export const initPosthog = () => {
           autocapture: true,
           disable_session_recording: true,
           disable_surveys: true,
-          capture_performance: false,
+          // Core Web Vitals from real visits: the site has too little traffic
+          // for Chrome's field data (CrUX), so this is the only field source.
+          // Network timing stays off. Sent only with consent (see below).
+          capture_performance: { web_vitals: true, network_timing: false },
           capture_dead_clicks: false,
           // SPA route changes must emit $pageview; the legacy default only fires
           // on full page loads, which made every <Link> navigation invisible.
@@ -664,7 +672,11 @@ export const resetAnalyticsIdentity = () => {
 };
 
 export const captureEvent = (eventName: string, properties?: AnalyticsProperties) => {
-  recordRoadmapAnalyticsEvent(eventName, properties);
+  if (ROADMAP_ACTIVITY_EVENTS.has(eventName)) {
+    void import('@/lib/roadmapRetentionTracking')
+      .then(({ recordRoadmapAnalyticsEvent }) => recordRoadmapAnalyticsEvent(eventName, properties))
+      .catch(() => { /* Telemetry must not interrupt product work. */ });
+  }
   // Drop all events from internal/admin accounts so they never pollute metrics.
   if (isInternalUser()) {
     return;

@@ -57,7 +57,12 @@ const frozenFiles = {
   // Rehashed 2026-10-25: Startup Pedia sits in the Content submenu under
   // Newspaper and Podcast (as requested, instead of its own tab), and Content
   // is active on /startup-pedia. Nothing else in the file changed.
-  '../src/components/Navigation.tsx': '22c6530d03c88e88259aeca21adb71cdb7090bd5161e76181833c9f32ceaa396',
+  // Rehashed 2026-10-28 (readiness audit, load timing only): the signed-in
+  // navbar moved verbatim to navigation/MemberNavigation.tsx and loads lazily
+  // once auth reports a user; this file now picks VisitorNavbar or that. Both
+  // navbars render exactly as before. Visitors no longer download ~45KB gz of
+  // messaging, notifications and credit UI they never see.
+  '../src/components/Navigation.tsx': 'f054a5dabcf1dae579276305ef35364efe1ba51016ec6fff536cfe8710bb83d5',
   // Re-pinned 2026-07-25 (delivery audit, Phase 1): AISpecializationTrends moved
   // from a static import to lazy() + Suspense, matching how HomeFAQ and
   // FounderAnswerLibraryTeaser are already loaded. It is the only homepage
@@ -78,7 +83,11 @@ const frozenFiles = {
   // Rehashed 2026-10-04 for two approved changes the red CI hid: 36bbf23c
   // (2026-08-30, sticky mobile CTA removed) and 8a1bdfe9 (2026-09-08, new
   // social image).
-  '../src/pages/Index.tsx': 'dce7e669f3d2e31f3df70b0ed99141fe8c06213b32d3edb67be54f4d988874ab',
+  // Rehashed 2026-10-28 (readiness audit, load timing only): the three lazy
+  // sections (Recharts trends, Startup Pedia teaser, FAQ) mount when they come
+  // within 800px of the viewport instead of on first render, behind the same
+  // placeholders. No section added, removed, reordered, restyled or re-copied.
+  '../src/pages/Index.tsx': 'dea670dbab6a0eea8b4cdf939253c8bedceaf27498c2729a79d09228907244ec',
 } as const;
 
 test('the approved unauthenticated landing page remains frozen during core-tool work', () => {

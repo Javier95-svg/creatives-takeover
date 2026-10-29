@@ -29,7 +29,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import ThemeToggle from "@/components/ThemeToggle";
-import ctLogoPolished from "@/assets/ct-logo-polished-borders.webp";
+import ctLogoNav44 from "@/assets/ct-logo-small-44.webp";
+import ctLogoNav88 from "@/assets/ct-logo-small-88.webp";
+import ctLogoNav132 from "@/assets/ct-logo-small-132.webp";
 import { cn } from "@/lib/utils";
 import { usePageAnalytics } from "@/hooks/usePageAnalytics";
 import { useCTAAttribution } from "@/hooks/useCTAAttribution";
@@ -184,7 +186,8 @@ const LegacyVisitorNavbar = () => {
               onClick={() => trackNavClick("Logo")}
             >
               <img
-                src={ctLogoPolished}
+                src={ctLogoNav44}
+                srcSet={`${ctLogoNav44} 1x, ${ctLogoNav88} 2x, ${ctLogoNav132} 3x`}
                 alt="Creatives Takeover"
                 className="site-nav-logo animate-logo-breathing nav-logo-hover h-11 w-11 shrink-0"
                 width={44}

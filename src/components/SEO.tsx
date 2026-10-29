@@ -106,6 +106,13 @@ const SEO = ({
 
 export default SEO;
 
+// The founder's own profiles, so engines can tie the byline to one verifiable person.
+// Mirrors the About page (MeetTheTeam.tsx).
+export const FOUNDER_SAME_AS = [
+  "https://www.linkedin.com/in/javier-digital-marketing/",
+  "https://x.com/JavierForge",
+];
+
 // Helper function to create Organization schema
 export const createOrganizationSchema = () => ({
   "@context": "https://schema.org",
@@ -120,7 +127,8 @@ export const createOrganizationSchema = () => ({
     "@id": "https://creatives-takeover.com/about#founder",
     "name": "Javier Alonso",
     "jobTitle": "Founder & CEO",
-    "url": "https://creatives-takeover.com/about#founder"
+    "url": "https://creatives-takeover.com/about#founder",
+    "sameAs": FOUNDER_SAME_AS
   },
   "sameAs": [
     "https://x.com/Creatives_Rule",
@@ -429,7 +437,8 @@ export const createAboutPageSchema = () => ({
       "@id": "https://creatives-takeover.com/about#founder",
       "name": "Javier Alonso",
       "jobTitle": "Founder & CEO",
-      "url": "https://creatives-takeover.com/about#founder"
+      "url": "https://creatives-takeover.com/about#founder",
+      "sameAs": FOUNDER_SAME_AS
     },
     "sameAs": [
       "https://x.com/Creatives_Rule",

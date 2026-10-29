@@ -28,7 +28,10 @@ test('optional analytics cannot load replay or Amplitude during anonymous LCP', 
   assert.match(analytics, /import\('posthog-js'\)/);
   assert.match(analytics, /disable_session_recording: true/);
   assert.match(analytics, /disable_surveys: true/);
-  assert.match(analytics, /capture_performance: false/);
+  // Web vitals only (a small extension loaded after the idle bootstrap); network
+  // timing stays off, and $web_vitals is dropped without consent.
+  assert.match(analytics, /capture_performance: \{ web_vitals: true, network_timing: false \}/);
+  assert.match(analytics, /CONSENT_ONLY_EVENTS = new Set\(\[[^\]]*'\$web_vitals'/);
   assert.match(analytics, /scheduleAuthenticatedSessionRecording/);
   assert.match(analytics, /requestIdleCallback/);
   assert.doesNotMatch(main, /from ['"]posthog-js/);

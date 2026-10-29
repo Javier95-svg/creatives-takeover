@@ -4,11 +4,15 @@ import { join } from 'node:path';
 
 const DIST_DIR = join(process.cwd(), 'dist');
 const html = readFileSync(join(DIST_DIR, 'index.html'), 'utf8');
-const assetPaths = [
-  ...html.matchAll(/(?:src|href)="(\/assets\/[^\"]+\.(?:js|css))"/g),
-].map((match) => match[1]);
+// The homepage also preloads its own route chunks (data-route-preload="home",
+// added by generate-prerendered-pages.mjs). They are budgeted separately: the
+// shell budget below is what every page pays.
+const tags = [...html.matchAll(/<(?:script|link)\b[^>]*>/g)].map((match) => match[0]);
+const assetOf = (tag) => tag.match(/(?:src|href)="(\/assets\/[^"]+\.(?:js|css))"/)?.[1];
+const assetPaths = tags.filter((tag) => !tag.includes('data-route-preload')).map(assetOf).filter(Boolean);
+const routePreloadPaths = tags.filter((tag) => tag.includes('data-route-preload')).map(assetOf).filter(Boolean);
 
-const assets = assetPaths.map((assetPath) => {
+const measure = (assetPath) => {
   const filePath = join(DIST_DIR, assetPath.replace(/^\//, ''));
   const contents = readFileSync(filePath);
   return {
@@ -16,7 +20,10 @@ const assets = assetPaths.map((assetPath) => {
     rawBytes: statSync(filePath).size,
     gzipBytes: gzipSync(contents).length,
   };
-});
+};
+const assets = assetPaths.map(measure);
+const routePreloads = routePreloadPaths.map(measure);
+const routePreloadGzipBytes = routePreloads.reduce((sum, asset) => sum + asset.gzipBytes, 0);
 
 const jsAssets = assets.filter(({ asset }) => asset.endsWith('.js'));
 const entry = jsAssets.find(({ asset }) => /\/index\.[^/]+\.js$/.test(asset));
@@ -29,11 +36,16 @@ const totals = assets.reduce(
 );
 
 const budgets = {
-  // Keep the shell below the audited 328KB gzip baseline. New dependencies
-  // must earn their way into the first-load path instead of silently growing it.
+  // New dependencies must earn their way into the first-load path instead of
+  // silently growing it. Re-set 2026-10-28 after the readiness audit: icons and
+  // Radix moved out of the app-wide ui-foundation/radix-ui chunks, so the shell
+  // fell from 358KB to ~302KB gz in 5 requests. The entry is larger (~196KB raw)
+  // because the shell's own icons and tooltip now live in it instead of in
+  // those chunks.
   initialJsRequests: 6,
-  initialGzipBytes: 340 * 1024,
-  entryRawBytes: 140 * 1024,
+  initialGzipBytes: 315 * 1024,
+  entryRawBytes: 205 * 1024,
+  homeRoutePreloadGzipBytes: 120 * 1024,
 };
 
 const failures = [];
@@ -48,6 +60,9 @@ if (!entry) {
 } else if (entry.rawBytes > budgets.entryRawBytes) {
   failures.push(`entry raw bytes ${entry.rawBytes} exceed ${budgets.entryRawBytes}`);
 }
+if (routePreloadGzipBytes > budgets.homeRoutePreloadGzipBytes) {
+  failures.push(`homepage route preloads ${routePreloadGzipBytes} gzip bytes exceed ${budgets.homeRoutePreloadGzipBytes}`);
+}
 
 console.log(JSON.stringify({
   initialJsRequests: jsAssets.length,
@@ -55,8 +70,10 @@ console.log(JSON.stringify({
   initialRawBytes: totals.rawBytes,
   initialGzipBytes: totals.gzipBytes,
   entryRawBytes: entry?.rawBytes ?? null,
+  homeRoutePreloadGzipBytes: routePreloadGzipBytes,
   budgets,
   assets,
+  routePreloads,
 }, null, 2));
 
 if (failures.length > 0) {

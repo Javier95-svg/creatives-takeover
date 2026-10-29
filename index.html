@@ -54,7 +54,7 @@
     <meta name="twitter:title" content="Creatives Takeover | Startup Development Platform" />
     <meta name="twitter:description" content="Creatives Takeover helps first-time founders validate ideas, build MVPs, launch, gain traction, and prepare to raise." />
 
-    <!-- Structured Data: WebSite + Organization + SoftwareApplication + FAQ -->
+    <!-- Structured Data: WebSite + Organization + SoftwareApplication. The homepage FAQPage is added at build time from src/data/homeFaq.ts. -->
     <script type="application/ld+json">
     [
       {
@@ -84,7 +84,8 @@
           "@id": "https://creatives-takeover.com/about#founder",
           "name": "Javier Alonso",
           "jobTitle": "Founder & CEO",
-          "url": "https://creatives-takeover.com/about#founder"
+          "url": "https://creatives-takeover.com/about#founder",
+          "sameAs": ["https://www.linkedin.com/in/javier-digital-marketing/", "https://x.com/JavierForge"]
         },
         "sameAs": [
           "https://x.com/Creatives_Rule",
@@ -112,42 +113,6 @@
           "Expert Support and Founder Network"
         ],
         "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD", "description": "Free plan available" }
-      },
-      {
-        "@context": "https://schema.org",
-        "@type": "FAQPage",
-        "mainEntity": [
-          {
-            "@type": "Question",
-            "name": "What is Creatives Takeover?",
-            "acceptedAnswer": { "@type": "Answer", "text": "Creatives Takeover is an evidence backed system for first time solo founders. The Founders Compass connects customer definition, proof, PMF decisions, MVP building, GTM execution, and measured traction." }
-          },
-          {
-            "@type": "Question",
-            "name": "How do I validate my startup idea?",
-            "acceptedAnswer": { "@type": "Answer", "text": "Start with ICP Builder to decide who to serve and which assumptions need interviews. Use Demo Studio to publish proof, then combine customer and behavioral signals in PMF Lab before committing to the MVP." }
-          },
-          {
-            "@type": "Question",
-            "name": "Can I get value before creating an account?",
-            "acceptedAnswer": { "@type": "Answer", "text": "Yes. Visitors can generate a personalized live demo or an evidence backed ICP decision preview before signup. The draft is preserved when they create an account." }
-          },
-          {
-            "@type": "Question",
-            "name": "How are the six tools connected?",
-            "acceptedAnswer": { "@type": "Answer", "text": "Each tool carries source evidence, assumptions, confidence, and measured results into the next relevant stage so founders do not restart from a blank page." }
-          },
-          {
-            "@type": "Question",
-            "name": "Can I find a startup mentor on Creatives Takeover?",
-            "acceptedAnswer": { "@type": "Answer", "text": "Yes. Expert Support and the Founder Network connect founders with experienced builders. Pro includes priority support and a substantive expert response within 48 hours." }
-          },
-          {
-            "@type": "Question",
-            "name": "Is Creatives Takeover free?",
-            "acceptedAnswer": { "@type": "Answer", "text": "Yes, Creatives Takeover has a free plan with access to core startup tools and founder resources. Paid plans unlock additional credits, premium workflows, and full community features." }
-          }
-        ]
       }
     ]
     </script>

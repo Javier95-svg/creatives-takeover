@@ -2,6 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { BASE_URL, INDEXABLE_ROUTES, OG_IMAGE, SITE_NAME } from "./seo-route-config.mjs";
 import { fetchHubChildren } from "./fetch-hub-children.mjs";
+import { HOME_FAQS } from "../src/data/homeFaq.ts";
 
 const DIST_DIR = path.resolve(process.cwd(), "dist");
 const TEMPLATE_PATH = path.join(DIST_DIR, "index.html");
@@ -107,6 +108,10 @@ const FOOTER_GROUPS = [
       { href: "/privacy-policy", label: "Privacy Policy" },
       { href: "/data-privacy", label: "Data Privacy" },
       { href: "/terms", label: "Terms" },
+      // The React footer's Cookie settings button is drawn by JS, so the served
+      // HTML showed no way to withdraw consent. This lands on the policy's
+      // cookies section, which has the same button.
+      { href: "/privacy-policy#cookies", label: "Cookie settings" },
     ],
   },
 ];
@@ -322,6 +327,12 @@ function replaceMetaByProperty(html, property, content) {
   return html.replace("</head>", `    ${replacement}\n  </head>`);
 }
 
+// Mirrors FOUNDER_SAME_AS in src/components/SEO.tsx.
+const FOUNDER_SAME_AS = [
+  "https://www.linkedin.com/in/javier-digital-marketing/",
+  "https://x.com/JavierForge",
+];
+
 // Keep the Organization entity stable across public pages. WebSite identity
 // markup intentionally stays on the domain homepage, per Google's site-name
 // guidance, so inner routes do not compete with the homepage as the site root.
@@ -339,6 +350,7 @@ const ORGANIZATION_SCHEMA = {
     name: "Javier Alonso",
     jobTitle: "Founder & CEO",
     url: `${BASE_URL}/about#founder`,
+    sameAs: FOUNDER_SAME_AS,
   },
   sameAs: [
     "https://x.com/Creatives_Rule",
@@ -360,8 +372,21 @@ const SITE_NAVIGATION_SCHEMA = SITELINK_NAV.map((item, index) => ({
   url: BASE_URL + item.href,
 }));
 
+// Built from the same data HomeFAQ.tsx renders. A hand-written copy in index.html
+// had drifted to questions the page no longer showed, which Google treats as
+// markup that doesn't match visible content.
+const HOME_FAQ_SCHEMA = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: HOME_FAQS.map((faq) => ({
+    "@type": "Question",
+    name: faq.question,
+    acceptedAnswer: { "@type": "Answer", text: faq.answer.split("\n\n").map((part) => part.trim()).join(" ") },
+  })),
+};
+
 // The dist/index.html template ships the homepage's JSON-LD (WebSite, Organization,
-// SoftwareApplication, homepage FAQ). On inner pages that block is wrong — replace
+// SoftwareApplication). On inner pages that block is wrong — replace
 // it with route-specific schema mirroring what react-helmet renders after hydration.
 function buildStructuredData(routeConfig) {
   // The homepage keeps its own template block, but it is the result that shows
@@ -445,6 +470,7 @@ function buildStructuredData(routeConfig) {
         jobTitle: "Founder & CEO",
         // Mirrors StartupPediaEntry.tsx: the byline links to the Founder ID profile.
         url: `${BASE_URL}/profile/javier`,
+        sameAs: FOUNDER_SAME_AS,
       },
       publisher: {
         "@type": "Organization",
@@ -471,7 +497,7 @@ function replaceJsonLd(html, routeConfig) {
   // than replacing it, because the homepage result is the one that shows
   // sitelinks and it must not lose its site-name markup to gain them.
   if (data === "append-site-navigation") {
-    const navJson = JSON.stringify(SITE_NAVIGATION_SCHEMA, null, 2).replace(/</g, "\\u003c");
+    const navJson = JSON.stringify([...SITE_NAVIGATION_SCHEMA, HOME_FAQ_SCHEMA], null, 2).replace(/</g, "\\u003c");
     return html.replace(
       /(<script type="application\/ld\+json">[\s\S]*?<\/script>)/i,
       (block) => block + "\n    <script type=\"application/ld+json\">\n" + navJson + "\n    </script>"
@@ -500,7 +526,7 @@ function buildOgImage(routeConfig) {
 // not render a second visual shell before React because that causes a visible
 // hydration flash when its simplified markup is replaced by the real app.
 
-function renderRoute(template, routeConfig, hubChildren = {}) {
+export function renderRoute(template, routeConfig, hubChildren = {}) {
   const canonical = `${BASE_URL}${routeConfig.path}`;
   const robots = "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1";
   const ogImage = buildOgImage(routeConfig);
@@ -555,8 +581,48 @@ export function renderAppShell(template) {
   return html;
 }
 
-async function writeRoute(template, routeConfig, hubChildren) {
-  const html = renderRoute(template, routeConfig, hubChildren);
+// The homepage is a lazy route, so its hero (the LCP element) could only start
+// downloading after the entry chunk had downloaded and run. Preloading the
+// route's chunk and its static imports from the HTML fetches them alongside the
+// entry. Only on /, the page most visitors land on; marked so the initial
+// bundle budget can count them separately.
+export function homeRoutePreloads(manifest) {
+  // Keyed by source path when the chunk is the route alone, or by chunk name
+  // (_Index.<hash>.js) when Rollup merged shared code into it.
+  const routeKey = manifest["src/pages/Index.tsx"]
+    ? "src/pages/Index.tsx"
+    : Object.keys(manifest).find((key) => manifest[key].name === "Index" && manifest[key].isDynamicEntry);
+  const files = new Set();
+  const visit = (key) => {
+    const chunk = manifest[key];
+    if (!chunk || files.has(chunk.file)) return;
+    files.add(chunk.file);
+    for (const dependency of chunk.imports ?? []) visit(dependency);
+  };
+  if (routeKey) visit(routeKey);
+  const shell = new Set([manifest["index.html"]?.file, ...(manifest["index.html"]?.imports ?? []).map((key) => manifest[key]?.file)]);
+  return [...files].filter((file) => file.endsWith(".js") && !shell.has(file));
+}
+
+function addHomeRoutePreloads(html, files) {
+  if (!files.length) return html;
+  const links = files.map((file) => `    <link rel="modulepreload" crossorigin href="/${file}" data-route-preload="home">`).join("\n");
+  return html.replace("</head>", `${links}\n  </head>`);
+}
+
+// Served by Vercel with status 404 for any URL outside the vercel.json SPA
+// allowlist. It boots the same app, so a visitor still gets the NotFound screen
+// and navigation; crawlers get a real 404 instead of an error page posing as
+// content (a soft 404).
+export function renderNotFoundPage(template) {
+  let html = renderAppShell(template);
+  html = replaceTag(html, /<title>[\s\S]*?<\/title>/i, `<title>Page not found | ${SITE_NAME}</title>`);
+  return replaceMetaByName(html, "robots", "noindex");
+}
+
+async function writeRoute(template, routeConfig, hubChildren, homePreloads = []) {
+  let html = renderRoute(template, routeConfig, hubChildren);
+  if (routeConfig.path === "/") html = addHomeRoutePreloads(html, homePreloads);
   const outputFile = path.join(DIST_DIR, toOutputPath(routeConfig));
   await fs.mkdir(path.dirname(outputFile), { recursive: true });
   await fs.writeFile(outputFile, html, "utf8");
@@ -587,8 +653,19 @@ async function main() {
   await fs.mkdir(DIST_DIR, { recursive: true });
   // Written from the untouched template, before the homepage overwrites index.html.
   await fs.writeFile(path.join(DIST_DIR, "app-shell.html"), renderAppShell(template), "utf8");
+  await fs.writeFile(path.join(DIST_DIR, "404.html"), renderNotFoundPage(template), "utf8");
+
+  const manifestPath = path.join(DIST_DIR, ".vite", "manifest.json");
+  let homePreloads = [];
+  try {
+    homePreloads = homeRoutePreloads(JSON.parse(await fs.readFile(manifestPath, "utf8")));
+    await fs.rm(path.join(DIST_DIR, ".vite"), { recursive: true, force: true });
+  } catch {
+    console.warn("No Vite manifest; the homepage ships without route preloads.");
+  }
+
   await Promise.all(
-    INDEXABLE_ROUTES.map((routeConfig) => writeRoute(template, routeConfig, hubChildren)),
+    INDEXABLE_ROUTES.map((routeConfig) => writeRoute(template, routeConfig, hubChildren, homePreloads)),
   );
   console.log(
     `Prerendered ${INDEXABLE_ROUTES.length} public route shells with route-specific metadata.`

@@ -2,6 +2,7 @@ import { Helmet } from "react-helmet-async";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import HomeWallpaper from "@/components/wallpapers/HomeWallpaper";
+import { openCookieSettings } from "@/lib/consent";
 
 const PrivacyPolicy = () => {
   return (
@@ -22,7 +23,7 @@ const PrivacyPolicy = () => {
             <h1 className="text-4xl md:text-6xl font-bold gradient-text creatives-font leading-tight pb-2 overflow-visible mb-6">
               Privacy Policy
             </h1>
-            <p className="text-sm text-muted-foreground">Last updated: October 9, 2026</p>
+            <p className="text-sm text-muted-foreground">Last updated: October 28, 2026</p>
           </header>
 
           <div className="max-w-4xl mx-auto space-y-8">
@@ -154,7 +155,7 @@ const PrivacyPolicy = () => {
               </div>
             </section>
 
-            <section className="glass-card hover-lift">
+            <section id="cookies" className="glass-card hover-lift scroll-mt-24">
               <h2 className="text-2xl font-semibold gradient-text mb-6">6. Cookies and Similar Technologies</h2>
               <div className="space-y-4 text-foreground/90">
                 <p>We use cookies and similar technologies (such as browser storage) to operate and improve the platform. Some always run because the service needs them; analytics that store anything in your browser only run if you allow them.</p>
@@ -171,6 +172,13 @@ const PrivacyPolicy = () => {
                   <li><strong>Time spent in each section:</strong> when you are signed in, we measure how long you actively use each section and tool, so we can tell which parts of the platform are genuinely useful.</li>
                 </ul>
                 <p>If you choose &ldquo;Reject All&rdquo;, none of the optional items above run; the always-on items continue. You can change your choice at any time from <strong>Cookie settings</strong> in the site footer or in your account settings. We ask again when this policy changes in a way that affects your choice, and at least every 12 months.</p>
+                <button
+                  type="button"
+                  onClick={openCookieSettings}
+                  className="rounded-md border border-primary/40 px-4 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary/10"
+                >
+                  Change cookie settings
+                </button>
                 <p>You can also manage cookies through your browser settings, but disabling essential cookies may reduce or break parts of the service.</p>
               </div>
             </section>
@@ -230,9 +238,12 @@ const PrivacyPolicy = () => {
             <section className="glass-card hover-lift">
               <h2 className="text-2xl font-semibold gradient-text mb-6">11. Your Rights</h2>
               <div className="space-y-4 text-foreground/90">
+                <p>Creatives Takeover Ltd is the controller of the personal information described in this policy.</p>
                 <p>Depending on where you live, you may have rights such as the right to access, correct, delete, restrict, object to, or export certain personal information.</p>
-                <p>You may also withdraw consent where processing depends on consent. Some rights are subject to legal exceptions.</p>
-                <p>To make a request, contact <strong className="text-primary">admin@creatives-takeover.com</strong>.</p>
+                <p>You may also withdraw consent where processing depends on consent, at any time and as easily as you gave it; for analytics, use <strong>Cookie settings</strong>. Some rights are subject to legal exceptions.</p>
+                <p>To make a request, email <strong className="text-primary">admin@creatives-takeover.com</strong> with the subject &ldquo;Privacy request&rdquo;. We may ask you to confirm your identity before acting on it.</p>
+                <p>We respond within one month of receiving your request. If a request is complex, or you send several, we may extend this by up to two further months; if we do, we will tell you within the first month and explain why.</p>
+                <p>You have the right to lodge a complaint with a data protection supervisory authority. In the UK this is the Information Commissioner&apos;s Office (<a className="text-primary underline underline-offset-4" href="https://ico.org.uk/make-a-complaint/" target="_blank" rel="noreferrer">ico.org.uk</a>). If you live in the EU or EEA, you can contact the supervisory authority in your country. We would appreciate the chance to address your concern first, so please consider contacting us before you do.</p>
               </div>
             </section>
 

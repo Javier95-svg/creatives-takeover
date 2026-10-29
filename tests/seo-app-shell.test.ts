@@ -14,7 +14,6 @@ test('every SPA rewrite serves the neutral app shell, never the homepage file', 
   const spaRewrites = vercel.rewrites.filter((rule: { destination: string }) => rule.destination.endsWith('.html') && !rule.destination.includes('/', 1));
   assert.ok(spaRewrites.length >= 3);
   for (const rule of spaRewrites) assert.equal(rule.destination, '/app-shell.html', rule.source);
-  assert.equal(vercel.rewrites.at(-1).source, '/((?!assets/).*)');
 });
 
 test('the app shell drops everything that claims a specific page', async () => {
@@ -76,4 +75,15 @@ test('the build guard fails a deploy that brings the homepage fallback back', as
   assert.equal(broken.length, 4);
   assert.match(broken.join('\n'), /app-shell\.html has canonical/);
   assert.match(broken.join('\n'), /rewrite .* -> \/index\.html/);
+});
+
+test('the homepage FAQPage markup is built from the FAQ the page shows', async () => {
+  const { renderRoute } = await import('../scripts/generate-prerendered-pages.mjs');
+  const { HOME_FAQS } = await import('../src/data/homeFaq.ts');
+  const { INDEXABLE_ROUTES } = await import('../scripts/seo-route-config.mjs');
+  const template = read('index.html');
+  assert.doesNotMatch(template, /"FAQPage"/, 'index.html must not carry a hand-written FAQ that can drift');
+  const home = renderRoute(template, INDEXABLE_ROUTES.find((route: { path: string }) => route.path === '/'));
+  const questions = [...home.matchAll(/"@type": "Question",\s*"name": "([^"]+)"/g)].map((match) => match[1]);
+  assert.deepEqual(questions, HOME_FAQS.map((faq: { question: string }) => faq.question));
 });

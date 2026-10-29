@@ -20,7 +20,7 @@ const DataPrivacy = () => {
         <main className="container mx-auto px-6 py-24">
           <header className="mb-16 text-center">
             <p className="mb-4 text-sm font-semibold uppercase tracking-[0.2em] text-primary">
-              Last updated: October 9, 2026
+              Last updated: October 28, 2026
             </p>
             <h1 className="text-4xl md:text-6xl font-bold gradient-text creatives-font leading-tight pb-2 overflow-visible mb-6">
               Data Privacy Policy
@@ -190,6 +190,13 @@ const DataPrivacy = () => {
                   To protect accounts, we may need to verify your identity before completing a
                   privacy request. Some data may need to be retained for legal, billing, security, or
                   fraud-prevention reasons.
+                </p>
+                <p>
+                  Send requests to <strong className="text-primary">admin@creatives-takeover.com</strong> with
+                  the subject &ldquo;Privacy request&rdquo;. We respond within one month, or tell you within that
+                  month if a complex request needs up to two more. You can also complain to a data protection
+                  supervisory authority: the Information Commissioner&apos;s Office in the UK, or the authority in
+                  your country in the EU or EEA.
                 </p>
               </div>
             </section>

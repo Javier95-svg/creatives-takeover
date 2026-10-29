@@ -3,27 +3,18 @@ import { ArrowRight, Search } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { PEDIA_ENTRIES, entryPath, getTopic, type PediaEntry } from "@/data/startupPedia";
+import { FEATURED_PEDIA_ENTRIES } from "@/data/startupPedia/featured";
 
 // Startup Pedia replaced the Founder Answer Library (2026-10-25). The section,
 // its layout and its place on the homepage and /resources are unchanged; only
 // the entries it features and the links point at the new library.
-const FEATURED_SLUGS = [
-  "ideal-customer-profile",
-  "how-to-validate-a-startup-idea",
-  "minimum-viable-product",
-  "go-to-market-strategy",
-  "pitch-deck-outline",
-];
 
 interface FounderAnswerLibraryTeaserProps {
   compact?: boolean;
 }
 
 export default function FounderAnswerLibraryTeaser({ compact = false }: FounderAnswerLibraryTeaserProps) {
-  const featuredPages = FEATURED_SLUGS.slice(0, compact ? 3 : 5)
-    .map((slug) => PEDIA_ENTRIES.find((entry) => entry.slug === slug))
-    .filter((entry): entry is PediaEntry => Boolean(entry));
+  const featuredPages = FEATURED_PEDIA_ENTRIES.slice(0, compact ? 3 : 5);
 
   return (
     <section className={compact ? "py-12" : "py-16 lg:py-20"}>
@@ -63,12 +54,12 @@ export default function FounderAnswerLibraryTeaser({ compact = false }: FounderA
                   <CardContent className="flex items-start justify-between gap-4 p-4">
                     <div>
                       <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">
-                        {getTopic(page.topic)?.label}
+                        {page.topicLabel}
                       </p>
                       <h3 className="mt-1 text-base font-semibold">{page.title}</h3>
                     </div>
                     <Link
-                      to={entryPath(page.slug)}
+                      to={`/startup-pedia/${page.slug}`}
                       className="mt-1 flex-none text-sm font-semibold text-primary hover:underline"
                     >
                       Read

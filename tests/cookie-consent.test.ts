@@ -222,3 +222,14 @@ test('Cookie settings reopens the choice from the footer and account settings', 
   assert.match(read('../src/components/Footer.tsx'), /onClick=\{openCookieSettings\}[\s\S]*?Cookie settings/);
   assert.match(read('../src/pages/DashboardSettingsPage.tsx'), /onClick=\{openCookieSettings\}/);
 });
+
+test('the privacy policy carries the Art. 12/13 signals a scanner looks for', () => {
+  const policy = read('../src/pages/PrivacyPolicy.tsx');
+  assert.match(policy, /right to lodge a complaint with a data protection supervisory authority/);
+  assert.match(policy, /Information Commissioner&apos;s Office/);
+  assert.match(policy, /within one month of receiving your request/);
+  assert.match(policy, /Creatives Takeover Ltd is the controller/);
+  // Withdrawing consent must be reachable from the served HTML, not only from JS.
+  assert.match(policy, /<section id="cookies"[\s\S]*?onClick=\{openCookieSettings\}/);
+  assert.match(read('../scripts/generate-prerendered-pages.mjs'), /href: "\/privacy-policy#cookies", label: "Cookie settings"/);
+});

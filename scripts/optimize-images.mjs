@@ -34,6 +34,11 @@ export const TARGETS = [
   // src/assets/ — imported via Vite, large PNGs
   { input: 'src/assets/ct-logo.png',                     quality: 80 },
   { input: 'src/assets/ct-logo-polished-borders.png',    quality: 80 },
+  // The navbar logo renders at 44px; the 512px WebP above (24KB) was the image
+  // Lighthouse flagged on the homepage. 1x/2x/3x variants for srcset.
+  { input: 'src/assets/ct-logo-polished-borders.png', output: 'src/assets/ct-logo-small-44.webp',  quality: 85, resize: 44 },
+  { input: 'src/assets/ct-logo-polished-borders.png', output: 'src/assets/ct-logo-small-88.webp',  quality: 85, resize: 88 },
+  { input: 'src/assets/ct-logo-polished-borders.png', output: 'src/assets/ct-logo-small-132.webp', quality: 85, resize: 132 },
   { input: 'src/assets/team-javier-pena.png',            quality: 82 },
   { input: 'src/assets/team-domagoj-markota.png',        quality: 82 },
   { input: 'src/assets/team-daniela-hagg.png',           quality: 82 },
@@ -46,9 +51,9 @@ export const TARGETS = [
   { input: 'public/auth/creatives-takeover-circle.png',           quality: 80 },
 ];
 
-async function convertToWebP({ input, quality, resize }) {
+async function convertToWebP({ input, output, quality, resize }) {
   const inputPath = path.join(ROOT, input);
-  const outputPath = inputPath.replace(/\.(png|jpe?g)$/i, '.webp');
+  const outputPath = output ? path.join(ROOT, output) : inputPath.replace(/\.(png|jpe?g)$/i, '.webp');
 
   try {
     await fs.access(inputPath);

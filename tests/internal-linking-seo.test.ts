@@ -93,9 +93,11 @@ test("every nav link in the prerendered shell is itself an indexable route", () 
   assert.ok(navHrefs.length > 0, "expected nav/footer links in the generator");
   for (const href of navHrefs) {
     if (href === "/") continue;
+    // A section anchor (the Cookie settings link) points at its page.
+    const page = href.split("#")[0];
     assert.match(
       config,
-      new RegExp(`path: "${href}"`),
+      new RegExp(`path: "${page}"`),
       `${href} is linked from every shell but is not an indexable route`,
     );
   }

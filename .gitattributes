@@ -1,0 +1,4 @@
+# The CSP in vercel.json lists sha256 hashes of index.html's inline scripts.
+# A CRLF checkout (core.autocrlf on Windows) changes those bytes and the hashes,
+# so this file is always checked out with LF.
+index.html text eol=lf

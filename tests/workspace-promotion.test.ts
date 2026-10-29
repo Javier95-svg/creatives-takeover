@@ -22,7 +22,7 @@ test('workspace routes do not reserve space for the suppressed legacy navigation
   // Navigation renders as null inside the frame, so the 6rem that pages reserve
   // for the fixed legacy bar is dead space under the workspace header.
   const nav = readFileSync('src/components/Navigation.tsx', 'utf8');
-  assert.match(nav, /inWorkspace \? null :/);
+  assert.match(nav, /if \(inWorkspace \|\| loading\) return null;/);
   const css = readFileSync('src/components/workspace-route-frame.css', 'utf8');
   assert.match(css, /\.workspace-route-content \.pt-header-offset \{ padding-top: 0; \}/);
   // Pages that size their own offset to the navbar height opt in with

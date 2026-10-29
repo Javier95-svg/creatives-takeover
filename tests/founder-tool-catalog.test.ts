@@ -40,7 +40,7 @@ test('canonical visible names are standardized', () => {
 
 test('navigation, dashboard, pricing, SEO, FAQs, and Pulse consume the catalog contract', () => {
   const catalogConsumers = [
-    '../src/components/Navigation.tsx',
+    '../src/components/navigation/MemberNavigation.tsx',
     '../src/config/dashboardToolRegistry.ts',
     '../src/components/PricingComparison.tsx',
     '../src/pages/Blog.tsx',
