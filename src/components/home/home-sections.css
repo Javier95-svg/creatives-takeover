@@ -1,0 +1,499 @@
+/*
+ * Homepage sections added in the 2026-10-29 refresh (Who's here, Pricing,
+ * Proof, closing CTA). Built on the theme tokens in src/index.css so they sit
+ * next to the existing sections in both themes. Motion is transform and
+ * shadow only (no layout shift) and is switched off for reduced motion.
+ */
+
+.hs-section {
+  --hs-radius: 1.25rem;
+  --hs-gap: 1rem;
+  --hs-ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.hs-header {
+  max-width: 48rem;
+  margin: 0 auto 3rem;
+  text-align: center;
+}
+
+/* ---- Cards ------------------------------------------------------------ */
+
+.hs-card {
+  --hs-accent: var(--primary);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  height: 100%;
+  padding: 1.5rem;
+  border-radius: var(--hs-radius);
+  border: 1px solid hsl(var(--border) / 0.82);
+  background: linear-gradient(180deg, hsl(var(--card) / 0.98), hsl(var(--card)));
+  box-shadow:
+    0 24px 60px -40px hsl(var(--foreground) / 0.2),
+    0 10px 24px -22px hsl(var(--foreground) / 0.12);
+  color: hsl(var(--foreground));
+  text-decoration: none;
+  overflow: hidden;
+  transition:
+    transform 320ms var(--hs-ease),
+    box-shadow 320ms var(--hs-ease),
+    border-color 320ms var(--hs-ease);
+}
+
+.hs-card[data-accent="success"] { --hs-accent: var(--success); }
+.hs-card[data-accent="warning"] { --hs-accent: var(--warning); }
+.hs-card[data-accent="info"] { --hs-accent: var(--info); }
+.hs-card[data-accent="destructive"] { --hs-accent: var(--destructive); }
+
+/* A thin accent line on top, brighter on hover. */
+.hs-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 3px;
+  background: linear-gradient(90deg, hsl(var(--hs-accent) / 0.15), hsl(var(--hs-accent)), hsl(var(--hs-accent) / 0.15));
+  opacity: 0.55;
+  transition: opacity 320ms var(--hs-ease);
+}
+
+a.hs-card:hover,
+a.hs-card:focus-visible {
+  transform: translateY(-4px);
+  border-color: hsl(var(--hs-accent) / 0.55);
+  box-shadow:
+    0 30px 60px -36px hsl(var(--hs-accent) / 0.45),
+    0 12px 24px -20px hsl(var(--foreground) / 0.14);
+}
+
+a.hs-card:hover::before,
+a.hs-card:focus-visible::before {
+  opacity: 1;
+}
+
+.hs-card__title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.hs-card__copy {
+  color: hsl(var(--muted-foreground));
+  font-size: 0.9375rem;
+  line-height: 1.6;
+}
+
+.hs-card__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: auto;
+  padding-top: 0.75rem;
+  color: hsl(var(--hs-accent));
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.hs-card__link svg {
+  width: 1rem;
+  height: 1rem;
+  transition: transform 320ms var(--hs-ease);
+}
+
+a.hs-card:hover .hs-card__link svg {
+  transform: translate(2px, -2px);
+}
+
+.hs-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 0.875rem;
+  border: 1px solid hsl(var(--hs-accent) / 0.3);
+  background: hsl(var(--hs-accent) / 0.1);
+  color: hsl(var(--hs-accent));
+}
+
+.hs-icon svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.hs-chip {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--background) / 0.8);
+  padding: 0.2rem 0.6rem;
+  color: hsl(var(--muted-foreground));
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.hs-chip--solid {
+  border-color: transparent;
+  background: hsl(var(--hs-accent));
+  color: hsl(var(--primary-foreground));
+}
+
+.hs-chip--warn {
+  align-self: flex-start;
+  border-color: hsl(var(--warning) / 0.5);
+  background: hsl(var(--warning) / 0.15);
+  color: hsl(var(--foreground));
+}
+
+/* ---- Who's here --------------------------------------------------------- */
+
+.hs-ecosystem-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13.5rem, 1fr));
+  gap: var(--hs-gap);
+  max-width: 76rem;
+  margin: 0 auto;
+}
+
+.hs-ecosystem-card__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.hs-ecosystem-card__promise {
+  color: hsl(var(--foreground) / 0.86);
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+/* ---- Pricing ------------------------------------------------------------ */
+
+.hs-pricing-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--hs-gap);
+  max-width: 72rem;
+  margin: 0 auto;
+}
+
+.hs-plan {
+  border-color: hsl(var(--hs-accent) / 0.45);
+}
+
+.hs-plan--recommended {
+  border-width: 2px;
+  border-color: hsl(var(--hs-accent) / 0.75);
+  box-shadow:
+    0 0 0 4px hsl(var(--hs-accent) / 0.08),
+    0 30px 60px -36px hsl(var(--hs-accent) / 0.5);
+}
+
+.hs-plan__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.hs-plan__best {
+  color: hsl(var(--muted-foreground));
+  font-size: 0.8125rem;
+}
+
+.hs-plan__price {
+  margin: 0.5rem 0 0.25rem;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 2.25rem;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+.hs-plan__price span {
+  margin-left: 0.2rem;
+  color: hsl(var(--muted-foreground));
+  font-family: 'Inter', sans-serif;
+  font-size: 0.875rem;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+.hs-plan__usage {
+  margin-top: auto;
+  padding-top: 0.75rem;
+  border-top: 1px solid hsl(var(--border) / 0.7);
+  color: hsl(var(--hs-accent));
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+/* ---- Proof -------------------------------------------------------------- */
+
+.hs-proof-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
+  gap: var(--hs-gap);
+  max-width: 72rem;
+  margin: 0 auto;
+}
+
+.hs-proof {
+  margin: 0;
+}
+
+.hs-proof--placeholder {
+  border-style: dashed;
+  border-color: hsl(var(--warning) / 0.6);
+}
+
+.hs-proof__quote {
+  font-size: 1.0625rem;
+  line-height: 1.6;
+}
+
+.hs-proof__name {
+  margin-top: auto;
+  padding-top: 1rem;
+  font-weight: 600;
+}
+
+.hs-proof__role {
+  color: hsl(var(--muted-foreground));
+  font-size: 0.875rem;
+}
+
+/* ---- Buttons and actions ------------------------------------------------ */
+
+.hs-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 2.5rem;
+  text-align: center;
+}
+
+.hs-actions__note {
+  color: hsl(var(--muted-foreground));
+  font-size: 0.9375rem;
+}
+
+.hs-actions__note a {
+  color: hsl(var(--primary));
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.hs-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 3rem;
+  padding: 0 1.5rem;
+  border-radius: 0.75rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition:
+    transform 240ms var(--hs-ease, ease),
+    box-shadow 240ms var(--hs-ease, ease),
+    background-color 240ms ease;
+}
+
+.hs-button svg {
+  width: 1rem;
+  height: 1rem;
+  transition: transform 240ms ease;
+}
+
+.hs-button:hover svg {
+  transform: translateX(3px);
+}
+
+.hs-button--primary {
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  box-shadow: 0 16px 32px -18px hsl(var(--primary) / 0.7);
+}
+
+.hs-button--primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 22px 40px -18px hsl(var(--primary) / 0.8);
+}
+
+.hs-button--ghost {
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--background) / 0.7);
+  color: hsl(var(--foreground));
+}
+
+.hs-button--ghost:hover {
+  border-color: hsl(var(--primary) / 0.5);
+  background: hsl(var(--primary) / 0.08);
+}
+
+/* ---- Closing CTA -------------------------------------------------------- */
+
+.hs-closing {
+  padding: 2rem 0 6rem;
+}
+
+.hs-closing__panel {
+  position: relative;
+  max-width: 60rem;
+  margin: 0 auto;
+  padding: 4rem 2rem;
+  border-radius: 2rem;
+  border: 1px solid hsl(var(--primary) / 0.3);
+  background:
+    radial-gradient(60% 80% at 50% 0%, hsl(var(--primary) / 0.22), transparent 70%),
+    linear-gradient(180deg, hsl(var(--card)), hsl(var(--card) / 0.92));
+  box-shadow:
+    0 0 0 1px hsl(var(--background) / 0.4) inset,
+    0 40px 90px -50px hsl(var(--primary) / 0.6);
+  text-align: center;
+  overflow: hidden;
+}
+
+/* A slow light sweep across the panel's top edge. */
+.hs-closing__panel::after {
+  content: "";
+  position: absolute;
+  inset: 0 auto auto 0;
+  width: 40%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, hsl(var(--primary)), transparent);
+  opacity: 0.8;
+}
+
+.hs-closing__title {
+  font-size: clamp(2rem, 4.5vw, 3.25rem);
+  margin-bottom: 1rem;
+}
+
+.hs-closing__copy {
+  max-width: 34rem;
+  margin: 0 auto;
+  color: hsl(var(--muted-foreground));
+  font-size: 1.0625rem;
+  line-height: 1.7;
+}
+
+.hs-closing__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-top: 2rem;
+}
+
+.hs-closing__fine {
+  margin-top: 1.25rem;
+  color: hsl(var(--muted-foreground));
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+/* ---- Responsive --------------------------------------------------------- */
+
+@media (max-width: 1023px) {
+  .hs-pricing-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 639px) {
+  .hs-header {
+    margin-bottom: 2.25rem;
+  }
+
+  .hs-ecosystem-grid,
+  .hs-pricing-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .hs-card {
+    padding: 1.25rem;
+  }
+
+  .hs-closing__panel {
+    padding: 3rem 1.25rem;
+    border-radius: 1.5rem;
+  }
+
+  .hs-closing__actions .hs-button {
+    width: 100%;
+  }
+}
+
+/* ---- Motion ------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: no-preference) {
+  .hs-closing__panel::after {
+    animation: hs-sweep 6s var(--hs-ease) infinite;
+  }
+}
+
+@keyframes hs-sweep {
+  0% { transform: translateX(-100%); }
+  60%, 100% { transform: translateX(250%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hs-card,
+  .hs-card::before,
+  .hs-card__link svg,
+  .hs-button,
+  .hs-button svg {
+    transition: none;
+  }
+
+  a.hs-card:hover,
+  a.hs-card:focus-visible,
+  .hs-button--primary:hover {
+    transform: none;
+  }
+}
+
+/* ---- Startup Development Cycle: the tool link under each stage ---------- */
+
+.startup-cycle-tool-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: hsl(var(--primary));
+  font-size: 0.9375rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.startup-cycle-tool-link svg {
+  transition: transform 240ms ease;
+}
+
+.startup-cycle-tool-link:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.startup-cycle-tool-link:hover svg {
+  transform: translateX(3px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .startup-cycle-tool-link svg {
+    transition: none;
+  }
+}

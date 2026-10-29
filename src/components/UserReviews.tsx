@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,7 +13,8 @@ import {
   ChartNoAxesCombined,
   TrendingUp,
   Play,
-  Pause
+  Pause,
+  ArrowRight
 } from "lucide-react";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 
@@ -22,6 +24,8 @@ type CycleStep = {
   description: string;
   icon: React.ElementType;
   color: string;
+  /** The tool built for this stage. */
+  tool: { name: string; href: string };
 };
 
 const cycleSteps: CycleStep[] = [
@@ -31,7 +35,8 @@ const cycleSteps: CycleStep[] = [
     description:
       "In this stage, founders clarify the foundation of their startup by answering a few core questions:\n\nWhat specific problem are you solving?\nWho are you solving it for?\nWhat makes your solution different and more efficient?\nWhy are you the right person to build it?\n\nThe goal is to define your Ideal Customer Profile (ICP) and set clear, specific goals for what you want to achieve next.",
     icon: Fingerprint,
-    color: "from-warning/20 to-warning/20"
+    color: "from-warning/20 to-warning/20",
+    tool: { name: "ICP Builder", href: "/icp-builder" }
   },
   {
     shortLabel: "Prototyping",
@@ -39,7 +44,8 @@ const cycleSteps: CycleStep[] = [
     description:
       "After defining your identity, the next step is to create a simple landing page that works as your waitlist. This page should clearly explain what your product is, who it is for, and the core problem it solves so visitors quickly understand the value.\n\nIt should also describe the key features you plan to offer and give a simple overview of how the product will work, without building the MVP yet. The goal is to make the idea feel real enough to test interest, collect sign-ups, and confirm there is market demand before investing time and money into development.",
     icon: DraftingCompass,
-    color: "from-info/20 to-info/20"
+    color: "from-info/20 to-info/20",
+    tool: { name: "Demo Studio", href: "/demo-studio/try" }
   },
   {
     shortLabel: "Validation",
@@ -47,7 +53,8 @@ const cycleSteps: CycleStep[] = [
     description:
       "In this stage, founders actively reach out to potential customers and book one-on-one conversations to gather honest feedback on the concept. The goal is to confirm real demand by tracking signals like interview insights and how many people join the waitlist.\n\nThis step is crucial because it helps you avoid building something nobody wants. If validation is strong, you move forward to Step 4; if it’s weak, you iterate by asking your ideal customers what’s missing, what would make it valuable, or what alternatives they would choose instead.",
     icon: CheckCircle,
-    color: "from-success/20 to-success/20"
+    color: "from-success/20 to-success/20",
+    tool: { name: "PMF Lab", href: "/pmf-lab" }
   },
   {
     shortLabel: "Building",
@@ -55,7 +62,8 @@ const cycleSteps: CycleStep[] = [
     description:
       "Once validation is confirmed, founders can start building the MVP they’ve been promising. This is where the idea becomes a working product, supported by the tools and guidance available on Creatives Takeover, such as the MVP and Tech Stack Builder, plus access to mentors who have experience launching MVPs.\n\nThe focus at this stage is not to build the “perfect” final product. Instead, founders should develop only the core features that deliver the main value, so they can launch sooner, learn faster, and improve the product steadily as they grow.",
     icon: Hammer,
-    color: "from-warning/20 to-warning/20"
+    color: "from-warning/20 to-warning/20",
+    tool: { name: "MVP Builder", href: "/build" }
   },
   {
     shortLabel: "Launch",
@@ -63,7 +71,8 @@ const cycleSteps: CycleStep[] = [
     description:
       "In this stage, founders bring the product to the public and start actively promoting it wherever their audience already spends time. That includes direct outreach and consistent posting across channels like Product Hunt, LinkedIn, X, Reddit, Instagram, and other relevant sites.\n\nThey should also submit the startup to directories to increase visibility and begin building the brand through clear messaging, visuals, and a steady online presence. The goal is to generate early attention, attract first users, and start building momentum.",
     icon: Rocket,
-    color: "from-purple-500/20 to-purple-600/20"
+    color: "from-purple-500/20 to-purple-600/20",
+    tool: { name: "GTM Strategist", href: "/go-to-market" }
   },
   {
     shortLabel: "Traction",
@@ -71,7 +80,8 @@ const cycleSteps: CycleStep[] = [
     description:
       "Launch brings your first users. Traction is about learning which of them stay and which channel keeps bringing more. In this stage you choose one acquisition channel that fits your product, track retention in the first 30 days, and tell real growth apart from constant effort. GTM Strategist helps you choose the channel, and Traction Engine helps you run and measure it week by week.\n\nThe milestone is three consecutive weeks above your score threshold: people come back, your channel converts, and you can keep up the pace.",
     icon: ChartNoAxesCombined,
-    color: "from-pink-500/20 to-pink-600/20"
+    color: "from-pink-500/20 to-pink-600/20",
+    tool: { name: "Traction Engine", href: "/traction-engine" }
   },
   {
     shortLabel: "Fundraising",
@@ -79,7 +89,8 @@ const cycleSteps: CycleStep[] = [
     description:
       "Not every business needs to raise money. If yours does, this is the stage to prepare: a working product, evidence of demand, early paying customers, and a clear plan for what the money is for.\n\nInsighta helps you check your readiness, improve your pitch deck, and find investors and accelerators that match your stage and sector. No platform can guarantee funding; the stronger your evidence, the better your conversations with investors will be.",
     icon: TrendingUp,
-    color: "from-indigo-500/20 to-indigo-600/20"
+    color: "from-indigo-500/20 to-indigo-600/20",
+    tool: { name: "Insighta", href: "/insighta" }
   }
 ];
 
@@ -128,7 +139,7 @@ const UserReviews = () => {
         Startup Development Cycle
       </h2>
       <p className="homepage-section-copy startup-cycle-copy text-base sm:text-lg max-w-3xl mx-auto animate-in fade-in slide-in-from-bottom duration-700 delay-200">
-        A 7-stage roadmap in two phases: Phase A (BizMap AI) covers validation, MVP and launch; Phase B (Insighta) covers traction and preparing to raise.
+        Seven stages, one project. Start at the stage you are in and open the tool built for it.
       </p>
     </div>
   );
@@ -327,6 +338,10 @@ const UserReviews = () => {
                 <p className="text-sm leading-7 text-muted-foreground whitespace-pre-line">
                   {activeStep.description}
                 </p>
+                <Link to={activeStep.tool.href} className="startup-cycle-tool-link mt-4">
+                  Open {activeStep.tool.name}
+                  <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                </Link>
               </CardContent>
             </Card>
           </div>
@@ -501,12 +516,17 @@ const UserReviews = () => {
                 <p className="text-muted-foreground leading-relaxed text-base sm:text-lg whitespace-pre-line animate-in fade-in duration-700 delay-100">
                   {activeStep.description}
                 </p>
+                <Link to={activeStep.tool.href} className="startup-cycle-tool-link mt-6">
+                  Open {activeStep.tool.name}
+                  <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                </Link>
 
                 {/* Enhanced progress indicator */}
                 <div className="mt-6 flex gap-1.5 animate-in fade-in slide-in-from-bottom duration-700 delay-200">
                   {cycleSteps.map((_, index) => (
                     <button
                       key={index}
+                      type="button"
                       onClick={() => {
                         setActiveStepIndex(index);
                         setIsAutoPlaying(false);

@@ -43,7 +43,11 @@ const frozenFiles = {
   // Stack row with the MVP Builder offer and its /build destination.
   // Rehashed 2026-10-24 (copy audit): the subtitle and two card descriptions
   // describe what the tools do instead of promising speed or a clear path.
-  '../src/components/EntrepreneurProblems.tsx': 'e13e2ed8a1cee6b26fe52e01031bbf5bc9405787b7830ae1189d2e27036da116',
+  // Rehashed 2026-10-29 (homepage refresh, requested by Javier): the Dashboard
+  // card opens the public sample workspace (/demo) instead of the sign-in-only
+  // /dashboard, the investor card reads "Investor directory", and the
+  // never-rendered `pathway` copy is gone. Layout and GIFs are unchanged.
+  '../src/components/EntrepreneurProblems.tsx': '9afa4f0973fbcb267f89e2b264849b4f169ac36aaf5b1ad8f6997621a8a2ce37',
   // Updated for the canonical core-tool navigation: support tools no longer
   // appear as stage prerequisites, while Stage VII retains its original name
   // and order.
@@ -87,7 +91,14 @@ const frozenFiles = {
   // sections (Recharts trends, Startup Pedia teaser, FAQ) mount when they come
   // within 800px of the viewport instead of on first render, behind the same
   // placeholders. No section added, removed, reordered, restyled or re-copied.
-  '../src/pages/Index.tsx': 'dea670dbab6a0eea8b4cdf939253c8bedceaf27498c2729a79d09228907244ec',
+  // Rehashed 2026-10-29 (homepage refresh, requested by Javier): adds Who's
+  // here, Pricing, a Proof slot (hidden until real quotes exist) and a closing
+  // CTA; moves the AI trends after the product sections; collapses the
+  // duplicated mobile and desktop trees; new title and description. The
+  // Hero, journey, cycle, value cards, Pedia teaser and FAQ keep their place
+  // and look. The lazy-section placeholders now reserve the measured heights
+  // (they were about half), which removed most of the phone layout shift.
+  '../src/pages/Index.tsx': '1f029a49f020a653cb5098da61d15e9d64c36affbb6e4e97a4db8ec5c1c539c5',
 } as const;
 
 test('the approved unauthenticated landing page remains frozen during core-tool work', () => {

@@ -1,0 +1,60 @@
+import { Link } from "react-router-dom";
+import { ArrowRight, ArrowUpRight, Briefcase, GraduationCap, Lightbulb, Rocket, TrendingUp, type LucideIcon } from "lucide-react";
+import { WHO_IS_THIS_FOR_ACCOUNT_TYPES } from "@/components/whoIsThisForProfiles";
+import { RevealGroup } from "@/components/animations/ScrollReveal";
+import HomeSectionHeader from "./HomeSectionHeader";
+
+type AccountId = (typeof WHO_IS_THIS_FOR_ACCOUNT_TYPES)[number]["id"];
+
+// The public page that explains each account type best. The cards themselves
+// come from "Who is this for?", so the homepage and the dialog say the same.
+const ACCOUNT_LINKS: Record<AccountId, { href: string; label: string; icon: LucideIcon; accent: string }> = {
+  founder: { href: "/for-founders", label: "For founders", icon: Rocket, accent: "primary" },
+  builder: { href: "/start", label: "Take the quick quiz", icon: Lightbulb, accent: "success" },
+  mentor: { href: "/mentorship", label: "Meet the mentors", icon: GraduationCap, accent: "warning" },
+  marketplace: { href: "/marketplace", label: "Browse services", icon: Briefcase, accent: "info" },
+  investor: { href: "/for-investors", label: "For investors", icon: TrendingUp, accent: "destructive" },
+};
+
+const EcosystemSection = () => (
+  <section className="hs-section section-shell" aria-labelledby="ecosystem-heading">
+    <div className="container mx-auto px-4 sm:px-6">
+      <HomeSectionHeader badge="Who's Here" title="Everyone your project needs is already here" id="ecosystem-heading">
+        Founders and builders work on their projects next to mentors, service providers and investors, on the same SaaS platform.
+      </HomeSectionHeader>
+
+      <RevealGroup className="hs-ecosystem-grid" stagger={0.07}>
+        {WHO_IS_THIS_FOR_ACCOUNT_TYPES.map((account) => {
+          const link = ACCOUNT_LINKS[account.id];
+          const Icon = link.icon;
+          return (
+            <Link key={account.id} to={link.href} className="hs-card hs-ecosystem-card" data-accent={link.accent}>
+              <div className="hs-ecosystem-card__top">
+                <span className="hs-icon" aria-hidden="true">
+                  <Icon />
+                </span>
+                <span className="hs-chip">{account.access === "invitation" ? "By invitation" : "Open to everyone"}</span>
+              </div>
+              <h3 className="hs-card__title">{account.label}</h3>
+              <p className="hs-ecosystem-card__promise">“{account.promise}”</p>
+              <p className="hs-card__copy">{account.next}</p>
+              <span className="hs-card__link">
+                {link.label}
+                <ArrowUpRight aria-hidden="true" />
+              </span>
+            </Link>
+          );
+        })}
+      </RevealGroup>
+
+      <div className="hs-actions">
+        <Link to="/start" className="hs-button hs-button--primary">
+          Find your path
+          <ArrowRight aria-hidden="true" />
+        </Link>
+      </div>
+    </div>
+  </section>
+);
+
+export default EcosystemSection;

@@ -11,7 +11,7 @@ import { PLAN_MONTHLY_CREDITS, PLAN_PRICING } from '../config/pricing.ts';
  */
 
 // Plan names and what each plan is for, as shown on the pricing page.
-const PLAN_COPY = [
+export const PLAN_COPY = [
   { id: 'rookie', name: 'Rookie', outcome: 'Clarify' },
   { id: 'starter', name: 'Starter', outcome: 'Validate' },
   { id: 'rising', name: 'Rising', outcome: 'Build and Launch' },

@@ -1,9 +1,14 @@
-import { useEffect, lazy, Suspense, useRef } from "react";
+import { useEffect, lazy, Suspense, useRef, type ReactNode } from "react";
 import Navigation from "@/components/Navigation";
 import Hero from "@/components/Hero";
 import ValuePropositionCards from "@/components/ValuePropositionCards";
 import UserReviews from "@/components/UserReviews";
 import EntrepreneurProblems from "@/components/EntrepreneurProblems";
+import EcosystemSection from "@/components/home/EcosystemSection";
+import PricingTeaser from "@/components/home/PricingTeaser";
+import ProofSection from "@/components/home/ProofSection";
+import ClosingCta from "@/components/home/ClosingCta";
+import "@/components/home/home-sections.css";
 import { PullToRefresh } from "@/components/mobile/PullToRefresh";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ScrollReveal } from "@/components/animations/ScrollReveal";
@@ -19,7 +24,7 @@ import { trackLandingViewed } from "@/lib/analytics";
 // AISpecializationTrends is the only homepage section that uses Recharts; as a
 // static import it pulled ~77KB gz of charting into the fold-blocking bundle
 // for a section that renders well below the fold. The Suspense fallback below
-// reserves its measured height (969px mobile / 753px at lg) so deferring it
+// reserves its measured height (see the placeholders below) so deferring it
 // costs no layout shift.
 const AISpecializationTrends = lazy(() => import("@/components/AISpecializationTrends"));
 const HomeFAQ = lazy(() => import("@/components/HomeFAQ"));
@@ -27,10 +32,18 @@ const FounderAnswerLibraryTeaser = lazy(() => import("@/components/seo/FounderAn
 
 // lazy() alone still fetched all three chunks on first render (~190KB gz with
 // Recharts), before the visitor scrolled. LoadWhenNear defers each until it is
-// 800px from the viewport; the placeholders keep the heights above.
-const trendsPlaceholder = <div className="min-h-[969px] lg:min-h-[753px] animate-pulse bg-muted/20" />;
-const teaserPlaceholder = <div className="h-64 animate-pulse bg-muted/20" />;
-const faqPlaceholder = <div className="h-96 animate-pulse bg-muted/20" />;
+// 800px from the viewport. Each placeholder reserves the section's rendered
+// height (measured 2026-10-29 at 390, 768 and 1024+ px wide); the old ones were
+// half the real height, so every swap pushed the page down on phones.
+const trendsPlaceholder = <div className="min-h-[1635px] md:min-h-[1509px] lg:min-h-[1191px] animate-pulse bg-muted/20" />;
+const teaserPlaceholder = <div className="min-h-[902px] md:min-h-[722px] lg:min-h-[468px] animate-pulse bg-muted/20" />;
+const faqPlaceholder = <div className="min-h-[1172px] md:min-h-[1244px] lg:min-h-[1300px] animate-pulse bg-muted/20" />;
+
+const Reveal = ({ children }: { children: ReactNode }) => (
+  <ScrollReveal variant="fade" amount={0.05}>
+    {children}
+  </ScrollReveal>
+);
 
 const Index = () => {
   const isMobile = useIsMobile();
@@ -63,12 +76,67 @@ const Index = () => {
     ])
   ];
 
+  // The story, in order: what it is (hero), the problems and the tool for each,
+  // the stages, what is inside, who is here, why now, what it costs, what people
+  // say (hidden until real quotes exist), answers, and one last way in.
+  const sections = (
+    <>
+      <Hero />
+      <Reveal>
+        <div className="homepage-band-muted">
+          <EntrepreneurProblems />
+        </div>
+      </Reveal>
+      <Reveal>
+        <UserReviews />
+      </Reveal>
+      <Reveal>
+        <div className="homepage-band-muted">
+          <ValuePropositionCards />
+        </div>
+      </Reveal>
+      <Reveal>
+        <EcosystemSection />
+      </Reveal>
+      <Reveal>
+        <div className="homepage-band-muted">
+          <LoadWhenNear id="ai-trends" placeholder={trendsPlaceholder}>
+            <Suspense fallback={trendsPlaceholder}>
+              <AISpecializationTrends />
+            </Suspense>
+          </LoadWhenNear>
+        </div>
+      </Reveal>
+      <Reveal>
+        <PricingTeaser />
+      </Reveal>
+      <ProofSection />
+      <Reveal>
+        <LoadWhenNear id="pedia-teaser" placeholder={teaserPlaceholder}>
+          <Suspense fallback={teaserPlaceholder}>
+            <FounderAnswerLibraryTeaser compact />
+          </Suspense>
+        </LoadWhenNear>
+      </Reveal>
+      <Reveal>
+        <div className="homepage-band-muted">
+          <LoadWhenNear id="home-faq" placeholder={faqPlaceholder}>
+            <Suspense fallback={faqPlaceholder}>
+              <HomeFAQ />
+            </Suspense>
+          </LoadWhenNear>
+        </div>
+      </Reveal>
+      <ClosingCta />
+    </>
+  );
+
   return (
     <div className="min-h-screen relative">
       <HomeWallpaper variant="landing" />
       <SEO
-        title="Creatives Takeover | Startup Development Platform"
-        description="Creatives Takeover is a startup development platform that helps first-time founders validate ideas, build MVPs, launch, gain traction, and prepare to raise."
+        title="Creatives Takeover | Start and Test Your Startup Project"
+        description="Creatives Takeover is a SaaS platform where founders start and test their projects, with tools for every stage plus mentors, service providers and investors."
         keywords="founder operating system, startup idea validation, customer decision brief, interactive product demo, product market fit evidence, MVP builder, go-to-market execution, traction engine, first-time solo founders"
         url="/"
         image="/og-founders-compass-2026-09.png"
@@ -78,87 +146,7 @@ const Index = () => {
       />
       <Navigation />
       <main>
-        {isMobile ? (
-          <PullToRefresh onRefresh={handleRefresh}>
-            <Hero />
-            <ScrollReveal variant="fade" amount={0.05}>
-              <div className="homepage-band-muted">
-                <EntrepreneurProblems />
-              </div>
-            </ScrollReveal>
-            <ScrollReveal variant="fade" amount={0.05}>
-              <UserReviews />
-            </ScrollReveal>
-            <ScrollReveal variant="fade" amount={0.05}>
-              <div className="homepage-band-muted">
-                <LoadWhenNear id="ai-trends" placeholder={trendsPlaceholder}>
-                  <Suspense fallback={trendsPlaceholder}>
-                    <AISpecializationTrends />
-                  </Suspense>
-                </LoadWhenNear>
-              </div>
-            </ScrollReveal>
-            <ScrollReveal variant="fade" amount={0.05}>
-              <ValuePropositionCards />
-            </ScrollReveal>
-            <ScrollReveal variant="fade" amount={0.05}>
-              <LoadWhenNear id="pedia-teaser" placeholder={teaserPlaceholder}>
-                <Suspense fallback={teaserPlaceholder}>
-                  <FounderAnswerLibraryTeaser compact />
-                </Suspense>
-              </LoadWhenNear>
-            </ScrollReveal>
-            <ScrollReveal variant="fade" amount={0.05}>
-              <div className="homepage-band-muted">
-                <LoadWhenNear id="home-faq" placeholder={faqPlaceholder}>
-                  <Suspense fallback={faqPlaceholder}>
-                    <HomeFAQ />
-                  </Suspense>
-                </LoadWhenNear>
-              </div>
-            </ScrollReveal>
-          </PullToRefresh>
-        ) : (
-          <>
-            <Hero />
-            <ScrollReveal variant="fade" amount={0.05}>
-              <div className="homepage-band-muted">
-                <EntrepreneurProblems />
-              </div>
-            </ScrollReveal>
-            <ScrollReveal variant="fade" amount={0.05}>
-              <UserReviews />
-            </ScrollReveal>
-            <ScrollReveal variant="fade" amount={0.05}>
-              <div className="homepage-band-muted">
-                <LoadWhenNear id="ai-trends" placeholder={trendsPlaceholder}>
-                  <Suspense fallback={trendsPlaceholder}>
-                    <AISpecializationTrends />
-                  </Suspense>
-                </LoadWhenNear>
-              </div>
-            </ScrollReveal>
-            <ScrollReveal variant="fade" amount={0.05}>
-              <ValuePropositionCards />
-            </ScrollReveal>
-            <ScrollReveal variant="fade" amount={0.05}>
-              <LoadWhenNear id="pedia-teaser" placeholder={teaserPlaceholder}>
-                <Suspense fallback={teaserPlaceholder}>
-                  <FounderAnswerLibraryTeaser compact />
-                </Suspense>
-              </LoadWhenNear>
-            </ScrollReveal>
-            <ScrollReveal variant="fade" amount={0.05}>
-              <div className="homepage-band-muted">
-                <LoadWhenNear id="home-faq" placeholder={faqPlaceholder}>
-                  <Suspense fallback={faqPlaceholder}>
-                    <HomeFAQ />
-                  </Suspense>
-                </LoadWhenNear>
-              </div>
-            </ScrollReveal>
-          </>
-        )}
+        {isMobile ? <PullToRefresh onRefresh={handleRefresh}>{sections}</PullToRefresh> : sections}
       </main>
       <Footer />
       {/* SoftGateModal intentionally omitted for this hero design */}

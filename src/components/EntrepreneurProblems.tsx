@@ -25,7 +25,6 @@ type AccentColor = "blue" | "green" | "red" | "amber";
 type JourneyStep = {
   phase: string;
   challenge: string;
-  pathway: string;
   icon: LucideIcon;
   accentColor: AccentColor;
 };
@@ -57,49 +56,42 @@ const journeySteps: JourneyStep[] = [
   {
     phase: "The Starting Point",
     challenge: "Scattered ideas without a clear direction",
-    pathway: "BizMap AI guides you from scattered thoughts to a strategic plan—clarifying your market, competitors, and next steps in one conversation.",
     icon: Lightbulb,
     accentColor: "blue",
   },
   {
     phase: "Finding Direction",
     challenge: "Aligning your product with a genuine market need",
-    pathway: "The Dashboard breaks down your vision into weekly sprints, tracks progress, and keeps you accountable—transforming busyness into real momentum.",
     icon: Target,
     accentColor: "green",
   },
   {
     phase: "Lack of Experience",
     challenge: "Navigating Uncertainty and Decision-Making",
-    pathway: "Our Community connects you with mentors and fellow founders who've navigated these exact challenges—offering guidance, feedback, and genuine support.",
     icon: Users,
     accentColor: "red",
   },
   {
     phase: "Working Smartly",
     challenge: "Task prioritization and resource management",
-    pathway: "BizMap AI helps define your ICP, select the right channels, and craft a go-to-market strategy based on proven frameworks—no more guessing.",
     icon: Map,
     accentColor: "blue",
   },
   {
     phase: "Seeking Resources",
     challenge: "Fundraising feels impossible without the right connections",
-    pathway: "Meet your Investor",
     icon: Rocket,
     accentColor: "amber",
   },
   {
     phase: "MVP Building",
     challenge: "Deciding what your first version actually needs",
-    pathway: "Build the core product your customers need without unnecessary features.",
     icon: Code,
     accentColor: "blue",
   },
   {
     phase: "Founder's Mental Tax",
     challenge: "High risk of burnout",
-    pathway: "Find a Co-Founder",
     icon: LayoutDashboard,
     accentColor: "green",
   },
@@ -173,7 +165,7 @@ const journeyActions: JourneyAction[] = [
     delay: "0.3s",
   },
   {
-    to: "/dashboard",
+    to: "/demo",
     title: "Dashboard: Your Project Co-Pilot",
     outcome: "Daily Focus",
     description: "Prioritize tasks, track weekly progress, and stay accountable in one workspace.",
@@ -197,7 +189,7 @@ const journeyActions: JourneyAction[] = [
   {
     to: "/investors",
     title: "Find Investors",
-    outcome: "Angel Investor Network",
+    outcome: "Investor directory",
     description: "Find relevant investors by stage and sector, then start targeted conversations.",
     icon: Users,
     accentName: "emerald",

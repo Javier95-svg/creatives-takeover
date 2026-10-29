@@ -121,7 +121,7 @@ export const createOrganizationSchema = () => ({
   "name": "Creatives Takeover",
   "url": "https://creatives-takeover.com",
   "logo": "https://creatives-takeover.com/favicon-192x192.png",
-  "description": "Creatives Takeover is a startup development platform for first-time founders, connecting customer clarity, validation, MVP building, go-to-market execution, traction, and fundraising preparation.",
+  "description": "Creatives Takeover is a SaaS platform where founders and indie builders start and test their projects, with tools for every stage plus mentors, cofounders, service providers and investors.",
   "founder": {
     "@type": "Person",
     "@id": "https://creatives-takeover.com/about#founder",
@@ -431,7 +431,7 @@ export const createAboutPageSchema = () => ({
     "name": "Creatives Takeover",
     "url": "https://creatives-takeover.com",
     "logo": "https://creatives-takeover.com/favicon-192x192.png",
-    "description": "Creatives Takeover is a startup development platform for first-time founders, connecting customer clarity, validation, MVP building, go-to-market execution, traction, and fundraising preparation.",
+    "description": "Creatives Takeover is a SaaS platform where founders and indie builders start and test their projects, with tools for every stage plus mentors, cofounders, service providers and investors.",
     "founder": {
       "@type": "Person",
       "@id": "https://creatives-takeover.com/about#founder",

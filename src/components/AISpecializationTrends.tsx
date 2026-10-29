@@ -17,15 +17,7 @@ import { useTypingAnimation } from "@/hooks/useTypingAnimation";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 
-const TypedParagraph = ({
-  text,
-  startDelay = 0,
-  className = ""
-}: {
-  text: string;
-  startDelay?: number;
-  className?: string;
-}) => {
+const TypedText = ({ text, startDelay }: { text: string; startDelay: number }) => {
   const { displayedText, isTyping } = useTypingAnimation({
     text,
     speed: 28,
@@ -33,12 +25,33 @@ const TypedParagraph = ({
   });
 
   return (
-    <p className={className}>
+    <span className="absolute inset-0" aria-hidden="true">
       {displayedText}
       {isTyping && <span className="inline-block w-0.5 h-4 bg-primary ml-1 animate-pulse" />}
-    </p>
+    </span>
   );
 };
+
+// The full text is laid out (invisibly) from the start and the typed copy is
+// drawn on top of it, so the paragraph never grows while it types. Growing
+// text pushed everything below it down: 0.52 of the phone CLS on 2026-10-29.
+const TypedParagraph = ({
+  text,
+  startDelay = 0,
+  active,
+  className = ""
+}: {
+  text: string;
+  startDelay?: number;
+  active: boolean;
+  className?: string;
+}) => (
+  <p className={`relative ${className}`}>
+    <span className="sr-only">{text}</span>
+    <span className="invisible" aria-hidden="true">{text}</span>
+    {active && <TypedText text={text} startDelay={startDelay} />}
+  </p>
+);
 
 const AISpecializationTrends = () => {
   const [chartVisible, setChartVisible] = useState(false);
@@ -46,6 +59,8 @@ const AISpecializationTrends = () => {
   const isMobile = useIsMobile();
   const prefersReducedMotion = usePrefersReducedMotion();
   const typingSpeed = 24;
+  // Reserved before the charts draw, so their arrival shifts nothing below.
+  const chartHeight = isMobile ? 220 : 300;
   const firstNarrative =
     "Starting a software business takes less money and fewer people than it used to. AI tools now handle work that once needed a team, and focused products for a specific group of people can reach customers anywhere.";
   const secondNarrative =
@@ -171,9 +186,10 @@ const AISpecializationTrends = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className={isMobile ? "px-4 pb-5" : undefined}>
+              <div style={{ minHeight: chartHeight }}>
               {chartVisible && (
                 <div className="chart-container mx-auto w-full max-w-[340px] sm:max-w-none">
-                  <ResponsiveContainer width="100%" height={isMobile ? 220 : 300}>
+                  <ResponsiveContainer width="100%" height={chartHeight}>
                     <BarChart data={soloFounderData} margin={{ top: 28, right: 10, left: 0, bottom: 5 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} vertical={false} />
                       <XAxis dataKey="period" stroke="hsl(var(--muted-foreground))" style={axisStyle} tickLine={false} />
@@ -197,6 +213,7 @@ const AISpecializationTrends = () => {
                   </ResponsiveContainer>
                 </div>
               )}
+              </div>
               <p className="text-sm text-muted-foreground mt-4">
                 Share of new startups with a solo founder. Starting a company now takes fewer people.
               </p>
@@ -219,9 +236,10 @@ const AISpecializationTrends = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className={isMobile ? "px-4 pb-5" : undefined}>
+              <div style={{ minHeight: chartHeight }}>
               {chartVisible && (
                 <div className="chart-container mx-auto w-full max-w-[340px] sm:max-w-none" style={{ animationDelay: '0.2s' }}>
-                  <ResponsiveContainer width="100%" height={isMobile ? 220 : 300}>
+                  <ResponsiveContainer width="100%" height={chartHeight}>
                     <BarChart data={timeToRevenueData} layout="vertical" margin={{ top: 5, right: isMobile ? 84 : 72, left: 0, bottom: 5 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} horizontal={false} />
                       <XAxis type="number" stroke="hsl(var(--muted-foreground))" style={axisStyle} domain={[0, 18]} ticks={[0, 6, 12, 18]} unit=" mo" tickLine={false} />
@@ -242,6 +260,7 @@ const AISpecializationTrends = () => {
                   </ResponsiveContainer>
                 </div>
               )}
+              </div>
               <p className="text-sm text-muted-foreground mt-4">
                 Median time to reach $1M in annualized revenue. Stripe reports the top AI companies got there four months ahead of the fastest-growing SaaS companies.
               </p>
@@ -263,20 +282,18 @@ const AISpecializationTrends = () => {
             <h3 className="font-space-grotesk text-2xl font-semibold mb-4 text-center text-foreground tracking-tight">
               Why It Matters Now
             </h3>
-            {textSectionVisible && (
-              <>
-                <TypedParagraph
-                  text={firstNarrative}
-                  startDelay={0}
-                  className="text-base text-muted-foreground leading-relaxed mb-4"
-                />
-                <TypedParagraph
-                  text={secondNarrative}
-                  startDelay={secondStartDelay}
-                  className="text-base text-muted-foreground leading-relaxed"
-                />
-              </>
-            )}
+            <TypedParagraph
+              text={firstNarrative}
+              startDelay={0}
+              active={textSectionVisible}
+              className="text-base text-muted-foreground leading-relaxed mb-4"
+            />
+            <TypedParagraph
+              text={secondNarrative}
+              startDelay={secondStartDelay}
+              active={textSectionVisible}
+              className="text-base text-muted-foreground leading-relaxed"
+            />
           </div>
         </div>
       </div>

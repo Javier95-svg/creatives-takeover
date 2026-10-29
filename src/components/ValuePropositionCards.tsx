@@ -75,7 +75,7 @@ const ValuePropositionCards = () => {
       title: "Mentors, cofounders and experts",
       subtitle: "People",
       buttonLabel: "Find Help",
-      description: "You don't have to figure everything out alone. Book mentors who have solved the problem you are stuck on, and find a cofounder whose skills fill the gaps in your team.\n\nWhen you need hands, the service marketplace connects you with providers in sales, marketing, operations and tech support. They are on the same platform where you build, so you don't have to look for help elsewhere.",
+      description: "You don't have to figure everything out alone. Find mentors with experience in specific fields, and find a cofounder whose skills fill the gaps in your team.\n\nWhen you need hands, the service marketplace connects you with providers in sales, marketing, operations and tech support. They are on the same platform where you build, so you don't have to look for help elsewhere.",
       link: "/mentorship",
       linkLabel: "Find a mentor",
       image: "https://images.unsplash.com/photo-1587614382346-4ec70e388b28?w=800&h=600&fit=crop&q=80&fm=webp",
@@ -111,7 +111,7 @@ const ValuePropositionCards = () => {
       title: "Learn from founders",
       subtitle: "Stories and Guides",
       buttonLabel: "Founder Stories",
-      description: "Founder Stories brings real experiences from people building companies: the lessons, the wins and the mistakes, without recycled advice.\n\nWhen you have a specific question, the Founder Answer Library and the Startup Guide give you clear, practical answers on customers, validation, MVPs, go to market and fundraising.",
+      description: "Founder Stories brings real experiences from people building companies: the lessons, the wins and the mistakes, without recycled advice.\n\nWhen you have a specific question, Startup Pedia and the Startup Guide give you clear, practical answers on customers, validation, MVPs, go to market and fundraising.",
       link: "/newspaper",
       linkLabel: "Read founder stories",
       image: "https://images.unsplash.com/photo-1456324504439-367cee3b3c32?w=800&h=600&fit=crop&q=80&fm=webp",
@@ -392,6 +392,9 @@ const ValuePropositionCards = () => {
           <h2 className="homepage-section-title value-prop-section__title text-3xl sm:text-4xl lg:text-[2.9rem] mb-4">
             Creatives Takeover in a Nutshell
           </h2>
+          <p className="homepage-section-copy text-base sm:text-lg">
+            Creatives Takeover is a SaaS platform where founders and indie builders start and test their projects. ICP Builder, Demo Studio, PMF Lab, MVP Builder, GTM Strategist and Traction Engine share one project, Pulse answers from your saved work, and mentors, cofounders, service providers and investors are on the same platform. The Rookie plan is free.
+          </p>
         </div>
 
         {/* Horizontal Carousel */}
