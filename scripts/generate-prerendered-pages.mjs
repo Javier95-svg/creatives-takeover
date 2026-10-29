@@ -362,7 +362,7 @@ const ORGANIZATION_SCHEMA = {
   name: SITE_NAME,
   url: BASE_URL,
   logo: { "@type": "ImageObject", url: `${BASE_URL}/favicon-192x192.png`, width: 192, height: 192 },
-  description: "Creatives Takeover is a SaaS platform where founders and indie builders start and test their projects, with tools for every stage plus mentors, cofounders, service providers and investors.",
+  description: "Creatives Takeover is a startup development platform for first-time founders, connecting customer clarity, validation, MVP building, go-to-market execution, traction, and fundraising preparation.",
   founder: {
     "@type": "Person",
     "@id": `${BASE_URL}/about#founder`,

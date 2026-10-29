@@ -9,17 +9,17 @@ const source = readFileSync(
 
 const actionBlock = source.match(/const journeyActions: JourneyAction\[\] = \[([\s\S]*?)\n\];/)?.[1] ?? '';
 
-test('the task prioritization row shows the Dashboard through the public sample workspace', () => {
+test('the task prioritization row promotes Dashboard with a coherent outcome', () => {
   assert.match(
     actionBlock,
-    /to: "\/demo",[\s\S]*?title: "Dashboard: Your Project Co-Pilot",[\s\S]*?outcome: "Daily Focus",[\s\S]*?Prioritize tasks, track weekly progress, and stay accountable in one workspace\./,
+    /to: "\/dashboard",[\s\S]*?title: "Dashboard: Your Project Co-Pilot",[\s\S]*?outcome: "Daily Focus",[\s\S]*?Prioritize tasks, track weekly progress, and stay accountable in one workspace\./,
   );
 });
 
 test("journey cards use the approved outcome labels", () => {
   assert.match(source, /title: "Define Your ICP",[\s\S]*?outcome: "Target Correctly"/);
   assert.match(source, /title: "Validate Demand",[\s\S]*?outcome: "Understand the Market"/);
-  assert.match(source, /title: "Find Investors",[\s\S]*?outcome: "Investor directory"/);
+  assert.match(source, /title: "Find Investors",[\s\S]*?outcome: "Angel Investor Network"/);
 });
 
 test('all founder journey cards expose complete, concise outcome copy', () => {

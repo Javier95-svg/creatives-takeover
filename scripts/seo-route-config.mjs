@@ -211,9 +211,9 @@ export const STARTUP_PEDIA_ROUTES = [PEDIA_HUB_ROUTE, ...PEDIA_TOPIC_ROUTES, ...
 export const INDEXABLE_ROUTES = [
   {
     path: "/",
-    title: "Creatives Takeover | Start and Test Your Startup Project",
+    title: "Creatives Takeover | Startup Development Platform",
     description:
-      "Creatives Takeover is a SaaS platform where founders start and test their projects, with tools for every stage plus mentors, service providers and investors.",
+      "Creatives Takeover is a startup development platform that helps first-time founders validate ideas, build MVPs, launch, gain traction, and prepare to raise.",
     changefreq: "daily",
     priority: 1.0,
     heroHeading: "The Founders' Compass",

@@ -15,15 +15,17 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { Badge } from "@/components/ui/badge";
 import FounderJourneyVideo from "./FounderJourneyVideo";
 import { ScrollReveal } from "@/components/animations/ScrollReveal";
-import HomeSectionHeader from "@/components/home/HomeSectionHeader";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 type AccentColor = "blue" | "green" | "red" | "amber";
 
 type JourneyStep = {
   phase: string;
   challenge: string;
+  pathway: string;
   icon: LucideIcon;
   accentColor: AccentColor;
 };
@@ -55,42 +57,49 @@ const journeySteps: JourneyStep[] = [
   {
     phase: "The Starting Point",
     challenge: "Scattered ideas without a clear direction",
+    pathway: "BizMap AI guides you from scattered thoughts to a strategic plan—clarifying your market, competitors, and next steps in one conversation.",
     icon: Lightbulb,
     accentColor: "blue",
   },
   {
     phase: "Finding Direction",
     challenge: "Aligning your product with a genuine market need",
+    pathway: "The Dashboard breaks down your vision into weekly sprints, tracks progress, and keeps you accountable—transforming busyness into real momentum.",
     icon: Target,
     accentColor: "green",
   },
   {
     phase: "Lack of Experience",
     challenge: "Navigating Uncertainty and Decision-Making",
+    pathway: "Our Community connects you with mentors and fellow founders who've navigated these exact challenges—offering guidance, feedback, and genuine support.",
     icon: Users,
     accentColor: "red",
   },
   {
     phase: "Working Smartly",
     challenge: "Task prioritization and resource management",
+    pathway: "BizMap AI helps define your ICP, select the right channels, and craft a go-to-market strategy based on proven frameworks—no more guessing.",
     icon: Map,
     accentColor: "blue",
   },
   {
     phase: "Seeking Resources",
     challenge: "Fundraising feels impossible without the right connections",
+    pathway: "Meet your Investor",
     icon: Rocket,
     accentColor: "amber",
   },
   {
     phase: "MVP Building",
     challenge: "Deciding what your first version actually needs",
+    pathway: "Build the core product your customers need without unnecessary features.",
     icon: Code,
     accentColor: "blue",
   },
   {
     phase: "Founder's Mental Tax",
     challenge: "High risk of burnout",
+    pathway: "Find a Co-Founder",
     icon: LayoutDashboard,
     accentColor: "green",
   },
@@ -164,7 +173,7 @@ const journeyActions: JourneyAction[] = [
     delay: "0.3s",
   },
   {
-    to: "/demo",
+    to: "/dashboard",
     title: "Dashboard: Your Project Co-Pilot",
     outcome: "Daily Focus",
     description: "Prioritize tasks, track weekly progress, and stay accountable in one workspace.",
@@ -188,7 +197,7 @@ const journeyActions: JourneyAction[] = [
   {
     to: "/investors",
     title: "Find Investors",
-    outcome: "Investor directory",
+    outcome: "Angel Investor Network",
     description: "Find relevant investors by stage and sector, then start targeted conversations.",
     icon: Users,
     accentName: "emerald",
@@ -253,67 +262,221 @@ const journeyActions: JourneyAction[] = [
   },
 ];
 
-// The journey is a timeline: each problem with its GIF on one side of a glowing
-// line and the part of the platform for it on the other, swapping sides every
-// row. The GIFs are multi-megabyte, so FounderJourneyVideo only mounts each one
-// as its row nears the viewport; the frame keeps its shape until then.
 const EntrepreneurProblems = () => {
+  const isMobile = useIsMobile();
+
+  const getAccentClasses = (color: string) => {
+    const classes = {
+      blue: {
+        icon: "bg-primary/10 border-primary/30 text-primary",
+        timeline: "bg-primary/20",
+        glow: "shadow-primary/20",
+      },
+      red: {
+        icon: "bg-destructive-subtle border-destructive/30 text-destructive",
+        timeline: "bg-destructive/20",
+        glow: "shadow-destructive/20",
+      },
+      green: {
+        icon: "bg-success-subtle border-success/30 text-success",
+        timeline: "bg-success/20",
+        glow: "shadow-success/20",
+      },
+      amber: {
+        icon: "bg-warning-subtle border-warning/30 text-warning",
+        timeline: "bg-warning/20",
+        glow: "shadow-warning/20",
+      },
+    };
+    return classes[color as keyof typeof classes] || classes.blue;
+  };
+
+  const getPathwayAction = (index: number) => {
+    return journeyActions[index] ?? null;
+  };
+
+  const renderPathwayAction = (
+    _step: JourneyStep,
+    index: number,
+    className = "",
+  ) => {
+    const action = getPathwayAction(index);
+
+    if (!action) {
+      return null;
+    }
+
+    const ActionIcon = action.icon;
+    const actionStyle = {
+      "--journey-accent": action.accent,
+      "--journey-accent-soft": action.accentSoft,
+      "--journey-accent-strong": action.accentStrong,
+    } as CSSProperties;
+
+    return (
+      <Link
+        to={action.to}
+        className={`journey-action-card group block w-full touch-manipulation ${className}`}
+        data-accent={action.accentName}
+        style={actionStyle}
+      >
+        <div className="journey-action-card__surface">
+          <div className="journey-action-card__content">
+            <div className="journey-action-card__meta">
+              <span className="journey-action-card__outcome">{action.outcome}</span>
+              <div className="journey-action-card__icon-shell">
+                <ActionIcon className="h-5 w-5" aria-hidden="true" />
+              </div>
+            </div>
+            <div className="journey-action-card__copy-wrap">
+              <h4 className="journey-action-card__title font-space-grotesk font-semibold">
+                {action.title}
+              </h4>
+              <p className="journey-action-card__copy">
+                {action.description}
+              </p>
+            </div>
+            <span className="journey-action-card__cta">
+              Open tool
+              <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
+            </span>
+          </div>
+        </div>
+      </Link>
+    );
+  };
+
   return (
-    <section className="founder-journey-section section-shell hg-section hg-journey" aria-labelledby="journey-heading">
-      <span className="hg-aurora hg-aurora--journey" aria-hidden="true" />
+    <section className="founder-journey-section section-shell relative" aria-labelledby="journey-heading">
+
       <div className="container mx-auto px-4 sm:px-6 relative z-10">
-        <ScrollReveal>
-          <HomeSectionHeader
-            badge="Own Your Path"
-            title="Every Founder's Journey is Unique"
-            id="journey-heading"
-            align="center"
-            className="hg-head"
-          >
-            Most founders hit the same problems. Here is what helps with each.
-          </HomeSectionHeader>
+        {/* Section Header */}
+        <ScrollReveal className="text-center mb-14 sm:mb-16 max-w-3xl mx-auto">
+          <Badge variant="outline" className="homepage-section-badge mb-5">
+            Own Your Path
+          </Badge>
+          <h2 id="journey-heading" className="homepage-section-title founder-journey-section__title text-3xl sm:text-4xl lg:text-[2.9rem] mb-5">
+            Every Founder's Journey is Unique
+          </h2>
+          <p className="homepage-section-copy founder-journey-section__copy mx-auto text-base sm:text-lg">
+            But most founders run into the same problems. Here is each one, and the part of the platform that helps you work through it.
+          </p>
         </ScrollReveal>
 
-        <ol className="hg-timeline">
-          {journeySteps.map((step, index) => {
-            const action = journeyActions[index];
-            const ActionIcon = action.icon;
-            const stepStyle = { "--step-hue": action.accent } as CSSProperties;
-            // Each side slides in from its own edge (a fade on phones, in ScrollReveal).
-            const flip = index % 2 === 1;
+        {/* Vertical Timeline */}
+        <div className="max-w-5xl mx-auto relative">
+          {/* Timeline Line - Continuous vertical line */}
+          <div className="absolute left-8 md:left-1/2 top-0 bottom-0 w-px bg-border/80 hidden sm:block" />
 
-            return (
-              <li key={step.phase} className={`hg-step${flip ? " hg-step--flip" : ""}`} style={stepStyle}>
-                <ScrollReveal variant={flip ? "slide-left" : "slide-right"} className="hg-step__media hg-glass">
-                  <div className="hg-step__screen">
-                    <span className="hg-step__skeleton" aria-hidden="true" />
-                    <FounderJourneyVideo position={index} className="founder-journey-gif hg-step__gif" />
+          {/* Timeline Items */}
+          <div className="space-y-10 md:space-y-14">
+            {journeySteps.map((step, index) => {
+              const Icon = step.icon;
+              const accentClasses = getAccentClasses(step.accentColor);
+              const isEven = index % 2 === 0;
+
+              return (
+                <ScrollReveal
+                  key={index}
+                  className="relative"
+                  variant={isEven ? "slide-left" : "slide-right"}
+                >
+                  {isMobile ? (
+                  <div className="space-y-5">
+                    <div className="text-center">
+                      <div className="mb-3 flex justify-center">
+                        <span className="inline-flex items-center rounded-full border border-border/72 bg-background/88 px-3 py-1 text-label font-medium uppercase tracking-[0.18em] text-muted-foreground">
+                          {step.phase}
+                        </span>
+                      </div>
+                      <h3 className="font-space-grotesk text-xl font-semibold text-foreground">
+                        {step.challenge}
+                      </h3>
+                    </div>
+
+                    <div className="w-full">
+                      {index <= 6 ? (
+                        <FounderJourneyVideo position={index} className="founder-journey-gif" />
+                      ) : (
+                        <div className={`mx-auto w-14 h-14 rounded-full flex items-center justify-center ${accentClasses.icon} shadow-sm transition-colors`}>
+                          <Icon className="w-7 h-7" />
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex justify-center">
+                      {renderPathwayAction(step, index, "max-w-3xl")}
+                    </div>
                   </div>
-                  <p className="hg-step__phase">{step.phase}</p>
-                  <h3 className="hg-step__challenge">{step.challenge}</h3>
-                </ScrollReveal>
+                  ) : (
+                  <div className="grid grid-cols-2 grid-rows-[auto_1fr] gap-x-6 gap-y-4 lg:gap-x-8">
+                    {isEven ? (
+                      <>
+                        <div className="md:col-start-2 md:row-start-1 text-center">
+                          <div className="mb-3 flex justify-center">
+                            <span className="inline-flex items-center rounded-full border border-border/72 bg-background/88 px-3 py-1 text-label font-medium uppercase tracking-[0.18em] text-muted-foreground">
+                              {step.phase}
+                            </span>
+                          </div>
+                          <h3 className="font-space-grotesk text-2xl font-semibold text-foreground">
+                            {step.challenge}
+                          </h3>
+                        </div>
 
-                <span className="hg-step__dot" aria-hidden="true" />
+                        <div className={`${index === 0 ? 'md:pr-8 lg:pr-16 xl:pr-20' : 'md:pr-6 lg:pr-10 xl:pr-12'} md:col-start-1 md:row-start-2 self-center flex justify-center`}>
+                          {renderPathwayAction(step, index)}
+                        </div>
 
-                <ScrollReveal variant={flip ? "slide-right" : "slide-left"} className="hg-step__side">
-                  <Link to={action.to} className="hg-step__card hg-glass group">
-                    <span className="hg-step__glow" aria-hidden="true" />
-                    <span className="hg-step__outcome">
-                      <ActionIcon aria-hidden="true" />
-                      {action.outcome}
-                    </span>
-                    <span className="hg-step__title">{action.title}</span>
-                    <span className="hg-step__copy">{action.description}</span>
-                    <span className="hg-step__cta">
-                      Open tool
-                      <ArrowUpRight aria-hidden="true" />
-                    </span>
-                  </Link>
+                        <div className="relative z-10 md:col-start-2 md:row-start-2 self-center">
+                          {index <= 6 ? (
+                            <div className="w-full md:max-w-2xl lg:max-w-3xl xl:max-w-4xl ml-2 lg:ml-4">
+                              <FounderJourneyVideo position={index} className="founder-journey-gif" />
+                            </div>
+                          ) : (
+                            <div className={`w-16 h-16 rounded-full flex items-center justify-center ${accentClasses.icon} shadow-sm bg-background transition-colors`}>
+                              <Icon className="w-9 h-9" />
+                            </div>
+                          )}
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="md:col-start-1 md:row-start-1 text-center">
+                          <div className="mb-3 flex justify-center">
+                            <span className="inline-flex items-center rounded-full border border-border/72 bg-background/88 px-3 py-1 text-label font-medium uppercase tracking-[0.18em] text-muted-foreground">
+                              {step.phase}
+                            </span>
+                          </div>
+                          <h3 className="font-space-grotesk text-2xl font-semibold text-foreground">
+                            {step.challenge}
+                          </h3>
+                        </div>
+
+                        <div className="relative z-10 md:col-start-1 md:row-start-2 self-center">
+                          {index <= 6 ? (
+                            <div className="w-full md:max-w-2xl lg:max-w-3xl xl:max-w-4xl mr-2 lg:mr-4">
+                              <FounderJourneyVideo position={index} className="founder-journey-gif" />
+                            </div>
+                          ) : (
+                            <div className={`w-16 h-16 rounded-full flex items-center justify-center ${accentClasses.icon} shadow-sm bg-background transition-colors`}>
+                              <Icon className="w-9 h-9" />
+                            </div>
+                          )}
+                        </div>
+
+                        <div className={`${index === 1 ? 'md:pl-8 lg:pl-16 xl:pl-20' : 'md:pl-6 lg:pl-10 xl:pl-12'} md:col-start-2 md:row-start-2 self-center flex justify-center`}>
+                          {renderPathwayAction(step, index)}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                  )}
                 </ScrollReveal>
-              </li>
-            );
-          })}
-        </ol>
+              );
+            })}
+          </div>
+        </div>
+
       </div>
     </section>
   );

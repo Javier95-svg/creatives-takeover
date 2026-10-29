@@ -43,14 +43,7 @@ const frozenFiles = {
   // Stack row with the MVP Builder offer and its /build destination.
   // Rehashed 2026-10-24 (copy audit): the subtitle and two card descriptions
   // describe what the tools do instead of promising speed or a clear path.
-  // Rehashed 2026-10-29 (homepage refresh, requested by Javier): the Dashboard
-  // card opens the public sample workspace (/demo) instead of the sign-in-only
-  // /dashboard, the investor card reads "Investor directory", and the
-  // never-rendered `pathway` copy is gone. Layout and GIFs are unchanged.
-  // Rehashed 2026-10-29 (direction E, Glass, picked by Javier): the journey is a
-  // glass timeline again, all seven steps with their GIFs on a glowing line,
-  // tool cards on the other side. Copy and data are unchanged.
-  '../src/components/EntrepreneurProblems.tsx': '8ada3e70eaf44618f3bc2814b9e39f03ffb189dd720b397b9a4e72d84806f2f5',
+  '../src/components/EntrepreneurProblems.tsx': 'e13e2ed8a1cee6b26fe52e01031bbf5bc9405787b7830ae1189d2e27036da116',
   // Updated for the canonical core-tool navigation: support tools no longer
   // appear as stage prerequisites, while Stage VII retains its original name
   // and order.
@@ -94,22 +87,7 @@ const frozenFiles = {
   // sections (Recharts trends, Startup Pedia teaser, FAQ) mount when they come
   // within 800px of the viewport instead of on first render, behind the same
   // placeholders. No section added, removed, reordered, restyled or re-copied.
-  // Rehashed 2026-10-29 (homepage refresh, requested by Javier): adds Who's
-  // here, Pricing, a Proof slot (hidden until real quotes exist) and a closing
-  // CTA; moves the AI trends after the product sections; collapses the
-  // duplicated mobile and desktop trees; new title and description. The
-  // Hero, journey, cycle, value cards, Pedia teaser and FAQ keep their place
-  // and look. The lazy-section placeholders now reserve the measured heights
-  // (they were about half), which removed most of the phone layout shift.
-  // Same day, after review: each section below the hero is wrapped in a
-  // HomeScene (its own display face) and the muted bands are gone; the page
-  // keeps the one HomeWallpaper.
-  // Rehashed again 2026-10-29 (Stripe-style redesign Javier asked for):
-  // the journey becomes a problem picker with one stage, the cycle a track,
-  // What's inside a set of tabs; placeholders re-measured. Hero untouched.
-  // Rehashed 2026-10-29 (direction E, Glass): imports home-glass.css for the
-  // journey, A Unique Environment, pricing and closing sections.
-  '../src/pages/Index.tsx': 'b2a7b8e9df30c7e6498ebd467d9ad5448dca6e1f0a67fbe27e7d5e3d95830d7e',
+  '../src/pages/Index.tsx': 'dea670dbab6a0eea8b4cdf939253c8bedceaf27498c2729a79d09228907244ec',
 } as const;
 
 test('the approved unauthenticated landing page remains frozen during core-tool work', () => {

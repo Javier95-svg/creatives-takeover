@@ -1,17 +1,9 @@
-import { useEffect, lazy, Suspense, useRef, type ReactNode } from "react";
+import { useEffect, lazy, Suspense, useRef } from "react";
 import Navigation from "@/components/Navigation";
 import Hero from "@/components/Hero";
 import ValuePropositionCards from "@/components/ValuePropositionCards";
 import UserReviews from "@/components/UserReviews";
 import EntrepreneurProblems from "@/components/EntrepreneurProblems";
-import EcosystemSection from "@/components/home/EcosystemSection";
-import PricingTeaser from "@/components/home/PricingTeaser";
-import ProofSection from "@/components/home/ProofSection";
-import ClosingCta from "@/components/home/ClosingCta";
-import HomeScene, { useHomeSceneFonts } from "@/components/home/HomeScene";
-import "@/components/home/home-sections.css";
-import "@/components/home/home-upgrade.css";
-import "@/components/home/home-glass.css";
 import { PullToRefresh } from "@/components/mobile/PullToRefresh";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ScrollReveal } from "@/components/animations/ScrollReveal";
@@ -27,7 +19,7 @@ import { trackLandingViewed } from "@/lib/analytics";
 // AISpecializationTrends is the only homepage section that uses Recharts; as a
 // static import it pulled ~77KB gz of charting into the fold-blocking bundle
 // for a section that renders well below the fold. The Suspense fallback below
-// reserves its measured height (see the placeholders below) so deferring it
+// reserves its measured height (969px mobile / 753px at lg) so deferring it
 // costs no layout shift.
 const AISpecializationTrends = lazy(() => import("@/components/AISpecializationTrends"));
 const HomeFAQ = lazy(() => import("@/components/HomeFAQ"));
@@ -35,25 +27,16 @@ const FounderAnswerLibraryTeaser = lazy(() => import("@/components/seo/FounderAn
 
 // lazy() alone still fetched all three chunks on first render (~190KB gz with
 // Recharts), before the visitor scrolled. LoadWhenNear defers each until it is
-// 800px from the viewport. Each placeholder reserves the section's rendered
-// height (re-measured 2026-10-29 after the redesign, at 390, 800 and 1280 px); the old ones were
-// half the real height, so every swap pushed the page down on phones.
-const trendsPlaceholder = <div className="min-h-[1953px] md:min-h-[1852px] lg:min-h-[1272px] animate-pulse bg-muted/20" />;
-const teaserPlaceholder = <div className="min-h-[1458px] md:min-h-[1084px] lg:min-h-[774px] animate-pulse bg-muted/20" />;
-const faqPlaceholder = <div className="min-h-[1398px] md:min-h-[1258px] lg:min-h-[1079px] animate-pulse bg-muted/20" />;
-
-const Reveal = ({ children }: { children: ReactNode }) => (
-  <ScrollReveal variant="fade" amount={0.05}>
-    {children}
-  </ScrollReveal>
-);
+// 800px from the viewport; the placeholders keep the heights above.
+const trendsPlaceholder = <div className="min-h-[969px] lg:min-h-[753px] animate-pulse bg-muted/20" />;
+const teaserPlaceholder = <div className="h-64 animate-pulse bg-muted/20" />;
+const faqPlaceholder = <div className="h-96 animate-pulse bg-muted/20" />;
 
 const Index = () => {
   const isMobile = useIsMobile();
   const hasTrackedLandingView = useRef(false);
   // Track homepage analytics
   usePageAnalytics('/', 'Home - Creatives Takeover');
-  useHomeSceneFonts();
 
   useEffect(() => {
     if (hasTrackedLandingView.current) return;
@@ -80,82 +63,12 @@ const Index = () => {
     ])
   ];
 
-  // The story, in order: what it is (hero), the problems and the tool for each,
-  // the stages, what is inside, who is here, why now, what it costs, what people
-  // say (hidden until real quotes exist), answers, and one last way in.
-  // Each section after the hero is its own scene with its own display face
-  // (see home-scenes.css); HomeWallpaper stays behind the whole page.
-  const sections = (
-    <>
-      <Hero />
-      <HomeScene scene="journey">
-        <Reveal>
-          <EntrepreneurProblems />
-        </Reveal>
-      </HomeScene>
-      <HomeScene scene="orbit">
-        <Reveal>
-          <UserReviews />
-        </Reveal>
-      </HomeScene>
-      <HomeScene scene="studio">
-        <Reveal>
-          <ValuePropositionCards />
-        </Reveal>
-      </HomeScene>
-      <HomeScene scene="network">
-        <Reveal>
-          <EcosystemSection />
-        </Reveal>
-      </HomeScene>
-      <HomeScene scene="data">
-        <Reveal>
-          <LoadWhenNear id="ai-trends" placeholder={trendsPlaceholder}>
-            <Suspense fallback={trendsPlaceholder}>
-              <AISpecializationTrends />
-            </Suspense>
-          </LoadWhenNear>
-        </Reveal>
-      </HomeScene>
-      <HomeScene scene="tiers">
-        <Reveal>
-          <PricingTeaser />
-        </Reveal>
-      </HomeScene>
-      {/* Renders nothing (zero height) until src/data/homeProof.ts has quotes. */}
-      <HomeScene scene="quote">
-        <ProofSection />
-      </HomeScene>
-      <HomeScene scene="library">
-        <Reveal>
-          <LoadWhenNear id="pedia-teaser" placeholder={teaserPlaceholder}>
-            <Suspense fallback={teaserPlaceholder}>
-              <FounderAnswerLibraryTeaser compact variant="home" />
-            </Suspense>
-          </LoadWhenNear>
-        </Reveal>
-      </HomeScene>
-      <HomeScene scene="calm">
-        <Reveal>
-          <LoadWhenNear id="home-faq" placeholder={faqPlaceholder}>
-            <Suspense fallback={faqPlaceholder}>
-              <HomeFAQ />
-            </Suspense>
-          </LoadWhenNear>
-        </Reveal>
-      </HomeScene>
-      <HomeScene scene="launch">
-        <ClosingCta />
-      </HomeScene>
-    </>
-  );
-
   return (
     <div className="min-h-screen relative">
       <HomeWallpaper variant="landing" />
       <SEO
-        title="Creatives Takeover | Start and Test Your Startup Project"
-        description="Creatives Takeover is a SaaS platform where founders start and test their projects, with tools for every stage plus mentors, service providers and investors."
+        title="Creatives Takeover | Startup Development Platform"
+        description="Creatives Takeover is a startup development platform that helps first-time founders validate ideas, build MVPs, launch, gain traction, and prepare to raise."
         keywords="founder operating system, startup idea validation, customer decision brief, interactive product demo, product market fit evidence, MVP builder, go-to-market execution, traction engine, first-time solo founders"
         url="/"
         image="/og-founders-compass-2026-09.png"
@@ -165,7 +78,87 @@ const Index = () => {
       />
       <Navigation />
       <main>
-        {isMobile ? <PullToRefresh onRefresh={handleRefresh}>{sections}</PullToRefresh> : sections}
+        {isMobile ? (
+          <PullToRefresh onRefresh={handleRefresh}>
+            <Hero />
+            <ScrollReveal variant="fade" amount={0.05}>
+              <div className="homepage-band-muted">
+                <EntrepreneurProblems />
+              </div>
+            </ScrollReveal>
+            <ScrollReveal variant="fade" amount={0.05}>
+              <UserReviews />
+            </ScrollReveal>
+            <ScrollReveal variant="fade" amount={0.05}>
+              <div className="homepage-band-muted">
+                <LoadWhenNear id="ai-trends" placeholder={trendsPlaceholder}>
+                  <Suspense fallback={trendsPlaceholder}>
+                    <AISpecializationTrends />
+                  </Suspense>
+                </LoadWhenNear>
+              </div>
+            </ScrollReveal>
+            <ScrollReveal variant="fade" amount={0.05}>
+              <ValuePropositionCards />
+            </ScrollReveal>
+            <ScrollReveal variant="fade" amount={0.05}>
+              <LoadWhenNear id="pedia-teaser" placeholder={teaserPlaceholder}>
+                <Suspense fallback={teaserPlaceholder}>
+                  <FounderAnswerLibraryTeaser compact />
+                </Suspense>
+              </LoadWhenNear>
+            </ScrollReveal>
+            <ScrollReveal variant="fade" amount={0.05}>
+              <div className="homepage-band-muted">
+                <LoadWhenNear id="home-faq" placeholder={faqPlaceholder}>
+                  <Suspense fallback={faqPlaceholder}>
+                    <HomeFAQ />
+                  </Suspense>
+                </LoadWhenNear>
+              </div>
+            </ScrollReveal>
+          </PullToRefresh>
+        ) : (
+          <>
+            <Hero />
+            <ScrollReveal variant="fade" amount={0.05}>
+              <div className="homepage-band-muted">
+                <EntrepreneurProblems />
+              </div>
+            </ScrollReveal>
+            <ScrollReveal variant="fade" amount={0.05}>
+              <UserReviews />
+            </ScrollReveal>
+            <ScrollReveal variant="fade" amount={0.05}>
+              <div className="homepage-band-muted">
+                <LoadWhenNear id="ai-trends" placeholder={trendsPlaceholder}>
+                  <Suspense fallback={trendsPlaceholder}>
+                    <AISpecializationTrends />
+                  </Suspense>
+                </LoadWhenNear>
+              </div>
+            </ScrollReveal>
+            <ScrollReveal variant="fade" amount={0.05}>
+              <ValuePropositionCards />
+            </ScrollReveal>
+            <ScrollReveal variant="fade" amount={0.05}>
+              <LoadWhenNear id="pedia-teaser" placeholder={teaserPlaceholder}>
+                <Suspense fallback={teaserPlaceholder}>
+                  <FounderAnswerLibraryTeaser compact />
+                </Suspense>
+              </LoadWhenNear>
+            </ScrollReveal>
+            <ScrollReveal variant="fade" amount={0.05}>
+              <div className="homepage-band-muted">
+                <LoadWhenNear id="home-faq" placeholder={faqPlaceholder}>
+                  <Suspense fallback={faqPlaceholder}>
+                    <HomeFAQ />
+                  </Suspense>
+                </LoadWhenNear>
+              </div>
+            </ScrollReveal>
+          </>
+        )}
       </main>
       <Footer />
       {/* SoftGateModal intentionally omitted for this hero design */}

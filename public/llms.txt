@@ -1,6 +1,6 @@
 # Creatives Takeover
 
-> Last updated: 2026-10-29
+> Last updated: 2026-10-25
 
 > Creatives Takeover is the startup ecosystem workspace. Founders test and build their ideas with AI tools that draft startup artifacts (ideal customer profile, MVP scope, go-to-market plan, pitch deck review) and a marketplace of reviewed human startup mentors who can be booked directly. Incubators, accelerators and universities use it to see how every team in a cohort is progressing, and VCs and family offices use it to meet founders who are executing. Founders can start free without applying and keep 100% equity.
 
@@ -68,7 +68,7 @@ Founder plans are self-serve with no equity taken and no application required. I
 Plain-English reference entries on startup terms, metrics and frameworks, plus practical guides. Each entry is a standalone page.
 
 - [Startup Guide](https://creatives-takeover.com/startup-guide): End-to-end guide from idea to launch.
-- [Startup Pedia index](https://creatives-takeover.com/startup-pedia): All 50 entries, searchable by term, topic and role.
+- [Startup Pedia index](https://creatives-takeover.com/startup-pedia): All 47 entries, searchable by term, topic and role.
 
 ### Validation & customer discovery
 
@@ -140,9 +140,6 @@ Plain-English reference entries on startup terms, metrics and frameworks, plus p
 - [Founder Progress Tracking Software: What Accelerators Should Look For](https://creatives-takeover.com/startup-pedia/founder-progress-tracking-software)
 - [Accelerator and Incubator Software Compared (2026)](https://creatives-takeover.com/startup-pedia/accelerator-software-compared)
 - [Startup Accelerator Alternatives: How to Get the Same Benefits](https://creatives-takeover.com/startup-pedia/startup-accelerator-alternatives)
-- [How to Measure Customer Discovery Progress](https://creatives-takeover.com/startup-pedia/measuring-customer-discovery-progress)
-- [How Mentors Track Founder Actions Between Sessions](https://creatives-takeover.com/startup-pedia/how-mentors-track-founder-progress)
-- [Accelerator vs Incubator: What Is the Difference?](https://creatives-takeover.com/startup-pedia/accelerator-vs-incubator)
 
 ## Editorial
 
