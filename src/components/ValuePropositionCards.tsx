@@ -392,9 +392,6 @@ const ValuePropositionCards = () => {
           <h2 className="homepage-section-title value-prop-section__title text-3xl sm:text-4xl lg:text-[2.9rem] mb-4">
             Creatives Takeover in a Nutshell
           </h2>
-          <p className="homepage-section-copy text-base sm:text-lg">
-            Know who your customer is, test whether people want your product before you build all of it, and plan how to reach your first buyers. Mentors, service providers and investors are on the same platform when you need them.
-          </p>
         </div>
 
         {/* Horizontal Carousel */}

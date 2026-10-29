@@ -23,8 +23,8 @@ const LEAD_ACCOUNTS: ReadonlySet<AccountId> = new Set(["founder", "builder"]);
 const EcosystemSection = () => (
   <section className="hs-section section-shell" aria-labelledby="ecosystem-heading">
     <div className="container mx-auto px-4 sm:px-6">
-      <HomeSectionHeader badge="Who's Here" title="Everyone your project needs is already here" id="ecosystem-heading">
-        Founders and builders work on their projects next to mentors, service providers and investors, on the same SaaS platform.
+      <HomeSectionHeader badge="Who's Here" title="A Unique Environment" id="ecosystem-heading">
+        Made for people building on their own, or just curious about an idea. Around your project you meet mentors to learn from, possible cofounders, service providers for the work you can't do alone, and investors looking for projects that fit what they back.
       </HomeSectionHeader>
 
       <RevealGroup className="hs-ecosystem-grid" stagger={0.07}>
