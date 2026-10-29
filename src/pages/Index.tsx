@@ -11,6 +11,7 @@ import ClosingCta from "@/components/home/ClosingCta";
 import HomeScene, { useHomeSceneFonts } from "@/components/home/HomeScene";
 import "@/components/home/home-sections.css";
 import "@/components/home/home-upgrade.css";
+import "@/components/home/home-glass.css";
 import { PullToRefresh } from "@/components/mobile/PullToRefresh";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ScrollReveal } from "@/components/animations/ScrollReveal";

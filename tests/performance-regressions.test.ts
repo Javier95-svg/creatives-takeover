@@ -13,7 +13,8 @@ test('founder journey media stays outside the homepage critical loading path', (
   assert.match(media, /fetchPriority="low"/);
   assert.match(media, /width=\{1152\}/);
   assert.match(media, /height=\{648\}/);
-  assert.match(journey, /\{isMobile \? \(/);
+  // One timeline for every screen size, so each GIF is in the page once.
+  assert.equal(journey.match(/<FounderJourneyVideo/g)?.length, 1);
   assert.doesNotMatch(journey, /hidden md:block/);
   assert.doesNotMatch(journey, /md:hidden/);
 });

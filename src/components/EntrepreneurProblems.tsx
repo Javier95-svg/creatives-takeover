@@ -1,4 +1,4 @@
-import { useRef, useState, type CSSProperties, type KeyboardEvent } from "react";
+import type { CSSProperties } from "react";
 import {
   ArrowUpRight,
   Boxes,
@@ -17,9 +17,7 @@ import {
 import { Link } from "react-router-dom";
 import FounderJourneyVideo from "./FounderJourneyVideo";
 import { ScrollReveal } from "@/components/animations/ScrollReveal";
-import { useIsMobile } from "@/hooks/use-mobile";
 import HomeSectionHeader from "@/components/home/HomeSectionHeader";
-import GradientMesh from "@/components/home/GradientMesh";
 
 type AccentColor = "blue" | "green" | "red" | "amber";
 
@@ -255,136 +253,67 @@ const journeyActions: JourneyAction[] = [
   },
 ];
 
-// The journey is a picker: the problems on the left, the part of the platform
-// for the chosen one on a stage on the right. Only the chosen row's GIF is in
-// the page (the others are display: none), so a visit downloads one or two of
-// these multi-megabyte GIFs instead of all seven. It does not autoplay for the
-// same reason.
+// The journey is a timeline: each problem with its GIF on one side of a glowing
+// line and the part of the platform for it on the other, swapping sides every
+// row. The GIFs are multi-megabyte, so FounderJourneyVideo only mounts each one
+// as its row nears the viewport; the frame keeps its shape until then.
 const EntrepreneurProblems = () => {
-  const isMobile = useIsMobile();
-  const [activeIndex, setActiveIndex] = useState(0);
-  const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
-
-  const select = (index: number) => {
-    const next = (index + journeySteps.length) % journeySteps.length;
-    setActiveIndex(next);
-    tabRefs.current[next]?.focus();
-  };
-
-  const onTabKeyDown = (event: KeyboardEvent<HTMLButtonElement>, index: number) => {
-    if (event.key === "ArrowDown" || event.key === "ArrowRight") {
-      event.preventDefault();
-      select(index + 1);
-    } else if (event.key === "ArrowUp" || event.key === "ArrowLeft") {
-      event.preventDefault();
-      select(index - 1);
-    }
-  };
-
-  const renderStage = (index: number) => {
-    const action = journeyActions[index];
-    const next = journeyActions[(index + 1) % journeyActions.length];
-    const ActionIcon = action.icon;
-    const stageStyle = { "--journey-accent": action.accent } as CSSProperties;
-
-    return (
-      <div
-        key={action.to}
-        id={`journey-panel-${index}`}
-        role="tabpanel"
-        aria-labelledby={`journey-tab-${index}`}
-        className="hx-journey__stage"
-        style={stageStyle}
-        hidden={index !== activeIndex}
-      >
-        <GradientMesh colors={[action.accent, action.accentGlow, next.accent, action.accentStrong]} />
-        <div className="hx-journey__window">
-          <div className="hx-journey__chrome" aria-hidden="true">
-            <i />
-            <i />
-            <i />
-            <span>creatives-takeover.com{action.to}</span>
-          </div>
-          <div className="hx-journey__screen">
-            {/* Shown until (or instead of) the GIF for this row. */}
-            <div className="hx-journey__skeleton" aria-hidden="true">
-              <span />
-              <span />
-              <span />
-              <span />
-            </div>
-            {index !== activeIndex ? null : (
-              <FounderJourneyVideo position={index} className="founder-journey-gif hx-journey__gif" />
-            )}
-          </div>
-        </div>
-        <Link to={action.to} className="hx-journey__card group">
-          <span className="hx-journey__outcome">
-            <ActionIcon aria-hidden="true" />
-            {action.outcome}
-          </span>
-          <h3 className="hx-journey__title">{action.title}</h3>
-          <p className="hx-journey__copy">{action.description}</p>
-          <span className="hx-journey__cta">
-            Open tool
-            <ArrowUpRight aria-hidden="true" />
-          </span>
-        </Link>
-      </div>
-    );
-  };
-
   return (
-    <section className="founder-journey-section section-shell hx-journey" aria-labelledby="journey-heading">
+    <section className="founder-journey-section section-shell hg-section hg-journey" aria-labelledby="journey-heading">
+      <span className="hg-aurora hg-aurora--journey" aria-hidden="true" />
       <div className="container mx-auto px-4 sm:px-6 relative z-10">
         <ScrollReveal>
-          <HomeSectionHeader badge="Own Your Path" title="Every Founder's Journey is Unique" id="journey-heading">
-            Most founders hit the same problems. Pick yours.
+          <HomeSectionHeader
+            badge="Own Your Path"
+            title="Every Founder's Journey is Unique"
+            id="journey-heading"
+            align="center"
+            className="hg-head"
+          >
+            Most founders hit the same problems. Here is what helps with each.
           </HomeSectionHeader>
         </ScrollReveal>
 
-        <ScrollReveal className="hx-journey__grid" variant="fade">
-          <div className="hx-journey__list" role="tablist" aria-orientation="vertical" aria-label="Founder problems">
-            {journeySteps.map((step, index) => {
-              const Icon = step.icon;
-              const selected = index === activeIndex;
-              const tabStyle = { "--journey-accent": journeyActions[index].accent } as CSSProperties;
-              return (
-                <div key={step.phase} className="hx-journey__item">
-                  <button
-                    ref={(el) => {
-                      tabRefs.current[index] = el;
-                    }}
-                    type="button"
-                    role="tab"
-                    id={`journey-tab-${index}`}
-                    aria-selected={selected}
-                    aria-controls={`journey-panel-${index}`}
-                    tabIndex={selected ? 0 : -1}
-                    className="hx-journey__tab"
-                    style={tabStyle}
-                    onClick={() => setActiveIndex(index)}
-                    onKeyDown={(event) => onTabKeyDown(event, index)}
-                  >
-                    <span className="hx-journey__icon" aria-hidden="true">
-                      <Icon />
-                    </span>
-                    <span className="hx-journey__text">
-                      <span className="hx-journey__phase">{step.phase}</span>
-                      <span className="hx-journey__challenge">{step.challenge}</span>
-                    </span>
-                  </button>
-                  {/* On a phone the stage opens under the row that was tapped. */}
-                  {isMobile ? (
-                    selected ? renderStage(index) : null
-                  ) : null}
-                </div>
-              );
-            })}
-          </div>
+        <ol className="hg-timeline">
+          {journeySteps.map((step, index) => {
+            const action = journeyActions[index];
+            const ActionIcon = action.icon;
+            const stepStyle = { "--step-hue": action.accent } as CSSProperties;
+            // Each side slides in from its own edge (a fade on phones, in ScrollReveal).
+            const flip = index % 2 === 1;
 
-          {!isMobile && <div className="hx-journey__stages">{journeyActions.map((_, index) => renderStage(index))}</div>}
-        </ScrollReveal>
+            return (
+              <li key={step.phase} className={`hg-step${flip ? " hg-step--flip" : ""}`} style={stepStyle}>
+                <ScrollReveal variant={flip ? "slide-left" : "slide-right"} className="hg-step__media hg-glass">
+                  <div className="hg-step__screen">
+                    <span className="hg-step__skeleton" aria-hidden="true" />
+                    <FounderJourneyVideo position={index} className="founder-journey-gif hg-step__gif" />
+                  </div>
+                  <p className="hg-step__phase">{step.phase}</p>
+                  <h3 className="hg-step__challenge">{step.challenge}</h3>
+                </ScrollReveal>
+
+                <span className="hg-step__dot" aria-hidden="true" />
+
+                <ScrollReveal variant={flip ? "slide-right" : "slide-left"} className="hg-step__side">
+                  <Link to={action.to} className="hg-step__card hg-glass group">
+                    <span className="hg-step__glow" aria-hidden="true" />
+                    <span className="hg-step__outcome">
+                      <ActionIcon aria-hidden="true" />
+                      {action.outcome}
+                    </span>
+                    <span className="hg-step__title">{action.title}</span>
+                    <span className="hg-step__copy">{action.description}</span>
+                    <span className="hg-step__cta">
+                      Open tool
+                      <ArrowUpRight aria-hidden="true" />
+                    </span>
+                  </Link>
+                </ScrollReveal>
+              </li>
+            );
+          })}
+        </ol>
       </div>
     </section>
   );

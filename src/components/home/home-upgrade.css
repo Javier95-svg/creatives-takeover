@@ -2,11 +2,11 @@
  * Homepage redesign, 2026-10-29: Stripe-style sections below the hero.
  * Left-aligned headings with a gradient eyebrow, moving colour fields
  * (GradientMesh) inside panels, and one interactive moment per section: the
- * journey picker, the cycle track, the What's inside tabs and the network
- * diagram. Sections stay transparent so the one HomeWallpaper shows behind
- * the whole page. All motion is transform or opacity and switches off for
- * reduced motion; stacked panels share one grid cell so switching never
- * moves the page.
+ * cycle track and the What's inside tabs. The journey, A Unique Environment,
+ * pricing and the closing panel are glass (home-glass.css). Sections stay
+ * transparent so the one HomeWallpaper shows behind the whole page. All
+ * motion is transform or opacity and switches off for reduced motion; stacked
+ * panels share one grid cell so switching never moves the page.
  */
 
 /* ---- Section heading ---------------------------------------------------- */
@@ -77,256 +77,6 @@
 .hx-mesh span:nth-child(2) { top: -25%; right: -25%; background: radial-gradient(circle, hsl(var(--mesh-2)) 0%, hsl(var(--mesh-2) / 0) 65%); }
 .hx-mesh span:nth-child(3) { bottom: -40%; left: 5%; background: radial-gradient(circle, hsl(var(--mesh-3)) 0%, hsl(var(--mesh-3) / 0) 65%); }
 .hx-mesh span:nth-child(4) { bottom: -35%; right: -15%; background: radial-gradient(circle, hsl(var(--mesh-4)) 0%, hsl(var(--mesh-4) / 0) 65%); }
-
-/* ---- Every Founder's Journey: a picker and a stage ---------------------- */
-
-.hx-journey__grid {
-  display: grid;
-  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
-  gap: 2.5rem;
-  align-items: start;
-}
-
-.hx-journey__list {
-  display: grid;
-  gap: 0.5rem;
-}
-
-.hx-journey__tab {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  width: 100%;
-  padding: 1rem 1.1rem;
-  border: 1px solid transparent;
-  border-radius: 1.125rem;
-  background: transparent;
-  color: inherit;
-  text-align: left;
-  cursor: pointer;
-  transition: background-color 260ms ease, border-color 260ms ease, box-shadow 260ms ease;
-}
-
-.hx-journey__tab:hover {
-  background: hsl(var(--card) / 0.55);
-}
-
-.hx-journey__tab[aria-selected="true"] {
-  border-color: hsl(var(--journey-accent) / 0.5);
-  background: hsl(var(--card) / 0.9);
-  box-shadow:
-    inset 3px 0 0 hsl(var(--journey-accent)),
-    0 20px 40px -28px hsl(var(--journey-accent) / 0.85);
-}
-
-.hx-journey__tab:focus-visible {
-  outline: 2px solid hsl(var(--journey-accent));
-  outline-offset: 2px;
-}
-
-.hx-journey__icon {
-  display: grid;
-  flex: none;
-  place-items: center;
-  width: 2.5rem;
-  height: 2.5rem;
-  border-radius: 0.75rem;
-  background: hsl(var(--journey-accent) / 0.14);
-  color: hsl(var(--journey-accent));
-}
-
-.hx-journey__icon svg {
-  width: 1.15rem;
-  height: 1.15rem;
-}
-
-.hx-journey__text {
-  min-width: 0;
-}
-
-.hx-journey__phase {
-  display: block;
-  color: hsl(var(--muted-foreground));
-  font-size: 0.6875rem;
-  font-weight: 600;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-}
-
-.hx-journey__challenge {
-  display: block;
-  margin-top: 0.2rem;
-  color: hsl(var(--foreground) / 0.7);
-  font-size: 1rem;
-  font-weight: 600;
-  line-height: 1.35;
-}
-
-.hx-journey__tab[aria-selected="true"] .hx-journey__challenge {
-  color: hsl(var(--foreground));
-}
-
-.hx-journey__stages {
-  position: sticky;
-  top: 6.5rem;
-}
-
-.hx-journey__stage {
-  position: relative;
-  isolation: isolate;
-  padding: 1.5rem 1.5rem 1.75rem;
-  border: 1px solid hsl(var(--journey-accent) / 0.35);
-  border-radius: 1.75rem;
-  overflow: hidden;
-}
-
-.hx-journey__window {
-  position: relative;
-  border: 1px solid hsl(0 0% 100% / 0.14);
-  border-radius: 1rem;
-  background: hsl(224 32% 9% / 0.88);
-  box-shadow: 0 30px 60px -30px hsl(224 60% 4% / 0.7);
-  overflow: hidden;
-}
-
-.hx-journey__chrome {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  height: 2.25rem;
-  padding: 0 0.9rem;
-  border-bottom: 1px solid hsl(0 0% 100% / 0.08);
-}
-
-.hx-journey__chrome i {
-  width: 0.55rem;
-  height: 0.55rem;
-  border-radius: 50%;
-  background: hsl(0 0% 100% / 0.22);
-}
-
-.hx-journey__chrome span {
-  margin-left: 0.75rem;
-  padding: 0.15rem 0.6rem;
-  border-radius: 0.375rem;
-  background: hsl(0 0% 100% / 0.06);
-  color: hsl(0 0% 100% / 0.55);
-  font: 500 0.6875rem/1.4 ui-monospace, 'SFMono-Regular', Menlo, monospace;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.hx-journey__screen {
-  position: relative;
-  aspect-ratio: 256 / 135;
-}
-
-/* A sketch of a workspace, under the GIF and in its place until it loads. */
-.hx-journey__skeleton {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  grid-template-columns: 1fr 2fr;
-  grid-template-rows: 1fr 1fr 1.6fr;
-  gap: 0.7rem;
-  padding: 1.1rem;
-}
-
-.hx-journey__skeleton span {
-  border-radius: 0.6rem;
-  background: linear-gradient(110deg, hsl(0 0% 100% / 0.05) 30%, hsl(var(--journey-accent) / 0.22) 50%, hsl(0 0% 100% / 0.05) 70%);
-  background-size: 250% 100%;
-}
-
-.hx-journey__skeleton span:nth-child(1) { grid-row: 1 / 4; }
-.hx-journey__skeleton span:nth-child(4) { grid-column: 2; }
-
-.hx-journey__screen .founder-journey-gif {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-}
-
-.hx-journey__screen .founder-journey-gif__frame {
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
-}
-
-.hx-journey__card {
-  position: relative;
-  display: block;
-  width: min(27rem, 90%);
-  margin: -2.75rem 0 0 auto;
-  padding: 1.4rem 1.5rem;
-  border: 1px solid hsl(var(--border) / 0.8);
-  border-radius: 1.25rem;
-  background: hsl(var(--card) / 0.95);
-  box-shadow: 0 30px 60px -30px hsl(224 60% 4% / 0.6);
-  color: hsl(var(--foreground));
-  text-decoration: none;
-  transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 320ms ease;
-}
-
-.hx-journey__card:hover,
-.hx-journey__card:focus-visible {
-  transform: translateY(-4px);
-  box-shadow: 0 36px 70px -30px hsl(var(--journey-accent) / 0.7);
-}
-
-.hx-journey__outcome {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  color: hsl(var(--journey-accent));
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-}
-
-.hx-journey__outcome svg {
-  width: 1rem;
-  height: 1rem;
-}
-
-.hx-journey .hx-journey__title {
-  margin: 0.5rem 0 0.4rem;
-  font-size: 1.75rem;
-  line-height: 1.1;
-}
-
-.hx-journey__copy {
-  color: hsl(var(--muted-foreground));
-  font-size: 0.9375rem;
-  line-height: 1.6;
-}
-
-.hx-journey__cta {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  margin-top: 0.9rem;
-  color: hsl(var(--journey-accent));
-  font-size: 0.875rem;
-  font-weight: 600;
-}
-
-.hx-journey__cta svg {
-  width: 1rem;
-  height: 1rem;
-  transition: transform 260ms ease;
-}
-
-.hx-journey__card:hover .hx-journey__cta svg {
-  transform: translate(2px, -2px);
-}
 
 /* ---- Startup Development Cycle: a track and a stage --------------------- */
 
@@ -763,227 +513,6 @@
   text-underline-offset: 4px;
 }
 
-/* ---- A Unique Environment: a network ------------------------------------ */
-
-.hx-env__grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  align-items: center;
-  gap: 3.5rem;
-}
-
-.hx-env__diagram {
-  position: relative;
-  width: 100%;
-  max-width: 32rem;
-  aspect-ratio: 1;
-  margin: 0 auto;
-}
-
-.hx-env__lines {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  overflow: visible;
-}
-
-.hx-env__orbit {
-  fill: none;
-  stroke: hsl(var(--border));
-  stroke-width: 0.25;
-  stroke-dasharray: 0.8 1.2;
-}
-
-.hx-env__orbit--inner {
-  stroke: hsl(var(--primary) / 0.35);
-}
-
-.hx-env__line {
-  stroke-width: 0.6;
-  stroke-linecap: round;
-  stroke-dasharray: 2 2.2;
-  opacity: 0.55;
-  transition: opacity 300ms ease, stroke-width 300ms ease;
-}
-
-.hx-env__line.is-focus {
-  opacity: 1;
-  stroke-width: 1;
-}
-
-.hx-env__core {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  translate: -50% -50%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.3rem;
-  width: 30%;
-  aspect-ratio: 1;
-  border-radius: 50%;
-  background: linear-gradient(135deg, hsl(228 90% 60%), hsl(262 83% 60%) 55%, hsl(330 85% 60%));
-  box-shadow:
-    0 0 0 10px hsl(262 83% 62% / 0.12),
-    0 30px 60px -20px hsl(262 83% 62% / 0.85);
-  color: hsl(0 0% 100%);
-  font-size: 0.875rem;
-  font-weight: 700;
-  text-align: center;
-}
-
-.hx-env__core svg {
-  width: 1.4rem;
-  height: 1.4rem;
-}
-
-.hx-env__pulse {
-  position: absolute;
-  inset: 0;
-  border: 2px solid hsl(262 83% 72% / 0.6);
-  border-radius: 50%;
-}
-
-.hx-env__node {
-  position: absolute;
-  translate: -50% -50%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.45rem;
-}
-
-.hx-env__node-dot {
-  display: grid;
-  place-items: center;
-  width: 3.5rem;
-  height: 3.5rem;
-  border: 2px solid hsl(var(--node-hue) / 0.7);
-  border-radius: 50%;
-  background: hsl(var(--card));
-  box-shadow:
-    0 0 0 6px hsl(var(--node-hue) / 0.12),
-    0 14px 30px -12px hsl(var(--node-hue) / 0.85);
-  color: hsl(var(--node-hue));
-  transition: transform 300ms ease, background-color 300ms ease, color 300ms ease;
-}
-
-.hx-env__node-dot svg {
-  width: 1.3rem;
-  height: 1.3rem;
-}
-
-.hx-env__node.is-focus .hx-env__node-dot {
-  background: hsl(var(--node-hue));
-  color: hsl(0 0% 100%);
-  transform: scale(1.12);
-}
-
-.hx-env__node-label {
-  color: hsl(var(--foreground) / 0.85);
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-
-.hx-env__list {
-  display: grid;
-  gap: 0.75rem;
-}
-
-.hx-env__row {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 1rem;
-  padding: 1.1rem 1.25rem;
-  border: 1px solid hsl(var(--border) / 0.7);
-  border-radius: 1.25rem;
-  background: hsl(var(--card) / 0.75);
-  color: inherit;
-  text-decoration: none;
-  transition: transform 300ms cubic-bezier(0.22, 1, 0.36, 1), border-color 300ms ease, box-shadow 300ms ease;
-}
-
-.hx-env__row:hover,
-.hx-env__row:focus-visible {
-  border-color: hsl(var(--node-hue) / 0.6);
-  box-shadow: 0 20px 40px -28px hsl(var(--node-hue) / 0.9);
-  transform: translateX(4px);
-}
-
-.hx-env__row:focus-visible {
-  outline: 2px solid hsl(var(--node-hue));
-  outline-offset: 2px;
-}
-
-.hx-env__row-icon {
-  display: grid;
-  place-items: center;
-  width: 2.75rem;
-  height: 2.75rem;
-  border-radius: 0.875rem;
-  background: hsl(var(--node-hue) / 0.14);
-  color: hsl(var(--node-hue));
-}
-
-.hx-env__row-icon svg {
-  width: 1.25rem;
-  height: 1.25rem;
-}
-
-.hx-env__row-top {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.6rem;
-}
-
-.hx-env__row-label {
-  color: hsl(var(--node-hue));
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-}
-
-.hx-env__row-promise {
-  display: block;
-  margin-top: 0.2rem;
-  font-family: var(--scene-display, 'Space Grotesk', sans-serif);
-  font-size: 1.15rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-}
-
-.hx-env__row-next {
-  display: block;
-  color: hsl(var(--muted-foreground));
-  font-size: 0.875rem;
-}
-
-.hx-env__row-cta svg {
-  width: 1.1rem;
-  height: 1.1rem;
-  color: hsl(var(--muted-foreground));
-  transition: transform 260ms ease, color 260ms ease;
-}
-
-.hx-env__row:hover .hx-env__row-cta svg {
-  color: hsl(var(--node-hue));
-  transform: translate(2px, -2px);
-}
-
-.hx-actions--start {
-  align-items: flex-start;
-  text-align: left;
-}
-
 /* ---- What AI changes: stat-led charts ----------------------------------- */
 
 .hx-chart {
@@ -1206,13 +735,10 @@
 /* ---- Responsive --------------------------------------------------------- */
 
 @media (max-width: 1023px) {
-  .hx-journey__grid,
-  .hx-env__grid,
   .hx-faq__grid {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .hx-journey__stages,
   .hx-faq__aside {
     position: static;
   }
@@ -1280,37 +806,6 @@
     scrollbar-width: none;
   }
 
-  .hx-journey__tab {
-    padding: 0.85rem 0.9rem;
-  }
-
-  .hx-journey__item .hx-journey__stage {
-    margin: 0.5rem 0 0.75rem;
-    padding: 1rem 1rem 1.25rem;
-  }
-
-  .hx-journey__card {
-    width: 100%;
-    margin-top: -1.5rem;
-  }
-
-  .hx-env__diagram {
-    max-width: 21rem;
-  }
-
-  .hx-env__node-dot {
-    width: 2.6rem;
-    height: 2.6rem;
-  }
-
-  .hx-env__node-label {
-    font-size: 0.625rem;
-  }
-
-  .hx-env__core {
-    font-size: 0.6875rem;
-  }
-
   .hx-pedia__shelf {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -1328,10 +823,6 @@
   .hx-mesh span:nth-child(3) { animation: hx-drift-c 17s ease-in-out infinite alternate; }
   .hx-mesh span:nth-child(4) { animation: hx-drift-d 21s ease-in-out infinite alternate; }
 
-  .hx-journey__skeleton span {
-    animation: hx-shimmer 2.4s ease-in-out infinite;
-  }
-
   .hx-cycle__timer,
   .hx-inside__timer {
     animation: hx-timer 6s linear forwards;
@@ -1340,49 +831,25 @@
   .hx-cycle__orb {
     animation: hx-bob 5s ease-in-out infinite;
   }
-
-  .hx-env__line {
-    animation: hx-flow 2.4s linear infinite;
-  }
-
-  .hx-env__pulse {
-    animation: hx-ping 3s ease-out infinite;
-  }
-
-  .hx-env__node {
-    animation: hx-bob 6s ease-in-out infinite;
-    animation-delay: var(--node-delay, 0s);
-  }
 }
 
 @keyframes hx-drift-a { to { transform: translate3d(10%, 8%, 0) scale(1.12); } }
 @keyframes hx-drift-b { to { transform: translate3d(-12%, 10%, 0) scale(0.92); } }
 @keyframes hx-drift-c { to { transform: translate3d(8%, -12%, 0) scale(1.1); } }
 @keyframes hx-drift-d { to { transform: translate3d(-8%, -8%, 0) scale(1.16); } }
-@keyframes hx-shimmer { from { background-position: 100% 0; } to { background-position: -150% 0; } }
 @keyframes hx-timer { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 @keyframes hx-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
-@keyframes hx-flow { to { stroke-dashoffset: -8.4; } }
-@keyframes hx-ping { from { transform: scale(1); opacity: 0.8; } to { transform: scale(1.6); opacity: 0; } }
 
 @media (prefers-reduced-motion: reduce) {
-  .hx-journey__tab,
-  .hx-journey__card,
-  .hx-journey__cta svg,
   .hx-cycle__fill,
   .hx-cycle__dot,
   .hx-cycle__panel,
   .hx-inside__panel,
   .hx-inside__tab,
-  .hx-env__row,
-  .hx-env__row-cta svg,
-  .hx-env__node-dot,
   .hx-pedia__card {
     transition: none;
   }
 
-  .hx-journey__card:hover,
-  .hx-env__row:hover,
   .hx-pedia__card:hover {
     transform: none;
   }

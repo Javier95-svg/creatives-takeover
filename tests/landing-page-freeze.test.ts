@@ -47,7 +47,10 @@ const frozenFiles = {
   // card opens the public sample workspace (/demo) instead of the sign-in-only
   // /dashboard, the investor card reads "Investor directory", and the
   // never-rendered `pathway` copy is gone. Layout and GIFs are unchanged.
-  '../src/components/EntrepreneurProblems.tsx': '0dc28d7822682eed2863723669c1b64356a4cf97afa4d66ba28f7a8afe5658c4',
+  // Rehashed 2026-10-29 (direction E, Glass, picked by Javier): the journey is a
+  // glass timeline again, all seven steps with their GIFs on a glowing line,
+  // tool cards on the other side. Copy and data are unchanged.
+  '../src/components/EntrepreneurProblems.tsx': '8ada3e70eaf44618f3bc2814b9e39f03ffb189dd720b397b9a4e72d84806f2f5',
   // Updated for the canonical core-tool navigation: support tools no longer
   // appear as stage prerequisites, while Stage VII retains its original name
   // and order.
@@ -104,7 +107,9 @@ const frozenFiles = {
   // Rehashed again 2026-10-29 (Stripe-style redesign Javier asked for):
   // the journey becomes a problem picker with one stage, the cycle a track,
   // What's inside a set of tabs; placeholders re-measured. Hero untouched.
-  '../src/pages/Index.tsx': 'c9976e5227f899e4221200214190cddbd41014e169bbb6e70329ab60aa303759',
+  // Rehashed 2026-10-29 (direction E, Glass): imports home-glass.css for the
+  // journey, A Unique Environment, pricing and closing sections.
+  '../src/pages/Index.tsx': 'b2a7b8e9df30c7e6498ebd467d9ad5448dca6e1f0a67fbe27e7d5e3d95830d7e',
 } as const;
 
 test('the approved unauthenticated landing page remains frozen during core-tool work', () => {
