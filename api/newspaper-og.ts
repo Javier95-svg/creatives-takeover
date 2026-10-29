@@ -49,6 +49,8 @@ export const PEDIA_TERM_LINKS: PediaTermLink[] = [
   { pattern: "non-disclosure agreements?", slug: "nda-and-intellectual-property" },
   { pattern: "intellectual property", slug: "nda-and-intellectual-property" },
   { pattern: "customer interviews?", slug: "customer-interview-questions" },
+  { pattern: "customer discovery", slug: "measuring-customer-discovery-progress" },
+  { pattern: "(?:startup |business )?incubators?", slug: "accelerator-vs-incubator" },
   { pattern: "cold emails?", slug: "cold-email-for-startups" },
   { pattern: "waitlists?", slug: "waitlist-before-mvp" },
   { pattern: "tech stacks?", slug: "how-to-choose-a-startup-tech-stack" },

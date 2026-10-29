@@ -370,4 +370,212 @@ export const programEntries: PediaEntry[] = [
     modifiedAt: "2026-10-25",
     legacySlugs: ["accelerator-alternatives"],
   },
+  {
+    slug: "measuring-customer-discovery-progress",
+    kind: "guide",
+    topic: "programs",
+    audiences: ["founder", "mentor", "program"],
+    title: "How to Measure Customer Discovery Progress",
+    metaTitle: "How to Measure Customer Discovery Progress",
+    metaDescription:
+      "Measure customer discovery by evidence, not activity: qualified conversations, confirmed problems, commitments and decisions, with a simple weekly view.",
+    aliases: ["customer discovery metrics", "measure customer interviews", "discovery progress", "validation metrics", "customer development metrics"],
+    answer:
+      "Measure customer discovery by the evidence it produces, not by activity: how many conversations were with people who match your target customer, how many confirmed the problem with a recent example, how many made a commitment such as a pilot, a deposit or an introduction, and what decision the team made as a result.",
+    sections: [
+      {
+        id: "why-count-evidence",
+        heading: "Why the number of interviews is not enough",
+        body: "\"We spoke to 40 people\" sounds like progress, but it says nothing about who those people were or what the team learned. Friends, other founders and people outside the target market are easy to reach and tend to be polite, so the count rises while the evidence stays weak.\n\nDiscovery is progressing when each week the team knows more about one specific customer: what problem they have, how they handle it today and whether they would act to solve it. The measures below track that.",
+      },
+      {
+        id: "what-to-measure",
+        heading: "Five measures that show real progress",
+        body: "1. **Qualified conversations:** conversations with people who match the [ideal customer profile](/startup-pedia/ideal-customer-profile). Agree the criteria before counting.\n2. **Problem confirmed with a recent example:** the person described the last time the problem happened, what it cost them and what they did about it. Opinions about the future do not count.\n3. **Existing workarounds:** how many already spend time or money on a fix, such as a spreadsheet, an agency or a competitor. A problem nobody works around is rarely urgent.\n4. **Commitments:** a follow-up meeting, an introduction to a colleague, a pilot, a pre-order or a deposit. Commitments cost the customer something, which is why they are stronger than compliments.\n5. **Decisions:** what the team changed because of what it heard, for example narrowing the customer, dropping a feature or stopping the idea.",
+      },
+      {
+        id: "weekly-view",
+        heading: "A simple weekly view",
+        body: "Keep one row per week with the five numbers and one sentence on what the team now believes. After three or four weeks the pattern is usually clear: either confirmed problems and commitments rise as the customer gets narrower, or they stay flat, which is itself a useful result.\n\nThe [customer interview questions](/startup-pedia/customer-interview-questions) guide covers how to run each conversation so the answers are usable, and [how to validate a startup idea](/startup-pedia/how-to-validate-a-startup-idea) covers what to do with the evidence.",
+      },
+      {
+        id: "example",
+        heading: "Example",
+        body: "A founder building scheduling software for physiotherapy clinics holds 12 conversations in two weeks. Only 7 are with clinic owners; the rest are therapists who do not choose software. Of the 7, 5 describe a recent double-booking problem and 4 already pay a receptionist to fix schedules by hand. Two agree to a free pilot. The founder narrows the target to owners of clinics with three or more therapists and stops interviewing individual therapists. The weekly view shows 7 qualified conversations, 5 confirmed problems, 4 workarounds, 2 commitments and 1 decision.",
+      },
+      {
+        id: "mistakes",
+        heading: "Common mistakes",
+        body: "- Counting every conversation, including friends and other founders.\n- Treating \"I would use that\" as confirmation. It is an opinion about the future.\n- Pitching the solution during the interview, which turns discovery into a sales call.\n- Measuring only at the end, when there is no time left to change direction.",
+      },
+    ],
+    roleNotes: {
+      founder: "Report the five numbers to yourself every week. If confirmed problems and commitments are flat after a month, change who you are talking to before you build more.",
+      mentor: "Ask for the last week's qualified conversations and the decision they led to. It moves the session from opinions to evidence.",
+      program: "The same five numbers, collected the same way for every team, make discovery comparable across a cohort.",
+    },
+    faqs: [
+      {
+        question: "How many customer interviews are enough?",
+        answer: "There is no fixed number. Many teams see clear patterns after 10 to 20 qualified conversations with one customer segment. Stop when new conversations stop changing what you believe, not when you reach a target.",
+      },
+      {
+        question: "What counts as a qualified customer conversation?",
+        answer: "A conversation with someone who matches your target customer criteria and has the problem you are studying, agreed before you start counting. Friends, investors and other founders usually do not qualify.",
+      },
+      {
+        question: "What is the strongest signal in customer discovery?",
+        answer: "A commitment that costs the customer something: time for a follow-up, an introduction, a pilot, a pre-order or money. Compliments and \"I would use it\" are the weakest signals.",
+      },
+    ],
+    sources: [
+      { title: "The Mom Test", publisher: "Rob Fitzpatrick", url: "https://www.momtestbook.com/" },
+      { title: "Startup School: How to Talk to Users", publisher: "Eric Migicovsky", url: "https://ericmigi.com/blog/startup-school-how-to-talk-to-users" },
+      { title: "Principles", publisher: "The Lean Startup", url: "https://theleanstartup.com/principles" },
+    ],
+    relatedSlugs: ["customer-interview-questions", "how-to-validate-a-startup-idea", "how-accelerators-measure-startup-progress", "ideal-customer-profile"],
+    cta: {
+      label: "Log interviews in Validate",
+      href: "/validate",
+      description: "Turn interview notes into a structured validation plan with the evidence in one place.",
+    },
+    publishedAt: "2026-10-29",
+    modifiedAt: "2026-10-29",
+  },
+  {
+    slug: "how-mentors-track-founder-progress",
+    kind: "guide",
+    topic: "programs",
+    audiences: ["mentor", "program", "founder"],
+    title: "How Mentors Track Founder Actions Between Sessions",
+    metaTitle: "How Mentors Track Founder Actions Between Sessions",
+    metaDescription:
+      "A simple way for mentors to track what founders commit to and do between sessions: agreed actions, evidence, a short check-in and a review at the next meeting.",
+    aliases: ["mentor follow up", "mentoring action items", "track mentee progress", "mentor accountability", "mentoring session notes"],
+    answer:
+      "Mentors track founder progress by ending every session with one to three specific actions, each with an owner, a date and the evidence that will show it happened, then opening the next session by reviewing that evidence before giving new advice.",
+    sections: [
+      {
+        id: "why-it-matters",
+        heading: "Why advice gets lost between sessions",
+        body: "Most mentoring sessions end with good ideas and no record of who will do what. Two weeks later both sides remember the conversation differently, the founder has done something else, and the next session starts from scratch. The advice was not wrong; nothing connected it to action.\n\nTracking actions does not mean managing the founder. The founder decides what to do. The mentor's job is to make the commitment specific enough that both can tell, next time, whether it happened and what it taught.",
+      },
+      {
+        id: "end-of-session",
+        heading: "End each session with agreed actions",
+        body: "In the last five minutes, agree one to three actions and write them down where both can see them:\n\n- **The action:** specific and small enough for the time available, for example \"hold five conversations with clinic owners\", not \"do more customer research\".\n- **The date:** usually the next session.\n- **The evidence:** what the founder will bring back, such as interview notes, a landing page with numbers or a decision.\n\nAsk the founder to state the actions in their own words. If they cannot, the session was not clear enough.",
+      },
+      {
+        id: "between-sessions",
+        heading: "Between sessions: a short check-in, not supervision",
+        body: "A brief message halfway between sessions, asking what is done and what is blocked, catches problems early. Keep it to two questions. If a founder is stuck on something the mentor can unblock with an introduction or a quick answer, that is the moment to help.\n\nAvoid daily follow-ups. Founders have many priorities, and a mentor who chases every task quickly becomes a manager the founder did not ask for.",
+      },
+      {
+        id: "next-session",
+        heading: "Start the next session with the evidence",
+        body: "Open by reviewing each action: done, partly done or not done, and what the evidence showed. An action that was not done is useful information too; it may mean the founder disagreed, lacked time or hit a blocker. Ask which, without judgement.\n\nOver several sessions, the record shows whether the founder is moving: more [qualified customer conversations](/startup-pedia/measuring-customer-discovery-progress), clearer decisions, a narrower customer. Programs that collect the same record for every team can use it in their [cohort reports](/startup-pedia/startup-cohort-progress-report-template).",
+      },
+      {
+        id: "example",
+        heading: "Example",
+        body: "A mentor meets a founder every two weeks. At the end of the first session they agree two actions: interview five owners of independent gyms and draft a one-page offer. At the midpoint check-in the founder has held two interviews and asks for an introduction, which the mentor makes. The next session opens with four interviews held, a recurring complaint about failed membership payments and a revised offer focused on that. The mentor's advice now builds on evidence rather than on the founder's first idea.",
+      },
+    ],
+    roleNotes: {
+      mentor: "One to three actions, each with a date and evidence, is enough. Review them at the start of every session before giving new advice.",
+      program: "Ask mentors to record agreed actions in one shared place. It shows which teams are moving between sessions, not only in them.",
+      founder: "Write the actions down yourself and bring the evidence, even when an action failed. It makes every session more useful.",
+    },
+    faqs: [
+      {
+        question: "How many action items should come out of a mentoring session?",
+        answer: "One to three. More than that and most will not get done before the next session, which teaches both sides to ignore the list.",
+      },
+      {
+        question: "Should mentors follow up with founders between sessions?",
+        answer: "A short check-in halfway between sessions is useful: what is done and what is blocked. More frequent follow-ups tend to feel like supervision.",
+      },
+      {
+        question: "What if the founder did not do the agreed actions?",
+        answer: "Ask why before moving on. The answer is often more useful than the action would have been: the founder may disagree with the direction, be short of time or be blocked by something the mentor can help with.",
+      },
+    ],
+    sources: [
+      { title: "The Techstars Mentor Manifesto", publisher: "Techstars", url: "https://www.techstars.com/the-line/advice/mentor-manifesto" },
+      { title: "The Mom Test", publisher: "Rob Fitzpatrick", url: "https://www.momtestbook.com/" },
+    ],
+    relatedSlugs: ["measuring-customer-discovery-progress", "how-accelerators-measure-startup-progress", "startup-cohort-progress-report-template", "founder-progress-tracking-software"],
+    cta: {
+      label: "Explore mentorship",
+      href: "/mentorship",
+      description: "Founders on Creatives Takeover can find experts in specific fields.",
+    },
+    publishedAt: "2026-10-29",
+    modifiedAt: "2026-10-29",
+  },
+  {
+    slug: "accelerator-vs-incubator",
+    kind: "term",
+    topic: "programs",
+    audiences: ["founder", "builder", "program"],
+    title: "Accelerator vs Incubator: What Is the Difference?",
+    metaTitle: "Accelerator vs Incubator: What Is the Difference?",
+    metaDescription:
+      "Accelerators run short, fixed cohorts and often invest for equity; incubators support earlier ideas for longer, usually with space and services. How to choose.",
+    aliases: ["incubator vs accelerator", "startup incubator", "business incubator", "what is an accelerator", "what is an incubator"],
+    answer:
+      "A startup accelerator is a fixed-length program, often around three months, that takes a cohort of startups, usually invests a small amount for equity and ends with a demo day. An incubator supports earlier-stage ideas for longer and more flexibly, typically with workspace, advice and services, and usually takes no equity.",
+    sections: [
+      {
+        id: "accelerators",
+        heading: "What an accelerator is",
+        body: "Accelerators select startups in batches (cohorts) through a competitive application. For a few months the teams get structured programming, mentors, deadlines and access to investors, and the program usually ends with a demo day where founders pitch.\n\nMany accelerators invest in each company in exchange for equity. Terms vary widely. As one example, Y Combinator's standard deal is $500,000: $125,000 for 7% of the company on a post-money SAFE, plus $375,000 on an uncapped SAFE with a most favored nation provision. Smaller programs invest less or nothing at all.",
+      },
+      {
+        id: "incubators",
+        heading: "What an incubator is",
+        body: "Incubators are often run by universities, local governments, corporations or nonprofits. They tend to admit startups on a rolling basis rather than in cohorts, support them for months or years rather than weeks, and focus on helping an idea or an early company get established: workspace, advice, training, introductions and sometimes shared services such as legal or accounting help.\n\nMost incubators do not take equity, though some charge rent or fees. Because they are less selective and less time-bound, they suit founders who are still shaping the idea.",
+      },
+      {
+        id: "differences",
+        heading: "The main differences",
+        body: "- **Stage:** accelerators usually want a team with a product or early evidence; incubators often take earlier ideas.\n- **Length:** accelerators run for a fixed few months; incubators are open-ended or last a year or more.\n- **Intake:** accelerators admit cohorts; incubators often admit continuously.\n- **Money:** accelerators often invest for equity; incubators rarely invest and usually take no equity.\n- **Ending:** accelerators end with a demo day aimed at fundraising; incubators end when the company is ready to move on.\n\nThe labels are used loosely, and many programs mix both models, so read each program's terms rather than relying on the name.",
+      },
+      {
+        id: "choosing",
+        heading: "Which one fits your startup",
+        body: "If you are still testing whether the problem is real, an incubator or a structured way to [validate the idea](/startup-pedia/how-to-validate-a-startup-idea) on your own is usually a better fit than an accelerator, which will expect evidence. If you already have customers or a working product and want to raise a round, an accelerator's investor network and deadlines can help. If neither fits your timing, [accelerator alternatives](/startup-pedia/startup-accelerator-alternatives) explains how to get the same benefits separately.",
+      },
+    ],
+    roleNotes: {
+      founder: "Before applying, check the equity and the terms, not just the brand. A program is worth the equity only if it gives you something you cannot get another way.",
+      program: "Founders compare programs by what they leave with. Tracking their evidence during the program makes that easier to show.",
+    },
+    faqs: [
+      {
+        question: "Do incubators take equity?",
+        answer: "Most do not. Many are run by universities, governments or nonprofits and are funded by grants or fees. Some private incubators do take a small stake, so check the terms.",
+      },
+      {
+        question: "Is an accelerator or an incubator better for a first-time founder?",
+        answer: "It depends on your stage. With an idea and no evidence yet, an incubator or a structured validation process usually fits better. With a product and early customers, an accelerator can help you grow and raise.",
+      },
+      {
+        question: "How long do accelerator programs last?",
+        answer: "Most run for around three to six months and end with a demo day. Incubators usually last longer, from several months to a few years.",
+      },
+    ],
+    sources: [
+      { title: "What Startup Accelerators Really Do", publisher: "Harvard Business Review", url: "https://hbr.org/2016/03/what-startup-accelerators-really-do" },
+      { title: "The YC Deal", publisher: "Y Combinator", url: "https://www.ycombinator.com/deal" },
+    ],
+    relatedSlugs: ["startup-accelerator-alternatives", "startup-funding-stages", "pre-seed-vs-seed-funding", "how-accelerators-measure-startup-progress"],
+    cta: {
+      label: "Find accelerator programs",
+      href: "/accelerator-hunt",
+      description: "Accelerator Hunt lets you browse accelerator programs and filter them by industry and stage.",
+    },
+    publishedAt: "2026-10-29",
+    modifiedAt: "2026-10-29",
+  },
 ];
