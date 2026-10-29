@@ -89,6 +89,23 @@ export function verifyServingBuild({ distDir, vercelConfig }) {
     }
   }
 
+  // The strict CSP has no 'unsafe-eval', so a chunk that evals on a strict page
+  // throws. These three only reach eval behind a guard, so they are allowed;
+  // any other chunk that starts using it fails the build.
+  const evalAllowed = [
+    /^document-tools-docx\./, // setImmediate polyfill, only when handed a string
+    /^pdf\.worker\.min\./, // pdf.js probes isEvalSupported in try/catch and falls back
+    /^vendor-pdfjs-dist\./, // same probe, plus eval("require") on Node only
+  ];
+  const assetsDir = path.join(distDir, "assets");
+  const chunks = fs.existsSync(assetsDir) ? fs.readdirSync(assetsDir).filter((file) => file.endsWith(".js")) : [];
+  for (const chunk of chunks) {
+    if (evalAllowed.some((pattern) => pattern.test(chunk))) continue;
+    if (/new Function\(|[^\w.$]eval\(/.test(fs.readFileSync(path.join(assetsDir, chunk), "utf8"))) {
+      problems.push(`assets/${chunk} uses eval or new Function, which the site-wide CSP blocks`);
+    }
+  }
+
   const notFound = path.join(distDir, "404.html");
   if (!fs.existsSync(notFound)) problems.push("404.html is missing; unknown URLs would get Vercel's default page");
   else if (!/<meta name="robots" content="noindex"/.test(fs.readFileSync(notFound, "utf8"))) problems.push("404.html is not noindex");
@@ -107,6 +124,6 @@ if (process.argv[1] && import.meta.url.endsWith(path.basename(process.argv[1])))
     console.error(`SEO build check failed (${problems.length}):\n- ${problems.join("\n- ")}`);
     process.exitCode = 1;
   } else {
-    console.log(`SEO build check passed: app shell, homepage, ${INDEXABLE_ROUTES.length} page canonicals, 404 page and CSP script hashes.`);
+    console.log(`SEO build check passed: app shell, homepage, ${INDEXABLE_ROUTES.length} page canonicals, 404 page, CSP script hashes and eval-free chunks.`);
   }
 }

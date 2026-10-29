@@ -82,6 +82,25 @@ test('the build guard fails on an inline script the CSP has no hash for', async 
   assert.equal(problems.length, 2, problems.join('\n'));
 });
 
+test('the build guard fails on a new chunk that uses eval, but allows the guarded pdf.js and docx ones', async () => {
+  const { mkdtempSync, mkdirSync, writeFileSync } = await import('node:fs');
+  const { tmpdir } = await import('node:os');
+  const { join } = await import('node:path');
+  const { verifyServingBuild } = await import('../scripts/verify-seo-build.mjs');
+  const config = JSON.parse(read('vercel.json'));
+  const dist = mkdtempSync(join(tmpdir(), 'csp-eval-'));
+  writeFileSync(join(dist, '404.html'), '<html><head><meta name="robots" content="noindex" /></head></html>');
+  mkdirSync(join(dist, 'assets'));
+  writeFileSync(join(dist, 'assets', 'vendor-pdfjs-dist.abc.js'), 'try{new Function("")}catch{}');
+  writeFileSync(join(dist, 'assets', 'Index.abc.js'), 'const ok = obj.eval(x); retrieval(y);');
+  assert.deepEqual(verifyServingBuild({ distDir: dist, vercelConfig: config }), []);
+
+  writeFileSync(join(dist, 'assets', 'Pricing.abc.js'), 'const f = new Function("return 1");');
+  assert.deepEqual(verifyServingBuild({ distDir: dist, vercelConfig: config }), [
+    'assets/Pricing.abc.js uses eval or new Function, which the site-wide CSP blocks',
+  ]);
+});
+
 test('only the MVP Builder and published sites keep unsafe-inline and unsafe-eval', () => {
   const config = JSON.parse(read('vercel.json')) as { headers: Array<{ source: string; has?: unknown; headers: Array<{ key: string; value: string }> }> };
   const loose = config.headers

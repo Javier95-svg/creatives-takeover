@@ -348,7 +348,7 @@ const ORGANIZATION_SCHEMA = {
     "@type": "Person",
     "@id": `${BASE_URL}/about#founder`,
     name: "Javier Alonso",
-    jobTitle: "Founder & CEO",
+    jobTitle: "Founder (CEO & CTO)",
     url: `${BASE_URL}/about#founder`,
     sameAs: FOUNDER_SAME_AS,
   },
@@ -467,7 +467,7 @@ function buildStructuredData(routeConfig) {
         "@type": "Person",
         "@id": `${BASE_URL}/about#founder`,
         name: "Javier Alonso",
-        jobTitle: "Founder & CEO",
+        jobTitle: "Founder (CEO & CTO)",
         // Mirrors StartupPediaEntry.tsx: the byline links to the Founder ID profile.
         url: `${BASE_URL}/profile/javier`,
         sameAs: FOUNDER_SAME_AS,

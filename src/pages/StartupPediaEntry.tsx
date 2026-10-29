@@ -27,7 +27,7 @@ import "@/components/startup-pedia/startup-pedia.css";
 const SITE = "https://creatives-takeover.com";
 // The byline links to the author's Founder ID profile (requested 2026-10-25).
 const AUTHOR_PROFILE_PATH = "/profile/javier";
-const AUTHOR = { "@type": "Person", "@id": `${SITE}/about#founder`, name: "Javier Alonso", jobTitle: "Founder & CEO", url: `${SITE}${AUTHOR_PROFILE_PATH}`, sameAs: FOUNDER_SAME_AS };
+const AUTHOR = { "@type": "Person", "@id": `${SITE}/about#founder`, name: "Javier Alonso", jobTitle: "Founder (CEO & CTO)", url: `${SITE}${AUTHOR_PROFILE_PATH}`, sameAs: FOUNDER_SAME_AS };
 
 const formatDate = (iso: string) =>
   new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric", timeZone: "UTC" });

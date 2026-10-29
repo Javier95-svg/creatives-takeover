@@ -126,7 +126,7 @@ export const createOrganizationSchema = () => ({
     "@type": "Person",
     "@id": "https://creatives-takeover.com/about#founder",
     "name": "Javier Alonso",
-    "jobTitle": "Founder & CEO",
+    "jobTitle": "Founder (CEO & CTO)",
     "url": "https://creatives-takeover.com/about#founder",
     "sameAs": FOUNDER_SAME_AS
   },
@@ -436,7 +436,7 @@ export const createAboutPageSchema = () => ({
       "@type": "Person",
       "@id": "https://creatives-takeover.com/about#founder",
       "name": "Javier Alonso",
-      "jobTitle": "Founder & CEO",
+      "jobTitle": "Founder (CEO & CTO)",
       "url": "https://creatives-takeover.com/about#founder",
       "sameAs": FOUNDER_SAME_AS
     },
