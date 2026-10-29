@@ -1,0 +1,30 @@
+name: IndexNow
+
+# Once a day, tells Bing and the other IndexNow engines which live pages changed
+# in the last two days (scripts/submit-indexnow.mjs). Run it by hand from the
+# Actions tab after a big content push; set "days" to reach further back.
+
+on:
+  schedule:
+    - cron: '30 13 * * *'
+  workflow_dispatch:
+    inputs:
+      days:
+        description: Submit pages whose lastmod is within this many days
+        default: '2'
+
+permissions:
+  contents: read
+
+jobs:
+  submit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Submit recently changed pages
+        env:
+          INDEXNOW_DAYS: ${{ github.event.inputs.days || '2' }}
+        run: node scripts/submit-indexnow.mjs

@@ -7,7 +7,8 @@
 
 export const config = { runtime: 'edge' };
 
-const KEY = '8e2b1f9c4a7d63e05b8f2c1a9d4e7b30';
+export const INDEXNOW_KEY = '8e2b1f9c4a7d63e05b8f2c1a9d4e7b30';
+const KEY = INDEXNOW_KEY;
 const HOST = 'creatives-takeover.com';
 const SITE = 'https://creatives-takeover.com';
 
