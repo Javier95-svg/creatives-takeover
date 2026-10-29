@@ -81,8 +81,8 @@ const Index = () => {
   // The story, in order: what it is (hero), the problems and the tool for each,
   // the stages, what is inside, who is here, why now, what it costs, what people
   // say (hidden until real quotes exist), answers, and one last way in.
-  // Each section after the hero is its own scene: its own wallpaper and its
-  // own display face (see home-scenes.css).
+  // Each section after the hero is its own scene with its own display face
+  // (see home-scenes.css); HomeWallpaper stays behind the whole page.
   const sections = (
     <>
       <Hero />

@@ -99,8 +99,9 @@ const frozenFiles = {
   // and look. The lazy-section placeholders now reserve the measured heights
   // (they were about half), which removed most of the phone layout shift.
   // Same day, after review: each section below the hero is wrapped in a
-  // HomeScene (its own wallpaper and display face) and the muted bands are gone.
-  '../src/pages/Index.tsx': 'f1c7c972409ad9d9866f9d6280fca3218fb84f1153e2f8a9e99b1a3c4050d91c',
+  // HomeScene (its own display face) and the muted bands are gone; the page
+  // keeps the one HomeWallpaper.
+  '../src/pages/Index.tsx': 'c749f74113a5a768822d85575450b9c7044947332a72898be5d0586ef2c455a7',
 } as const;
 
 test('the approved unauthenticated landing page remains frozen during core-tool work', () => {

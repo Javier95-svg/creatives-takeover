@@ -1,85 +1,18 @@
 /*
- * Homepage scenes: every section below the hero gets its own wallpaper and
- * its own display face, each taken from what the section is about (a route
- * map for the journey, orbits for the cycle, a network for who's here, graph
- * paper for the data, ruled paper for Startup Pedia...). Body copy stays
- * Inter so the page still reads as one product.
- *
- * Wallpapers are CSS gradients plus three small SVGs used as masks, so the
- * ink colour follows the theme. Edges fade into the page background over
- * 5rem so scenes blend into each other instead of meeting at a hard line. Nothing here changes layout;
- * the only motion is the closing CTA's beams, off for reduced motion.
+ * Homepage scenes: every section below the hero gets its own display face,
+ * taken from what the section is about (a map-like serif for the journey, a
+ * reading serif for Startup Pedia, a data face for the charts...). Body copy
+ * stays Inter so the page still reads as one product, and the whole page
+ * keeps the one HomeWallpaper behind it.
  */
 
 .hs-scene {
-  --scene-fade: 5rem;
-  --scene-bg: transparent;
-  --scene-ink: var(--primary);
-  --scene-ink-alpha: 0.12;
-  --scene-pattern: none;
-  --scene-pattern-size: cover;
-  --scene-pattern-position: center;
-  --scene-pattern-repeat: no-repeat;
-  --scene-glow: none;
   --scene-display: 'Space Grotesk', 'Inter', sans-serif;
   --scene-display-weight: 600;
   --scene-tracking: -0.04em;
   --scene-title-scale: 1;
   --scene-eyebrow: 'Inter', sans-serif;
-  position: relative;
-  isolation: isolate;
 }
-
-.hs-scene__wall {
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  overflow: hidden;
-  pointer-events: none;
-  background: var(--scene-bg);
-}
-
-/*
- * Every scene fades into the page background at its top and bottom, so two
- * scenes always meet on the same colour and no seam or gap shows.
- */
-.hs-scene__wall::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    180deg,
-    hsl(var(--background)) 0,
-    hsl(var(--background) / 0) var(--scene-fade),
-    hsl(var(--background) / 0) calc(100% - var(--scene-fade)),
-    hsl(var(--background)) 100%
-  );
-}
-
-.hs-scene__pattern,
-.hs-scene__glow {
-  position: absolute;
-  inset: 0;
-}
-
-.hs-scene__pattern {
-  background: hsl(var(--scene-ink) / var(--scene-ink-alpha));
-  -webkit-mask-image: var(--scene-pattern);
-  mask-image: var(--scene-pattern);
-  -webkit-mask-size: var(--scene-pattern-size);
-  mask-size: var(--scene-pattern-size);
-  -webkit-mask-position: var(--scene-pattern-position);
-  mask-position: var(--scene-pattern-position);
-  -webkit-mask-repeat: var(--scene-pattern-repeat);
-  mask-repeat: var(--scene-pattern-repeat);
-}
-
-.hs-scene__glow {
-  inset: -10%;
-  background: var(--scene-glow);
-}
-
-/* ---- Type --------------------------------------------------------------- */
 
 .hs-scene :is(h2, h3, h4, .font-space-grotesk, .homepage-section-title) {
   font-family: var(--scene-display);
@@ -105,298 +38,84 @@
 }
 
 @media (max-width: 639px) {
-  .hs-scene { --scene-title-size: 1.875rem; --scene-fade: 3rem; }
+  .hs-scene { --scene-title-size: 1.875rem; }
 }
 
-/* ---- Journey: a route map ----------------------------------------------- */
-
+/* Journey: a map-like serif. It ships in one weight, so card titles go a size up instead. */
 .hs-scene--journey {
-  --scene-bg: linear-gradient(180deg, hsl(222 60% 97%), hsl(220 55% 95%));
-  --scene-ink: 221 70% 45%;
-  --scene-ink-alpha: 0.13;
-  --scene-pattern: url("./scenes/topography.svg");
-  --scene-glow:
-    radial-gradient(40% 35% at 12% 18%, hsl(217 90% 60% / 0.14), transparent 70%),
-    radial-gradient(35% 30% at 88% 78%, hsl(190 90% 50% / 0.1), transparent 70%);
   --scene-display: 'Instrument Serif', Georgia, serif;
   --scene-display-weight: 400;
   --scene-tracking: -0.01em;
   --scene-title-scale: 1.22;
 }
 
-.dark .hs-scene--journey {
-  --scene-bg: linear-gradient(180deg, hsl(222 45% 9%), hsl(221 48% 11%));
-  --scene-ink: 214 90% 72%;
-  --scene-ink-alpha: 0.12;
-  --scene-glow:
-    radial-gradient(40% 35% at 12% 18%, hsl(217 90% 55% / 0.18), transparent 70%),
-    radial-gradient(35% 30% at 88% 78%, hsl(190 90% 45% / 0.1), transparent 70%);
-}
-
-/* The serif only ships in one weight, so card titles go a size up instead. */
 .hs-scene--journey :is(h3, h4) {
   font-weight: 400;
   font-size: 1.45em;
   letter-spacing: -0.005em;
 }
 
-/* ---- Startup Development Cycle: orbits ---------------------------------- */
-
+/* Startup Development Cycle */
 .hs-scene--orbit {
-  --scene-bg: linear-gradient(180deg, hsl(252 70% 97%), hsl(250 60% 96%));
-  --scene-ink: 255 60% 52%;
-  --scene-ink-alpha: 0.12;
-  --scene-pattern: repeating-radial-gradient(circle at 28% 62%, transparent 0 54px, #000 55px 56px, transparent 57px 110px);
-  --scene-glow:
-    radial-gradient(30% 40% at 28% 62%, hsl(258 90% 66% / 0.16), transparent 70%),
-    radial-gradient(30% 35% at 82% 30%, hsl(228 90% 62% / 0.1), transparent 70%);
   --scene-display: 'Sora', 'Inter', sans-serif;
   --scene-tracking: -0.035em;
 }
 
-.dark .hs-scene--orbit {
-  --scene-bg: linear-gradient(180deg, hsl(250 38% 10%), hsl(248 36% 12%));
-  --scene-ink: 255 85% 76%;
-  --scene-ink-alpha: 0.11;
-  --scene-glow:
-    radial-gradient(30% 40% at 28% 62%, hsl(258 90% 60% / 0.22), transparent 70%),
-    radial-gradient(30% 35% at 82% 30%, hsl(228 90% 60% / 0.12), transparent 70%);
-}
-
-/* Rings fade out away from their centre. */
-.hs-scene--orbit .hs-scene__pattern {
-  -webkit-mask-image: var(--scene-pattern), radial-gradient(60% 75% at 28% 62%, #000 30%, transparent 75%);
-  mask-image: var(--scene-pattern), radial-gradient(60% 75% at 28% 62%, #000 30%, transparent 75%);
-  -webkit-mask-composite: source-in;
-  mask-composite: intersect;
-}
-
-/* ---- What's inside: a lit studio ---------------------------------------- */
-
+/* What's inside */
 .hs-scene--studio {
-  --scene-bg: linear-gradient(180deg, hsl(36 45% 97%), hsl(32 38% 95%));
-  --scene-ink: 30 30% 20%;
-  --scene-ink-alpha: 0.07;
-  --scene-pattern: url("./scenes/grain.svg");
-  --scene-pattern-size: 220px;
-  --scene-pattern-repeat: repeat;
-  --scene-pattern-position: 0 0;
-  --scene-glow:
-    radial-gradient(45% 55% at 50% -5%, hsl(38 95% 60% / 0.2), transparent 70%),
-    radial-gradient(30% 30% at 95% 95%, hsl(18 90% 60% / 0.08), transparent 70%);
   --scene-display: 'Bricolage Grotesque', 'Inter', sans-serif;
   --scene-tracking: -0.035em;
 }
 
-.dark .hs-scene--studio {
-  --scene-bg: linear-gradient(180deg, hsl(28 9% 9%), hsl(26 8% 10%));
-  --scene-ink: 36 40% 85%;
-  --scene-ink-alpha: 0.06;
-  --scene-glow:
-    radial-gradient(45% 55% at 50% -5%, hsl(38 95% 55% / 0.16), transparent 70%),
-    radial-gradient(30% 30% at 95% 95%, hsl(18 90% 50% / 0.08), transparent 70%);
-}
-
-/* ---- Who's here: a network ---------------------------------------------- */
-
+/* Who's here */
 .hs-scene--network {
-  --scene-bg: linear-gradient(180deg, hsl(172 45% 96%), hsl(176 40% 95%));
-  --scene-ink: 176 65% 30%;
-  --scene-ink-alpha: 0.16;
-  --scene-pattern: url("./scenes/constellation.svg");
-  --scene-glow:
-    radial-gradient(35% 40% at 50% 45%, hsl(172 80% 45% / 0.12), transparent 70%),
-    radial-gradient(30% 30% at 5% 90%, hsl(200 90% 55% / 0.08), transparent 70%);
   --scene-display: 'Manrope', 'Inter', sans-serif;
   --scene-display-weight: 700;
   --scene-tracking: -0.035em;
-}
-
-.dark .hs-scene--network {
-  --scene-bg: linear-gradient(180deg, hsl(186 40% 8%), hsl(182 38% 10%));
-  --scene-ink: 172 70% 62%;
-  --scene-ink-alpha: 0.17;
-  --scene-glow:
-    radial-gradient(35% 40% at 50% 45%, hsl(172 80% 40% / 0.16), transparent 70%),
-    radial-gradient(30% 30% at 5% 90%, hsl(200 90% 50% / 0.08), transparent 70%);
 }
 
 .hs-scene--network :is(h3, h4) {
   font-weight: 700;
 }
 
-/* ---- What AI changes: graph paper --------------------------------------- */
-
+/* What AI changes: a data face, with mono labels */
 .hs-scene--data {
-  --scene-bg: linear-gradient(180deg, hsl(150 30% 97%), hsl(155 28% 95%));
-  --scene-ink: 158 55% 28%;
-  --scene-ink-alpha: 0.1;
-  --scene-pattern:
-    linear-gradient(90deg, #000 1px, transparent 1px),
-    linear-gradient(180deg, #000 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 0, 0, 0.4) 1px, transparent 1px),
-    linear-gradient(180deg, rgba(0, 0, 0, 0.4) 1px, transparent 1px);
-  --scene-pattern-size: 120px 120px, 120px 120px, 24px 24px, 24px 24px;
-  --scene-pattern-repeat: repeat;
-  --scene-pattern-position: center top;
-  --scene-glow:
-    radial-gradient(40% 35% at 85% 15%, hsl(160 80% 45% / 0.12), transparent 70%),
-    radial-gradient(35% 30% at 10% 85%, hsl(190 80% 50% / 0.08), transparent 70%);
   --scene-display: 'IBM Plex Sans', 'Inter', sans-serif;
   --scene-tracking: -0.03em;
   --scene-eyebrow: 'IBM Plex Mono', ui-monospace, monospace;
-}
-
-.dark .hs-scene--data {
-  --scene-bg: linear-gradient(180deg, hsl(165 30% 7%), hsl(168 28% 8%));
-  --scene-ink: 155 60% 62%;
-  --scene-ink-alpha: 0.09;
-  --scene-glow:
-    radial-gradient(40% 35% at 85% 15%, hsl(160 80% 40% / 0.14), transparent 70%),
-    radial-gradient(35% 30% at 10% 85%, hsl(190 80% 45% / 0.08), transparent 70%);
 }
 
 .hs-scene--data .homepage-section-badge {
   letter-spacing: 0.12em;
 }
 
-/* ---- Pricing: one glow per tier, in the tier colours -------------------- */
-
+/* Pricing */
 .hs-scene--tiers {
-  --scene-bg: linear-gradient(180deg, hsl(220 30% 97%), hsl(220 25% 96%));
-  --scene-ink: 220 25% 30%;
-  --scene-ink-alpha: 0.05;
-  --scene-pattern: repeating-linear-gradient(135deg, #000 0 1px, transparent 1px 14px);
-  --scene-glow:
-    radial-gradient(22% 30% at 18% 78%, hsl(var(--success) / 0.16), transparent 70%),
-    radial-gradient(22% 30% at 40% 82%, hsl(var(--primary) / 0.18), transparent 70%),
-    radial-gradient(22% 30% at 62% 82%, hsl(var(--warning) / 0.16), transparent 70%),
-    radial-gradient(22% 30% at 84% 78%, hsl(var(--destructive) / 0.14), transparent 70%);
   --scene-display: 'Plus Jakarta Sans', 'Inter', sans-serif;
   --scene-display-weight: 700;
   --scene-tracking: -0.025em;
-}
-
-.dark .hs-scene--tiers {
-  --scene-bg: linear-gradient(180deg, hsl(222 22% 9%), hsl(222 20% 10%));
-  --scene-ink: 220 30% 80%;
-  --scene-ink-alpha: 0.035;
-}
-
-.hs-scene--tiers .hs-scene__pattern {
-  -webkit-mask-image: var(--scene-pattern), linear-gradient(180deg, transparent, #000 40%, #000 70%, transparent);
-  mask-image: var(--scene-pattern), linear-gradient(180deg, transparent, #000 40%, #000 70%, transparent);
-  -webkit-mask-composite: source-in;
-  mask-composite: intersect;
 }
 
 .hs-scene--tiers :is(h3, h4) {
   font-weight: 700;
 }
 
-/* ---- Proof: quotes ------------------------------------------------------ */
-
-.hs-scene--quote {
-  --scene-bg: linear-gradient(180deg, hsl(320 40% 97%), hsl(315 35% 96%));
-  --scene-glow: radial-gradient(40% 40% at 50% 30%, hsl(320 80% 60% / 0.1), transparent 70%);
-  --scene-display: 'Newsreader', Georgia, serif;
-  --scene-display-weight: 500;
-  --scene-tracking: -0.02em;
-}
-
-.dark .hs-scene--quote {
-  --scene-bg: linear-gradient(180deg, hsl(300 22% 9%), hsl(300 20% 10%));
-  --scene-glow: radial-gradient(40% 40% at 50% 30%, hsl(320 80% 55% / 0.12), transparent 70%);
-}
-
-/* ---- Startup Pedia: ruled paper ----------------------------------------- */
-
+/* Proof and Startup Pedia: a reading serif */
+.hs-scene--quote,
 .hs-scene--library {
-  --scene-bg:
-    linear-gradient(90deg, transparent calc(6% - 1px), hsl(352 70% 60% / 0.28) calc(6% - 1px) 6%, transparent 6%),
-    linear-gradient(180deg, hsl(42 55% 96%), hsl(40 45% 94%));
-  --scene-ink: 35 35% 35%;
-  --scene-ink-alpha: 0.12;
-  --scene-pattern: repeating-linear-gradient(180deg, transparent 0 33px, #000 33px 34px);
-  --scene-pattern-repeat: repeat;
-  --scene-glow: radial-gradient(40% 45% at 70% 50%, hsl(40 90% 60% / 0.12), transparent 70%);
   --scene-display: 'Newsreader', Georgia, serif;
   --scene-display-weight: 500;
   --scene-tracking: -0.02em;
-  padding-block: 3rem;
 }
 
-.dark .hs-scene--library {
-  --scene-bg:
-    linear-gradient(90deg, transparent calc(6% - 1px), hsl(352 70% 60% / 0.22) calc(6% - 1px) 6%, transparent 6%),
-    linear-gradient(180deg, hsl(36 11% 9%), hsl(34 10% 10%));
-  --scene-ink: 40 40% 75%;
-  --scene-ink-alpha: 0.07;
-  --scene-glow: radial-gradient(40% 45% at 70% 50%, hsl(40 90% 50% / 0.08), transparent 70%);
-}
-
-/* ---- FAQ: a quiet dot grid ---------------------------------------------- */
-
+/* FAQ. Its title is a plain h2 with Tailwind sizes, so give it the scene's scale. */
 .hs-scene--calm {
-  --scene-bg: linear-gradient(180deg, hsl(225 25% 97%), hsl(225 22% 96%));
-  --scene-ink: 225 20% 40%;
-  --scene-ink-alpha: 0.2;
-  --scene-pattern: radial-gradient(circle, #000 1px, transparent 1.5px);
-  --scene-pattern-size: 22px 22px;
-  --scene-pattern-repeat: repeat;
-  --scene-pattern-position: center top;
-  --scene-glow: radial-gradient(45% 40% at 50% 20%, hsl(var(--primary) / 0.08), transparent 70%);
   --scene-display: 'Urbanist', 'Inter', sans-serif;
   --scene-tracking: -0.03em;
 }
 
-.dark .hs-scene--calm {
-  --scene-bg: linear-gradient(180deg, hsl(225 18% 8%), hsl(225 16% 9%));
-  --scene-ink: 220 20% 70%;
-  --scene-ink-alpha: 0.14;
-  --scene-glow: radial-gradient(45% 40% at 50% 20%, hsl(var(--primary) / 0.1), transparent 70%);
-}
-
-.hs-scene--calm .hs-scene__pattern {
-  -webkit-mask-image: var(--scene-pattern), radial-gradient(70% 60% at 50% 50%, #000 20%, transparent 80%);
-  mask-image: var(--scene-pattern), radial-gradient(70% 60% at 50% 50%, #000 20%, transparent 80%);
-  -webkit-mask-composite: source-in;
-  mask-composite: intersect;
-}
-
-/* The FAQ title is a plain h2 with Tailwind sizes; give it the scene's scale. */
 .hs-scene--calm h2 {
   font-size: clamp(2.25rem, 4.5vw, 3.5rem);
 }
 
-/* ---- Closing CTA: light beams, back to the hero's face ------------------ */
-
-.hs-scene--launch {
-  --scene-bg: linear-gradient(180deg, hsl(226 70% 97%), hsl(228 65% 94%));
-  --scene-glow:
-    conic-gradient(from 180deg at 50% 105%, transparent 0deg, hsl(var(--primary) / 0.16) 20deg, transparent 40deg, hsl(258 90% 66% / 0.12) 70deg, transparent 95deg, transparent 265deg, hsl(258 90% 66% / 0.12) 290deg, transparent 315deg, hsl(var(--primary) / 0.16) 340deg, transparent 360deg),
-    radial-gradient(50% 45% at 50% 100%, hsl(var(--primary) / 0.2), transparent 70%);
-  --scene-fade: 4rem;
-}
-
-.dark .hs-scene--launch {
-  --scene-bg: linear-gradient(180deg, hsl(226 40% 9%), hsl(228 45% 11%));
-}
-
-/*
- * ---- Motion: only the closing beams breathe ------------------------------
- * The other wallpapers stay still on purpose: animating ten section-sized
- * layers costs GPU memory on phones for very little.
- */
-
-@media (prefers-reduced-motion: no-preference) {
-  .hs-scene--launch .hs-scene__glow {
-    animation: hs-scene-breathe 9s ease-in-out infinite alternate;
-    transform-origin: 50% 100%;
-  }
-}
-
-@keyframes hs-scene-breathe {
-  from { transform: scale(1); opacity: 0.85; }
-  to { transform: scale(1.06); opacity: 1; }
-}
+/* The closing CTA keeps the hero's Space Grotesk (the defaults above). */

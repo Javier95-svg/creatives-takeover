@@ -45,15 +45,12 @@ type HomeSceneProps = {
   children: ReactNode;
 };
 
-/** One homepage section with its own wallpaper and display type. */
+/**
+ * One homepage section with its own display face. The wallpaper stays the
+ * page-wide HomeWallpaper on purpose (Javier, 2026-10-29).
+ */
 const HomeScene = ({ scene, children }: HomeSceneProps) => (
-  <div className={`hs-scene hs-scene--${scene}`}>
-    <div className="hs-scene__wall" aria-hidden="true">
-      <div className="hs-scene__pattern" />
-      <div className="hs-scene__glow" />
-    </div>
-    {children}
-  </div>
+  <div className={`hs-scene hs-scene--${scene}`}>{children}</div>
 );
 
 export default HomeScene;
