@@ -4,6 +4,13 @@ import { BASE_URL, INDEXABLE_ROUTES, OG_IMAGE, SITE_NAME } from "./seo-route-con
 import { fetchHubChildren } from "./fetch-hub-children.mjs";
 import { HOME_FAQS } from "../src/data/homeFaq.ts";
 
+// What visitors read on the main public pages, captured from the real render
+// by e2e/crawler-content.spec.ts (npm run seo:crawler-content). AI crawlers do
+// not run JavaScript; without this they got a one-line summary of each page.
+const CRAWLER_CONTENT = JSON.parse(
+  await fs.readFile(new URL("./crawler-content.json", import.meta.url), "utf8").catch(() => "{}"),
+);
+
 const DIST_DIR = path.resolve(process.cwd(), "dist");
 const TEMPLATE_PATH = path.join(DIST_DIR, "index.html");
 
@@ -147,7 +154,7 @@ function buildFallbackHtml(routeConfig, hubChildren = {}) {
           <p>I have a product: <a href="/#get-started">Build my demo</a>. One sentence to start; see your result before signup.</p>`
     : `<p>${routeConfig.heroCopy || routeConfig.description}</p>`;
   const authorByline = routeConfig.pediaEntry
-    ? `<p>By <a href="/profile/javier">Javier Alonso, Founder &amp; CEO</a>. Updated <time datetime="${routeConfig.modifiedAt}">${routeConfig.modifiedAt}</time>.</p>`
+    ? `<p>By <a href="/profile/javier">Javier Alonso, Founder (CEO &amp; CTO)</a>. Updated <time datetime="${routeConfig.modifiedAt}">${routeConfig.modifiedAt}</time>.</p>`
     : "";
   // Startup Pedia ships its full article body as HTML (built from the same data
   // as the React page), so crawlers read the whole entry without JavaScript.
@@ -247,15 +254,17 @@ ${childLinks
     .map((item) => `<li><a href="${item.href}">${item.label}</a></li>`)
     .join("");
 
-  return `
-      <header>
-        <p>${SITE_NAME}</p>
-        <nav aria-label="Primary pages">
-          ${nav}
-        </nav>
-      </header>
-      <article>
-        <section>
+  // /faq and /terms render their title outside <main>, so the capture starts
+  // below it; the route's heading stands in.
+  const captured = CRAWLER_CONTENT[routeConfig.path];
+  const capturedLines = captured
+    ? [...(/<h1>/.test(captured) ? [] : [`<h1>${routeConfig.heroHeading || routeConfig.title}</h1>`]), ...captured.split("\n")]
+    : [];
+  const pageContent = captured
+    ? `        <section>
+${capturedLines.map((line) => `          ${line}`).join("\n")}
+        </section>`
+    : `        <section>
           <h1>${routeConfig.heroHeading || routeConfig.title}</h1>
           ${heroContent}
           ${authorByline}
@@ -273,7 +282,17 @@ ${checklist}
 ${faqs}
           </dl>
         </section>` : ""}
-${cta}
+${cta}`;
+
+  return `
+      <header>
+        <p>${SITE_NAME}</p>
+        <nav aria-label="Primary pages">
+          ${nav}
+        </nav>
+      </header>
+      <article>
+${pageContent}
 ${childLinksSection}
         <section>
           <h2>${routeConfig.relatedLinks ? "Keep learning" : "Explore more"}</h2>

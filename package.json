@@ -23,6 +23,7 @@
     "images:optimize": "node scripts/optimize-images.mjs",
     "lint:fix": "eslint . --fix",
     "test:smoke": "playwright test",
+    "seo:crawler-content": "node scripts/update-crawler-content.mjs",
     "test:messages:performance": "node scripts/check-messages-performance.mjs",
     "test:bundle:performance": "node scripts/check-initial-bundle.mjs",
     "release:verify-pilot": "node scripts/verify-pilot-release.mjs",
