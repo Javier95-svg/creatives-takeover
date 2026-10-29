@@ -10,6 +10,7 @@ import ProofSection from "@/components/home/ProofSection";
 import ClosingCta from "@/components/home/ClosingCta";
 import HomeScene, { useHomeSceneFonts } from "@/components/home/HomeScene";
 import "@/components/home/home-sections.css";
+import "@/components/home/home-upgrade.css";
 import { PullToRefresh } from "@/components/mobile/PullToRefresh";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ScrollReveal } from "@/components/animations/ScrollReveal";
@@ -34,11 +35,11 @@ const FounderAnswerLibraryTeaser = lazy(() => import("@/components/seo/FounderAn
 // lazy() alone still fetched all three chunks on first render (~190KB gz with
 // Recharts), before the visitor scrolled. LoadWhenNear defers each until it is
 // 800px from the viewport. Each placeholder reserves the section's rendered
-// height (measured 2026-10-29 at 390, 768 and 1024+ px wide); the old ones were
+// height (re-measured 2026-10-29 after the redesign, at 390, 800 and 1280 px); the old ones were
 // half the real height, so every swap pushed the page down on phones.
-const trendsPlaceholder = <div className="min-h-[1635px] md:min-h-[1509px] lg:min-h-[1191px] animate-pulse bg-muted/20" />;
-const teaserPlaceholder = <div className="min-h-[902px] md:min-h-[722px] lg:min-h-[468px] animate-pulse bg-muted/20" />;
-const faqPlaceholder = <div className="min-h-[1172px] md:min-h-[1244px] lg:min-h-[1300px] animate-pulse bg-muted/20" />;
+const trendsPlaceholder = <div className="min-h-[1953px] md:min-h-[1852px] lg:min-h-[1272px] animate-pulse bg-muted/20" />;
+const teaserPlaceholder = <div className="min-h-[1458px] md:min-h-[1084px] lg:min-h-[774px] animate-pulse bg-muted/20" />;
+const faqPlaceholder = <div className="min-h-[1398px] md:min-h-[1258px] lg:min-h-[1079px] animate-pulse bg-muted/20" />;
 
 const Reveal = ({ children }: { children: ReactNode }) => (
   <ScrollReveal variant="fade" amount={0.05}>
@@ -128,7 +129,7 @@ const Index = () => {
         <Reveal>
           <LoadWhenNear id="pedia-teaser" placeholder={teaserPlaceholder}>
             <Suspense fallback={teaserPlaceholder}>
-              <FounderAnswerLibraryTeaser compact />
+              <FounderAnswerLibraryTeaser compact variant="home" />
             </Suspense>
           </LoadWhenNear>
         </Reveal>

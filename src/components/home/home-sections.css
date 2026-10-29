@@ -12,12 +12,6 @@
   --hs-ease: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.hs-header {
-  max-width: 48rem;
-  margin: 0 auto 3.5rem;
-  text-align: center;
-}
-
 /* ---- Cards ------------------------------------------------------------ */
 
 /*
@@ -131,89 +125,6 @@ a.hs-card:hover .hs-card__link svg {
   border-color: hsl(var(--warning) / 0.5);
   background: hsl(var(--warning) / 0.15);
   color: hsl(var(--foreground));
-}
-
-/* ---- Who's here: a bento, founders and builders first ------------------- */
-
-.hs-ecosystem-grid {
-  display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: var(--hs-gap);
-  max-width: 72rem;
-  margin: 0 auto;
-}
-
-/* Grid items are the reveal wrappers (or the cards, with reduced motion). */
-.hs-ecosystem-grid > * {
-  grid-column: span 2;
-}
-
-.hs-ecosystem-grid > :nth-child(-n + 2) {
-  grid-column: span 3;
-}
-
-.hs-ecosystem-card {
-  min-height: 17rem;
-}
-
-.hs-ecosystem-card--lead {
-  padding: 2.25rem;
-}
-
-/* A large faint copy of the icon, bottom right, as a watermark. */
-.hs-ecosystem-card__mark {
-  position: absolute;
-  right: -1.5rem;
-  bottom: -1.75rem;
-  width: 9rem;
-  height: 9rem;
-  color: hsl(var(--hs-accent) / 0.07);
-  stroke-width: 1.25;
-  pointer-events: none;
-  transition: transform 600ms var(--hs-ease), color 600ms var(--hs-ease);
-}
-
-.hs-ecosystem-card--lead .hs-ecosystem-card__mark {
-  width: 12rem;
-  height: 12rem;
-}
-
-a.hs-ecosystem-card:hover .hs-ecosystem-card__mark {
-  transform: rotate(-8deg) scale(1.06);
-  color: hsl(var(--hs-accent) / 0.12);
-}
-
-.hs-ecosystem-card__top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  margin-bottom: 1rem;
-}
-
-.hs-ecosystem-card__label {
-  color: hsl(var(--hs-accent));
-  font-size: 0.8125rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-}
-
-.hs-ecosystem-card__promise {
-  font-family: var(--scene-display, 'Space Grotesk', sans-serif);
-  font-size: 1.375rem;
-  font-weight: 700;
-  letter-spacing: -0.03em;
-  line-height: 1.2;
-}
-
-.hs-ecosystem-card--lead .hs-ecosystem-card__promise {
-  font-size: clamp(1.75rem, 2.6vw, 2.25rem);
-}
-
-.hs-ecosystem-card .hs-card__copy {
-  position: relative;
-  max-width: 26rem;
 }
 
 /* ---- Pricing ------------------------------------------------------------ */
@@ -464,15 +375,30 @@ a.hs-ecosystem-card:hover .hs-ecosystem-card__mark {
   box-shadow: 0 50px 110px -60px hsl(var(--primary) / 0.75);
 }
 
+/* A dark stage under a bright moving colour field, in both themes, with a
+   soft shade in the middle so the white type always reads. */
 .hs-closing__panel {
   position: relative;
+  isolation: isolate;
   padding: 5rem 2rem;
   border-radius: calc(2.25rem - 1px);
-  background:
-    radial-gradient(60% 70% at 50% 0%, hsl(var(--primary) / 0.2), transparent 70%),
-    linear-gradient(180deg, hsl(var(--card)), hsl(var(--card) / 0.94));
+  background: hsl(230 45% 12%);
+  color: hsl(0 0% 100%);
   text-align: center;
   overflow: hidden;
+}
+
+.hs-closing__panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: radial-gradient(55% 65% at 50% 50%, hsl(230 45% 10% / 0.6), transparent 80%);
+}
+
+.hs-closing__mesh {
+  z-index: -2;
+  opacity: 0.85;
 }
 
 /* A slow light sweep across the panel's top edge. */
@@ -490,10 +416,11 @@ a.hs-ecosystem-card:hover .hs-ecosystem-card__mark {
 .hs-closing__title {
   font-size: clamp(2.5rem, 6vw, 4.25rem);
   margin-bottom: 1.25rem;
+  color: hsl(0 0% 100%);
 }
 
 .hs-closing__accent {
-  background: linear-gradient(90deg, hsl(var(--primary)), hsl(258 90% 70%));
+  background: linear-gradient(90deg, hsl(48 100% 80%), hsl(330 100% 85%));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -502,7 +429,7 @@ a.hs-ecosystem-card:hover .hs-ecosystem-card__mark {
 .hs-closing__copy {
   max-width: 34rem;
   margin: 0 auto;
-  color: hsl(var(--muted-foreground));
+  color: hsl(0 0% 100% / 0.85);
   font-size: 1.125rem;
   line-height: 1.7;
 }
@@ -517,54 +444,43 @@ a.hs-ecosystem-card:hover .hs-ecosystem-card__mark {
 
 .hs-closing__fine {
   margin-top: 1.5rem;
-  color: hsl(var(--muted-foreground));
+  color: hsl(0 0% 100% / 0.72);
   font-size: 0.8125rem;
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
 
+.hs-closing .hs-button--primary {
+  background: hsl(0 0% 100%);
+  color: hsl(230 45% 14%);
+  box-shadow: 0 18px 36px -18px hsl(230 45% 4% / 0.8);
+}
+
+.hs-closing .hs-button--ghost {
+  border-color: hsl(0 0% 100% / 0.45);
+  background: hsl(0 0% 100% / 0.1);
+  color: hsl(0 0% 100%);
+}
+
+.hs-closing .hs-button--ghost:hover {
+  background: hsl(0 0% 100% / 0.18);
+}
+
 /* ---- Responsive --------------------------------------------------------- */
 
 @media (max-width: 1023px) {
-  .hs-ecosystem-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .hs-ecosystem-grid > *,
-  .hs-ecosystem-grid > :nth-child(-n + 2) {
-    grid-column: span 1;
-  }
-
-  .hs-ecosystem-grid > :last-child {
-    grid-column: span 2;
-  }
-
   .hs-pricing-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 @media (max-width: 639px) {
-  .hs-header {
-    margin-bottom: 2.5rem;
-  }
-
-  .hs-ecosystem-grid,
   .hs-pricing-grid {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .hs-ecosystem-grid > :last-child {
-    grid-column: span 1;
-  }
-
-  .hs-ecosystem-card {
-    min-height: 0;
-  }
-
-  .hs-card,
-  .hs-ecosystem-card--lead {
+  .hs-card {
     padding: 1.5rem;
   }
 
@@ -593,7 +509,6 @@ a.hs-ecosystem-card:hover .hs-ecosystem-card__mark {
 @media (prefers-reduced-motion: reduce) {
   .hs-card,
   .hs-card__link svg,
-  .hs-ecosystem-card__mark,
   .hs-button,
   .hs-button svg {
     transition: none;
@@ -601,7 +516,6 @@ a.hs-ecosystem-card:hover .hs-ecosystem-card__mark {
 
   a.hs-card:hover,
   a.hs-card:focus-visible,
-  a.hs-ecosystem-card:hover .hs-ecosystem-card__mark,
   .hs-button--primary:hover {
     transform: none;
   }

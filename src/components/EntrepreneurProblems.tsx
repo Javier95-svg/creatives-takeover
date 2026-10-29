@@ -1,4 +1,4 @@
-import type { CSSProperties } from "react";
+import { useRef, useState, type CSSProperties, type KeyboardEvent } from "react";
 import {
   ArrowUpRight,
   Boxes,
@@ -15,10 +15,11 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { Link } from "react-router-dom";
-import { Badge } from "@/components/ui/badge";
 import FounderJourneyVideo from "./FounderJourneyVideo";
 import { ScrollReveal } from "@/components/animations/ScrollReveal";
 import { useIsMobile } from "@/hooks/use-mobile";
+import HomeSectionHeader from "@/components/home/HomeSectionHeader";
+import GradientMesh from "@/components/home/GradientMesh";
 
 type AccentColor = "blue" | "green" | "red" | "amber";
 
@@ -254,221 +255,136 @@ const journeyActions: JourneyAction[] = [
   },
 ];
 
+// The journey is a picker: the problems on the left, the part of the platform
+// for the chosen one on a stage on the right. Only the chosen row's GIF is in
+// the page (the others are display: none), so a visit downloads one or two of
+// these multi-megabyte GIFs instead of all seven. It does not autoplay for the
+// same reason.
 const EntrepreneurProblems = () => {
   const isMobile = useIsMobile();
+  const [activeIndex, setActiveIndex] = useState(0);
+  const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
-  const getAccentClasses = (color: string) => {
-    const classes = {
-      blue: {
-        icon: "bg-primary/10 border-primary/30 text-primary",
-        timeline: "bg-primary/20",
-        glow: "shadow-primary/20",
-      },
-      red: {
-        icon: "bg-destructive-subtle border-destructive/30 text-destructive",
-        timeline: "bg-destructive/20",
-        glow: "shadow-destructive/20",
-      },
-      green: {
-        icon: "bg-success-subtle border-success/30 text-success",
-        timeline: "bg-success/20",
-        glow: "shadow-success/20",
-      },
-      amber: {
-        icon: "bg-warning-subtle border-warning/30 text-warning",
-        timeline: "bg-warning/20",
-        glow: "shadow-warning/20",
-      },
-    };
-    return classes[color as keyof typeof classes] || classes.blue;
+  const select = (index: number) => {
+    const next = (index + journeySteps.length) % journeySteps.length;
+    setActiveIndex(next);
+    tabRefs.current[next]?.focus();
   };
 
-  const getPathwayAction = (index: number) => {
-    return journeyActions[index] ?? null;
-  };
-
-  const renderPathwayAction = (
-    _step: JourneyStep,
-    index: number,
-    className = "",
-  ) => {
-    const action = getPathwayAction(index);
-
-    if (!action) {
-      return null;
+  const onTabKeyDown = (event: KeyboardEvent<HTMLButtonElement>, index: number) => {
+    if (event.key === "ArrowDown" || event.key === "ArrowRight") {
+      event.preventDefault();
+      select(index + 1);
+    } else if (event.key === "ArrowUp" || event.key === "ArrowLeft") {
+      event.preventDefault();
+      select(index - 1);
     }
+  };
 
+  const renderStage = (index: number) => {
+    const action = journeyActions[index];
+    const next = journeyActions[(index + 1) % journeyActions.length];
     const ActionIcon = action.icon;
-    const actionStyle = {
-      "--journey-accent": action.accent,
-      "--journey-accent-soft": action.accentSoft,
-      "--journey-accent-strong": action.accentStrong,
-    } as CSSProperties;
+    const stageStyle = { "--journey-accent": action.accent } as CSSProperties;
 
     return (
-      <Link
-        to={action.to}
-        className={`journey-action-card group block w-full touch-manipulation ${className}`}
-        data-accent={action.accentName}
-        style={actionStyle}
+      <div
+        key={action.to}
+        id={`journey-panel-${index}`}
+        role="tabpanel"
+        aria-labelledby={`journey-tab-${index}`}
+        className="hx-journey__stage"
+        style={stageStyle}
+        hidden={index !== activeIndex}
       >
-        <div className="journey-action-card__surface">
-          <div className="journey-action-card__content">
-            <div className="journey-action-card__meta">
-              <span className="journey-action-card__outcome">{action.outcome}</span>
-              <div className="journey-action-card__icon-shell">
-                <ActionIcon className="h-5 w-5" aria-hidden="true" />
-              </div>
+        <GradientMesh colors={[action.accent, action.accentGlow, next.accent, action.accentStrong]} />
+        <div className="hx-journey__window">
+          <div className="hx-journey__chrome" aria-hidden="true">
+            <i />
+            <i />
+            <i />
+            <span>creatives-takeover.com{action.to}</span>
+          </div>
+          <div className="hx-journey__screen">
+            {/* Shown until (or instead of) the GIF for this row. */}
+            <div className="hx-journey__skeleton" aria-hidden="true">
+              <span />
+              <span />
+              <span />
+              <span />
             </div>
-            <div className="journey-action-card__copy-wrap">
-              <h4 className="journey-action-card__title font-space-grotesk font-semibold">
-                {action.title}
-              </h4>
-              <p className="journey-action-card__copy">
-                {action.description}
-              </p>
-            </div>
-            <span className="journey-action-card__cta">
-              Open tool
-              <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
-            </span>
+            {index !== activeIndex ? null : (
+              <FounderJourneyVideo position={index} className="founder-journey-gif hx-journey__gif" />
+            )}
           </div>
         </div>
-      </Link>
+        <Link to={action.to} className="hx-journey__card group">
+          <span className="hx-journey__outcome">
+            <ActionIcon aria-hidden="true" />
+            {action.outcome}
+          </span>
+          <h3 className="hx-journey__title">{action.title}</h3>
+          <p className="hx-journey__copy">{action.description}</p>
+          <span className="hx-journey__cta">
+            Open tool
+            <ArrowUpRight aria-hidden="true" />
+          </span>
+        </Link>
+      </div>
     );
   };
 
   return (
-    <section className="founder-journey-section section-shell relative" aria-labelledby="journey-heading">
-
+    <section className="founder-journey-section section-shell hx-journey" aria-labelledby="journey-heading">
       <div className="container mx-auto px-4 sm:px-6 relative z-10">
-        {/* Section Header */}
-        <ScrollReveal className="text-center mb-14 sm:mb-16 max-w-3xl mx-auto">
-          <Badge variant="outline" className="homepage-section-badge mb-5">
-            Own Your Path
-          </Badge>
-          <h2 id="journey-heading" className="homepage-section-title founder-journey-section__title text-3xl sm:text-4xl lg:text-[2.9rem] mb-5">
-            Every Founder's Journey is Unique
-          </h2>
-          <p className="homepage-section-copy founder-journey-section__copy mx-auto text-base sm:text-lg">
-            But most founders run into the same problems. Here is each one, and the part of the platform that helps you work through it.
-          </p>
+        <ScrollReveal>
+          <HomeSectionHeader badge="Own Your Path" title="Every Founder's Journey is Unique" id="journey-heading">
+            Most founders hit the same problems. Pick yours.
+          </HomeSectionHeader>
         </ScrollReveal>
 
-        {/* Vertical Timeline */}
-        <div className="max-w-5xl mx-auto relative">
-          {/* Timeline Line - Continuous vertical line */}
-          <div className="absolute left-8 md:left-1/2 top-0 bottom-0 w-px bg-border/80 hidden sm:block" />
-
-          {/* Timeline Items */}
-          <div className="space-y-10 md:space-y-14">
+        <ScrollReveal className="hx-journey__grid" variant="fade">
+          <div className="hx-journey__list" role="tablist" aria-orientation="vertical" aria-label="Founder problems">
             {journeySteps.map((step, index) => {
               const Icon = step.icon;
-              const accentClasses = getAccentClasses(step.accentColor);
-              const isEven = index % 2 === 0;
-
+              const selected = index === activeIndex;
+              const tabStyle = { "--journey-accent": journeyActions[index].accent } as CSSProperties;
               return (
-                <ScrollReveal
-                  key={index}
-                  className="relative"
-                  variant={isEven ? "slide-left" : "slide-right"}
-                >
+                <div key={step.phase} className="hx-journey__item">
+                  <button
+                    ref={(el) => {
+                      tabRefs.current[index] = el;
+                    }}
+                    type="button"
+                    role="tab"
+                    id={`journey-tab-${index}`}
+                    aria-selected={selected}
+                    aria-controls={`journey-panel-${index}`}
+                    tabIndex={selected ? 0 : -1}
+                    className="hx-journey__tab"
+                    style={tabStyle}
+                    onClick={() => setActiveIndex(index)}
+                    onKeyDown={(event) => onTabKeyDown(event, index)}
+                  >
+                    <span className="hx-journey__icon" aria-hidden="true">
+                      <Icon />
+                    </span>
+                    <span className="hx-journey__text">
+                      <span className="hx-journey__phase">{step.phase}</span>
+                      <span className="hx-journey__challenge">{step.challenge}</span>
+                    </span>
+                  </button>
+                  {/* On a phone the stage opens under the row that was tapped. */}
                   {isMobile ? (
-                  <div className="space-y-5">
-                    <div className="text-center">
-                      <div className="mb-3 flex justify-center">
-                        <span className="inline-flex items-center rounded-full border border-border/72 bg-background/88 px-3 py-1 text-label font-medium uppercase tracking-[0.18em] text-muted-foreground">
-                          {step.phase}
-                        </span>
-                      </div>
-                      <h3 className="font-space-grotesk text-xl font-semibold text-foreground">
-                        {step.challenge}
-                      </h3>
-                    </div>
-
-                    <div className="w-full">
-                      {index <= 6 ? (
-                        <FounderJourneyVideo position={index} className="founder-journey-gif" />
-                      ) : (
-                        <div className={`mx-auto w-14 h-14 rounded-full flex items-center justify-center ${accentClasses.icon} shadow-sm transition-colors`}>
-                          <Icon className="w-7 h-7" />
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="flex justify-center">
-                      {renderPathwayAction(step, index, "max-w-3xl")}
-                    </div>
-                  </div>
-                  ) : (
-                  <div className="grid grid-cols-2 grid-rows-[auto_1fr] gap-x-6 gap-y-4 lg:gap-x-8">
-                    {isEven ? (
-                      <>
-                        <div className="md:col-start-2 md:row-start-1 text-center">
-                          <div className="mb-3 flex justify-center">
-                            <span className="inline-flex items-center rounded-full border border-border/72 bg-background/88 px-3 py-1 text-label font-medium uppercase tracking-[0.18em] text-muted-foreground">
-                              {step.phase}
-                            </span>
-                          </div>
-                          <h3 className="font-space-grotesk text-2xl font-semibold text-foreground">
-                            {step.challenge}
-                          </h3>
-                        </div>
-
-                        <div className={`${index === 0 ? 'md:pr-8 lg:pr-16 xl:pr-20' : 'md:pr-6 lg:pr-10 xl:pr-12'} md:col-start-1 md:row-start-2 self-center flex justify-center`}>
-                          {renderPathwayAction(step, index)}
-                        </div>
-
-                        <div className="relative z-10 md:col-start-2 md:row-start-2 self-center">
-                          {index <= 6 ? (
-                            <div className="w-full md:max-w-2xl lg:max-w-3xl xl:max-w-4xl ml-2 lg:ml-4">
-                              <FounderJourneyVideo position={index} className="founder-journey-gif" />
-                            </div>
-                          ) : (
-                            <div className={`w-16 h-16 rounded-full flex items-center justify-center ${accentClasses.icon} shadow-sm bg-background transition-colors`}>
-                              <Icon className="w-9 h-9" />
-                            </div>
-                          )}
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <div className="md:col-start-1 md:row-start-1 text-center">
-                          <div className="mb-3 flex justify-center">
-                            <span className="inline-flex items-center rounded-full border border-border/72 bg-background/88 px-3 py-1 text-label font-medium uppercase tracking-[0.18em] text-muted-foreground">
-                              {step.phase}
-                            </span>
-                          </div>
-                          <h3 className="font-space-grotesk text-2xl font-semibold text-foreground">
-                            {step.challenge}
-                          </h3>
-                        </div>
-
-                        <div className="relative z-10 md:col-start-1 md:row-start-2 self-center">
-                          {index <= 6 ? (
-                            <div className="w-full md:max-w-2xl lg:max-w-3xl xl:max-w-4xl mr-2 lg:mr-4">
-                              <FounderJourneyVideo position={index} className="founder-journey-gif" />
-                            </div>
-                          ) : (
-                            <div className={`w-16 h-16 rounded-full flex items-center justify-center ${accentClasses.icon} shadow-sm bg-background transition-colors`}>
-                              <Icon className="w-9 h-9" />
-                            </div>
-                          )}
-                        </div>
-
-                        <div className={`${index === 1 ? 'md:pl-8 lg:pl-16 xl:pl-20' : 'md:pl-6 lg:pl-10 xl:pl-12'} md:col-start-2 md:row-start-2 self-center flex justify-center`}>
-                          {renderPathwayAction(step, index)}
-                        </div>
-                      </>
-                    )}
-                  </div>
-                  )}
-                </ScrollReveal>
+                    selected ? renderStage(index) : null
+                  ) : null}
+                </div>
               );
             })}
           </div>
-        </div>
 
+          {!isMobile && <div className="hx-journey__stages">{journeyActions.map((_, index) => renderStage(index))}</div>}
+        </ScrollReveal>
       </div>
     </section>
   );

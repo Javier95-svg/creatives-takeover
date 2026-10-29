@@ -4,39 +4,41 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { Link } from "react-router-dom";
+import { ArrowRight } from "lucide-react";
 import { HOME_FAQS } from "@/data/homeFaq";
+import HomeSectionHeader from "@/components/home/HomeSectionHeader";
 
 const HomeFAQ = () => {
   const faqs = HOME_FAQS;
 
   return (
-    <section className="relative py-20 lg:py-28">
-
+    <section className="relative py-20 lg:py-28 hx-faq" aria-labelledby="faq-heading">
       <div className="container mx-auto px-4 sm:px-6 relative z-10">
-        {/* Section Header */}
-        <div className="text-center mb-12 sm:mb-16">
-          <h2 className="font-space-grotesk text-3xl sm:text-4xl md:text-5xl font-semibold mb-4 sm:mb-6 text-foreground">
-            FAQs
-          </h2>
-          <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto px-4">
-            Everything you need to know about Creatives Takeover.
-          </p>
-        </div>
+        <div className="hx-faq__grid">
+          {/* The heading stays in view beside the answers on wide screens. */}
+          <div className="hx-faq__aside">
+            <HomeSectionHeader badge="Questions" title="FAQs" id="faq-heading">
+              Everything you need to know about Creatives Takeover.
+            </HomeSectionHeader>
+            <Link to="/contact" className="hs-button hs-button--ghost">
+              Ask us something else
+              <ArrowRight aria-hidden="true" />
+            </Link>
+          </div>
 
-        {/* FAQ Accordion */}
-        <div className="max-w-4xl mx-auto px-4">
-          <div className="rounded-2xl border border-border/60 bg-card p-4 sm:p-6 lg:p-8 shadow-sm">
-            <Accordion type="single" collapsible className="space-y-0">
+          <div>
+            <Accordion type="single" collapsible className="hx-faq__list">
               {faqs.map((faq, index) => (
                 <AccordionItem
                   key={index}
                   value={`item-${index}`}
-                  className="border-b border-border/40 px-4 sm:px-6 last:border-b-0"
+                  className="hx-faq__item"
                 >
-                  <AccordionTrigger className="text-left text-sm sm:text-base md:text-lg font-semibold py-5 lg:py-6 tracking-tight">
+                  <AccordionTrigger className="hx-faq__q text-left text-base md:text-lg font-semibold tracking-tight">
                     {faq.question}
                   </AccordionTrigger>
-                  <AccordionContent className="text-sm sm:text-base text-muted-foreground leading-relaxed pt-2">
+                  <AccordionContent className="hx-faq__a text-sm sm:text-base text-muted-foreground leading-relaxed">
                     {faq.answer.split('\n\n').filter(para => para.trim()).map((paragraph, idx) => (
                       <p key={idx} className="mb-3 last:mb-0">
                         {paragraph.trim()}

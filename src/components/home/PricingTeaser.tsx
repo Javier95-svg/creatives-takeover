@@ -15,7 +15,7 @@ const PricingTeaser = () => (
   <section className="hs-section section-shell" aria-labelledby="pricing-teaser-heading">
     <div className="container mx-auto px-4 sm:px-6">
       <HomeSectionHeader badge="Pricing" title="Start free. Upgrade when your project needs more." id="pricing-teaser-heading">
-        Every plan includes the core tools, and credits pay for the heavier ones. Paid plans add more credits, investor and accelerator research, and your MVP on your own domain.
+        The core tools are on every plan. Paid plans add credits and research.
       </HomeSectionHeader>
 
       <RevealGroup className="hs-pricing-grid" stagger={0.08}>

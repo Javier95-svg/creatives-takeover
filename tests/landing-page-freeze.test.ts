@@ -47,7 +47,7 @@ const frozenFiles = {
   // card opens the public sample workspace (/demo) instead of the sign-in-only
   // /dashboard, the investor card reads "Investor directory", and the
   // never-rendered `pathway` copy is gone. Layout and GIFs are unchanged.
-  '../src/components/EntrepreneurProblems.tsx': '9afa4f0973fbcb267f89e2b264849b4f169ac36aaf5b1ad8f6997621a8a2ce37',
+  '../src/components/EntrepreneurProblems.tsx': '0dc28d7822682eed2863723669c1b64356a4cf97afa4d66ba28f7a8afe5658c4',
   // Updated for the canonical core-tool navigation: support tools no longer
   // appear as stage prerequisites, while Stage VII retains its original name
   // and order.
@@ -101,7 +101,10 @@ const frozenFiles = {
   // Same day, after review: each section below the hero is wrapped in a
   // HomeScene (its own display face) and the muted bands are gone; the page
   // keeps the one HomeWallpaper.
-  '../src/pages/Index.tsx': 'c749f74113a5a768822d85575450b9c7044947332a72898be5d0586ef2c455a7',
+  // Rehashed again 2026-10-29 (Stripe-style redesign Javier asked for):
+  // the journey becomes a problem picker with one stage, the cycle a track,
+  // What's inside a set of tabs; placeholders re-measured. Hero untouched.
+  '../src/pages/Index.tsx': 'c9976e5227f899e4221200214190cddbd41014e169bbb6e70329ab60aa303759',
 } as const;
 
 test('the approved unauthenticated landing page remains frozen during core-tool work', () => {

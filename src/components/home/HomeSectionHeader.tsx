@@ -1,23 +1,23 @@
 import type { ReactNode } from "react";
-import { Badge } from "@/components/ui/badge";
 
 type HomeSectionHeaderProps = {
   badge: string;
-  title: string;
+  title: ReactNode;
   id?: string;
   children?: ReactNode;
+  /** Centred for sections whose content is centred under the heading. */
+  align?: "start" | "center";
+  className?: string;
 };
 
-/** The badge, title and lede every homepage section opens with. */
-const HomeSectionHeader = ({ badge, title, id, children }: HomeSectionHeaderProps) => (
-  <div className="hs-header">
-    <Badge variant="outline" className="homepage-section-badge mb-5">
-      {badge}
-    </Badge>
-    <h2 id={id} className="homepage-section-title text-3xl sm:text-4xl lg:text-[2.9rem] mb-5">
+/** The eyebrow, title and one-line lede every homepage section opens with. */
+const HomeSectionHeader = ({ badge, title, id, children, align = "start", className = "" }: HomeSectionHeaderProps) => (
+  <div className={`hx-head${align === "center" ? " hx-head--center" : ""} ${className}`}>
+    <p className="homepage-section-badge hx-eyebrow">{badge}</p>
+    <h2 id={id} className="homepage-section-title hx-title">
       {title}
     </h2>
-    {children ? <p className="homepage-section-copy text-base sm:text-lg">{children}</p> : null}
+    {children ? <p className="hx-lede">{children}</p> : null}
   </div>
 );
 

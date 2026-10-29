@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef, type ChangeEvent } from "react";
+import { useState, useEffect, useRef, type ChangeEvent } from "react";
 import { Link } from "react-router-dom";
 import { Lightbulb, Users, Rocket, LayoutDashboard, Upload, Loader2, GraduationCap, TrendingUp, Handshake, BookOpen, ArrowRight } from "lucide-react";
 
@@ -6,20 +6,26 @@ import { Lightbulb, Users, Rocket, LayoutDashboard, Upload, Loader2, GraduationC
 // homepage link slot and asks Google to fetch a URL it is told to skip; the card
 // itself still shows, it just does not advertise a crawler-hostile route.
 const ROBOTS_DISALLOWED_LINKS = new Set(["/dashboard"]);
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  type CarouselApi,
-} from "@/components/ui/carousel";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
+import HomeSectionHeader from "@/components/home/HomeSectionHeader";
+import GradientMesh from "@/components/home/GradientMesh";
+
+const AUTOPLAY_MS = 6000;
+
+// A colour field behind each card's photo.
+const CARD_MESHES: [string, string, string, string][] = [
+  ["228 90% 64%", "262 83% 66%", "192 90% 52%", "330 80% 62%"],
+  ["262 83% 66%", "300 70% 62%", "228 90% 64%", "40 95% 60%"],
+  ["152 68% 46%", "192 90% 52%", "90 60% 52%", "228 90% 64%"],
+  ["330 85% 62%", "24 92% 58%", "262 83% 66%", "48 95% 60%"],
+  ["40 95% 58%", "18 90% 58%", "152 68% 46%", "228 90% 64%"],
+  ["192 90% 52%", "228 90% 64%", "170 75% 46%", "290 70% 62%"],
+];
 
 interface ValueCardImage {
   position: number;
@@ -28,11 +34,9 @@ interface ValueCardImage {
 }
 
 const ValuePropositionCards = () => {
-  const [api, setApi] = useState<CarouselApi>();
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const carouselContentRef = useRef<HTMLDivElement | null>(null);
-  const autoScrollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [isAutoScrollPaused, setIsAutoScrollPaused] = useState(false);
+  const [isHovering, setIsHovering] = useState(false);
   const [cardImages, setCardImages] = useState<ValueCardImage[]>([]);
   const [uploading, setUploading] = useState<number | null>(null);
   const [optimisticPreviews, setOptimisticPreviews] = useState<Record<number, string>>({});
@@ -278,285 +282,168 @@ const ValuePropositionCards = () => {
     }
   };
 
-  // Handle carousel API setup and sync selected index
-  const onSelect = useCallback(() => {
-    if (!api) return;
-    setSelectedIndex(api.selectedScrollSnap());
-  }, [api]);
+  const running = !isAutoScrollPaused && !isHovering && !prefersReducedMotion;
+  const tabsRef = useRef<HTMLDivElement | null>(null);
 
-  // Set up the carousel API listener
+  // On a phone the tab row scrolls sideways; keep the active tab in view.
+  // Only the row's own scrollLeft moves, never the page.
   useEffect(() => {
-    if (!api) return;
-    api.on("select", onSelect);
-    onSelect(); // Sync initial state
-    return () => {
-      api.off("select", onSelect);
-    };
-  }, [api, onSelect]);
+    const row = tabsRef.current;
+    const tab = row?.children[selectedIndex] as HTMLElement | undefined;
+    if (!row || !tab || row.scrollWidth <= row.clientWidth) return;
+    const left = tab.offsetLeft - (row.clientWidth - tab.offsetWidth) / 2;
+    row.scrollTo({ left, behavior: prefersReducedMotion ? "auto" : "smooth" });
+  }, [selectedIndex, prefersReducedMotion]);
 
   useEffect(() => {
-    if (!api) return;
+    if (prefersReducedMotion) setIsAutoScrollPaused(true);
+  }, [prefersReducedMotion]);
 
-    if (autoScrollRef.current) {
-      clearInterval(autoScrollRef.current);
-    }
+  useEffect(() => {
+    if (!running) return;
+    const timer = setTimeout(() => {
+      setSelectedIndex((prev) => (prev + 1) % allCards.length);
+    }, AUTOPLAY_MS);
+    return () => clearTimeout(timer);
+  }, [running, selectedIndex, allCards.length]);
 
-    if (prefersReducedMotion || isAutoScrollPaused) {
-      if (prefersReducedMotion) {
-        setIsAutoScrollPaused(true);
-      }
-      autoScrollRef.current = null;
-      return;
-    }
-
-    autoScrollRef.current = setInterval(() => {
-      api.scrollNext();
-    }, 5000);
-
-    return () => {
-      if (autoScrollRef.current) {
-        clearInterval(autoScrollRef.current);
-        autoScrollRef.current = null;
-      }
-    };
-  }, [api, isAutoScrollPaused, prefersReducedMotion]);
-
-  // Navigate to specific card
   const goToCard = (index: number) => {
-    if (api) {
-      api.scrollTo(index);
-      setSelectedIndex(index);
-    }
+    setSelectedIndex(index);
+    setIsAutoScrollPaused(true);
   };
-
-  const handleStopClick = () => {
-    setIsAutoScrollPaused((prev) => !prev);
-  };
-
-  useEffect(() => {
-    const container = carouselContentRef.current;
-    if (!container) return;
-
-    const updateHeights = () => {
-      const cards = Array.from(container.querySelectorAll<HTMLElement>('[data-value-card]'));
-      if (!cards.length) return;
-
-      if (window.innerWidth <= 768) {
-        cards.forEach((card) => {
-          card.style.height = 'auto';
-        });
-        return;
-      }
-
-      // Reset every card, then measure: reading a height right after each reset
-      // forced a full-page layout per card.
-      cards.forEach((card) => {
-        card.style.height = 'auto';
-      });
-      const maxHeight = Math.max(...cards.map((card) => card.getBoundingClientRect().height));
-      const finalHeight = Math.ceil(maxHeight);
-      cards.forEach((card) => {
-        card.style.height = `${finalHeight}px`;
-      });
-    };
-
-    updateHeights();
-
-    const handleResize = () => updateHeights();
-    window.addEventListener('resize', handleResize);
-
-    const images = Array.from(container.querySelectorAll<HTMLImageElement>('img'));
-    images.forEach((img) => {
-      if (img.complete) return;
-      img.addEventListener('load', handleResize);
-      img.addEventListener('error', handleResize);
-    });
-
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      images.forEach((img) => {
-        img.removeEventListener('load', handleResize);
-        img.removeEventListener('error', handleResize);
-      });
-    };
-  }, []);
 
   return (
-    <section id="what-you-get" className="value-prop-section section-shell scroll-mt-24">
+    <section id="what-you-get" className="value-prop-section section-shell scroll-mt-24 hx-inside" aria-labelledby="inside-heading">
       <div className="container mx-auto px-4 sm:px-6">
-        {/* Section Header */}
-        <div className="max-w-3xl mx-auto text-center mb-12 sm:mb-16">
-          <Badge variant="outline" className="homepage-section-badge mb-5">
-            What's Inside
-          </Badge>
-          <h2 className="homepage-section-title value-prop-section__title text-3xl sm:text-4xl lg:text-[2.9rem] mb-4">
-            Creatives Takeover in a Nutshell
-          </h2>
+        <div className="hx-inside__top">
+          <HomeSectionHeader badge="What's Inside" title="Creatives Takeover in a Nutshell" id="inside-heading" />
+          <button
+            type="button"
+            onClick={() => setIsAutoScrollPaused((prev) => !prev)}
+            disabled={prefersReducedMotion}
+            className="hx-cycle__play"
+            aria-pressed={!isAutoScrollPaused}
+          >
+            {isAutoScrollPaused ? "Resume" : "Stop"}
+          </button>
         </div>
 
-        {/* Horizontal Carousel */}
-        <div className="max-w-6xl mx-auto">
-          <Carousel
-            setApi={setApi}
-            opts={{
-              align: "start",
-              loop: true,
-            }}
-            className="w-full"
-          >
-            <CarouselContent ref={carouselContentRef} className="-ml-4 items-stretch">
-              {allCards.map((card, index) => {
-                const Icon = card.icon;
-                const storedImage = cardImages.find((img) => img.position === card.position);
-                const imageSrc = optimisticPreviews[card.position] || storedImage?.image_url || card.image;
-                // The card describes its own photo; stored alt text dates from older card topics.
-                const altText = card.imageAlt || storedImage?.alt_text;
-                const isUploadingPosition = uploading === card.position;
-                return (
-                  <CarouselItem key={card.title} className="pl-4 basis-full h-full">
-                    <Card className="value-prop-card surface-panel trust-outline overflow-hidden h-full relative rounded-4xl" data-value-card>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={handleStopClick}
-                        title={isAutoScrollPaused ? "Resume auto-scroll" : "Pause auto-scroll"}
-                        disabled={prefersReducedMotion}
-                        className="absolute right-4 top-4 z-10 h-7 px-2 text-xs"
-                      >
-                        {isAutoScrollPaused ? "Resume" : "Stop"}
-                      </Button>
-                      <div className="grid md:grid-cols-2 h-full">
-                        {/* Image - Left */}
-                        <figure className="value-prop-card__media relative h-64 md:h-full md:min-h-[320px] group">
-                          <img
-                            src={imageSrc}
-                            alt={altText}
-                            className="value-prop-card__image w-full h-full object-cover"
-                            loading="lazy"
-                          />
-                          <div className="absolute inset-0 bg-gradient-to-t from-background/15 via-transparent to-transparent" />
-                          {isAdmin && (
-                            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40">
-                              <div className="w-full max-w-[200px] px-4">
-                                <Input
-                                  ref={(el) => {
-                                    fileInputRefs.current[card.position] = el;
-                                  }}
-                                  type="file"
-                                  accept="image/jpeg,image/png,image/webp,image/gif"
-                                  onChange={(e) => {
-                                    const file = e.target.files?.[0];
-                                    if (file) {
-                                      void handleImageUpload(card.position, file, e);
-                                    }
-                                  }}
-                                  disabled={isUploadingPosition}
-                                  className="hidden"
-                                  id={`value-card-upload-${card.position}`}
-                                />
-                                <Button
-                                  type="button"
-                                  variant="secondary"
-                                  size="sm"
-                                  onClick={() => {
-                                    const fileInput = fileInputRefs.current[card.position];
-                                    if (fileInput) {
-                                      fileInput.click();
-                                    }
-                                  }}
-                                  disabled={isUploadingPosition}
-                                  className="w-full"
-                                >
-                                  {isUploadingPosition ? (
-                                    <>
-                                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                      Uploading...
-                                    </>
-                                  ) : (
-                                    <>
-                                      <Upload className="h-4 w-4 mr-2" />
-                                      Change Image
-                                    </>
-                                  )}
-                                </Button>
-                              </div>
-                            </div>
-                          )}
-                        </figure>
-
-                        {/* Content - Right */}
-                        <div className="value-prop-card__content p-7 md:p-10 lg:p-12 flex flex-col justify-center md:h-full">
-                          <div className="flex items-center gap-3 mb-4">
-                            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                              <Icon className="h-5 w-5 text-primary" />
-                            </div>
-                            <div>
-                              <p className="text-label uppercase tracking-[0.18em] text-muted-foreground">
-                                {card.title}
-                              </p>
-                              <h3 className="value-prop-card__heading font-space-grotesk text-[1.75rem] font-semibold tracking-tight text-foreground">
-                                {card.subtitle}
-                              </h3>
-                            </div>
-                          </div>
-
-                          <div className="value-prop-card__body text-sm leading-7 text-muted-foreground space-y-4">
-                            {card.description.split('\n\n').map((paragraph, idx) => (
-                              <p key={idx}>{paragraph}</p>
-                            ))}
-                          </div>
-
-                          {/* Each card already carried a `link`, and none of them
-                              was ever rendered. This is the homepage's largest
-                              section, so it was emitting zero internal links to
-                              the destinations it describes. */}
-                          {card.link && !ROBOTS_DISALLOWED_LINKS.has(card.link) && (
-                            <Link
-                              to={card.link}
-                              className="value-prop-card__link inline-flex items-center gap-1.5 text-sm font-medium text-primary underline-offset-4 transition-colors hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                            >
-                              {card.linkLabel || `Explore ${card.subtitle}`}
-                              <ArrowRight className="h-4 w-4 shrink-0" />
-                            </Link>
-                          )}
-                        </div>
-                      </div>
-                    </Card>
-                  </CarouselItem>
-                );
-              })}
-            </CarouselContent>
-          </Carousel>
-
-          {/* Mobile dot indicators */}
-          <div className="flex justify-center gap-2 mt-5 md:hidden" aria-label="Slide navigation">
-            {allCards.map((_, idx) => (
-              <button
-                key={idx}
-                onClick={() => goToCard(idx)}
-                className={`h-1.5 rounded-full transition-all duration-300 ${idx === selectedIndex ? 'w-6 bg-primary' : 'w-1.5 bg-muted-foreground/30'}`}
-                aria-label={`Go to slide ${idx + 1}`}
-              />
-            ))}
+        <div onMouseEnter={() => setIsHovering(true)} onMouseLeave={() => setIsHovering(false)}>
+          <div ref={tabsRef} className="hx-inside__tabs" role="tablist" aria-label="What's inside">
+            {allCards.map((card, index) => {
+              const Icon = card.icon;
+              const selected = index === selectedIndex;
+              return (
+                <button
+                  key={card.buttonLabel}
+                  type="button"
+                  role="tab"
+                  id={`inside-tab-${index}`}
+                  aria-selected={selected}
+                  aria-controls={`inside-panel-${index}`}
+                  className="hx-inside__tab"
+                  onClick={() => goToCard(index)}
+                >
+                  <Icon aria-hidden="true" />
+                  {card.buttonLabel}
+                  {selected && running ? <span key={selectedIndex} className="hx-inside__timer" aria-hidden="true" /> : null}
+                </button>
+              );
+            })}
           </div>
 
-          {/* Navigation Buttons */}
-          <div className="value-prop-nav hidden md:grid grid-cols-3 gap-3 mt-8 max-w-4xl mx-auto">
-            {allCards.map((card, index) => (
-              <Button
-                key={card.buttonLabel}
-                variant={selectedIndex === index ? "default" : "outline"}
-                onClick={() => goToCard(index)}
-                className={`transition-all duration-200 ${
-                  selectedIndex === index
-                    ? "bg-primary text-primary-foreground shadow-md"
-                    : "hover:border-primary/50"
-                }`}
-              >
-                {card.buttonLabel}
-              </Button>
-            ))}
+          {/* All six panels share one grid cell, so the block keeps the height
+              of the longest card and switching never moves the page. */}
+          <div className="hx-inside__panels">
+            {allCards.map((card, index) => {
+              const Icon = card.icon;
+              const selected = index === selectedIndex;
+              const storedImage = cardImages.find((img) => img.position === card.position);
+              const imageSrc = optimisticPreviews[card.position] || storedImage?.image_url || card.image;
+              // The card describes its own photo; stored alt text dates from older card topics.
+              const altText = card.imageAlt || storedImage?.alt_text;
+              const isUploadingPosition = uploading === card.position;
+              const mesh = CARD_MESHES[index % CARD_MESHES.length];
+              return (
+                <div
+                  key={card.title}
+                  id={`inside-panel-${index}`}
+                  role="tabpanel"
+                  aria-labelledby={`inside-tab-${index}`}
+                  aria-hidden={!selected}
+                  className={`hx-inside__panel${selected ? " is-active" : ""}`}
+                >
+                  <figure className="hx-inside__media group">
+                    <GradientMesh colors={mesh} className="hx-inside__glow" />
+                    <img src={imageSrc} alt={altText ?? ""} className="hx-inside__image" loading="lazy" />
+                    <figcaption className="hx-inside__chip">
+                      <span>
+                        <Icon aria-hidden="true" />
+                      </span>
+                      {card.subtitle}
+                    </figcaption>
+                    {isAdmin && (
+                      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40 rounded-3xl">
+                        <div className="w-full max-w-52 px-4">
+                          <Input
+                            ref={(el) => {
+                              fileInputRefs.current[card.position] = el;
+                            }}
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp,image/gif"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                void handleImageUpload(card.position, file, e);
+                              }
+                            }}
+                            disabled={isUploadingPosition}
+                            className="hidden"
+                            id={`value-card-upload-${card.position}`}
+                          />
+                          <Button
+                            type="button"
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => fileInputRefs.current[card.position]?.click()}
+                            disabled={isUploadingPosition}
+                            className="w-full"
+                          >
+                            {isUploadingPosition ? (
+                              <>
+                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                Uploading...
+                              </>
+                            ) : (
+                              <>
+                                <Upload className="h-4 w-4 mr-2" />
+                                Change Image
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </figure>
+
+                  <div className="hx-inside__copy">
+                    <p className="hx-inside__kicker">{card.title}</p>
+                    <h3 className="hx-inside__title">{card.subtitle}</h3>
+                    <div className="hx-inside__text">
+                      {card.description.split("\n\n").map((paragraph, idx) => (
+                        <p key={idx}>{paragraph}</p>
+                      ))}
+                    </div>
+                    {card.link && !ROBOTS_DISALLOWED_LINKS.has(card.link) && (
+                      <Link to={card.link} className="hx-inside__link" tabIndex={selected ? 0 : -1}>
+                        {card.linkLabel || `Explore ${card.subtitle}`}
+                        <ArrowRight className="h-4 w-4 shrink-0" aria-hidden="true" />
+                      </Link>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>

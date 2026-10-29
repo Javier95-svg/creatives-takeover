@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import HomeSectionHeader from "@/components/home/HomeSectionHeader";
 import { Timer, User } from "lucide-react";
 import {
   BarChart,
@@ -160,29 +160,23 @@ const AISpecializationTrends = () => {
       `}</style>
 
       <div className="container mx-auto px-4 sm:px-6 relative z-10">
-        {/* Section Header - Enhanced */}
-        <div className="text-center mb-14 sm:mb-16">
-          <Badge variant="outline" className="homepage-section-badge mb-5">
-            The Power of Small Teams
-          </Badge>
-          <h2 className="homepage-section-title text-3xl sm:text-4xl lg:text-[2.9rem] mb-5">
-            What AI Changes for Small Teams
-          </h2>
-          <p className="homepage-section-copy text-base sm:text-lg max-w-3xl mx-auto px-4">
-            AI tools let small teams do research, building, marketing and support work that used to need a much larger team.
-          </p>
-        </div>
+        <HomeSectionHeader badge="The Power of Small Teams" title="What AI Changes for Small Teams">
+          Small teams now do work that used to need a large one.
+        </HomeSectionHeader>
 
         <div ref={chartAnimationRef}>
         {/* Charts Grid: published figures, each with its source */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
           {/* Chart 1: Solo founders */}
-          <Card className="surface-panel trust-outline overflow-hidden hover:shadow-[0_22px_44px_-30px_rgba(15,23,42,0.2)] transition-shadow">
+          <Card className="hx-chart overflow-hidden">
             <CardHeader>
               <CardTitle className="font-space-grotesk text-base sm:text-lg flex items-center gap-2">
                 <User className="w-5 h-5 text-primary" />
                 More Startups Begin With One Founder
               </CardTitle>
+              <p className="hx-chart__stat">
+                36.3%<span>of new U.S. startups on Carta had a solo founder in H1 2025, up from 23.7% in 2019</span>
+              </p>
             </CardHeader>
             <CardContent className={isMobile ? "px-4 pb-5" : undefined}>
               <div style={{ minHeight: chartHeight }}>
@@ -190,6 +184,12 @@ const AISpecializationTrends = () => {
                 <div className="chart-container mx-auto w-full max-w-[340px] sm:max-w-none">
                   <ResponsiveContainer width="100%" height={chartHeight}>
                     <BarChart data={soloFounderData} margin={{ top: 28, right: 10, left: 0, bottom: 5 }}>
+                      <defs>
+                        <linearGradient id="hxBarStrong" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0" stopColor="hsl(192 90% 56%)" />
+                          <stop offset="1" stopColor="hsl(262 83% 64%)" />
+                        </linearGradient>
+                      </defs>
                       <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} vertical={false} />
                       <XAxis dataKey="period" stroke="hsl(var(--muted-foreground))" style={axisStyle} tickLine={false} />
                       <YAxis stroke="hsl(var(--muted-foreground))" style={axisStyle} unit="%" domain={[0, 40]} ticks={[0, 10, 20, 30, 40]} tickLine={false} />
@@ -203,7 +203,7 @@ const AISpecializationTrends = () => {
                         {soloFounderData.map((entry, index) => (
                           <Cell
                             key={entry.period}
-                            fill={index === soloFounderData.length - 1 ? 'hsl(var(--primary))' : 'hsl(var(--primary) / 0.45)'}
+                            fill={index === soloFounderData.length - 1 ? 'url(#hxBarStrong)' : 'hsl(var(--primary) / 0.35)'}
                           />
                         ))}
                         <LabelList dataKey="share" position="top" formatter={(value: number) => `${value}%`} style={valueLabelStyle} />
@@ -227,12 +227,15 @@ const AISpecializationTrends = () => {
           </Card>
 
           {/* Chart 2: Time to first $1M */}
-          <Card className="surface-panel trust-outline overflow-hidden hover:shadow-[0_22px_44px_-30px_rgba(15,23,42,0.2)] transition-shadow">
+          <Card className="hx-chart overflow-hidden">
             <CardHeader>
               <CardTitle className="font-space-grotesk text-base sm:text-lg flex items-center gap-2">
                 <Timer className="w-5 h-5 text-primary" />
                 AI Products Reach Revenue Sooner
               </CardTitle>
+              <p className="hx-chart__stat">
+                11.5 mo<span>median for the top 100 AI companies on Stripe to reach $1M in annualized revenue</span>
+              </p>
             </CardHeader>
             <CardContent className={isMobile ? "px-4 pb-5" : undefined}>
               <div style={{ minHeight: chartHeight }}>
@@ -240,6 +243,12 @@ const AISpecializationTrends = () => {
                 <div className="chart-container mx-auto w-full max-w-[340px] sm:max-w-none" style={{ animationDelay: '0.2s' }}>
                   <ResponsiveContainer width="100%" height={chartHeight}>
                     <BarChart data={timeToRevenueData} layout="vertical" margin={{ top: 5, right: isMobile ? 84 : 72, left: 0, bottom: 5 }}>
+                      <defs>
+                        <linearGradient id="hxBarSide" x1="0" y1="0" x2="1" y2="0">
+                          <stop offset="0" stopColor="hsl(262 83% 64%)" />
+                          <stop offset="1" stopColor="hsl(330 85% 62%)" />
+                        </linearGradient>
+                      </defs>
                       <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} horizontal={false} />
                       <XAxis type="number" stroke="hsl(var(--muted-foreground))" style={axisStyle} domain={[0, 18]} ticks={[0, 6, 12, 18]} unit=" mo" tickLine={false} />
                       <YAxis type="category" dataKey="group" stroke="hsl(var(--muted-foreground))" style={axisStyle} width={isMobile ? 120 : 150} tickLine={false} />
@@ -251,7 +260,7 @@ const AISpecializationTrends = () => {
                         isAnimationActive={!prefersReducedMotion}
                       >
                         {timeToRevenueData.map((entry, index) => (
-                          <Cell key={entry.group} fill={index === 0 ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground) / 0.45)'} />
+                          <Cell key={entry.group} fill={index === 0 ? 'url(#hxBarSide)' : 'hsl(var(--muted-foreground) / 0.4)'} />
                         ))}
                         <LabelList dataKey="months" position="right" formatter={(value: number) => `${value} months`} style={valueLabelStyle} />
                       </Bar>
@@ -276,9 +285,9 @@ const AISpecializationTrends = () => {
         </div>
 
         {/* Narrative Conclusion */}
-        <div ref={textSectionRef} className="mt-12 max-w-4xl mx-auto">
-          <div className="surface-panel trust-outline rounded-2.5xl sm:rounded-4xl p-5 sm:p-10">
-            <h3 className="font-space-grotesk text-2xl font-semibold mb-4 text-center text-foreground tracking-tight">
+        <div ref={textSectionRef} className="mt-4">
+          <div className="hx-why">
+            <h3 className="hx-why__title">
               Why It Matters Now
             </h3>
             <TypedParagraph
