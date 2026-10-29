@@ -8,6 +8,7 @@ import EcosystemSection from "@/components/home/EcosystemSection";
 import PricingTeaser from "@/components/home/PricingTeaser";
 import ProofSection from "@/components/home/ProofSection";
 import ClosingCta from "@/components/home/ClosingCta";
+import HomeScene, { useHomeSceneFonts } from "@/components/home/HomeScene";
 import "@/components/home/home-sections.css";
 import { PullToRefresh } from "@/components/mobile/PullToRefresh";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -50,6 +51,7 @@ const Index = () => {
   const hasTrackedLandingView = useRef(false);
   // Track homepage analytics
   usePageAnalytics('/', 'Home - Creatives Takeover');
+  useHomeSceneFonts();
 
   useEffect(() => {
     if (hasTrackedLandingView.current) return;
@@ -79,55 +81,70 @@ const Index = () => {
   // The story, in order: what it is (hero), the problems and the tool for each,
   // the stages, what is inside, who is here, why now, what it costs, what people
   // say (hidden until real quotes exist), answers, and one last way in.
+  // Each section after the hero is its own scene: its own wallpaper and its
+  // own display face (see home-scenes.css).
   const sections = (
     <>
       <Hero />
-      <Reveal>
-        <div className="homepage-band-muted">
+      <HomeScene scene="journey">
+        <Reveal>
           <EntrepreneurProblems />
-        </div>
-      </Reveal>
-      <Reveal>
-        <UserReviews />
-      </Reveal>
-      <Reveal>
-        <div className="homepage-band-muted">
+        </Reveal>
+      </HomeScene>
+      <HomeScene scene="orbit">
+        <Reveal>
+          <UserReviews />
+        </Reveal>
+      </HomeScene>
+      <HomeScene scene="studio">
+        <Reveal>
           <ValuePropositionCards />
-        </div>
-      </Reveal>
-      <Reveal>
-        <EcosystemSection />
-      </Reveal>
-      <Reveal>
-        <div className="homepage-band-muted">
+        </Reveal>
+      </HomeScene>
+      <HomeScene scene="network">
+        <Reveal>
+          <EcosystemSection />
+        </Reveal>
+      </HomeScene>
+      <HomeScene scene="data">
+        <Reveal>
           <LoadWhenNear id="ai-trends" placeholder={trendsPlaceholder}>
             <Suspense fallback={trendsPlaceholder}>
               <AISpecializationTrends />
             </Suspense>
           </LoadWhenNear>
-        </div>
-      </Reveal>
-      <Reveal>
-        <PricingTeaser />
-      </Reveal>
-      <ProofSection />
-      <Reveal>
-        <LoadWhenNear id="pedia-teaser" placeholder={teaserPlaceholder}>
-          <Suspense fallback={teaserPlaceholder}>
-            <FounderAnswerLibraryTeaser compact />
-          </Suspense>
-        </LoadWhenNear>
-      </Reveal>
-      <Reveal>
-        <div className="homepage-band-muted">
+        </Reveal>
+      </HomeScene>
+      <HomeScene scene="tiers">
+        <Reveal>
+          <PricingTeaser />
+        </Reveal>
+      </HomeScene>
+      {/* Renders nothing (zero height) until src/data/homeProof.ts has quotes. */}
+      <HomeScene scene="quote">
+        <ProofSection />
+      </HomeScene>
+      <HomeScene scene="library">
+        <Reveal>
+          <LoadWhenNear id="pedia-teaser" placeholder={teaserPlaceholder}>
+            <Suspense fallback={teaserPlaceholder}>
+              <FounderAnswerLibraryTeaser compact />
+            </Suspense>
+          </LoadWhenNear>
+        </Reveal>
+      </HomeScene>
+      <HomeScene scene="calm">
+        <Reveal>
           <LoadWhenNear id="home-faq" placeholder={faqPlaceholder}>
             <Suspense fallback={faqPlaceholder}>
               <HomeFAQ />
             </Suspense>
           </LoadWhenNear>
-        </div>
-      </Reveal>
-      <ClosingCta />
+        </Reveal>
+      </HomeScene>
+      <HomeScene scene="launch">
+        <ClosingCta />
+      </HomeScene>
     </>
   );
 

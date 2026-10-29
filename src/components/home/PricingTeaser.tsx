@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Sparkles } from "lucide-react";
 import { PLAN_PRICING } from "@/config/pricing";
 import { PLAN_PACKAGE_PRESENTATION } from "@/config/planPackages";
 import { PLAN_COPY } from "@/lib/publicPlatformFacts";
@@ -30,16 +30,20 @@ const PricingTeaser = () => (
               data-accent={TIER_ACCENT[plan.id]}
               aria-label={`${plan.name} plan, ${price === 0 ? "free" : `$${price} a month`}. Compare plans`}
             >
-              <div className="hs-plan__head">
-                <h3 className="hs-card__title">{plan.name}</h3>
-                {presentation.recommended ? <span className="hs-chip hs-chip--solid">Recommended</span> : null}
-              </div>
+              {presentation.recommended ? (
+                <span className="hs-plan__ribbon">
+                  <Sparkles aria-hidden="true" />
+                  Recommended
+                </span>
+              ) : null}
+              <h3 className="hs-plan__name">{plan.name}</h3>
               <p className="hs-plan__best">Best for {presentation.bestFor.toLowerCase()}</p>
               <p className="hs-plan__price">
                 ${price}
                 <span>/month</span>
               </p>
-              <p className="hs-card__copy">{presentation.outcome}</p>
+              <p className="hs-plan__outcome">{presentation.outcome}</p>
+              <p className="hs-card__copy">{presentation.outcomeDetail}</p>
               <p className="hs-plan__usage">{presentation.usageLabel}</p>
             </Link>
           );

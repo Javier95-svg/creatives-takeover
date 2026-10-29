@@ -16,6 +16,10 @@ const ACCOUNT_LINKS: Record<AccountId, { href: string; label: string; icon: Luci
   investor: { href: "/for-investors", label: "For investors", icon: TrendingUp, accent: "destructive" },
 };
 
+// Founders and builders are who the platform is for first, so their cards lead
+// the grid at double width; the people around them follow.
+const LEAD_ACCOUNTS: ReadonlySet<AccountId> = new Set(["founder", "builder"]);
+
 const EcosystemSection = () => (
   <section className="hs-section section-shell" aria-labelledby="ecosystem-heading">
     <div className="container mx-auto px-4 sm:px-6">
@@ -27,15 +31,22 @@ const EcosystemSection = () => (
         {WHO_IS_THIS_FOR_ACCOUNT_TYPES.map((account) => {
           const link = ACCOUNT_LINKS[account.id];
           const Icon = link.icon;
+          const lead = LEAD_ACCOUNTS.has(account.id);
           return (
-            <Link key={account.id} to={link.href} className="hs-card hs-ecosystem-card" data-accent={link.accent}>
+            <Link
+              key={account.id}
+              to={link.href}
+              className={`hs-card hs-ecosystem-card${lead ? " hs-ecosystem-card--lead" : ""}`}
+              data-accent={link.accent}
+            >
+              <Icon className="hs-ecosystem-card__mark" aria-hidden="true" />
               <div className="hs-ecosystem-card__top">
                 <span className="hs-icon" aria-hidden="true">
                   <Icon />
                 </span>
                 <span className="hs-chip">{account.access === "invitation" ? "By invitation" : "Open to everyone"}</span>
               </div>
-              <h3 className="hs-card__title">{account.label}</h3>
+              <h3 className="hs-ecosystem-card__label">{account.label}</h3>
               <p className="hs-ecosystem-card__promise">“{account.promise}”</p>
               <p className="hs-card__copy">{account.next}</p>
               <span className="hs-card__link">

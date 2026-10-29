@@ -1,24 +1,29 @@
 /*
  * Homepage sections added in the 2026-10-29 refresh (Who's here, Pricing,
  * Proof, closing CTA). Built on the theme tokens in src/index.css so they sit
- * next to the existing sections in both themes. Motion is transform and
- * shadow only (no layout shift) and is switched off for reduced motion.
+ * next to the existing sections in both themes; each one also picks up its
+ * scene's display face (home-scenes.css). Motion is transform and shadow only
+ * (no layout shift) and is switched off for reduced motion.
  */
 
 .hs-section {
-  --hs-radius: 1.25rem;
-  --hs-gap: 1rem;
+  --hs-radius: 1.5rem;
+  --hs-gap: 1.125rem;
   --hs-ease: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .hs-header {
   max-width: 48rem;
-  margin: 0 auto 3rem;
+  margin: 0 auto 3.5rem;
   text-align: center;
 }
 
 /* ---- Cards ------------------------------------------------------------ */
 
+/*
+ * A gradient hairline border (accent at the top left, fading out) drawn with
+ * two background layers, and a soft accent light in the top right corner.
+ */
 .hs-card {
   --hs-accent: var(--primary);
   position: relative;
@@ -26,20 +31,23 @@
   flex-direction: column;
   gap: 0.5rem;
   height: 100%;
-  padding: 1.5rem;
+  padding: 1.75rem;
   border-radius: var(--hs-radius);
-  border: 1px solid hsl(var(--border) / 0.82);
-  background: linear-gradient(180deg, hsl(var(--card) / 0.98), hsl(var(--card)));
+  border: 1px solid transparent;
+  background:
+    radial-gradient(120% 80% at 100% 0%, hsl(var(--hs-accent) / 0.12), transparent 55%) padding-box,
+    linear-gradient(170deg, hsl(var(--card) / 0.96), hsl(var(--card) / 0.88)) padding-box,
+    linear-gradient(150deg, hsl(var(--hs-accent) / 0.55), hsl(var(--border) / 0.5) 35%, hsl(var(--border) / 0.35) 70%, hsl(var(--hs-accent) / 0.25)) border-box;
   box-shadow:
-    0 24px 60px -40px hsl(var(--foreground) / 0.2),
-    0 10px 24px -22px hsl(var(--foreground) / 0.12);
+    0 1px 0 hsl(var(--foreground) / 0.04) inset,
+    0 30px 60px -42px hsl(var(--foreground) / 0.28),
+    0 12px 24px -22px hsl(var(--foreground) / 0.14);
   color: hsl(var(--foreground));
   text-decoration: none;
   overflow: hidden;
   transition:
-    transform 320ms var(--hs-ease),
-    box-shadow 320ms var(--hs-ease),
-    border-color 320ms var(--hs-ease);
+    transform 360ms var(--hs-ease),
+    box-shadow 360ms var(--hs-ease);
 }
 
 .hs-card[data-accent="success"] { --hs-accent: var(--success); }
@@ -47,43 +55,20 @@
 .hs-card[data-accent="info"] { --hs-accent: var(--info); }
 .hs-card[data-accent="destructive"] { --hs-accent: var(--destructive); }
 
-/* A thin accent line on top, brighter on hover. */
-.hs-card::before {
-  content: "";
-  position: absolute;
-  inset: 0 0 auto;
-  height: 3px;
-  background: linear-gradient(90deg, hsl(var(--hs-accent) / 0.15), hsl(var(--hs-accent)), hsl(var(--hs-accent) / 0.15));
-  opacity: 0.55;
-  transition: opacity 320ms var(--hs-ease);
-}
-
 a.hs-card:hover,
 a.hs-card:focus-visible {
-  transform: translateY(-4px);
-  border-color: hsl(var(--hs-accent) / 0.55);
+  transform: translateY(-6px);
   box-shadow:
-    0 30px 60px -36px hsl(var(--hs-accent) / 0.45),
-    0 12px 24px -20px hsl(var(--foreground) / 0.14);
-}
-
-a.hs-card:hover::before,
-a.hs-card:focus-visible::before {
-  opacity: 1;
-}
-
-.hs-card__title {
-  font-family: 'Space Grotesk', sans-serif;
-  font-size: 1.25rem;
-  font-weight: 600;
-  letter-spacing: -0.02em;
-  line-height: 1.2;
+    0 1px 0 hsl(var(--foreground) / 0.04) inset,
+    0 0 0 1px hsl(var(--hs-accent) / 0.35),
+    0 36px 70px -36px hsl(var(--hs-accent) / 0.55),
+    0 14px 28px -20px hsl(var(--foreground) / 0.16);
 }
 
 .hs-card__copy {
   color: hsl(var(--muted-foreground));
   font-size: 0.9375rem;
-  line-height: 1.6;
+  line-height: 1.65;
 }
 
 .hs-card__link {
@@ -91,7 +76,7 @@ a.hs-card:focus-visible::before {
   align-items: center;
   gap: 0.35rem;
   margin-top: auto;
-  padding-top: 0.75rem;
+  padding-top: 1rem;
   color: hsl(var(--hs-accent));
   font-size: 0.875rem;
   font-weight: 600;
@@ -100,49 +85,45 @@ a.hs-card:focus-visible::before {
 .hs-card__link svg {
   width: 1rem;
   height: 1rem;
-  transition: transform 320ms var(--hs-ease);
+  transition: transform 360ms var(--hs-ease);
 }
 
 a.hs-card:hover .hs-card__link svg {
-  transform: translate(2px, -2px);
+  transform: translate(3px, -3px);
 }
 
 .hs-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2.75rem;
-  height: 2.75rem;
-  border-radius: 0.875rem;
-  border: 1px solid hsl(var(--hs-accent) / 0.3);
-  background: hsl(var(--hs-accent) / 0.1);
+  width: 3rem;
+  height: 3rem;
+  border-radius: 1rem;
+  border: 1px solid hsl(var(--hs-accent) / 0.35);
+  background:
+    radial-gradient(circle at 30% 25%, hsl(var(--hs-accent) / 0.3), hsl(var(--hs-accent) / 0.08) 70%);
+  box-shadow: 0 10px 24px -12px hsl(var(--hs-accent) / 0.7);
   color: hsl(var(--hs-accent));
 }
 
 .hs-icon svg {
-  width: 1.25rem;
-  height: 1.25rem;
+  width: 1.3rem;
+  height: 1.3rem;
 }
 
 .hs-chip {
   display: inline-flex;
   align-items: center;
   border-radius: 999px;
-  border: 1px solid hsl(var(--border));
-  background: hsl(var(--background) / 0.8);
-  padding: 0.2rem 0.6rem;
+  border: 1px solid hsl(var(--border) / 0.8);
+  background: hsl(var(--background) / 0.6);
+  padding: 0.25rem 0.65rem;
   color: hsl(var(--muted-foreground));
   font-size: 0.6875rem;
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   white-space: nowrap;
-}
-
-.hs-chip--solid {
-  border-color: transparent;
-  background: hsl(var(--hs-accent));
-  color: hsl(var(--primary-foreground));
 }
 
 .hs-chip--warn {
@@ -152,14 +133,54 @@ a.hs-card:hover .hs-card__link svg {
   color: hsl(var(--foreground));
 }
 
-/* ---- Who's here --------------------------------------------------------- */
+/* ---- Who's here: a bento, founders and builders first ------------------- */
 
 .hs-ecosystem-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(13.5rem, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: var(--hs-gap);
-  max-width: 76rem;
+  max-width: 72rem;
   margin: 0 auto;
+}
+
+/* Grid items are the reveal wrappers (or the cards, with reduced motion). */
+.hs-ecosystem-grid > * {
+  grid-column: span 2;
+}
+
+.hs-ecosystem-grid > :nth-child(-n + 2) {
+  grid-column: span 3;
+}
+
+.hs-ecosystem-card {
+  min-height: 17rem;
+}
+
+.hs-ecosystem-card--lead {
+  padding: 2.25rem;
+}
+
+/* A large faint copy of the icon, bottom right, as a watermark. */
+.hs-ecosystem-card__mark {
+  position: absolute;
+  right: -1.5rem;
+  bottom: -1.75rem;
+  width: 9rem;
+  height: 9rem;
+  color: hsl(var(--hs-accent) / 0.07);
+  stroke-width: 1.25;
+  pointer-events: none;
+  transition: transform 600ms var(--hs-ease), color 600ms var(--hs-ease);
+}
+
+.hs-ecosystem-card--lead .hs-ecosystem-card__mark {
+  width: 12rem;
+  height: 12rem;
+}
+
+a.hs-ecosystem-card:hover .hs-ecosystem-card__mark {
+  transform: rotate(-8deg) scale(1.06);
+  color: hsl(var(--hs-accent) / 0.12);
 }
 
 .hs-ecosystem-card__top {
@@ -167,13 +188,32 @@ a.hs-card:hover .hs-card__link svg {
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
-  margin-bottom: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.hs-ecosystem-card__label {
+  color: hsl(var(--hs-accent));
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
 }
 
 .hs-ecosystem-card__promise {
-  color: hsl(var(--foreground) / 0.86);
-  font-size: 1rem;
-  font-weight: 500;
+  font-family: var(--scene-display, 'Space Grotesk', sans-serif);
+  font-size: 1.375rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+}
+
+.hs-ecosystem-card--lead .hs-ecosystem-card__promise {
+  font-size: clamp(1.75rem, 2.6vw, 2.25rem);
+}
+
+.hs-ecosystem-card .hs-card__copy {
+  position: relative;
+  max-width: 26rem;
 }
 
 /* ---- Pricing ------------------------------------------------------------ */
@@ -182,27 +222,75 @@ a.hs-card:hover .hs-card__link svg {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: var(--hs-gap);
-  max-width: 72rem;
+  align-items: stretch;
+  max-width: 74rem;
   margin: 0 auto;
 }
 
 .hs-plan {
-  border-color: hsl(var(--hs-accent) / 0.45);
+  padding-top: 2rem;
+}
+
+/* A bar of the tier colour across the top. */
+.hs-plan::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 4px;
+  background: linear-gradient(90deg, hsl(var(--hs-accent) / 0.2), hsl(var(--hs-accent)), hsl(var(--hs-accent) / 0.2));
 }
 
 .hs-plan--recommended {
-  border-width: 2px;
-  border-color: hsl(var(--hs-accent) / 0.75);
+  background:
+    radial-gradient(120% 70% at 50% 0%, hsl(var(--hs-accent) / 0.2), transparent 60%) padding-box,
+    linear-gradient(170deg, hsl(var(--card) / 0.98), hsl(var(--card) / 0.92)) padding-box,
+    linear-gradient(160deg, hsl(var(--hs-accent)), hsl(258 90% 66% / 0.7) 50%, hsl(var(--hs-accent) / 0.6)) border-box;
   box-shadow:
-    0 0 0 4px hsl(var(--hs-accent) / 0.08),
-    0 30px 60px -36px hsl(var(--hs-accent) / 0.5);
+    0 0 0 4px hsl(var(--hs-accent) / 0.1),
+    0 40px 80px -40px hsl(var(--hs-accent) / 0.65);
 }
 
-.hs-plan__head {
-  display: flex;
+.hs-plan__ribbon {
+  position: absolute;
+  top: 1.1rem;
+  right: 1.1rem;
+  display: inline-flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 0.3rem;
+  border-radius: 999px;
+  background: hsl(var(--hs-accent));
+  padding: 0.25rem 0.65rem;
+  color: hsl(var(--primary-foreground));
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  box-shadow: 0 8px 18px -8px hsl(var(--hs-accent) / 0.8);
+}
+
+.hs-plan__ribbon svg {
+  width: 0.8rem;
+  height: 0.8rem;
+}
+
+.hs-plan__name {
+  display: inline-flex;
+  align-items: center;
   gap: 0.5rem;
+  color: hsl(var(--hs-accent));
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.hs-plan__name::before {
+  content: "";
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: hsl(var(--hs-accent));
+  box-shadow: 0 0 0 4px hsl(var(--hs-accent) / 0.18);
 }
 
 .hs-plan__best {
@@ -211,16 +299,16 @@ a.hs-card:hover .hs-card__link svg {
 }
 
 .hs-plan__price {
-  margin: 0.5rem 0 0.25rem;
-  font-family: 'Space Grotesk', sans-serif;
-  font-size: 2.25rem;
-  font-weight: 600;
-  letter-spacing: -0.03em;
+  margin: 1rem 0 0.75rem;
+  font-family: var(--scene-display, 'Space Grotesk', sans-serif);
+  font-size: 3rem;
+  font-weight: 700;
+  letter-spacing: -0.045em;
   line-height: 1;
 }
 
 .hs-plan__price span {
-  margin-left: 0.2rem;
+  margin-left: 0.25rem;
   color: hsl(var(--muted-foreground));
   font-family: 'Inter', sans-serif;
   font-size: 0.875rem;
@@ -228,13 +316,21 @@ a.hs-card:hover .hs-card__link svg {
   letter-spacing: 0;
 }
 
+.hs-plan__outcome {
+  font-weight: 600;
+  line-height: 1.4;
+}
+
 .hs-plan__usage {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   margin-top: auto;
-  padding-top: 0.75rem;
-  border-top: 1px solid hsl(var(--border) / 0.7);
+  padding-top: 1rem;
+  border-top: 1px dashed hsl(var(--border));
   color: hsl(var(--hs-accent));
   font-size: 0.8125rem;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 /* ---- Proof -------------------------------------------------------------- */
@@ -254,16 +350,19 @@ a.hs-card:hover .hs-card__link svg {
 .hs-proof--placeholder {
   border-style: dashed;
   border-color: hsl(var(--warning) / 0.6);
+  background: hsl(var(--card) / 0.9);
 }
 
 .hs-proof__quote {
-  font-size: 1.0625rem;
-  line-height: 1.6;
+  font-family: var(--scene-display, Georgia, serif);
+  font-size: 1.375rem;
+  font-style: italic;
+  line-height: 1.45;
 }
 
 .hs-proof__name {
   margin-top: auto;
-  padding-top: 1rem;
+  padding-top: 1.25rem;
   font-weight: 600;
 }
 
@@ -279,7 +378,7 @@ a.hs-card:hover .hs-card__link svg {
   flex-direction: column;
   align-items: center;
   gap: 1rem;
-  margin-top: 2.5rem;
+  margin-top: 3rem;
   text-align: center;
 }
 
@@ -300,22 +399,23 @@ a.hs-card:hover .hs-card__link svg {
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  min-height: 3rem;
-  padding: 0 1.5rem;
-  border-radius: 0.75rem;
+  min-height: 3.25rem;
+  padding: 0 1.75rem;
+  border-radius: 999px;
   font-size: 0.9375rem;
   font-weight: 600;
   text-decoration: none;
   transition:
-    transform 240ms var(--hs-ease, ease),
-    box-shadow 240ms var(--hs-ease, ease),
-    background-color 240ms ease;
+    transform 260ms var(--hs-ease, ease),
+    box-shadow 260ms var(--hs-ease, ease),
+    background-color 260ms ease,
+    border-color 260ms ease;
 }
 
 .hs-button svg {
   width: 1rem;
   height: 1rem;
-  transition: transform 240ms ease;
+  transition: transform 260ms ease;
 }
 
 .hs-button:hover svg {
@@ -323,19 +423,23 @@ a.hs-card:hover .hs-card__link svg {
 }
 
 .hs-button--primary {
-  background: hsl(var(--primary));
+  background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.82));
   color: hsl(var(--primary-foreground));
-  box-shadow: 0 16px 32px -18px hsl(var(--primary) / 0.7);
+  box-shadow:
+    0 1px 0 hsl(0 0% 100% / 0.25) inset,
+    0 18px 36px -18px hsl(var(--primary) / 0.8);
 }
 
 .hs-button--primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 22px 40px -18px hsl(var(--primary) / 0.8);
+  box-shadow:
+    0 1px 0 hsl(0 0% 100% / 0.25) inset,
+    0 24px 44px -18px hsl(var(--primary) / 0.9);
 }
 
 .hs-button--ghost {
   border: 1px solid hsl(var(--border));
-  background: hsl(var(--background) / 0.7);
+  background: hsl(var(--background) / 0.5);
   color: hsl(var(--foreground));
 }
 
@@ -347,22 +451,26 @@ a.hs-card:hover .hs-card__link svg {
 /* ---- Closing CTA -------------------------------------------------------- */
 
 .hs-closing {
-  padding: 2rem 0 6rem;
+  padding: 4rem 0 7rem;
+}
+
+/* The frame is a 1px gradient ring around the panel. */
+.hs-closing__frame {
+  max-width: 64rem;
+  margin: 0 auto;
+  padding: 1px;
+  border-radius: 2.25rem;
+  background: linear-gradient(135deg, hsl(var(--primary) / 0.8), hsl(258 90% 66% / 0.5) 40%, hsl(var(--border) / 0.4) 70%, hsl(var(--primary) / 0.5));
+  box-shadow: 0 50px 110px -60px hsl(var(--primary) / 0.75);
 }
 
 .hs-closing__panel {
   position: relative;
-  max-width: 60rem;
-  margin: 0 auto;
-  padding: 4rem 2rem;
-  border-radius: 2rem;
-  border: 1px solid hsl(var(--primary) / 0.3);
+  padding: 5rem 2rem;
+  border-radius: calc(2.25rem - 1px);
   background:
-    radial-gradient(60% 80% at 50% 0%, hsl(var(--primary) / 0.22), transparent 70%),
-    linear-gradient(180deg, hsl(var(--card)), hsl(var(--card) / 0.92));
-  box-shadow:
-    0 0 0 1px hsl(var(--background) / 0.4) inset,
-    0 40px 90px -50px hsl(var(--primary) / 0.6);
+    radial-gradient(60% 70% at 50% 0%, hsl(var(--primary) / 0.2), transparent 70%),
+    linear-gradient(180deg, hsl(var(--card)), hsl(var(--card) / 0.94));
   text-align: center;
   overflow: hidden;
 }
@@ -375,19 +483,27 @@ a.hs-card:hover .hs-card__link svg {
   width: 40%;
   height: 1px;
   background: linear-gradient(90deg, transparent, hsl(var(--primary)), transparent);
-  opacity: 0.8;
+  opacity: 0.9;
 }
 
+.hs-scene .homepage-section-title.hs-closing__title,
 .hs-closing__title {
-  font-size: clamp(2rem, 4.5vw, 3.25rem);
-  margin-bottom: 1rem;
+  font-size: clamp(2.5rem, 6vw, 4.25rem);
+  margin-bottom: 1.25rem;
+}
+
+.hs-closing__accent {
+  background: linear-gradient(90deg, hsl(var(--primary)), hsl(258 90% 70%));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 .hs-closing__copy {
   max-width: 34rem;
   margin: 0 auto;
   color: hsl(var(--muted-foreground));
-  font-size: 1.0625rem;
+  font-size: 1.125rem;
   line-height: 1.7;
 }
 
@@ -396,19 +512,34 @@ a.hs-card:hover .hs-card__link svg {
   flex-wrap: wrap;
   justify-content: center;
   gap: 0.75rem;
-  margin-top: 2rem;
+  margin-top: 2.25rem;
 }
 
 .hs-closing__fine {
-  margin-top: 1.25rem;
+  margin-top: 1.5rem;
   color: hsl(var(--muted-foreground));
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 
 /* ---- Responsive --------------------------------------------------------- */
 
 @media (max-width: 1023px) {
+  .hs-ecosystem-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .hs-ecosystem-grid > *,
+  .hs-ecosystem-grid > :nth-child(-n + 2) {
+    grid-column: span 1;
+  }
+
+  .hs-ecosystem-grid > :last-child {
+    grid-column: span 2;
+  }
+
   .hs-pricing-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -416,7 +547,7 @@ a.hs-card:hover .hs-card__link svg {
 
 @media (max-width: 639px) {
   .hs-header {
-    margin-bottom: 2.25rem;
+    margin-bottom: 2.5rem;
   }
 
   .hs-ecosystem-grid,
@@ -424,13 +555,21 @@ a.hs-card:hover .hs-card__link svg {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .hs-card {
-    padding: 1.25rem;
+  .hs-ecosystem-grid > :last-child {
+    grid-column: span 1;
+  }
+
+  .hs-ecosystem-card {
+    min-height: 0;
+  }
+
+  .hs-card,
+  .hs-ecosystem-card--lead {
+    padding: 1.5rem;
   }
 
   .hs-closing__panel {
-    padding: 3rem 1.25rem;
-    border-radius: 1.5rem;
+    padding: 3.5rem 1.25rem;
   }
 
   .hs-closing__actions .hs-button {
@@ -453,8 +592,8 @@ a.hs-card:hover .hs-card__link svg {
 
 @media (prefers-reduced-motion: reduce) {
   .hs-card,
-  .hs-card::before,
   .hs-card__link svg,
+  .hs-ecosystem-card__mark,
   .hs-button,
   .hs-button svg {
     transition: none;
@@ -462,6 +601,7 @@ a.hs-card:hover .hs-card__link svg {
 
   a.hs-card:hover,
   a.hs-card:focus-visible,
+  a.hs-ecosystem-card:hover .hs-ecosystem-card__mark,
   .hs-button--primary:hover {
     transform: none;
   }

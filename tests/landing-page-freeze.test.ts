@@ -98,7 +98,9 @@ const frozenFiles = {
   // Hero, journey, cycle, value cards, Pedia teaser and FAQ keep their place
   // and look. The lazy-section placeholders now reserve the measured heights
   // (they were about half), which removed most of the phone layout shift.
-  '../src/pages/Index.tsx': '1f029a49f020a653cb5098da61d15e9d64c36affbb6e4e97a4db8ec5c1c539c5',
+  // Same day, after review: each section below the hero is wrapped in a
+  // HomeScene (its own wallpaper and display face) and the muted bands are gone.
+  '../src/pages/Index.tsx': 'f1c7c972409ad9d9866f9d6280fca3218fb84f1153e2f8a9e99b1a3c4050d91c',
 } as const;
 
 test('the approved unauthenticated landing page remains frozen during core-tool work', () => {
