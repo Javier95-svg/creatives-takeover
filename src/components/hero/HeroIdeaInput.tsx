@@ -64,6 +64,13 @@ export const HeroIdeaInput = forwardRef<HeroIdeaInputHandle, HeroIdeaInputProps>
   useLayoutEffect(() => {
     const el = textareaRef.current;
     if (!el) return;
+    // Empty, the CSS already makes it one row with no scrollbar. Measuring here
+    // forced a layout of the whole homepage before its first paint.
+    if (!value) {
+      el.style.height = "";
+      el.style.overflowY = "";
+      return;
+    }
     el.style.height = "auto";
     const lineHeight = Number.parseFloat(getComputedStyle(el).lineHeight) || 30;
     const maxHeight = lineHeight * MAX_ROWS;

@@ -348,11 +348,12 @@ const ValuePropositionCards = () => {
         return;
       }
 
-      let maxHeight = 0;
+      // Reset every card, then measure: reading a height right after each reset
+      // forced a full-page layout per card.
       cards.forEach((card) => {
         card.style.height = 'auto';
-        maxHeight = Math.max(maxHeight, card.getBoundingClientRect().height);
       });
+      const maxHeight = Math.max(...cards.map((card) => card.getBoundingClientRect().height));
       const finalHeight = Math.ceil(maxHeight);
       cards.forEach((card) => {
         card.style.height = `${finalHeight}px`;
