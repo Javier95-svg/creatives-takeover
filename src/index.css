@@ -898,6 +898,17 @@ All colors MUST be HSL.
     box-shadow: var(--glass-shadow);
   }
 
+  /* Most .glass cards also carry an opaque bg-card / bg-background, which
+     hides everything behind them, so their blur could never be seen but was
+     recomputed for every card on every scroll frame (26 to 33 cards on /faq
+     and /resources). Measured with a 4x slower CPU, blur off took /resources
+     scrolling from 18 to 43fps. See-through glass keeps its blur. */
+  .glass.bg-card,
+  .glass.bg-background {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
   .section-shell {
     position: relative;
     padding-top: 5.75rem;

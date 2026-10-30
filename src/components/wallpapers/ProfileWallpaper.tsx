@@ -1,3 +1,6 @@
+// Drawn still: endless decorative loops behind the frosted navbar make the
+// browser redo the navbar blur every frame (measured on 2026-10-30; see
+// tests/performance-regressions.test.ts). Shapes keep their resting look.
 const ProfileWallpaper = () => {
   return (
     <div aria-hidden className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
@@ -17,7 +20,7 @@ const ProfileWallpaper = () => {
         bg-gradient-to-br 
         dark:from-[#3b82f6]/25 dark:via-[#2563eb]/15 dark:to-transparent 
         from-primary/8 via-primary/5 to-transparent 
-        blur-[100px] animate-[spin_45s_linear_infinite] 
+        blur-[100px] 
         dark:opacity-60 opacity-30" />
       
       {/* Red orb - top right */}
@@ -25,7 +28,7 @@ const ProfileWallpaper = () => {
         bg-gradient-to-bl 
         dark:from-[#ef4444]/20 dark:via-[#dc2626]/12 dark:to-transparent 
         from-[#ef4444]/6 via-[#dc2626]/4 to-transparent 
-        blur-[90px] animate-[spin_38s_linear_infinite_reverse] 
+        blur-[90px] 
         dark:opacity-55 opacity-25" />
       
       {/* Green orb - bottom center */}
@@ -33,7 +36,7 @@ const ProfileWallpaper = () => {
         bg-gradient-to-t 
         dark:from-[#10b981]/22 dark:via-[#059669]/14 dark:to-transparent 
         from-[#10b981]/7 via-[#059669]/5 to-transparent 
-        blur-[110px] animate-[spin_42s_linear_infinite] 
+        blur-[110px] 
         dark:opacity-58 opacity-28" />
 
       {/* Subtle RGB gradient mesh overlay - theme-aware */}
@@ -118,7 +121,6 @@ const ProfileWallpaper = () => {
               left: particle.left,
               width: `${particle.size}px`,
               height: `${particle.size}px`,
-              animation: 'float 8s ease-in-out infinite',
               animationDelay: particle.delay,
             }}
           />
@@ -148,7 +150,6 @@ const ProfileWallpaper = () => {
               left: node.left,
               width: '8px',
               height: '8px',
-              animation: 'pulse 3s ease-in-out infinite',
               animationDelay: `${index * 0.6}s`
             }}
           />

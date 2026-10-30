@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import test from 'node:test';
 
 const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8');
@@ -119,4 +119,22 @@ test('the navbar logo and the busiest wallpapers stay still', () => {
   const angels = read('../src/components/wallpapers/CommunityAngelsWallpaper.tsx');
   assert.doesNotMatch(angels, /infinite|animate-(spin|ping|pulse)|animation:/);
   assert.doesNotMatch(read('../src/pages/community/FindYourAngel.tsx'), /animate-text-flicker/);
+});
+
+// Every wallpaper sits under the frosted navbar, so an endless loop in any of
+// them costs every frame. Demo Studio keeps its two pulsing hotspots on
+// purpose: they are the one motion that says "a demo is playing here".
+test('wallpapers run no endless animations', () => {
+  const dir = new URL('../src/components/wallpapers/', import.meta.url);
+  const allowed = new Set(['DemoStudioWallpaper.tsx']);
+  const offenders = readdirSync(dir)
+    .filter((file) => /\.(tsx|css)$/.test(file) && !allowed.has(file))
+    .filter((file) => {
+      const code = readFileSync(new URL(file, dir), 'utf8')
+        .split('\n')
+        .filter((line) => !/^\s*(\/\/|\*|\/\*|\{\/\*)/.test(line))
+        .join('\n');
+      return /infinite|animate-(spin|ping|pulse|bounce)\b/.test(code);
+    });
+  assert.deepEqual(offenders, []);
 });

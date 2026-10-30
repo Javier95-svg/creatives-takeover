@@ -1,3 +1,6 @@
+// Drawn still: endless decorative loops behind the frosted navbar make the
+// browser redo the navbar blur every frame (measured on 2026-10-30; see
+// tests/performance-regressions.test.ts). Shapes keep their resting look.
 const BizmapWallpaper = () => {
   return (
     <div aria-hidden className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
@@ -61,12 +64,12 @@ const BizmapWallpaper = () => {
           border 
           dark:border-sky-400/20 border-sky-400/15 
           blur-[1px] 
-          animate-[spin_36s_linear_infinite]" />
+" />
         <div className="absolute top-1/3 -left-28 w-[28rem] h-[28rem] rounded-full 
           border 
           dark:border-emerald-300/20 border-emerald-300/15 
           blur-[1px] 
-          animate-[spin_28s_linear_infinite_reverse]" />
+" />
 
         {/* Pulsing data nodes - theme-aware */}
         {[
@@ -84,7 +87,6 @@ const BizmapWallpaper = () => {
               bg-cyan-500/60 shadow-glow-info"
             style={{
               ...pos,
-              animation: 'pulse 2.8s ease-in-out infinite',
               animationDelay: `${index * 0.5}s`
             }}
           />

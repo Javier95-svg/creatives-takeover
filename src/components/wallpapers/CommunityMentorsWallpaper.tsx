@@ -1,3 +1,6 @@
+// Drawn still: endless decorative loops behind the frosted navbar make the
+// browser redo the navbar blur every frame (measured on 2026-10-30; see
+// tests/performance-regressions.test.ts). Shapes keep their resting look.
 const CommunityMentorsWallpaper = () => {
   return (
     <div aria-hidden className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
@@ -51,7 +54,7 @@ const CommunityMentorsWallpaper = () => {
         <div
           key={`mentor-node-${index}`}
           className="absolute h-3 w-3 rounded-full bg-sky-500/60 shadow-[0_0_18px_rgba(14,165,233,0.28)] dark:bg-sky-300 dark:shadow-[0_0_22px_rgba(56,189,248,0.45)]"
-          style={{ top: node.top, left: node.left, animation: `pulse 3.2s ease-in-out ${index * 0.25}s infinite` }}
+          style={{ top: node.top, left: node.left }}
         />
       ))}
 
@@ -68,7 +71,6 @@ const CommunityMentorsWallpaper = () => {
             left: panel.left,
             width: `${panel.width}px`,
             transform: `rotate(${panel.rotation})`,
-            animation: `float 11s ease-in-out ${index * 0.8}s infinite`,
           }}
         >
           <div className="h-2.5 w-16 rounded-full bg-sky-500/30 dark:bg-sky-300/30" />

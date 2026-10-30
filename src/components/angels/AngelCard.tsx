@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { AngelInvestor } from "@/types/angel";
 import { Linkedin, Globe, Building2, Mail, Twitter } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { storageImageUrl } from "@/lib/storageImage";
 
 interface AngelCardProps {
   angel: AngelInvestor;
@@ -41,7 +42,9 @@ export const AngelCard = ({ angel, className, priority = false }: AngelCardProps
             <div className="relative group">
               <Avatar className="h-14 w-14 sm:h-20 sm:w-20 lg:h-24 lg:w-24 ring-4 ring-primary/20 group-hover:ring-primary/40 transition-all duration-300 group-hover:scale-105 shadow-lg">
                 <AvatarImage
-                  src={angel.picture || undefined}
+                  // Shown at 96px at most: ask Storage for a 192px copy (about
+                  // 5 kB) instead of the uploaded original (about 50 kB).
+                  src={storageImageUrl(angel.picture, { width: 96 })}
                   alt={angel.name}
                   className="object-cover"
                   loading={priority ? "eager" : "lazy"}

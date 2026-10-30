@@ -18,8 +18,6 @@
   border-radius: 9999px;
   filter: blur(80px);
   opacity: 0.85;
-  will-change: transform;
-  animation: onboarding-wallpaper-drift 38s ease-in-out infinite alternate;
 }
 
 .onboarding-wallpaper__glow--teal {
