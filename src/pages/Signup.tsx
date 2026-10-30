@@ -618,37 +618,11 @@ const Signup = () => {
         </Link>
 
         <div className="relative z-10 mt-7 max-w-xl md:mt-8">
-          <style>{`
-            @keyframes signupTitleFlicker {
-              0%, 100% {
-                opacity: 1;
-                text-shadow: 0 0 0 rgba(255, 255, 255, 0);
-              }
-              45% {
-                opacity: 0.9;
-                text-shadow: 0 0 14px rgba(255, 255, 255, 0.26);
-              }
-              48% {
-                opacity: 0.58;
-                text-shadow: 0 0 6px rgba(255, 255, 255, 0.16);
-              }
-              51% {
-                opacity: 1;
-                text-shadow: 0 0 18px rgba(255, 255, 255, 0.32);
-              }
-              54% {
-                opacity: 0.76;
-                text-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
-              }
-              58% {
-                opacity: 1;
-                text-shadow: 0 0 0 rgba(255, 255, 255, 0);
-              }
-            }
-          `}</style>
+          {/* The title used to flicker forever (opacity and text-shadow), which
+              repainted it every frame: with a 4x slower CPU the sign up page kept
+              the main thread busy while the visitor typed. It rests still. */}
           <h1
             className="signup-premium-left-title text-3xl font-bold leading-tight tracking-tight text-white md:text-4xl"
-            style={{ animation: "signupTitleFlicker 3.8s ease-in-out infinite" }}
           >
             Build what only you can build.
           </h1>
@@ -996,24 +970,9 @@ const Signup = () => {
                       aria-hidden="true"
                       className="pointer-events-none relative w-2 h-2 rounded-full bg-success"
                       style={{
-                        animation: 'flicker 1.5s ease-in-out infinite',
                         boxShadow: '0 0 6px rgba(34, 197, 94, 0.8), 0 0 12px rgba(34, 197, 94, 0.5)'
                       }}
                     >
-                      <style>{`
-                      @keyframes flicker {
-                        0%, 100% {
-                          opacity: 1;
-                          transform: scale(1);
-                          box-shadow: 0 0 6px rgba(34, 197, 94, 0.8), 0 0 12px rgba(34, 197, 94, 0.5);
-                        }
-                        50% {
-                          opacity: 0.4;
-                          transform: scale(0.8);
-                          box-shadow: 0 0 4px rgba(34, 197, 94, 0.4), 0 0 8px rgba(34, 197, 94, 0.2);
-                        }
-                      }
-                    `}</style>
                     </span>
                     Demo, pitch video, ICP, and launch plan tools are ready after onboarding.
                   </p>

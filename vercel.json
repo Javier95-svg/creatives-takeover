@@ -82,6 +82,7 @@
     { "source": "/resources/", "destination": "/resources/index.html" },
     { "source": "/marketplace", "destination": "/api/public-entity?type=marketplace" },
     { "source": "/marketplace/", "destination": "/api/public-entity?type=marketplace" },
+    { "source": "/marketplace/enquiries", "destination": "/app-shell.html" },
     { "source": "/marketplace/:slug", "destination": "/api/public-entity?type=service&slug=:slug" },
     { "source": "/mentorship/progress", "destination": "/app-shell.html" },
     { "source": "/mentorship/my-bookings", "destination": "/app-shell.html" },

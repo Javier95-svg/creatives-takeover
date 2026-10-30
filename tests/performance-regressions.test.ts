@@ -91,7 +91,8 @@ test('podcast keeps YouTube work off the page load path and outside cross-origin
   assert.match(podcastPlayer, /event\.data === 101 \|\| event\.data === 150/);
   assert.match(podcastPlayer, /React-owned wrapper/);
   assert.doesNotMatch(podcastPlayer, /ref=\{playerHostRef\}[\s\S]{0,160}playerStatus === "ready"/);
-  assert.match(podcastWallpaper, /pw-paused \.pw-anim \{ animation-play-state: paused/);
+  // The wallpaper is drawn still; its 36 endless loops held the page at 12fps.
+  assert.doesNotMatch(podcastWallpaper, /infinite|animation:|animate-/);
 
   const config = JSON.parse(vercel) as {
     headers: Array<{ source: string; headers: Array<{ key: string; value: string }> }>;
@@ -102,4 +103,20 @@ test('podcast keeps YouTube work off the page load path and outside cross-origin
   assert.ok(mvpBuilder);
   assert.equal(catchAll.headers.some((header) => header.key === 'Cross-Origin-Embedder-Policy'), false);
   assert.equal(mvpBuilder.headers.some((header) => header.key === 'Cross-Origin-Embedder-Policy'), true);
+});
+
+// Endless animations inside or behind the frosted navbar make the browser redo
+// its backdrop blur every frame. Measured with a 4x slower CPU (2026-10-30):
+// the breathing logo alone kept /pricing busy 2.4s of every 5s idle (0.4s
+// still), and the Find Your Angel wallpaper held /investors at 25fps idle and
+// 19fps scrolling (60 and about 49 still).
+test('the navbar logo and the busiest wallpapers stay still', () => {
+  const css = read('../src/index.css');
+  const logoRule = css.match(/\.animate-logo-breathing \{[^}]*\}/)?.[0] ?? '';
+  assert.ok(logoRule, 'logo rule exists');
+  assert.doesNotMatch(logoRule, /animation:/);
+
+  const angels = read('../src/components/wallpapers/CommunityAngelsWallpaper.tsx');
+  assert.doesNotMatch(angels, /infinite|animate-(spin|ping|pulse)|animation:/);
+  assert.doesNotMatch(read('../src/pages/community/FindYourAngel.tsx'), /animate-text-flicker/);
 });

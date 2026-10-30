@@ -96,7 +96,7 @@ const Podcast = () => {
       </Helmet>
 
       <div className="min-h-screen bg-background">
-        <PodcastWallpaper paused={Boolean(playing)} />
+        <PodcastWallpaper />
         <Navigation />
 
         <main className="relative pb-20">

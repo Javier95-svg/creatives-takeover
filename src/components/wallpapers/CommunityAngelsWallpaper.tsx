@@ -1,62 +1,31 @@
 const networkNodes = [
-  { top: "13%", left: "18%", size: 10, hue: "amber", delay: "0s" },
-  { top: "18%", left: "46%", size: 12, hue: "blue", delay: "0.4s" },
-  { top: "15%", left: "74%", size: 9, hue: "sky", delay: "0.8s" },
-  { top: "28%", left: "31%", size: 14, hue: "amber", delay: "1.1s" },
-  { top: "34%", left: "57%", size: 11, hue: "blue", delay: "1.4s" },
-  { top: "42%", left: "79%", size: 10, hue: "amber", delay: "1.7s" },
-  { top: "52%", left: "22%", size: 12, hue: "sky", delay: "2s" },
-  { top: "57%", left: "47%", size: 15, hue: "amber", delay: "2.3s" },
-  { top: "64%", left: "67%", size: 11, hue: "blue", delay: "2.6s" },
-  { top: "74%", left: "36%", size: 9, hue: "amber", delay: "2.9s" },
-  { top: "78%", left: "83%", size: 13, hue: "sky", delay: "3.2s" },
-];
+  { top: "13%", left: "18%", size: 10, hue: "amber" },
+  { top: "18%", left: "46%", size: 12, hue: "blue" },
+  { top: "15%", left: "74%", size: 9, hue: "sky" },
+  { top: "28%", left: "31%", size: 14, hue: "amber" },
+  { top: "34%", left: "57%", size: 11, hue: "blue" },
+  { top: "42%", left: "79%", size: 10, hue: "amber" },
+  { top: "52%", left: "22%", size: 12, hue: "sky" },
+  { top: "57%", left: "47%", size: 15, hue: "amber" },
+  { top: "64%", left: "67%", size: 11, hue: "blue" },
+  { top: "74%", left: "36%", size: 9, hue: "amber" },
+  { top: "78%", left: "83%", size: 13, hue: "sky" },
+] as const;
 
+// Each ring sits at its own fixed angle, so the dots on them do not line up.
 const orbitSignals = [
-  {
-    top: "14%",
-    left: "8%",
-    size: 156,
-    duration: "24s",
-    delay: "0s",
-    direction: "normal" as const,
-    tone: "amber" as const,
-  },
-  {
-    top: "16%",
-    right: "9%",
-    size: 146,
-    duration: "30s",
-    delay: "1.2s",
-    direction: "reverse" as const,
-    tone: "blue" as const,
-  },
-  {
-    top: "58%",
-    left: "11%",
-    size: 172,
-    duration: "28s",
-    delay: "0.8s",
-    direction: "reverse" as const,
-    tone: "sky" as const,
-  },
-  {
-    top: "63%",
-    right: "12%",
-    size: 154,
-    duration: "22s",
-    delay: "1.8s",
-    direction: "normal" as const,
-    tone: "amber" as const,
-  },
+  { top: "14%", left: "8%", size: 156, angle: 24, tone: "amber" as const },
+  { top: "16%", right: "9%", size: 146, angle: -48, tone: "blue" as const },
+  { top: "58%", left: "11%", size: 172, angle: 132, tone: "sky" as const },
+  { top: "63%", right: "12%", size: 154, angle: 68, tone: "amber" as const },
 ];
 
 const beaconRipples = [
-  { top: "18%", left: "46%", size: 54, tone: "blue", duration: "3.8s", delay: "0.2s" },
-  { top: "34%", left: "57%", size: 64, tone: "sky", duration: "4.2s", delay: "0.8s" },
-  { top: "57%", left: "47%", size: 72, tone: "amber", duration: "4.6s", delay: "1.3s" },
-  { top: "64%", left: "67%", size: 60, tone: "blue", duration: "4s", delay: "1.9s" },
-];
+  { top: "18%", left: "46%", size: 54, tone: "blue" },
+  { top: "34%", left: "57%", size: 64, tone: "sky" },
+  { top: "57%", left: "47%", size: 72, tone: "amber" },
+  { top: "64%", left: "67%", size: 60, tone: "blue" },
+] as const;
 
 const nodeColorMap = {
   amber: {
@@ -145,7 +114,12 @@ const CommunityAngelsWallpaper = () => {
         </g>
       </svg>
 
-      <div className="absolute left-1/2 top-[20%] h-40 w-40 -translate-x-1/2 rounded-full border border-white/45 bg-white/35 shadow-[0_0_50px_rgba(255,255,255,0.2)] backdrop-blur-2xl dark:border-white/10 dark:bg-white/[0.04] dark:shadow-[0_0_80px_rgba(96,165,250,0.15)]" style={{ animation: "pulse 8s ease-in-out infinite" }}>
+      {/* Everything below is drawn still. This wallpaper covers the whole page,
+          and its 25 endless animations (pulsing dots, ripples, spinning rings,
+          a pulsing frosted disc) kept the main thread busy and forced the
+          glass navbar to re-blur on every frame: with a 4x slower CPU the page
+          idled at 25fps and scrolled at 19fps. Still, it idles at 60fps. */}
+      <div className="absolute left-1/2 top-[20%] h-40 w-40 -translate-x-1/2 rounded-full border border-white/45 bg-white/35 shadow-[0_0_50px_rgba(255,255,255,0.2)] backdrop-blur-2xl dark:border-white/10 dark:bg-white/[0.04] dark:shadow-[0_0_80px_rgba(96,165,250,0.15)]">
         <div className="absolute inset-5 rounded-full border border-blue-400/20 dark:border-blue-300/20" />
         <div className="absolute inset-10 rounded-full border border-amber-400/25 dark:border-amber-300/25" />
       </div>
@@ -163,7 +137,6 @@ const CommunityAngelsWallpaper = () => {
               width: `${node.size}px`,
               height: `${node.size}px`,
               boxShadow: palette.glow,
-              animation: `pulse 4.8s ease-in-out ${node.delay} infinite`,
             }}
           />
         );
@@ -185,12 +158,8 @@ const CommunityAngelsWallpaper = () => {
             }}
           >
             <div
-              className={`relative h-full w-full rounded-full border ${tone.ring} animate-spin`}
-              style={{
-                animationDuration: orbit.duration,
-                animationDelay: orbit.delay,
-                animationDirection: orbit.direction,
-              }}
+              className={`relative h-full w-full rounded-full border ${tone.ring}`}
+              style={{ transform: `rotate(${orbit.angle}deg)` }}
             >
               <div className={`absolute inset-[18%] rounded-full border ${tone.innerRing}`} />
               <div
@@ -222,14 +191,8 @@ const CommunityAngelsWallpaper = () => {
               transform: "translate(-50%, -50%)",
             }}
           >
-            <div
-              className={`absolute inset-0 rounded-full border ${tone.ring} animate-ping`}
-              style={{ animationDuration: beacon.duration, animationDelay: beacon.delay }}
-            />
-            <div
-              className={`absolute inset-[18%] rounded-full border ${tone.innerRing} animate-ping`}
-              style={{ animationDuration: beacon.duration, animationDelay: beacon.delay }}
-            />
+            <div className={`absolute inset-0 rounded-full border ${tone.ring} opacity-50`} />
+            <div className={`absolute inset-[18%] rounded-full border ${tone.innerRing} opacity-50`} />
           </div>
         );
       })}

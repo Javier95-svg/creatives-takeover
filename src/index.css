@@ -2943,14 +2943,30 @@ img {
   }
 }
 
-/* Logo Breathing Animation Utility Class */
+/* Navbar and sidebar logo: the RGB glow, held still. It used to "breathe"
+   forever (scale plus three animated drop-shadow blurs). The logo sits inside
+   the frosted-glass navbar, so every frame of that animation made the browser
+   recompute the navbar's backdrop blur as well: measured on /pricing with a 4x
+   slower CPU, the main thread was busy 2.4s of every 5s while the page sat
+   idle, against 0.4s with the logo still. Even a scale-only loop kept the page
+   near 30fps, so the glow is static; hover still lifts it slightly. */
 .animate-logo-breathing {
-  animation: logo-breathing 3s ease-in-out infinite;
   transform-origin: center;
-  will-change: transform, filter;
+  filter:
+    drop-shadow(0 0 6px hsl(var(--blue-primary) / 0.45))
+    drop-shadow(0 0 10px hsl(var(--red-primary) / 0.4))
+    drop-shadow(0 0 14px hsl(var(--green-primary) / 0.35));
   image-rendering: auto;
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
+}
+
+/* Keep the RGB glow on hover instead of .nav-logo-hover's single shadow. */
+.animate-logo-breathing.nav-logo-hover:hover {
+  filter:
+    drop-shadow(0 0 6px hsl(var(--blue-primary) / 0.45))
+    drop-shadow(0 0 10px hsl(var(--red-primary) / 0.4))
+    drop-shadow(0 0 14px hsl(var(--green-primary) / 0.35));
 }
 
 /* Normalize navbar logo rendering across engines (Chrome/Firefox/Safari/Edge). */

@@ -1,4 +1,4 @@
-import type { IframeHTMLAttributes } from "react";
+import { useState, type IframeHTMLAttributes } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +14,7 @@ import {
   PenTool,
   ArrowRight
 } from "lucide-react";
+import { youtubeThumbnail } from "@/lib/podcast";
 
 // The site is cross-origin isolated (COEP: credentialless, set in vercel.json for
 // the MVP Builder's webcontainers). Under that policy a plain cross-origin iframe
@@ -26,6 +27,12 @@ const credentiallessIframeProp = {
 } as unknown as IframeHTMLAttributes<HTMLIFrameElement>;
 
 const TutorialsSection = () => {
+  // Each card shows the video's thumbnail until it is played. Six live YouTube
+  // players used to load with the page and kept rendering: with a 4x slower CPU
+  // /resources ran at 2 to 3fps and kept the main thread busy all the time,
+  // animations or not. Only the video someone clicks loads a player.
+  const [playingId, setPlayingId] = useState<string | null>(null);
+
   const tutorialCategories = [
     {
       icon: <Palette className="w-6 h-6 text-info" />,
@@ -193,18 +200,45 @@ const TutorialsSection = () => {
                   {/* Video Embed */}
                   <div className="relative overflow-hidden rounded-t-lg">
                     <div className="aspect-video">
-                      <iframe
-                        width="100%"
-                        height="100%"
-                        src={`https://www.youtube.com/embed/${tutorial.videoId}`}
-                        title={tutorial.title}
-                        frameBorder="0"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
-                        loading="lazy"
-                        className="w-full h-full"
-                        {...credentiallessIframeProp}
-                      />
+                      {playingId === tutorial.videoId ? (
+                        <iframe
+                          width="100%"
+                          height="100%"
+                          src={`https://www.youtube.com/embed/${tutorial.videoId}?autoplay=1`}
+                          title={tutorial.title}
+                          frameBorder="0"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                          className="w-full h-full"
+                          {...credentiallessIframeProp}
+                        />
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => setPlayingId(tutorial.videoId)}
+                          className="group/video relative block h-full w-full bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+                          aria-label={`Play ${tutorial.title}`}
+                        >
+                          <img
+                            src={youtubeThumbnail(tutorial.videoId)}
+                            alt=""
+                            width={480}
+                            height={360}
+                            loading="lazy"
+                            decoding="async"
+                            className="h-full w-full object-cover"
+                            // A removed video has no thumbnail; show the plain panel, not a broken image.
+                            onError={(event) => {
+                              event.currentTarget.hidden = true;
+                            }}
+                          />
+                          <span className="absolute inset-0 flex items-center justify-center bg-black/20 transition-colors group-hover/video:bg-black/35">
+                            <span className="flex h-14 w-14 items-center justify-center rounded-full bg-black/75 text-white shadow-lg transition-transform group-hover/video:scale-105">
+                              <Play className="h-6 w-6 translate-x-0.5" fill="currentColor" aria-hidden="true" />
+                            </span>
+                          </span>
+                        </button>
+                      )}
                     </div>
                     <div className="absolute top-4 right-4 pointer-events-none">
                       <Badge variant="secondary" className="bg-black/80 text-white border-0">

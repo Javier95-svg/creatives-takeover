@@ -375,7 +375,7 @@ const FindYourAngel = () => {
               <div className="max-w-4xl mx-auto text-center">
                 {/* Title */}
                 <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-6 takeover-title creatives-font">
-                  <span className="gradient-unified animate-text-flicker">
+                  <span className="gradient-unified">
                     Find your Angel
                   </span>
                 </h1>
