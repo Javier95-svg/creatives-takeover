@@ -129,9 +129,24 @@ Deno.serve(async (req) => {
   if (error || !data) return json({ error: error?.message || "Unable to prepare task plan" }, 500);
 
   let payload = data as unknown as PlanPayload;
-  const ranked = additional || payload.plan.user_reordered_at
-    ? null
-    : await rankWithAi(payload.items, payload.plan.context_snapshot ?? {});
+  // Rank each plan once. A new plan is "deterministic-v1"; after one AI
+  // attempt its model records either the ranking model or that the AI was
+  // unavailable, so later loads of the same plan skip a call that can wait up
+  // to 2.5s. A plan the founder reordered by hand is never re-ranked.
+  const needsRanking = !additional
+    && !payload.plan.user_reordered_at
+    && (payload.plan.model ?? "deterministic-v1") === "deterministic-v1"
+    && payload.items.length >= 2;
+  const ranked = needsRanking
+    ? await rankWithAi(payload.items, payload.plan.context_snapshot ?? {})
+    : null;
+  if (needsRanking && !ranked) {
+    await admin.from("daily_task_plans").update({
+      model: "deterministic-v1+ai-unavailable",
+      updated_at: new Date().toISOString(),
+    }).eq("id", payload.plan.id);
+    payload.plan.model = "deterministic-v1+ai-unavailable";
+  }
   if (ranked) {
     const reordered = await userClient.rpc("reorder_today_task_plan_v1", {
       p_task_ids: ranked.orderedTaskIds,
