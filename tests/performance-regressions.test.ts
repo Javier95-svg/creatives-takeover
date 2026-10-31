@@ -138,3 +138,69 @@ test('wallpapers run no endless animations', () => {
     });
   assert.deepEqual(offenders, []);
 });
+
+// Round 3 (2026-10-31): what signed-in pages ask Supabase for. Measured with a
+// mocked Supabase: every workspace page made 30 actor lookups for the
+// notification bell and two subscription checks; the dashboard loaded the
+// onboarding context four times.
+test('the notification bell looks each sender up once, not once per notification', () => {
+  const hook = read('../src/hooks/useCommunityNotifications.ts');
+  assert.match(hook, /queryKey: \['notification-actor', actorId\]/);
+  assert.match(hook, /new Set\(rows\.map\(\(row\) => row\.actor_id\)/);
+  assert.doesNotMatch(hook, /\.map\(async \(notification\)/);
+  assert.doesNotMatch(hook, /select\('\*'\)/);
+});
+
+test('every useSubscription caller shares one subscription cache entry', () => {
+  const subscription = read('../src/hooks/useSubscription.ts');
+  assert.match(subscription, /queryKey: \['subscription-status', user\?\.id\]/);
+  assert.doesNotMatch(subscription, /workspace-subscription-status/);
+});
+
+test('onboarding context and stage intelligence load once per page', () => {
+  assert.match(read('../src/hooks/useOnboardingContext.ts'), /queryKey: \['onboarding-context', userId\]/);
+  const stage = read('../src/hooks/useStageIntelligence.ts');
+  assert.match(stage, /'founder-stage-intelligence'/);
+  assert.match(stage, /cancelRefetch: false/);
+});
+
+test('the investor list leaves out contact details, which only Pro gets', () => {
+  const angels = read('../src/hooks/useAngels.ts');
+  assert.doesNotMatch(angels, /select\('\*'\)|\.select\(\)/);
+  assert.match(angels, /const ANGEL_CARD_COLUMNS = '[^']*'/);
+  assert.doesNotMatch(angels.match(/const ANGEL_CARD_COLUMNS = '[^']*'/)![0], /email|linkedin|twitter/);
+  assert.match(angels, /rpc\('get_angel_contacts_v1'/);
+  assert.match(read('../src/pages/community/FindYourAngel.tsx'), /useAngelContacts\(isPro\)/);
+  const migration = read('../supabase/migrations/20261031100000_angel_investors_admin_writes_and_contacts.sql');
+  assert.match(migration, /REVOKE SELECT ON public\.angel_investors FROM anon, authenticated/);
+  assert.match(migration, /has_role\(\(SELECT auth\.uid\(\)\), 'admin'::public\.app_role\)/);
+});
+
+// Polling under a minute only on admin pages; the profile page polled four
+// queries every 30s and re-signed its images each time.
+test('no member-facing query polls faster than once a minute', () => {
+  const root = new URL('../src/', import.meta.url);
+  const adminOnly = new Set(['hooks/usePageAnalyticsData.ts', 'hooks/useProgressTracker.ts']);
+  const offenders: string[] = [];
+  const walk = (dir: URL, prefix = '') => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const rel = `${prefix}${entry.name}`;
+      if (entry.isDirectory()) walk(new URL(`${entry.name}/`, dir), `${rel}/`);
+      else if (/\.(ts|tsx)$/.test(entry.name) && !adminOnly.has(rel) && !/admin/i.test(rel)) {
+        const code = readFileSync(new URL(entry.name, dir), 'utf8');
+        for (const match of code.matchAll(/refetchInterval:\s*([\d_]+)/g)) {
+          if (Number(match[1].replace(/_/g, '')) < 60_000) offenders.push(`${rel}: ${match[0]}`);
+        }
+      }
+    }
+  };
+  walk(root);
+  assert.deepEqual(offenders, []);
+  assert.match(read('../src/components/profile/ProfilePosts.tsx'), /signedUrls\.get\(path\)/);
+});
+
+test('the Pulse widget loads its markdown parser only with a reply', () => {
+  const bubble = read('../src/components/pulse/PulseMessageBubble.tsx');
+  assert.doesNotMatch(bubble, /from 'react-markdown'|from 'remark-/);
+  assert.match(bubble, /lazy\(\(\) => import\('\.\/PulseMarkdown'\)\)/);
+});
