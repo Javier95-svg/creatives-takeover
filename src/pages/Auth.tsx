@@ -246,7 +246,7 @@ const Auth: React.FC = () => {
         <CardHeader className="text-center">
           <div className="flex items-center justify-center gap-3 mb-2">
             <img 
-              src="/lovable-uploads/2ae69f5c-24f2-4a91-ae89-df8696970fd3.png" 
+              src="/brand/ct-mark-112.png" 
               alt="Creatives Takeover Logo" 
               className="h-8 w-auto animate-fade-in" 
             />

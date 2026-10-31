@@ -140,7 +140,7 @@ export function IcpUnlockGate({
 
         <div className="px-6 py-8 sm:px-10">
           <img
-            src="/lovable-uploads/04a4b9d0-4213-4186-ba00-c7acd22bad98.png"
+            src="/brand/ct-mark-112.png"
             alt=""
             aria-hidden="true"
             width={56}

@@ -262,7 +262,7 @@ const ResetPassword = () => {
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center gap-3 text-2xl font-bold gradient-text hover:opacity-80 transition-opacity">
             <img 
-              src="/lovable-uploads/04a4b9d0-4213-4186-ba00-c7acd22bad98.png" 
+              src="/brand/ct-mark-112.png" 
               alt="Creatives Takeover Logo" 
               className="w-8 h-8" 
             />

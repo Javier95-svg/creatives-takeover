@@ -507,7 +507,7 @@ export function IcpVerdictSpread({
         */}
       <div className="mt-6 flex items-center gap-2 border-t border-border/50 pt-4">
         <img
-          src="/lovable-uploads/04a4b9d0-4213-4186-ba00-c7acd22bad98.png"
+          src="/brand/ct-mark-112.png"
           alt=""
           className="h-6 w-6 rounded-lg object-cover"
           draggable={false}

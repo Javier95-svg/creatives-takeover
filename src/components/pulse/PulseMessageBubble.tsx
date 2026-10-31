@@ -1,9 +1,6 @@
-import type { MouseEvent, ReactNode } from 'react';
+import { lazy, Suspense, type MouseEvent, type ReactNode } from 'react';
 import { ArrowRight, Sparkles } from 'lucide-react';
-import ReactMarkdown from 'react-markdown';
 import { useNavigate } from 'react-router-dom';
-import remarkBreaks from 'remark-breaks';
-import remarkGfm from 'remark-gfm';
 import type { PulseMessage } from '@/hooks/usePulseWidget';
 import { PulseSources } from './PulseSources';
 import { PulseAnswerFeedback } from './PulseAnswerFeedback';
@@ -14,6 +11,8 @@ import { trackPulseMentorClicked, trackPulseSourceOpened } from '@/lib/pulseMent
 import { findPublicPulseLink, type PublicPulseLink } from '@/lib/publicPlatformFacts';
 import { followPublicPulseLink } from '@/lib/publicPulseNavigation';
 import { trackPulseInvestorProfileClicked } from '@/lib/analytics';
+
+const PulseMarkdown = lazy(() => import('./PulseMarkdown'));
 
 interface PulseMessageBubbleProps {
   message: PulseMessage;
@@ -56,31 +55,33 @@ export const PulseMessageBubble = ({ message, isStreaming }: PulseMessageBubbleP
         {isUser ? (
           <span className="whitespace-pre-wrap">{message.content}</span>
         ) : (
-          <ReactMarkdown
-            remarkPlugins={[remarkGfm, remarkBreaks]}
-            components={{
-              p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
-              ul: ({ children }) => <ul className="mb-2 ml-4 list-disc space-y-1 last:mb-0">{children}</ul>,
-              ol: ({ children }) => <ol className="mb-2 ml-4 list-decimal space-y-1 last:mb-0">{children}</ol>,
-              li: ({ children }) => <li>{children}</li>,
-              strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
-              a: ({ children, href }) => message.guest ? (
-                // Signed-out replies only link to the public pages list; anything else stays plain text.
-                renderGuestLink(href, children)
-              ) : href?.startsWith('/') ? (
-                // Site pages open in the same tab, like the cards below the reply.
-                <a className="font-medium underline underline-offset-2" href={href} onClick={event => openInApp(event, href)}>
-                  {children}
-                </a>
-              ) : (
-                <a className="underline underline-offset-2" href={href} target="_blank" rel="noreferrer">
-                  {children}
-                </a>
-              ),
-            }}
-          >
-            {message.content}
-          </ReactMarkdown>
+          // Plain text shows until the markdown chunk arrives, so the reply is
+          // readable straight away.
+          <Suspense fallback={<span className="whitespace-pre-wrap">{message.content}</span>}>
+            <PulseMarkdown
+              content={message.content}
+              components={{
+                p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+                ul: ({ children }) => <ul className="mb-2 ml-4 list-disc space-y-1 last:mb-0">{children}</ul>,
+                ol: ({ children }) => <ol className="mb-2 ml-4 list-decimal space-y-1 last:mb-0">{children}</ol>,
+                li: ({ children }) => <li>{children}</li>,
+                strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
+                a: ({ children, href }) => message.guest ? (
+                  // Signed-out replies only link to the public pages list; anything else stays plain text.
+                  renderGuestLink(href, children)
+                ) : href?.startsWith('/') ? (
+                  // Site pages open in the same tab, like the cards below the reply.
+                  <a className="font-medium underline underline-offset-2" href={href} onClick={event => openInApp(event, href)}>
+                    {children}
+                  </a>
+                ) : (
+                  <a className="underline underline-offset-2" href={href} target="_blank" rel="noreferrer">
+                    {children}
+                  </a>
+                ),
+              }}
+            />
+          </Suspense>
         )}
         {isStreaming && !message.content && (
           <div className="flex gap-1 items-center py-1">
