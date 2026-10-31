@@ -174,6 +174,10 @@ test('the investor list leaves out contact details, which only Pro gets', () => 
   const migration = read('../supabase/migrations/20261031100000_angel_investors_admin_writes_and_contacts.sql');
   assert.match(migration, /REVOKE SELECT ON public\.angel_investors FROM anon, authenticated/);
   assert.match(migration, /has_role\(\(SELECT auth\.uid\(\)\), 'admin'::public\.app_role\)/);
+  // A NULL pilot plan made the Pro check NULL, and IF NOT NULL let everyone through.
+  const fix = read('../supabase/migrations/20261031110000_fix_angel_contacts_pro_check.sql');
+  assert.match(fix, /coalesce\(public\.cohort_pilot_plan_v1\(v_user\), ''\) = 'pro'/);
+  assert.match(fix, /IF NOT coalesce\(v_pro, false\) THEN/);
 });
 
 // Polling under a minute only on admin pages; the profile page polled four
