@@ -216,7 +216,6 @@ function LeaveCohort({ cohortId, programName }: { cohortId: string; programName:
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: [COHORT_CONTEXT_QUERY_KEY] }),
         queryClient.invalidateQueries({ queryKey: ['subscription-status'] }),
-        queryClient.invalidateQueries({ queryKey: ['workspace-subscription-status'] }),
       ]);
     },
     onError: () => toast.error('We couldn’t take you out of the cohort. Try again.'),

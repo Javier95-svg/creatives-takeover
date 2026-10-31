@@ -81,6 +81,12 @@ const normalizeSubscriptionData = (
   };
 };
 
+// One cache entry serves every caller of useSubscription. When the status
+// can't be read the entry holds the free plan, so most callers carry on, and is
+// marked so the workspace (strictStatus) can say the plan is unavailable.
+type CachedSubscription = SubscriptionData & { statusUnavailable?: boolean };
+const STATUS_UNAVAILABLE = new Error('Subscription status unavailable');
+
 const normalizeTierRow = (row: Record<string, unknown>): SubscriptionTier => {
   const rawName = (row.tier_name || row.name || row.slug || '') as string;
   const tier_name = normalizePlan(rawName);
@@ -140,17 +146,15 @@ export function useSubscription(options?: { fetchTiers?: boolean; strictStatus?:
     return uniqueTiers;
   };
 
-  const fetchSubscription = async (): Promise<SubscriptionData> => {
+  const fetchSubscription = async (): Promise<CachedSubscription> => {
     if (!user) return DEFAULT_SUBSCRIPTION;
+    const unavailable = (): CachedSubscription => ({ ...normalizeSubscriptionData(user.email, DEFAULT_SUBSCRIPTION), statusUnavailable: true });
     if (isAdminEmail(user.email)) return { ...ADMIN_SUBSCRIPTION };
 
     try {
       const accessToken = await getAccessTokenSafely();
 
-      if (!accessToken) {
-        if (options?.strictStatus) throw new Error('Subscription status unavailable');
-        return normalizeSubscriptionData(user.email, DEFAULT_SUBSCRIPTION);
-      }
+      if (!accessToken) return unavailable();
 
       // A program's pilot plan lives in the database, not in Stripe, so it is
       // read beside check-subscription. A failed read just means no pilot plan.
@@ -168,8 +172,7 @@ export function useSubscription(options?: { fetchTiers?: boolean; strictStatus?:
 
       if (error) {
         console.error('Error from check-subscription function:', error);
-        if (options?.strictStatus) throw new Error('Subscription status unavailable');
-        return normalizeSubscriptionData(user.email, DEFAULT_SUBSCRIPTION);
+        return unavailable();
       }
 
       if (data) {
@@ -178,11 +181,9 @@ export function useSubscription(options?: { fetchTiers?: boolean; strictStatus?:
       }
     } catch (error) {
       console.error('Error checking subscription:', error);
-      if (options?.strictStatus) throw new Error('Subscription status unavailable');
     }
 
-    if (options?.strictStatus) throw new Error('Subscription status unavailable');
-    return normalizeSubscriptionData(user.email, DEFAULT_SUBSCRIPTION);
+    return unavailable();
   };
 
   const tiersQuery = useQuery({
@@ -194,7 +195,7 @@ export function useSubscription(options?: { fetchTiers?: boolean; strictStatus?:
   });
 
   const subscriptionQuery = useQuery({
-    queryKey: [options?.strictStatus ? 'workspace-subscription-status' : 'subscription-status', user?.id],
+    queryKey: ['subscription-status', user?.id],
     enabled: !!user?.id,
     queryFn: fetchSubscription,
     staleTime: 30_000,
@@ -496,7 +497,8 @@ export function useSubscription(options?: { fetchTiers?: boolean; strictStatus?:
 
   return {
     subscriptionData,
-    statusError: subscriptionQuery.error,
+    statusError: subscriptionQuery.error
+      ?? (options?.strictStatus && subscriptionQuery.data?.statusUnavailable ? STATUS_UNAVAILABLE : null),
     tiers,
     loading,
     actionLoading,

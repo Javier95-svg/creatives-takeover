@@ -216,7 +216,16 @@ export function DashboardDataProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!userId) return;
-    const onSocialChange = () => void queryClient.invalidateQueries({ queryKey: dashboardSnapshotQueryKey(userId) });
+    // The snapshot takes about two seconds to build, and a conversation sends
+    // changes in bursts. Wait for the burst to end, and let a reload already
+    // running finish instead of restarting it.
+    let socialTimer: ReturnType<typeof setTimeout> | undefined;
+    const onSocialChange = () => {
+      clearTimeout(socialTimer);
+      socialTimer = setTimeout(() => {
+        void queryClient.invalidateQueries({ queryKey: dashboardSnapshotQueryKey(userId) }, { cancelRefetch: false });
+      }, 2000);
+    };
     const channel = supabase
       .channel(`dashboard-activity:${userId}`)
       .on(
@@ -234,6 +243,7 @@ export function DashboardDataProvider({ children }: { children: ReactNode }) {
     const onToolMilestone = () => void queryClient.invalidateQueries({ queryKey: dashboardSnapshotQueryKey(userId) });
     window.addEventListener('ct:tool-milestone', onToolMilestone);
     return () => {
+      clearTimeout(socialTimer);
       window.removeEventListener('ct:tool-milestone', onToolMilestone);
       void supabase.removeChannel(channel);
     };

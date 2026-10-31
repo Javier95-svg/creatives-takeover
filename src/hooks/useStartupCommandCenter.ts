@@ -75,7 +75,8 @@ export function useStartupCommandCenter() {
     setError(null);
 
     try {
-      const { data: profile, error: profileError } = await supabase
+      const icpColumns = "id, analysis_data, target_audience, business_description, verdict, industry, niche_score, created_at, updated_at";
+      const profileRequest = supabase
         .from("profiles")
         .select(
           [
@@ -98,36 +99,11 @@ export function useStartupCommandCenter() {
         .eq("id", user.id)
         .maybeSingle();
 
-      if (profileError) throw profileError;
-
-      let icpRow: Record<string, any> | null = null;
-      if ((profile as any)?.primary_icp_analysis_id) {
-        const { data, error: icpError } = await supabase
-          .from(ICP_TABLE)
-          .select("id, analysis_data, target_audience, business_description, verdict, industry, niche_score, created_at, updated_at")
-          .eq("id", (profile as any).primary_icp_analysis_id)
-          .eq("user_id", user.id)
-          .maybeSingle();
-        if (icpError) throw icpError;
-        icpRow = data as Record<string, any> | null;
-      }
-
-      const [
-        latestIcp,
-        pmfRowResult,
-        techStackRow,
-        waitlistRow,
-        mvpRow,
-        gtmRow,
-      ] = await Promise.all([
-        icpRow
-          ? Promise.resolve(null)
-          : fetchLatestByUser(
-              ICP_TABLE,
-              user.id,
-              "id, analysis_data, target_audience, business_description, verdict, industry, niche_score, created_at, updated_at",
-              "updated_at",
-            ),
+      // These need only the user id, so they run alongside the profile read
+      // rather than after it. The latest ICP is read too: it is the one shown
+      // unless the profile names a different primary ICP.
+      const otherRequests = Promise.all([
+        fetchLatestByUser(ICP_TABLE, user.id, icpColumns, "updated_at"),
         isPmfResultsTableAvailable()
           ? fetchLatestByUser(
               PMF_TABLE,
@@ -164,6 +140,34 @@ export function useStartupCommandCenter() {
           "updated_at",
         ),
       ]);
+      // If the profile read fails first, this keeps a later failure here from
+      // surfacing as an unhandled rejection.
+      otherRequests.catch(() => undefined);
+
+      const { data: profile, error: profileError } = await profileRequest;
+      if (profileError) throw profileError;
+
+      const [
+        latestIcp,
+        pmfRowResult,
+        techStackRow,
+        waitlistRow,
+        mvpRow,
+        gtmRow,
+      ] = await otherRequests;
+
+      let icpRow: Record<string, any> | null = null;
+      const primaryIcpId = (profile as any)?.primary_icp_analysis_id;
+      if (primaryIcpId && (latestIcp as Record<string, any> | null)?.id !== primaryIcpId) {
+        const { data, error: icpError } = await supabase
+          .from(ICP_TABLE)
+          .select(icpColumns)
+          .eq("id", primaryIcpId)
+          .eq("user_id", user.id)
+          .maybeSingle();
+        if (icpError) throw icpError;
+        icpRow = data as Record<string, any> | null;
+      }
 
       setModel(
         buildStartupCommandCenterModel({

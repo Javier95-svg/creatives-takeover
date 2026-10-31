@@ -19,6 +19,7 @@ import { SegmentCheckGate } from '@/components/workspace/SegmentCheckGate';
 import { AccountReviewBanner } from '@/components/workspace/AccountReviewBanner';
 import { FinishSetupPrompt } from '@/components/onboarding/FinishSetupPrompt';
 import { useAccountContext } from '@/hooks/useAccountContext';
+import { useWorkspaceAccount } from '@/hooks/useWorkspaceAccount';
 import { trackRetentionEvent } from '@/lib/retentionSystem';
 import WorkspaceLayout from './WorkspaceLayout';
 
@@ -67,13 +68,7 @@ export default function WorkspaceLive({ children, home }: { children: ReactNode;
   // Mount on first open and keep it mounted so the dialog can animate closed.
   const [requestsMounted, setRequestsMounted] = useState(false);
   const { subscriptionData, loading: planLoading, statusError } = useSubscription({ fetchTiers: false, strictStatus: true });
-  // The shell stays mounted across routes, so a cached username outlives a
-  // rename and the avatar link 404s. Re-read on focus; saves invalidate it too.
-  const profile = useQuery({ queryKey: ['workspace-account', user!.id], staleTime: 0, refetchOnWindowFocus: true, queryFn: async ({ signal }) => {
-    const { data, error } = await supabase.schema('public').from('profiles').select('username, full_name').eq('id', user!.id).abortSignal(signal).maybeSingle();
-    if (error) throw error;
-    return data;
-  } });
+  const profile = useWorkspaceAccount();
   // Founder until the answer arrives, so no type specific nav flashes at anyone.
   const { userType, isLoading: accountLoading, isError: accountError, refresh: refreshAccount } = useAccountContext();
   const usesProject = userType === 'founder' || userType === 'builder';

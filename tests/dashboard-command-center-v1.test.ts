@@ -204,6 +204,11 @@ test('dashboard data stays visible across tab and auth-session refreshes', () =>
     read('../src/hooks/useTaskCalendarEngine.ts'),
     read('../src/hooks/useBizMapProgress.ts'),
     read('../src/hooks/useDailyMission.ts'),
+  ];
+  // These two moved to React Query (2026-10-31) so the dashboard's readers
+  // share one fetch. A query only reports loading before its first result and
+  // keeps that result on screen while it refetches.
+  const queryHooks = [
     read('../src/hooks/useOnboardingContext.ts'),
     read('../src/hooks/useStageIntelligence.ts'),
   ];
@@ -213,6 +218,10 @@ test('dashboard data stays visible across tab and auth-session refreshes', () =>
   assert.doesNotMatch(dashboard, /\[currentPlan, user\]/);
   retainedHooks.forEach((hook) => {
     assert.match(hook, /loadedUserIdRef/);
+  });
+  queryHooks.forEach((hook) => {
+    assert.match(hook, /useQuery\(/);
+    assert.match(hook, /query\.isPending/);
   });
 });
 

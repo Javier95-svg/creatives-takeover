@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback } from 'react';
+import { useQuery } from '@tanstack/react-query';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -91,76 +92,72 @@ function buildLegacyContext(profile: Record<string, unknown>): DashboardOnboardi
   };
 }
 
+async function loadOnboardingContext(userId: string): Promise<DashboardOnboardingContext | null> {
+  try {
+    const session = await getLatestOnboardingSession();
+    if (session?.derived_context) {
+      const answers = { ...EMPTY_ONBOARDING_ANSWERS_V1, ...session.answers } as OnboardingAnswersV1;
+      const refreshedContext = deriveOnboardingContextV1(answers, {
+        flowVersion: session.flow_version,
+        selectedIntent: session.derived_context.selectedIntent,
+        dataCompleteness: session.derived_context.dataCompleteness,
+      });
+      const persisted = session.derived_context;
+      const context: OnboardingContextV1 = {
+        ...persisted,
+        operatingStage: persisted.operatingStage ?? refreshedContext.operatingStage,
+        runnerUpStage: persisted.runnerUpStage ?? refreshedContext.runnerUpStage,
+        stageConfidenceBand: persisted.stageConfidenceBand ?? refreshedContext.stageConfidenceBand,
+        stageScoreMargin: persisted.stageScoreMargin ?? refreshedContext.stageScoreMargin,
+        stageEvidenceCoverage: persisted.stageEvidenceCoverage ?? refreshedContext.stageEvidenceCoverage,
+        capitalMotion: persisted.capitalMotion ?? refreshedContext.capitalMotion,
+        capitalEvidence: persisted.capitalEvidence ?? refreshedContext.capitalEvidence,
+        stageRationaleCodes: Array.isArray(persisted.stageRationaleCodes)
+          ? persisted.stageRationaleCodes
+          : refreshedContext.stageRationaleCodes,
+        stageConflictFlags: Array.isArray(persisted.stageConflictFlags)
+          ? persisted.stageConflictFlags
+          : refreshedContext.stageConflictFlags,
+      };
+      return {
+        answers,
+        context,
+        session,
+        isLegacy: false,
+      };
+    }
+
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('assigned_stage, country, current_focus, quiz_biggest_challenge, startup_description, startup_industry, startup_name, user_preferences')
+      .eq('id', userId)
+      .maybeSingle();
+    if (error) throw error;
+    return buildLegacyContext(asRecord(data));
+  } catch (error) {
+    console.warn('Unable to load onboarding context; dashboard defaults remain available.', error);
+    return null;
+  }
+}
+
+// One cache entry per user: the dashboard alone has four readers (focus editor,
+// journey snapshot, core metrics and stage intelligence), which used to load
+// the same session and profile four times on every visit.
 export function useOnboardingContext() {
   const { user } = useAuth();
-  const [value, setValue] = useState<DashboardOnboardingContext | null>(null);
-  const [loading, setLoading] = useState(true);
-  const loadedUserIdRef = useRef<string | null>(null);
+  const userId = user?.id;
+  const query = useQuery({
+    queryKey: ['onboarding-context', userId],
+    enabled: Boolean(userId),
+    staleTime: 60_000,
+    queryFn: () => loadOnboardingContext(userId!),
+  });
+  const { refetch: refetchQuery } = query;
+  const refetch = useCallback(async () => { await refetchQuery(); }, [refetchQuery]);
 
-  const load = useCallback(async () => {
-    if (!user?.id) {
-      loadedUserIdRef.current = null;
-      setValue(null);
-      setLoading(false);
-      return;
-    }
-    if (loadedUserIdRef.current !== user.id) {
-      setLoading(true);
-    }
-    try {
-      const session = await getLatestOnboardingSession();
-      if (session?.derived_context) {
-        const answers = { ...EMPTY_ONBOARDING_ANSWERS_V1, ...session.answers } as OnboardingAnswersV1;
-        const refreshedContext = deriveOnboardingContextV1(answers, {
-          flowVersion: session.flow_version,
-          selectedIntent: session.derived_context.selectedIntent,
-          dataCompleteness: session.derived_context.dataCompleteness,
-        });
-        const persisted = session.derived_context;
-        const context: OnboardingContextV1 = {
-          ...persisted,
-          operatingStage: persisted.operatingStage ?? refreshedContext.operatingStage,
-          runnerUpStage: persisted.runnerUpStage ?? refreshedContext.runnerUpStage,
-          stageConfidenceBand: persisted.stageConfidenceBand ?? refreshedContext.stageConfidenceBand,
-          stageScoreMargin: persisted.stageScoreMargin ?? refreshedContext.stageScoreMargin,
-          stageEvidenceCoverage: persisted.stageEvidenceCoverage ?? refreshedContext.stageEvidenceCoverage,
-          capitalMotion: persisted.capitalMotion ?? refreshedContext.capitalMotion,
-          capitalEvidence: persisted.capitalEvidence ?? refreshedContext.capitalEvidence,
-          stageRationaleCodes: Array.isArray(persisted.stageRationaleCodes)
-            ? persisted.stageRationaleCodes
-            : refreshedContext.stageRationaleCodes,
-          stageConflictFlags: Array.isArray(persisted.stageConflictFlags)
-            ? persisted.stageConflictFlags
-            : refreshedContext.stageConflictFlags,
-        };
-        setValue({
-          answers,
-          context,
-          session,
-          isLegacy: false,
-        });
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('assigned_stage, country, current_focus, quiz_biggest_challenge, startup_description, startup_industry, startup_name, user_preferences')
-        .eq('id', user.id)
-        .maybeSingle();
-      if (error) throw error;
-      setValue(buildLegacyContext(asRecord(data)));
-    } catch (error) {
-      console.warn('Unable to load onboarding context; dashboard defaults remain available.', error);
-      setValue(null);
-    } finally {
-      loadedUserIdRef.current = user.id;
-      setLoading(false);
-    }
-  }, [user?.id]);
-
-  useEffect(() => {
-    void load();
-  }, [load]);
-
-  return { value, loading, refetch: load };
+  return {
+    value: userId ? query.data ?? null : null,
+    loading: Boolean(userId) && query.isPending,
+    refetch,
+  };
 }

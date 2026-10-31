@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useQueryClient, type QueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -93,6 +94,20 @@ const collapseDuplicateNotifications = (items: CommunityNotification[]): Communi
   return collapsed;
 };
 
+type ActorInfo = { actor_name: string; actor_avatar: string | null; actor_username: string | null } | null;
+
+// The 50 latest notifications usually come from a handful of people, and each
+// new notification refetches the list, so look each person up once and keep
+// the answer for ten minutes instead of calling the RPC once per row.
+const fetchActor = (queryClient: QueryClient, actorId: string) => queryClient.fetchQuery({
+  queryKey: ['notification-actor', actorId],
+  staleTime: 10 * 60 * 1000,
+  queryFn: async (): Promise<ActorInfo> => {
+    const { data } = await supabase.rpc('get_notification_actor_info', { actor_user_id: actorId });
+    return (data?.[0] as ActorInfo) ?? null;
+  },
+}).catch((): ActorInfo => null);
+
 const shouldShowRealtimeToast = (notification: NotificationRow) => {
   const key = getNotificationDedupeKey(notification);
   if (!key) return true;
@@ -129,6 +144,7 @@ const getRealtimeToastMessage = (notification: NotificationRow) => {
 };
 
 export const useCommunityNotifications = (userId: string | undefined) => {
+  const queryClient = useQueryClient();
   const [notifications, setNotifications] = useState<CommunityNotification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -142,39 +158,37 @@ export const useCommunityNotifications = (userId: string | undefined) => {
     try {
       const { data, error } = await supabase
         .from('community_notifications')
-        .select('*')
+        .select('id, notification_type, post_id, comment_id, conversation_id, message_id, read, created_at, actor_id, metadata')
         .eq('user_id', userId)
         .order('created_at', { ascending: false })
         .limit(50);
 
       if (error) throw error;
 
-      // Fetch actor information for each notification
-      const notificationsWithActors = await Promise.all(
-        ((data || []) as NotificationRow[]).map(async (notification) => {
-          const { data: actorData } = await supabase.rpc('get_notification_actor_info', {
-            actor_user_id: notification.actor_id
-          });
+      const rows = (data || []) as NotificationRow[];
+      const actorIds = [...new Set(rows.map((row) => row.actor_id).filter(Boolean))];
+      const actors = new Map(await Promise.all(actorIds.map(async (id) => [id, await fetchActor(queryClient, id)] as const)));
+      const notificationsWithActors = rows.map((notification) => {
+        const actor = notification.actor_id ? actors.get(notification.actor_id) : null;
 
-          return {
-            id: notification.id,
-            notification_type: notification.notification_type,
-            post_id: notification.post_id,
-            comment_id: notification.comment_id,
-            conversation_id: notification.conversation_id || null,
-            message_id: notification.message_id || null,
-            read: notification.read,
-            created_at: notification.created_at,
-            actor_id: notification.actor_id,
-            actor: {
-              name: actorData?.[0]?.actor_name || 'Someone',
-              avatar: actorData?.[0]?.actor_avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=Anonymous`,
-              username: actorData?.[0]?.actor_username
-            },
-            metadata: notification.metadata || {}
-          };
-        })
-      );
+        return {
+          id: notification.id,
+          notification_type: notification.notification_type,
+          post_id: notification.post_id,
+          comment_id: notification.comment_id,
+          conversation_id: notification.conversation_id || null,
+          message_id: notification.message_id || null,
+          read: notification.read,
+          created_at: notification.created_at,
+          actor_id: notification.actor_id,
+          actor: {
+            name: actor?.actor_name || 'Someone',
+            avatar: actor?.actor_avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=Anonymous`,
+            username: actor?.actor_username ?? undefined
+          },
+          metadata: notification.metadata || {}
+        };
+      });
 
       const visibleNotifications = collapseDuplicateNotifications(notificationsWithActors).slice(0, 20);
       setNotifications(visibleNotifications);
@@ -185,7 +199,7 @@ export const useCommunityNotifications = (userId: string | undefined) => {
     } finally {
       setLoading(false);
     }
-  }, [userId]);
+  }, [queryClient, userId]);
 
   const markAsRead = async (notificationId: string) => {
     try {

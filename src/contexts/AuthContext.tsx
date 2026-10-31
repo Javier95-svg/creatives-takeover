@@ -218,11 +218,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         });
       }
 
-      const { data: refreshedProfile, error: refreshedProfileError } = await supabase
-        .from('profiles')
-        .select('id, created_at, onboarding_completed, quiz_completed, creative_niche, business_stage, subscription_tier, user_preferences')
-        .eq('id', userId)
-        .maybeSingle();
+      // Only a profile created just now needs reading again: an existing one is
+      // what Step 1 already read, and nothing above changes it.
+      const { data: refreshedProfile, error: refreshedProfileError } = profileExistedBeforeSignIn
+        ? { data: null, error: null }
+        : await supabase
+          .from('profiles')
+          .select('id, created_at, onboarding_completed, quiz_completed, creative_niche, business_stage, subscription_tier, user_preferences')
+          .eq('id', userId)
+          .maybeSingle();
 
       if (refreshedProfileError) {
         logWarn('Failed to refresh profile state after sign in', {

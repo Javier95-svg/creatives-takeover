@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { useOnboardingContext } from '@/hooks/useOnboardingContext';
@@ -14,6 +15,7 @@ import {
   type FounderStageState,
   type StageCorrectionReason,
 } from '@/lib/stageIntelligence';
+import type { OnboardingContextV1 } from '@/lib/onboardingContext';
 import type {
   CapitalMotion,
   FounderOperatingStageId,
@@ -69,100 +71,101 @@ function fallbackState(params: {
   };
 }
 
-export function useStageIntelligence() {
-  const { user } = useAuth();
-  const { value: onboarding, loading: onboardingLoading } = useOnboardingContext();
-  const [state, setState] = useState<FounderStageState | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [available, setAvailable] = useState(true);
-  const loadedUserIdRef = useRef<string | null>(null);
+type StageIntelligenceResult = { state: FounderStageState; available: boolean };
 
-  const load = useCallback(async () => {
-    if (!user?.id || !onboarding?.context) {
-      if (!user?.id) loadedUserIdRef.current = null;
-      setState(null);
-      setLoading(onboardingLoading);
-      return;
-    }
+async function loadStageIntelligence(userId: string, context: OnboardingContextV1): Promise<StageIntelligenceResult> {
+  const baseStage = clampOperatingStage(context.operatingStage ?? context.assignedStage);
+  const runnerUpStage = context.runnerUpStage == null
+    ? null
+    : clampOperatingStage(context.runnerUpStage);
+  const confidenceScore = Number.isFinite(Number(context.stageConfidence))
+    ? Number(context.stageConfidence)
+    : 50;
+  const confidenceBand: StageConfidenceBand =
+    context.stageConfidenceBand === 'high' || context.stageConfidenceBand === 'medium'
+      ? context.stageConfidenceBand
+      : 'low';
+  const capitalMotion: CapitalMotion =
+    context.capitalMotion === 'active' || context.capitalMotion === 'preparing'
+      ? context.capitalMotion
+      : 'inactive';
+  const base = {
+    baseStage,
+    runnerUpStage,
+    confidenceScore,
+    confidenceBand,
+    scoreMargin: Math.max(0, Number(context.stageScoreMargin ?? 0)),
+    evidenceCoverage: Math.min(1, Math.max(0, Number(context.stageEvidenceCoverage ?? 0.667))),
+    capitalMotion,
+    capitalEvidence: context.capitalEvidence === true,
+    rationaleCodes: Array.isArray(context.stageRationaleCodes)
+      ? context.stageRationaleCodes
+      : [],
+  };
 
-    if (loadedUserIdRef.current !== user.id) {
-      setLoading(true);
-    }
-    const context = onboarding.context;
-    const baseStage = clampOperatingStage(context.operatingStage ?? context.assignedStage);
-    const runnerUpStage = context.runnerUpStage == null
-      ? null
-      : clampOperatingStage(context.runnerUpStage);
-    const confidenceScore = Number.isFinite(Number(context.stageConfidence))
-      ? Number(context.stageConfidence)
-      : 50;
-    const confidenceBand: StageConfidenceBand =
-      context.stageConfidenceBand === 'high' || context.stageConfidenceBand === 'medium'
-        ? context.stageConfidenceBand
-        : 'low';
-    const capitalMotion: CapitalMotion =
-      context.capitalMotion === 'active' || context.capitalMotion === 'preparing'
-        ? context.capitalMotion
-        : 'inactive';
-    const base = {
-      baseStage,
+  try {
+    const [evidence, persisted] = await Promise.all([
+      fetchFounderStageEvidence(userId),
+      fetchFounderStageState(userId),
+    ]);
+    const assessment = deriveFounderStageAssessment(base, evidence);
+    const synced = await syncFounderStageState(
+      assessment,
+      persisted ? 'dashboard_refresh' : 'dashboard_initialization',
+    );
+    return { state: synced, available: true };
+  } catch (error) {
+    // The Command Center remains useful before the migration reaches an
+    // environment, or if stage intelligence is temporarily unavailable.
+    console.warn('Stage intelligence is unavailable; using onboarding context.', error);
+    return { state: fallbackState({
+      userId,
+      currentStage: baseStage,
       runnerUpStage,
       confidenceScore,
       confidenceBand,
-      scoreMargin: Math.max(0, Number(context.stageScoreMargin ?? 0)),
-      evidenceCoverage: Math.min(1, Math.max(0, Number(context.stageEvidenceCoverage ?? 0.667))),
+      evidenceCoverage: base.evidenceCoverage,
+      scoreMargin: base.scoreMargin,
       capitalMotion,
-      capitalEvidence: context.capitalEvidence === true,
-      rationaleCodes: Array.isArray(context.stageRationaleCodes)
-        ? context.stageRationaleCodes
-        : [],
-    };
+      capitalEvidence: base.capitalEvidence,
+      rationaleCodes: base.rationaleCodes,
+    }), available: false };
+  }
+}
 
-    try {
-      const [evidence, persisted] = await Promise.all([
-        fetchFounderStageEvidence(user.id),
-        fetchFounderStageState(user.id),
-      ]);
-      const assessment = deriveFounderStageAssessment(base, evidence);
-      const synced = await syncFounderStageState(
-        assessment,
-        persisted ? 'dashboard_refresh' : 'dashboard_initialization',
-      );
-      setState(synced);
-      setAvailable(true);
-    } catch (error) {
-      // The Command Center remains useful before the migration reaches an
-      // environment, or if stage intelligence is temporarily unavailable.
-      console.warn('Stage intelligence is unavailable; using onboarding context.', error);
-      setState(fallbackState({
-        userId: user.id,
-        currentStage: baseStage,
-        runnerUpStage,
-        confidenceScore,
-        confidenceBand,
-        evidenceCoverage: base.evidenceCoverage,
-        scoreMargin: base.scoreMargin,
-        capitalMotion,
-        capitalEvidence: base.capitalEvidence,
-        rationaleCodes: base.rationaleCodes,
-      }));
-      setAvailable(false);
-    } finally {
-      loadedUserIdRef.current = user.id;
-      setLoading(false);
-    }
-  }, [onboarding, onboardingLoading, user?.id]);
+// Shared by every reader on the page (the stage card and the journey snapshot
+// on the dashboard), so the evidence is read and the stage synced once per
+// visit rather than once per reader.
+export function useStageIntelligence() {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const { value: onboarding, loading: onboardingLoading } = useOnboardingContext();
+  const [saving, setSaving] = useState(false);
+  const userId = user?.id;
+  const context = onboarding?.context ?? null;
+  const queryKey = useMemo(() => ['founder-stage-intelligence', userId, context] as const, [context, userId]);
+  const query = useQuery({
+    queryKey,
+    enabled: Boolean(userId && context),
+    staleTime: 60_000,
+    queryFn: () => loadStageIntelligence(userId!, context!),
+  });
+  const state = userId && context ? query.data?.state ?? null : null;
+  const available = query.data?.available ?? true;
+  const loading = onboardingLoading || (Boolean(userId && context) && query.isPending);
+  const { refetch: refetchQuery } = query;
+  const load = useCallback(async () => { await refetchQuery(); }, [refetchQuery]);
+  const setState = useCallback((next: FounderStageState) => {
+    queryClient.setQueryData<StageIntelligenceResult>(queryKey, { state: next, available: true });
+  }, [queryClient, queryKey]);
 
   useEffect(() => {
-    void load();
-  }, [load]);
-
-  useEffect(() => {
-    const refresh = () => void load();
+    // Every mounted reader hears the event; cancelRefetch: false lets them share
+    // one reload instead of each restarting it.
+    const refresh = () => void queryClient.invalidateQueries({ queryKey: ['founder-stage-intelligence', userId] }, { cancelRefetch: false });
     window.addEventListener(FOUNDER_STAGE_UPDATED_EVENT, refresh);
     return () => window.removeEventListener(FOUNDER_STAGE_UPDATED_EVENT, refresh);
-  }, [load]);
+  }, [queryClient, userId]);
 
   const boundaryQuestion = useMemo<FounderStageBoundaryQuestion | null>(() => {
     if (!state || state.boundary_answered_at) return null;
@@ -205,7 +208,7 @@ export function useStageIntelligence() {
   return {
     state,
     boundaryQuestion,
-    loading: loading || onboardingLoading,
+    loading,
     saving,
     available,
     refetch: load,
