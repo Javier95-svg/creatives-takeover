@@ -32,7 +32,7 @@ export const PinnedPosts = ({ posts }: PinnedPostsProps) => {
     queryKey: ['profile-post-metrics', user?.id, posts.map((post) => `community:${post.id}`).sort()],
     enabled: posts.length > 0,
     staleTime: 15_000,
-    refetchInterval: 30_000,
+    refetchInterval: 60_000,
     queryFn: async () => {
       const { data, error } = await supabase.rpc('profile_post_metrics', { p_posts: posts.map((post) => ({ source: 'community', id: post.id })) });
       if (error) throw error;

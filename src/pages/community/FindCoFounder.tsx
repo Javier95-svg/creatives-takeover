@@ -58,7 +58,9 @@ const POSTS_PER_PAGE = 10;
 function RealPostActions({ post }: { post: CofounderPost }) {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { friendStatus, loading: connectionLoading, sendFriendRequest } = useSocial(post.user_id);
+  // The card needs only the connection state, not follows or the notification
+  // lists, which every card on the page would otherwise load again.
+  const { friendStatus, loading: connectionLoading, sendFriendRequest } = useSocial(post.user_id, { loadNotifications: false, loadFollow: false });
   const { startConversation } = useMessaging({ autoLoad: false });
   const [messageLoading, setMessageLoading] = useState(false);
 
@@ -141,21 +143,21 @@ const FindCoFounder = () => {
 
       if (error) throw error;
 
-      // Fetch author information for each post
-      const postsWithAuthors = await Promise.all(
-        (data || []).map(async (post) => {
-          const { data: profileData } = await supabase
-            .from('public_profiles')
-            .select('full_name, avatar_url, username')
-            .eq('id', post.user_id)
-            .single();
-
-          return {
-            ...post,
-            author: profileData || { full_name: 'Anonymous', avatar_url: '', username: null }
-          };
-        })
-      );
+      // All authors in one read rather than one per post.
+      const authorIds = [...new Set((data || []).map((post) => post.user_id).filter(Boolean))];
+      const { data: authors } = authorIds.length
+        ? await supabase.from('public_profiles').select('id, full_name, avatar_url, username').in('id', authorIds)
+        : { data: [] };
+      const authorsById = new Map((authors || []).map((author) => [author.id, author]));
+      const postsWithAuthors = (data || []).map((post) => {
+        const author = authorsById.get(post.user_id);
+        return {
+          ...post,
+          author: author
+            ? { full_name: author.full_name, avatar_url: author.avatar_url, username: author.username }
+            : { full_name: 'Anonymous', avatar_url: '', username: null },
+        };
+      });
 
       // Merge real posts with sample posts (real posts appear first)
       const allPosts: CofounderPost[] = [...postsWithAuthors, ...sampleCofounderPosts];

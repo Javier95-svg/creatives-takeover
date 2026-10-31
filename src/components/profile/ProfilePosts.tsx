@@ -50,6 +50,27 @@ interface FeedPost {
 
 interface SharedPost extends FeedPost { image_path?: string | null }
 
+// Signed image links last an hour. Reusing one until shortly before it expires
+// keeps each image's address stable across the page's background refreshes, so
+// the browser shows its cached copy instead of downloading the photo again.
+const SIGNED_URL_SECONDS = 3600;
+const signedUrls = new Map<string, { url: string; expiresAt: number }>();
+
+async function signPostImages(paths: string[]): Promise<Map<string, string>> {
+  const reuseUntil = Date.now() + 5 * 60_000;
+  const missing = paths.filter((path) => (signedUrls.get(path)?.expiresAt ?? 0) < reuseUntil);
+  if (missing.length) {
+    const { data, error } = await supabase.storage.from('profile-posts').createSignedUrls(missing, SIGNED_URL_SECONDS);
+    if (error) throw error;
+    const expiresAt = Date.now() + SIGNED_URL_SECONDS * 1000;
+    data?.forEach((item) => { if (item.path && item.signedUrl) signedUrls.set(item.path, { url: item.signedUrl, expiresAt }); });
+  }
+  return new Map(paths.flatMap((path) => {
+    const signed = signedUrls.get(path);
+    return signed ? [[path, signed.url] as const] : [];
+  }));
+}
+
 async function resolvePostImages(posts: SharedPost[]): Promise<FeedPost[]> {
   const journeyIds = posts.filter((post) => post.source === 'journey').map((post) => post.id);
   const imageLists = new Map<string, string[]>();
@@ -61,12 +82,7 @@ async function resolvePostImages(posts: SharedPost[]): Promise<FeedPost[]> {
   const pathsFor = (post: SharedPost) => imageLists.get(post.id)?.length
     ? imageLists.get(post.id)! : post.image_path ? [post.image_path] : [];
   const paths = [...new Set(posts.flatMap(pathsFor))];
-  const images = new Map<string, string>();
-  if (paths.length) {
-    const { data, error } = await supabase.storage.from('profile-posts').createSignedUrls(paths, 3600);
-    if (error) throw error;
-    data?.forEach((item) => { if (item.path && item.signedUrl) images.set(item.path, item.signedUrl); });
-  }
+  const images = paths.length ? await signPostImages(paths) : new Map<string, string>();
   return posts.map((post) => {
     const imagePaths = pathsFor(post);
     const imageUrls = imagePaths.map((path) => images.get(path) || '');
@@ -120,7 +136,7 @@ export function ProfilePosts({ userId, name, avatarUrl, isOwnProfile, founderIdS
   const pinned = useQuery({
     queryKey: pinKey,
     staleTime: 15_000,
-    refetchInterval: 30_000,
+    refetchInterval: 60_000,
     queryFn: async () => {
       const { data, error } = await supabase.rpc('get_profile_pinned_post', { p_user_id: userId });
       if (error) throw error;
@@ -164,7 +180,7 @@ export function ProfilePosts({ userId, name, avatarUrl, isOwnProfile, founderIdS
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['profile-journey-posts', userId, isOwnProfile, limit],
     // Open profiles pick up scheduled posts shortly after their release time.
-    refetchInterval: 30_000,
+    refetchInterval: 60_000,
     queryFn: async () => {
       const [journey, photos, community] = await Promise.all([
         supabase.rpc('list_profile_journey_posts', { p_user_id: userId, p_limit: limit }),
@@ -207,7 +223,7 @@ export function ProfilePosts({ userId, name, avatarUrl, isOwnProfile, founderIdS
     queryKey: ['profile-post-metrics', user?.id, visiblePosts.map((post) => `${post.source}:${post.id}`).sort()],
     enabled: visiblePosts.length > 0,
     staleTime: 15_000,
-    refetchInterval: 30_000,
+    refetchInterval: 60_000,
     queryFn: async () => {
       const batches: Promise<PostMetrics[]>[] = [];
       for (let i = 0; i < visiblePosts.length; i += 200) {
