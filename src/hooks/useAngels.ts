@@ -1,10 +1,42 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { AngelInvestor, CreateAngelInput } from '@/types/angel';
 import { useAdminRole } from '@/hooks/useAdminRole';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { PUBLIC_LIST_CACHE } from '@/lib/publicListCache';
+import { useAuth } from '@/contexts/AuthContext';
+
+// What a card shows to everyone. Contact details (email, LinkedIn, X) are a
+// Pro feature, so they are not part of the public list: Pro members and admins
+// get them from get_angel_contacts_v1 (useAngelContacts).
+const ANGEL_CARD_COLUMNS = 'id, name, picture, firm_name, investment_stages, sectors, website_url, is_active, created_at, updated_at';
+
+type AngelContacts = Pick<AngelInvestor, 'id' | 'email' | 'linkedin_url' | 'twitter_x_url'>;
+
+async function fetchAngelContacts(ids?: string[]): Promise<AngelContacts[]> {
+  const { data, error } = await (supabase as any).rpc('get_angel_contacts_v1', ids ? { p_ids: ids } : {});
+  if (!error) return (data ?? []) as AngelContacts[];
+  // Until 20261031100000 is applied the function does not exist and the
+  // columns are still readable, so read them directly.
+  if (error.code !== 'PGRST202') throw error;
+  const base = (supabase as any).from('angel_investors').select('id, email, linkedin_url, twitter_x_url');
+  const fallback = await (ids ? base.in('id', ids) : base.eq('is_active', true));
+  if (fallback.error) throw fallback.error;
+  return (fallback.data ?? []) as AngelContacts[];
+}
+
+/** Contact details by investor id; empty unless `enabled` (Pro or admin). */
+export function useAngelContacts(enabled: boolean) {
+  const { user } = useAuth();
+  const { data } = useQuery({
+    queryKey: ['angel-contacts', user?.id],
+    enabled: enabled && Boolean(user),
+    staleTime: 5 * 60 * 1000,
+    queryFn: () => fetchAngelContacts(),
+  });
+  return useMemo(() => new Map((data ?? []).map((contact) => [contact.id, contact])), [data]);
+}
 
 // Helper function to format error messages
 const formatErrorMessage = (error: any, defaultMessage: string): string => {
@@ -56,7 +88,7 @@ export const useAngels = () => {
         ...PUBLIC_LIST_CACHE,
         queryFn: async ({ signal }) => {
           const { data, error } = await (supabase as any)
-            .from('angel_investors').select('*').eq('is_active', true)
+            .from('angel_investors').select(ANGEL_CARD_COLUMNS).eq('is_active', true)
             .order('name', { ascending: true }).abortSignal(signal);
           if (error) throw error;
           return (data || []) as AngelInvestor[];
@@ -83,15 +115,18 @@ export const useAngels = () => {
     try {
       setLoading(true);
 
-      const { data, error } = await (supabase as any)
-        .from('angel_investors')
-        .select('*')
-        .eq('id', id)
-        .maybeSingle();
+      const [{ data, error }, contacts] = await Promise.all([
+        (supabase as any)
+          .from('angel_investors')
+          .select(ANGEL_CARD_COLUMNS)
+          .eq('id', id)
+          .maybeSingle(),
+        fetchAngelContacts([id]),
+      ]);
 
       if (error) throw error;
 
-      return data as AngelInvestor | null;
+      return data ? { ...data, ...contacts[0] } as AngelInvestor : null;
     } catch (error: any) {
       console.error('Error fetching angel investor:', {
         id,
@@ -144,7 +179,7 @@ export const useAngels = () => {
       const { data, error } = await (supabase as any)
         .from('angel_investors')
         .insert([insertData])
-        .select()
+        .select(ANGEL_CARD_COLUMNS)
         .single();
 
       if (error) {
@@ -216,7 +251,7 @@ export const useAngels = () => {
         .from('angel_investors')
         .update(cleanInput)
         .eq('id', id)
-        .select()
+        .select(ANGEL_CARD_COLUMNS)
         .single();
 
       if (error) {

@@ -31,7 +31,7 @@ import {
 import { AngelCard } from "@/components/angels/AngelCard";
 import { Sparkles, Loader2, Edit, Search, ChevronDown, X, Lock, Crown } from "lucide-react";
 import { AngelInvestor } from "@/types/angel";
-import { useAngels } from "@/hooks/useAngels";
+import { useAngelContacts, useAngels } from "@/hooks/useAngels";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { useFeatureGating } from "@/hooks/useFeatureGating";
@@ -84,9 +84,17 @@ const FindYourAngel = () => {
   const { fetchAngels, loading } = useAngels();
   const publicTab = getPublicTabConfig('/investors');
   const isPro = isAdmin || currentTier === 'pro';
+  // Email, LinkedIn and X are Pro details, fetched only for Pro members.
+  const contacts = useAngelContacts(isPro);
   // Arriving from a Pulse "Visit profile" card: the gate names the investor they chose.
   const pulseInvestor = searchParams.get("source") === "pulse" ? (searchParams.get("q") || "").trim().slice(0, 80) : "";
   const [angels, setAngels] = useState<AngelInvestor[]>([]);
+  // useAngels starts `loading` as false, so the signed-in list rendered its
+  // short "no results" state for a frame before the skeleton, and the page's
+  // wallpaper jumped as it grew (CLS 0.42 desktop, 0.65 mobile). Treat the list
+  // as loading until the first fetch settles, as the signed-out branch does.
+  const [angelsLoaded, setAngelsLoaded] = useState(false);
+  const listLoading = loading || !angelsLoaded;
   const openProfessionalUpgradePrompt = (featureName = 'Angel Investor Profiles') => {
     trackUpgradeClicked({
       from_plan: normalizePlanId(currentTier),
@@ -128,6 +136,8 @@ const FindYourAngel = () => {
     } catch (error) {
       console.error('Error loading angel investors:', error);
       setAngels([]);
+    } finally {
+      setAngelsLoaded(true);
     }
   };
 
@@ -137,6 +147,9 @@ const FindYourAngel = () => {
 
   // Sync debounced search to URL and reset page
   useEffect(() => {
+    // On arrival the search already matches the link, so keep its ?page=
+    // rather than sending a shared "page 3" link back to page 1.
+    if ((searchParams.get("q") || "") === debouncedSearch) return;
     const params = new URLSearchParams(searchParams);
     if (debouncedSearch) {
       params.set("q", debouncedSearch);
@@ -337,7 +350,7 @@ const FindYourAngel = () => {
     if (currentPage > totalPages && totalPages > 0) {
       const params = new URLSearchParams(searchParams);
       params.set("page", "1");
-      setSearchParams(params);
+      setSearchParams(params, { replace: true });
     }
   }, [currentPage, totalPages, searchParams, setSearchParams]);
 
@@ -769,7 +782,7 @@ const FindYourAngel = () => {
 
             {/* Results Count */}
             <div className="mb-4">
-              {loading ? (
+              {listLoading ? (
                 <div className="flex items-center gap-2">
                   <Loader2 className="h-4 w-4 animate-spin" />
                   <span className="text-sm text-muted-foreground">Loading angel investors...</span>
@@ -786,7 +799,7 @@ const FindYourAngel = () => {
             </div>
 
             {/* Angel Investor Cards Grid */}
-            {loading ? (
+            {listLoading ? (
               // A centred spinner occupied ~200px and was then replaced by a
               // 10-card grid ~2656px tall, pushing the whole page (and the
               // footer) down — measured CLS 0.44 desktop / 0.63 mobile, the
@@ -808,7 +821,7 @@ const FindYourAngel = () => {
                     {paginatedAngels.map((angel, index) => (
                       <div key={angel.id} className="relative group">
                         <AngelCard
-                          angel={angel}
+                          angel={contacts.has(angel.id) ? { ...angel, ...contacts.get(angel.id) } : angel}
                           priority={index < 4}
                         />
                         {isAdmin && (
