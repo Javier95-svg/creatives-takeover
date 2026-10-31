@@ -48,12 +48,22 @@ function parseOrder(value: unknown, items: PlanItem[]): string[] | null {
   return new Set(ids).size === items.length ? ids : null;
 }
 
+// Work the founder does not need to wait for runs after the response is sent.
+function afterResponse(work: Promise<unknown>) {
+  const edgeRuntime = (globalThis as typeof globalThis & {
+    EdgeRuntime?: { waitUntil: (promise: Promise<unknown>) => void };
+  }).EdgeRuntime;
+  const settled = work.catch((error) => console.error("ensure-daily-task-plan background work failed", error));
+  if (edgeRuntime?.waitUntil) edgeRuntime.waitUntil(settled);
+}
+
 async function rankWithAi(items: PlanItem[], context: Record<string, unknown>) {
   const key = Deno.env.get("GEMINI_API_KEY");
   if (!key || items.length < 2) return null;
   const model = Deno.env.get("TASK_PLAN_RANKING_MODEL") || "gemini-3.1-flash-lite";
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 2500);
+  // Ranking runs after the response, so it can wait for a slow model reply.
+  const timeout = setTimeout(() => controller.abort(), 8000);
   try {
     const response = await fetch("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", {
       method: "POST",
@@ -128,41 +138,39 @@ Deno.serve(async (req) => {
   });
   if (error || !data) return json({ error: error?.message || "Unable to prepare task plan" }, 500);
 
-  let payload = data as unknown as PlanPayload;
-  // Rank each plan once. A new plan is "deterministic-v1"; after one AI
-  // attempt its model records either the ranking model or that the AI was
-  // unavailable, so later loads of the same plan skip a call that can wait up
-  // to 2.5s. A plan the founder reordered by hand is never re-ranked.
+  const payload = data as unknown as PlanPayload;
+  // Rank each plan once, after the response: the founder gets today's plan in
+  // its deterministic order straight away and the ranked order on their next
+  // load. Production calls took 5 to 9 seconds while the ranking (up to 2.5s)
+  // and the bookkeeping below ran first. A new plan is "deterministic-v1";
+  // the attempt marks it "+ai-pending" so a second load does not start another,
+  // then records the ranking model or that the AI was unavailable. A plan the
+  // founder reordered by hand is never re-ranked.
   const needsRanking = !additional
     && !payload.plan.user_reordered_at
     && (payload.plan.model ?? "deterministic-v1") === "deterministic-v1"
     && payload.items.length >= 2;
-  const ranked = needsRanking
-    ? await rankWithAi(payload.items, payload.plan.context_snapshot ?? {})
-    : null;
-  if (needsRanking && !ranked) {
-    await admin.from("daily_task_plans").update({
-      model: "deterministic-v1+ai-unavailable",
-      updated_at: new Date().toISOString(),
-    }).eq("id", payload.plan.id);
-    payload.plan.model = "deterministic-v1+ai-unavailable";
-  }
-  if (ranked) {
-    const reordered = await userClient.rpc("reorder_today_task_plan_v1", {
-      p_task_ids: ranked.orderedTaskIds,
-      p_timezone: timezone,
-      p_record_user_action: false,
-    });
-    if (!reordered.error && reordered.data) {
-      payload = reordered.data as typeof payload;
+  if (needsRanking) {
+    const planId = payload.plan.id;
+    const items = payload.items;
+    const context = payload.plan.context_snapshot ?? {};
+    afterResponse((async () => {
+      await admin.from("daily_task_plans").update({ model: "deterministic-v1+ai-pending" }).eq("id", planId);
+      const ranked = await rankWithAi(items, context);
+      const reordered = ranked
+        ? await userClient.rpc("reorder_today_task_plan_v1", {
+          p_task_ids: ranked.orderedTaskIds,
+          p_timezone: timezone,
+          p_record_user_action: false,
+        })
+        : null;
+      const applied = Boolean(ranked && reordered && !reordered.error && reordered.data);
       await admin.from("daily_task_plans").update({
-        model: ranked.model,
-        fallback_used: false,
+        model: applied ? ranked!.model : "deterministic-v1+ai-unavailable",
+        ...(applied ? { fallback_used: false } : {}),
         updated_at: new Date().toISOString(),
-      }).eq("id", payload.plan.id);
-      payload.plan.model = ranked.model;
-      payload.plan.fallback_used = false;
-    }
+      }).eq("id", planId);
+    })());
   }
 
   const candidates = payload.items.map((item) => ({
@@ -171,32 +179,37 @@ Deno.serve(async (req) => {
     urgency: item.task.priority || "medium",
     estimatedMinutes: item.task.estimated_minutes || 15,
   }));
+  const aiRanked = !String(payload.plan.model ?? "deterministic-v1").startsWith("deterministic-v1");
   const decisionKeys = payload.items.map((item) => `task_plan:${String(payload.plan.plan_date)}:${item.task.id}`);
-  const existingDecisions = await admin.from("recommendation_decisions")
-    .select("decision_key,exposure_count")
-    .eq("user_id", authData.user.id)
-    .in("decision_key", decisionKeys);
-  const exposureCounts = new Map((existingDecisions.data ?? []).map((decision) => [
-    decision.decision_key,
-    Number(decision.exposure_count ?? 0),
-  ]));
-  await Promise.all(payload.items.map((item) => admin.from("recommendation_decisions").upsert({
-    user_id: authData.user.id,
-    decision_key: `task_plan:${String(payload.plan.plan_date)}:${item.task.id}`,
-    surface: "task_plan",
-    snapshot_hash: String(payload.plan.context_hash ?? ""),
-    candidate_set: candidates,
-    selected_key: item.task.recommendation_key || item.task.id,
-    selected_tool_key: item.task.source_tool || "tasks",
-    deterministic_key: payload.items[0]?.task.recommendation_key || payload.items[0]?.task.id,
-    policy_version: "task_plan_hybrid_v1",
-    assignment: ranked ? "learned" : "baseline",
-    model: ranked?.model || "deterministic-v1",
-    context_segments: payload.plan.context_snapshot || {},
-    score_diagnostics: { taskCount: payload.items.length, aiRanked: Boolean(ranked), rank: item.rank },
-    last_shown_at: new Date().toISOString(),
-    exposure_count: (exposureCounts.get(`task_plan:${String(payload.plan.plan_date)}:${item.task.id}`) ?? 0) + 1,
-  }, { onConflict: "user_id,decision_key" })));
+  // Exposure bookkeeping for the recommendation log; nothing in the response
+  // depends on it.
+  afterResponse((async () => {
+    const existingDecisions = await admin.from("recommendation_decisions")
+      .select("decision_key,exposure_count")
+      .eq("user_id", authData.user.id)
+      .in("decision_key", decisionKeys);
+    const exposureCounts = new Map((existingDecisions.data ?? []).map((decision) => [
+      decision.decision_key,
+      Number(decision.exposure_count ?? 0),
+    ]));
+    await Promise.all(payload.items.map((item) => admin.from("recommendation_decisions").upsert({
+      user_id: authData.user.id,
+      decision_key: `task_plan:${String(payload.plan.plan_date)}:${item.task.id}`,
+      surface: "task_plan",
+      snapshot_hash: String(payload.plan.context_hash ?? ""),
+      candidate_set: candidates,
+      selected_key: item.task.recommendation_key || item.task.id,
+      selected_tool_key: item.task.source_tool || "tasks",
+      deterministic_key: payload.items[0]?.task.recommendation_key || payload.items[0]?.task.id,
+      policy_version: "task_plan_hybrid_v1",
+      assignment: aiRanked ? "learned" : "baseline",
+      model: payload.plan.model || "deterministic-v1",
+      context_segments: payload.plan.context_snapshot || {},
+      score_diagnostics: { taskCount: payload.items.length, aiRanked, rank: item.rank },
+      last_shown_at: new Date().toISOString(),
+      exposure_count: (exposureCounts.get(`task_plan:${String(payload.plan.plan_date)}:${item.task.id}`) ?? 0) + 1,
+    }, { onConflict: "user_id,decision_key" })));
+  })());
 
   return json(payload);
 });
