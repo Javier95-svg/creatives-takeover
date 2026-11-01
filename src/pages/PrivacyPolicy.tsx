@@ -23,7 +23,7 @@ const PrivacyPolicy = () => {
             <h1 className="text-4xl md:text-6xl font-bold gradient-text creatives-font leading-tight pb-2 overflow-visible mb-6">
               Privacy Policy
             </h1>
-            <p className="text-sm text-muted-foreground">Last updated: October 28, 2026</p>
+            <p className="text-sm text-muted-foreground">Last updated: November 1, 2026</p>
           </header>
 
           <div className="max-w-4xl mx-auto space-y-8">
@@ -163,7 +163,7 @@ const PrivacyPolicy = () => {
                 <ul className="list-disc list-inside space-y-2 pl-4">
                   <li><strong>Essential cookies:</strong> required for sign-in, session management, security, and core functionality.</li>
                   <li><strong>Functional cookies:</strong> used to remember preferences and improve usability.</li>
-                  <li><strong>Anonymous visit counting:</strong> we count visits with PostHog in cookieless mode. Nothing is stored in your browser; PostHog's servers derive a daily-changing identifier from your IP address and browser details and do not keep your IP address. This tells us how many people visit, which pages, and where they came from, without identifying you or linking your visits across days.</li>
+                  <li><strong>Anonymous visit counting:</strong> we count visits with PostHog in cookieless mode. Nothing is stored in your browser; PostHog's servers derive a daily-changing identifier from your IP address and browser details and do not keep your IP address. This tells us how many people visit, which pages, where they came from, and how quickly each page loads and responds (timings only, such as how long the page took to appear), without identifying you or linking your visits across days.</li>
                   <li><strong>Product usage records (signed-in accounts):</strong> when you are signed in, our own database records which sections and tools of the platform you open each day and the actions you take in them, such as saving a result, sending a message, booking a call, or publishing a post. We use this to run the service, show your progress, and understand which parts of the platform are useful, under our legitimate interests. It uses no cookies and is not shared with analytics providers.</li>
                 </ul>
                 <h3 className="text-lg font-medium text-primary">Only if you choose &ldquo;Accept All&rdquo;</h3>

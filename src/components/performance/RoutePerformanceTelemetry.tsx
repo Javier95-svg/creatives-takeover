@@ -33,16 +33,25 @@ export function RoutePerformanceTelemetry() {
 
     let fcp: number | null = null;
     let lcp: number | null = null;
+    // Layout shift and the slowest tap or keypress of the visit (INP is the
+    // 98th percentile, which for the few interactions of a typical visit is
+    // the slowest one). Timings only: no content, no identifiers.
+    let cls = 0;
+    let slowestInteraction: number | null = null;
     let reported = false;
     const report = () => {
       if (reported || (fcp === null && lcp === null)) return;
       reported = true;
       const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined;
+      const connection = (navigator as Navigator & { connection?: { effectiveType?: string } }).connection;
       captureEvent('initial_web_vitals', {
         route: window.location.pathname,
         fcp_ms: fcp === null ? null : Math.round(fcp),
         lcp_ms: lcp === null ? null : Math.round(lcp),
         ttfb_ms: navigation ? Math.round(navigation.responseStart) : null,
+        cls: Math.round(cls * 1000) / 1000,
+        inp_ms: slowestInteraction === null ? null : Math.round(slowestInteraction),
+        connection: connection?.effectiveType ?? null,
       });
     };
 
@@ -55,6 +64,16 @@ export function RoutePerformanceTelemetry() {
       const latest = lcpEntries[lcpEntries.length - 1];
       if (latest) lcp = latest.startTime;
     });
+    const shiftObserver = new PerformanceObserver((entries) => {
+      for (const entry of entries.getEntries() as Array<PerformanceEntry & { value: number; hadRecentInput: boolean }>) {
+        if (!entry.hadRecentInput) cls += entry.value;
+      }
+    });
+    const interactionObserver = new PerformanceObserver((entries) => {
+      for (const entry of entries.getEntries() as Array<PerformanceEntry & { interactionId?: number }>) {
+        if (entry.interactionId) slowestInteraction = Math.max(slowestInteraction ?? 0, entry.duration);
+      }
+    });
 
     try {
       paintObserver.observe({ type: 'paint', buffered: true });
@@ -62,6 +81,11 @@ export function RoutePerformanceTelemetry() {
     } catch {
       // Older browsers simply omit these optional measurements.
     }
+    // Separate, so a browser without one of them still reports the rest.
+    try { shiftObserver.observe({ type: 'layout-shift', buffered: true }); } catch { /* unsupported */ }
+    try {
+      interactionObserver.observe({ type: 'event', buffered: true, durationThreshold: 40 } as PerformanceObserverInit);
+    } catch { /* unsupported */ }
 
     const onVisibilityChange = () => {
       if (document.visibilityState === 'hidden') report();
@@ -72,6 +96,8 @@ export function RoutePerformanceTelemetry() {
     return () => {
       paintObserver.disconnect();
       lcpObserver.disconnect();
+      shiftObserver.disconnect();
+      interactionObserver.disconnect();
       window.removeEventListener('pagehide', report);
       document.removeEventListener('visibilitychange', onVisibilityChange);
     };
