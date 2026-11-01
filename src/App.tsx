@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect, useLayoutEffect } from "react";
+import { Suspense, lazy, useEffect, useLayoutEffect, useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation, useNavigate, Navigate } from "react-router-dom";
 import { bindWorkspaceNavigator } from '@/lib/workspaceNavigation';
@@ -252,8 +252,22 @@ const PulseWidgetWrapper = () => {
   const location = useLocation();
   const { enabled, pending } = useWorkspaceRollout();
   const { user, loading } = useAuth();
+  // The assistant bubble and its data (about 25KB of script plus its own reads)
+  // wait until the page has loaded and gone idle, so they never compete with
+  // the page the member opened.
+  const [idle, setIdle] = useState(false);
+  useEffect(() => {
+    if (idle || loading || !user) return;
+    const start = () => setIdle(true);
+    if ('requestIdleCallback' in window) {
+      const id = window.requestIdleCallback(start, { timeout: 4000 });
+      return () => window.cancelIdleCallback(id);
+    }
+    const timer = window.setTimeout(start, 2000);
+    return () => window.clearTimeout(timer);
+  }, [idle, loading, user]);
 
-  if (loading || !user) return null;
+  if (loading || !user || !idle) return null;
   if (!shouldShowPulseForPath(location.pathname)) return null;
   if (location.pathname.startsWith('/prototypes/') || (location.pathname === '/' && (enabled || pending))) return null;
 

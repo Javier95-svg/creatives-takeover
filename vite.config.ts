@@ -49,6 +49,14 @@ function getManualChunk(id: string) {
     return "react-core";
   }
 
+  // react-dom's server renderer is reached only through the Loom recorder
+  // (react-shadow, VSL Studio). Pinned to react-core with the rest of react-dom
+  // it shipped ~70KB raw (~20KB gz) to every page; left to Rollup it stays
+  // with the one route that uses it.
+  if (id.includes("react-dom/cjs/react-dom-server") || id.includes("react-dom/server")) {
+    return undefined;
+  }
+
   const packageName = getPackageName(id);
   if (!packageName) {
     return undefined;

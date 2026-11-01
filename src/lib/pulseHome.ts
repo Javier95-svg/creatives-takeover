@@ -4,7 +4,7 @@ import { PULSE_UUID } from './pulseScope.ts';
 import type { PulseRetrievalReference, PulseSourceReference } from './pulseSources.ts';
 import type { CommitmentCheck, MemorySuggestion } from './pulseMemory.ts';
 import { workspaceCapabilityById } from './workspaceCapabilities.ts';
-import { PEDIA_ENTRIES } from '../data/startupPedia/index.ts';
+import { PEDIA_SLUGS } from '../data/startupPedia/slugs.ts';
 import { LAUNCH_DIRECTORIES } from '../data/launchDirectories.ts';
 
 export type PulseHomeConcept = 'founder-guide' | 'command-center' | 'guided-journey';
@@ -70,7 +70,7 @@ export function validateHomeActions(value: unknown): PulseHomeAction[] {
       if (typeof action.slug !== 'string' || !/^[a-z0-9][a-z0-9_-]{0,199}$/i.test(action.slug)) return [];
       return [{ ...action, route: `${action.kind === 'article' ? '/newspaper' : '/marketplace'}/${encodeURIComponent(action.slug)}`, image: undefined }];
     }
-    if (action.kind === 'pedia' && PEDIA_ENTRIES.some(entry => entry.slug === action.id)) {
+    if (action.kind === 'pedia' && typeof action.id === 'string' && PEDIA_SLUGS.has(action.id)) {
       return [{ ...action, slug: action.id, route: `/startup-pedia/${encodeURIComponent(action.id)}`, image: undefined,
         badges: Array.isArray(action.badges) ? action.badges.filter(value => typeof value === 'string').slice(0, 4) : undefined }];
     }

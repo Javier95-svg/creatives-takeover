@@ -1,39 +1,48 @@
-import { z } from 'zod';
-
-const supabaseBrowserEnvSchema = z
-  .object({
-    VITE_SUPABASE_URL: z.string().trim().url('must be a valid URL'),
-    VITE_SUPABASE_KEY: z.string().trim().min(1).optional(),
-    VITE_SUPABASE_PUBLISHABLE_KEY: z.string().trim().min(1).optional(),
-  })
-  .superRefine((env, context) => {
-    if (!env.VITE_SUPABASE_KEY && !env.VITE_SUPABASE_PUBLISHABLE_KEY) {
-      context.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'VITE_SUPABASE_KEY or VITE_SUPABASE_PUBLISHABLE_KEY is required',
-        path: ['VITE_SUPABASE_KEY'],
-      });
-    }
-  });
+// Plain checks rather than zod: this runs on every page load, and it was the
+// only thing that put zod (about 50KB raw) in the entry chunk.
 
 export interface SupabaseBrowserConfig {
   url: string;
   publishableKey: string;
 }
 
-export function parseSupabaseBrowserEnv(env: Record<string, unknown>): SupabaseBrowserConfig {
-  const result = supabaseBrowserEnvSchema.safeParse(env);
+const isValidUrl = (value: string) => {
+  try {
+    new URL(value);
+    return true;
+  } catch {
+    return false;
+  }
+};
 
-  if (!result.success) {
-    const details = result.error.issues
-      .map((issue) => `${issue.path.join('.') || 'environment'} ${issue.message}`)
-      .join('; ');
-    throw new Error(`Invalid Supabase browser configuration: ${details}`);
+/** A trimmed string, '' for an empty one, undefined when absent, null when not a string. */
+const readString = (value: unknown) => {
+  if (value === undefined) return undefined;
+  return typeof value === 'string' ? value.trim() : null;
+};
+
+export function parseSupabaseBrowserEnv(env: Record<string, unknown>): SupabaseBrowserConfig {
+  const url = readString(env.VITE_SUPABASE_URL);
+  const key = readString(env.VITE_SUPABASE_KEY);
+  const publishableKey = readString(env.VITE_SUPABASE_PUBLISHABLE_KEY);
+  const issues: string[] = [];
+
+  if (url === undefined || url === null) issues.push('VITE_SUPABASE_URL is required');
+  else if (!isValidUrl(url)) issues.push('VITE_SUPABASE_URL must be a valid URL');
+  for (const [name, value] of [['VITE_SUPABASE_KEY', key], ['VITE_SUPABASE_PUBLISHABLE_KEY', publishableKey]] as const) {
+    if (value === null) issues.push(`${name} must be a string`);
+    else if (value === '') issues.push(`${name} must not be empty`);
+  }
+  if (!key && !publishableKey) {
+    issues.push('VITE_SUPABASE_KEY VITE_SUPABASE_KEY or VITE_SUPABASE_PUBLISHABLE_KEY is required');
+  }
+
+  if (issues.length > 0) {
+    throw new Error(`Invalid Supabase browser configuration: ${issues.join('; ')}`);
   }
 
   return {
-    url: result.data.VITE_SUPABASE_URL,
-    publishableKey:
-      result.data.VITE_SUPABASE_KEY ?? result.data.VITE_SUPABASE_PUBLISHABLE_KEY!,
+    url: url as string,
+    publishableKey: (key || publishableKey) as string,
   };
 }
