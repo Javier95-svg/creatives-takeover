@@ -51,6 +51,8 @@ export const ACCOUNT_SCOPED_STORAGE_PREFIXES: readonly string[] = [
   // Community + assistant
   'community_post_draft',
   'pulse_last_proactive_hash',
+  // Workspace account details remembered between visits (useAccountContext)
+  'ct_account_context_v1',
 ];
 
 /**
