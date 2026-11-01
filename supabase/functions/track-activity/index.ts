@@ -6,6 +6,8 @@ const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
+  // Let the browser reuse the preflight instead of repeating it per event.
+  "Access-Control-Max-Age": "7200",
   "Content-Type": "application/json",
 };
 

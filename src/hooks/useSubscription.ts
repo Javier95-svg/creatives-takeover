@@ -1,4 +1,4 @@
-﻿import { useState } from 'react';
+﻿import { useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getAccessTokenSafely } from '@/integrations/supabase/auth';
 import { supabase } from '@/integrations/supabase/client';
@@ -122,6 +122,9 @@ export function useSubscription(options?: { fetchTiers?: boolean; strictStatus?:
   const fetchTiersEnabled = options?.fetchTiers ?? true;
   const { user } = useAuth();
   const [actionLoading, setActionLoading] = useState(false);
+  // check-subscription answers from stored state; an explicit refresh (after
+  // checkout, Retry, Refresh) asks it to check Stripe before answering.
+  const refreshFromStripeRef = useRef(false);
 
   const fetchTiers = async (): Promise<SubscriptionTier[]> => {
     const { data, error } = await supabase
@@ -158,11 +161,14 @@ export function useSubscription(options?: { fetchTiers?: boolean; strictStatus?:
 
       // A program's pilot plan lives in the database, not in Stripe, so it is
       // read beside check-subscription. A failed read just means no pilot plan.
+      const refresh = refreshFromStripeRef.current;
+      refreshFromStripeRef.current = false;
       const [{ data, error }, pilot] = await Promise.all([
         supabase.functions.invoke('check-subscription', {
           headers: {
             Authorization: `Bearer ${accessToken}`
-          }
+          },
+          ...(refresh ? { body: { refresh: true } } : {}),
         }),
         supabase.rpc('cohort_pilot_plan_v1' as never).then(
           (result) => (typeof result.data === 'string' ? result.data : null),
@@ -210,6 +216,7 @@ export function useSubscription(options?: { fetchTiers?: boolean; strictStatus?:
 
   const checkSubscription = async () => {
     if (!user) return null;
+    refreshFromStripeRef.current = true;
     const refreshed = await subscriptionQuery.refetch();
     return refreshed.data ?? null;
   };
