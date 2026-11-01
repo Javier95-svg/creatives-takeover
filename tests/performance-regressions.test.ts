@@ -208,3 +208,61 @@ test('the Pulse widget loads its markdown parser only with a reply', () => {
   assert.doesNotMatch(bubble, /from 'react-markdown'|from 'remark-/);
   assert.match(bubble, /lazy\(\(\) => import\('\.\/PulseMarkdown'\)\)/);
 });
+
+// Round 4 (2026-11-01): weight every page loads, the signed-in shell's wait,
+// slow APIs, the /build scroll, and real-user speed data.
+test('every page skips the server renderer, zod and the Startup Pedia articles', () => {
+  const vite = read('../vite.config.ts');
+  assert.match(vite, /id\.includes\("react-dom\/cjs\/react-dom-server"\)/);
+  assert.doesNotMatch(read('../src/integrations/supabase/envSchema.ts'), /from 'zod'/);
+  const pulseHome = read('../src/lib/pulseHome.ts');
+  assert.doesNotMatch(pulseHome, /startupPedia\/index/);
+  assert.match(pulseHome, /PEDIA_SLUGS\.has/);
+});
+
+test('the Pulse slug list matches every Startup Pedia entry', async () => {
+  const { PEDIA_ENTRIES } = await import('../src/data/startupPedia/index.ts');
+  const { PEDIA_SLUGS } = await import('../src/data/startupPedia/slugs.ts');
+  assert.deepEqual(
+    [...PEDIA_SLUGS].sort(),
+    PEDIA_ENTRIES.map((entry: { slug: string }) => entry.slug).sort(),
+    'Add the new entry slug to src/data/startupPedia/slugs.ts',
+  );
+});
+
+test('the workspace shell renders from the last known account details', () => {
+  const account = read('../src/hooks/useAccountContext.ts');
+  assert.match(account, /initialData: \(\) => \(userId \? readRemembered\(userId\) : undefined\)/);
+  assert.match(account, /initialDataUpdatedAt: 0/);
+  assert.match(read('../src/lib/accountScopedStorage.ts'), /'ct_account_context_v1'/);
+});
+
+test('fonts are served from this site, not a render-blocking Google stylesheet', () => {
+  const html = read('../index.html');
+  assert.doesNotMatch(html, /fonts\.googleapis\.com|fonts\.gstatic\.com/);
+  assert.match(html, /<link rel="preload" href="\/fonts\/inter-latin\.woff2"/);
+  assert.match(html, /@font-face \{ font-family: 'Inter'/);
+});
+
+test('subscription status answers from stored state and explicit refreshes ask Stripe', () => {
+  const fn = read('../supabase/functions/check-subscription/index.ts');
+  assert.match(fn, /STORED_MAX_AGE_MS/);
+  assert.match(fn, /afterResponse\(syncSubscription\(/);
+  assert.match(fn, /"Access-Control-Max-Age": "7200"/);
+  const hook = read('../src/hooks/useSubscription.ts');
+  assert.match(hook, /refreshFromStripeRef\.current = true;/);
+  assert.match(hook, /body: \{ refresh: true \}/);
+});
+
+test('the /build decorations settle instead of looping', () => {
+  const build = read('../src/pages/BuildPage.tsx');
+  assert.doesNotMatch(build, /ct-floaty \$\{p\.duration\} ease-in-out \$\{p\.delay\} infinite/);
+  assert.doesNotMatch(build, /animate-pulse/);
+});
+
+test('field speed data includes layout shift and interaction delay', () => {
+  const telemetry = read('../src/components/performance/RoutePerformanceTelemetry.tsx');
+  assert.match(telemetry, /cls: Math\.round\(cls \* 1000\) \/ 1000/);
+  assert.match(telemetry, /inp_ms:/);
+  assert.match(read('../src/pages/PrivacyPolicy.tsx'), /how quickly each page loads and responds/);
+});
