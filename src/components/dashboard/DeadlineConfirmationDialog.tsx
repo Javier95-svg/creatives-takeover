@@ -10,6 +10,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { rpcAsCaller } from '@/lib/callerRpc';
 import { toast } from 'sonner';
 
 interface Task {
@@ -34,7 +35,9 @@ export const DeadlineConfirmationDialog = ({ userId }: DeadlineConfirmationDialo
   const checkForOverdueTasks = useCallback(async () => {
     try {
       // Create a capped bell reminder for newly expired tasks.
-      await supabase.rpc('notify_task_deadline_expired' as never, { p_user_id: userId } as never);
+      await rpcAsCaller('notify_task_deadline_expired_mine', {}, {
+        name: 'notify_task_deadline_expired', args: { p_user_id: userId },
+      });
 
       // Keep the currently open dialog stable until user acts.
       if (hasOpenDialogRef.current) return;

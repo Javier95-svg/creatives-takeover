@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { rpcAsCaller } from '@/lib/callerRpc';
 import { useToast } from '@/hooks/use-toast';
 
 export interface DailyChallenge {
@@ -60,11 +61,13 @@ export const useDailyChallenges = (userId?: string) => {
     }
 
     try {
-      const { data, error } = await supabase.rpc('complete_daily_challenge', {
-        p_user_id: userId,
+      const proof = {
         p_challenge_id: challengeId,
         p_proof_reference_id: proofReferenceId || null,
         p_proof_reference_type: proofReferenceType || null
+      };
+      const { data, error } = await rpcAsCaller<any>('complete_daily_challenge_mine', proof, {
+        name: 'complete_daily_challenge', args: { p_user_id: userId, ...proof },
       });
 
       if (error) throw error;

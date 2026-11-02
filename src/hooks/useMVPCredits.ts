@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { rpcAsCaller } from '@/lib/callerRpc';
 import { useAuth } from '@/contexts/AuthContext';
 import { MVP_CREDIT_COSTS, type MVPCreditFeature } from '@/config/constants';
 import { createIdempotencyKey } from '@/lib/idempotency';
@@ -19,10 +20,9 @@ export function useMVPCredits() {
   const fetchBalance = useCallback(async (): Promise<MVPCreditBalance> => {
     if (!user?.id) return { balance: 0, monthly_quota: 0, subscription_tier: 'rookie' };
 
-    await supabase.rpc('ensure_mvp_credit_balance' as never, {
-      p_user_id: user.id,
-      p_subscription_tier: 'rookie',
-    } as never);
+    await rpcAsCaller('ensure_mvp_credit_balance_mine', {}, {
+      name: 'ensure_mvp_credit_balance', args: { p_user_id: user.id, p_subscription_tier: 'rookie' },
+    });
 
     const { data, error } = await supabase
       .from('mvp_credit_balances' as never)
@@ -77,8 +77,7 @@ export function useMVPCredits() {
         return null;
       }
 
-      const { data, error } = await supabase.rpc('deduct_mvp_credits_atomic' as never, {
-        p_user_id: user.id,
+      const deduction = {
         p_amount: requiredCredits,
         p_feature: feature,
         p_reason: options.featureName ?? feature,
@@ -86,7 +85,10 @@ export function useMVPCredits() {
           ...(options.metadata ?? {}),
           idempotencyKey: options.idempotencyKey ?? createIdempotencyKey(`mvp-${feature.toLowerCase()}`),
         },
-      } as never);
+      };
+      const { data, error } = await rpcAsCaller('deduct_mvp_credits_atomic_mine', deduction, {
+        name: 'deduct_mvp_credits_atomic', args: { p_user_id: user.id, ...deduction },
+      });
 
       if (error || (data as { success?: boolean } | null)?.success === false) {
         toast.error('Unable to process MVP Builder credits.');

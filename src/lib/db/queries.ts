@@ -283,38 +283,4 @@ export const queries = {
         .single()
     );
   },
-
-  async deductCredits(userId: string, amount: number, feature: string, reason?: string) {
-    logInfo('Deducting credits', { userId, amount, feature });
-    
-    // Get current balance
-    const { data: credits } = await this.getUserCredits(userId);
-    if (!credits || credits.balance < amount) {
-      throw new Error('Insufficient credits');
-    }
-
-    // Deduct credits
-    const newBalance = credits.balance - amount;
-    await safe.update(async () =>
-      await supabase
-        .from('user_credits')
-        .update({ balance: newBalance })
-        .eq('user_id', userId)
-    );
-
-    // Log transaction
-    await safe.insert(async () =>
-      await supabase
-        .from('credit_transactions')
-        .insert({
-          user_id: userId,
-          amount: -amount,
-          tx_type: 'deduct',
-          feature,
-          reason
-        })
-    );
-
-    return { newBalance };
-  }
 };

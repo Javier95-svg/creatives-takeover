@@ -36,6 +36,7 @@ import { Link } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
 import ReputationBadge from "./ReputationBadge";
 import { getProfileUrl } from "@/utils/profileUtils";
+import { rpcAsCaller } from '@/lib/callerRpc';
 
 export interface Post {
   id: string;
@@ -452,11 +453,9 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
         if (challengeData && challengeData.length > 0) {
           const challenge = challengeData[0];
           if (challenge.challenge_type === 'comment') {
-            await supabase.rpc('complete_daily_challenge', {
-              p_user_id: user.id,
-              p_challenge_id: challenge.id,
-              p_proof_reference_id: post.id,
-              p_proof_reference_type: 'comment'
+            const proof = { p_challenge_id: challenge.id, p_proof_reference_id: post.id, p_proof_reference_type: 'comment' };
+            await rpcAsCaller('complete_daily_challenge_mine', proof, {
+              name: 'complete_daily_challenge', args: { p_user_id: user.id, ...proof },
             });
           }
         }

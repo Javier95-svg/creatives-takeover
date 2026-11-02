@@ -16,6 +16,7 @@ import { useCredits } from '@/hooks/useCredits';
 import { useCreditActions } from '@/hooks/useCreditActions';
 import { useUpgradePrompt } from '@/contexts/UpgradePromptContext';
 import { supabase } from '@/integrations/supabase/client';
+import { rpcAsCaller } from '@/lib/callerRpc';
 import { useToast } from '@/hooks/use-toast';
 import { buildDashboardReturnToastAction } from '@/components/dashboard/dashboardReturnToast';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -521,10 +522,9 @@ const TechStack: React.FC = () => {
       }
 
       try {
-        await supabase.rpc('check_and_increment_usage', {
-          p_user_id: user.id,
-          p_feature_name: 'tech_stack_generations',
-          p_increment_by: 1
+        const usage = { p_feature_name: 'tech_stack_generations', p_increment_by: 1 };
+        await rpcAsCaller('check_and_increment_usage_mine', usage, {
+          name: 'check_and_increment_usage', args: { p_user_id: user.id, ...usage },
         });
       } catch (error) {
         console.warn('Failed to update Tech Stack usage', error);

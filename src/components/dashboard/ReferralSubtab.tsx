@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Check, Copy, Gift, Share2, Trophy } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { rpcAsCaller } from '@/lib/callerRpc';
 import type { Database } from '@/integrations/supabase/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -77,8 +78,8 @@ export function ReferralSubtab() {
 
       let resolvedCode = codeRes.data?.code ?? null;
       if (!resolvedCode && !codeRes.error) {
-        const { data: generatedCode, error: generateError } = await supabase.rpc('generate_referral_code', {
-          p_user_id: user.id,
+        const { data: generatedCode, error: generateError } = await rpcAsCaller<string>('generate_referral_code_mine', {}, {
+          name: 'generate_referral_code', args: { p_user_id: user.id },
         });
         if (generateError) {
           console.error('Failed to generate referral code', generateError);

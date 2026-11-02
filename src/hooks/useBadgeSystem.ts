@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { safe } from '@/integrations/supabase/safe';
 import { useToast } from '@/hooks/use-toast';
 import { showAchievementToast } from '@/components/community/AchievementToast';
+import { rpcAsCaller } from '@/lib/callerRpc';
 
 export interface BadgeDefinition {
   id: string;
@@ -41,9 +42,9 @@ export const useBadgeSystem = (userId?: string) => {
 
     try {
       const { data, error } = await safe.rpc(async () =>
-        await safe.client.rpc('check_and_award_badges', {
-          p_user_id: userId
-        })
+        await rpcAsCaller<unknown[]>('check_and_award_badges_mine', {}, {
+          name: 'check_and_award_badges', args: { p_user_id: userId },
+        }, safe.client as never) as never
       );
 
       if (error) throw error;

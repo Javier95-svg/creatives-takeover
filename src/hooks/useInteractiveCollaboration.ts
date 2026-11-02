@@ -396,14 +396,15 @@ export const useInteractiveCollaboration = (sessionId: string) => {
     const file = files.find(f => f.id === fileId);
     if (!file) return;
 
-    // Get download URL
-    const { data } = supabase.storage
+    // The bucket is private: a short-lived signed URL, not a public one.
+    const { data, error } = await supabase.storage
       .from('collaboration-files')
-      .getPublicUrl(file.storage_path);
+      .createSignedUrl(file.storage_path, 60);
+    if (error || !data?.signedUrl) return;
 
     // Trigger download
     const link = document.createElement('a');
-    link.href = data.publicUrl;
+    link.href = data.signedUrl;
     link.download = file.original_filename;
     document.body.appendChild(link);
     link.click();

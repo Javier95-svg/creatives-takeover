@@ -24,7 +24,9 @@ test('the service role is recognised whichever copy of its key the caller holds'
 
 test('the role claim is only trusted where the gateway verifies the signature', () => {
   const sender = read('../supabase/functions/send-retention-email/index.ts');
-  assert.match(sender, /if \(!isServiceRoleToken\(callerToken, supabaseServiceKey\)\) \{/);
+  assert.match(sender, /const fromServer = isServiceRoleToken\(callerToken, supabaseServiceKey\);/);
+  // Anyone else must be the signed-in member the email is for.
+  assert.match(sender, /if \(!caller \|\| caller\.id !== userId \|\| !caller\.email \|\| !MEMBER_SEQUENCES\.has\(sequence\)\) \{/);
   // send-retention-email must keep verify_jwt on (the default): no override in config.toml.
   assert.doesNotMatch(read('../supabase/config.toml'), /\[functions\.send-retention-email\]\s*verify_jwt\s*=\s*false/);
 });

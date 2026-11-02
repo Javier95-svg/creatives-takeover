@@ -96,31 +96,6 @@ export const useReputation = (userId?: string) => {
     }
   };
 
-  const awardBadge = async (badge: Omit<Badge, 'earned_at'>) => {
-    if (!userId || !reputation) return;
-
-    try {
-      const newBadge = { ...badge, earned_at: new Date().toISOString() };
-      const updatedBadges = [...(reputation.badges || []), newBadge];
-
-      const { error } = await supabase
-        .from('user_reputation')
-        .update({ badges: updatedBadges as any })
-        .eq('user_id', userId);
-
-      if (error) throw error;
-
-      setReputation({ ...reputation, badges: updatedBadges });
-      
-      toast({
-        title: `🎉 Badge Unlocked!`,
-        description: `You earned "${badge.name}"!`,
-      });
-    } catch (error: any) {
-      console.error('Error awarding badge:', error);
-    }
-  };
-
   const getLevelColor = (level: number) => {
     switch (level) {
       case 1: return 'text-muted-foreground';
@@ -188,7 +163,6 @@ export const useReputation = (userId?: string) => {
     reputation,
     recentTransactions,
     isLoading,
-    awardBadge,
     getLevelColor,
     getLevelProgress,
     refetch: fetchReputation,
