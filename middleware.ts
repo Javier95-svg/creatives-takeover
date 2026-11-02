@@ -10,6 +10,8 @@
 //
 //   2. Social-crawler OG meta tags for /icp/:slug/public (original behavior).
 
+import { RESERVED_SUBDOMAIN_LABELS as RESERVED_LABELS } from './src/lib/reservedSubdomains';
+
 export const config = {
   matcher: ['/', '/index.html', '/robots.txt', '/sitemap.xml', '/icp/:slug*/public'],
 };
@@ -21,7 +23,6 @@ const SUPABASE_URL = process.env.VITE_SUPABASE_URL ?? 'https://rcjlaybjnozqbsoxz
 const SUPABASE_KEY = process.env.VITE_SUPABASE_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? '';
 
 const PUBLISH_BASE = 'creatives-takeover.com';
-const RESERVED_LABELS = new Set(['www', 'app', 'api', 'mail', 'admin', 'staging']);
 
 function esc(s: string): string {
   return s
@@ -49,7 +50,6 @@ export default async function middleware(request: Request): Promise<Response | u
   const slug = publishedSlugFromHost(request.headers.get('host') ?? '');
   if (slug) {
     const fnUrl = new URL('/api/published-site', url.origin);
-    fnUrl.searchParams.set('slug', slug);
     fnUrl.searchParams.set('p', url.pathname.replace(/^\/+/, ''));
     try {
       const res = await fetch(fnUrl.toString());

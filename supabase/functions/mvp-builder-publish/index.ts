@@ -25,6 +25,19 @@ const BASE_DOMAIN = Deno.env.get("MVP_PUBLISH_BASE_DOMAIN") || "creatives-takeov
 const MAX_SLUG_LENGTH = 48;
 const MAX_ASSIGN_ATTEMPTS = 5;
 
+// Copy of src/lib/reservedSubdomains.ts (Deno cannot import from src). A project
+// called "Login" publishes to login-2.creatives-takeover.com, never login.
+// tests/security-hardening.test.ts fails if the two lists differ.
+const RESERVED_SUBDOMAIN_LABELS = new Set([
+  "abuse", "account", "accounts", "admin", "api", "app", "assets", "auth", "beta", "billing",
+  "blog", "careers", "cdn", "checkout", "creatives", "creativestakeover", "ct", "dashboard",
+  "dev", "docs", "e", "ftp", "help", "id", "internal", "jobs", "legal", "login", "mail", "my",
+  "no-reply", "noreply", "ns1", "ns2", "oauth", "official", "password", "pay", "payment",
+  "payments", "portal", "postmaster", "preview", "privacy", "reset", "secure", "security",
+  "signin", "signup", "smtp", "sso", "staging", "static", "status", "support", "team", "test",
+  "verify", "webmail", "www",
+]);
+
 function jsonResponse(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
@@ -230,6 +243,7 @@ serve(async (req) => {
           .map((row) => (typeof row.subdomain_slug === "string" ? row.subdomain_slug : null))
           .filter((value): value is string => Boolean(value))
       );
+      if (RESERVED_SUBDOMAIN_LABELS.has(base)) taken.add(base);
 
       const nextCandidate = (skip: Set<string>): string => {
         if (!taken.has(base) && !skip.has(base)) return base;

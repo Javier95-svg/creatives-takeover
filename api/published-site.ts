@@ -17,11 +17,11 @@ export const config = { runtime: 'edge' };
 import { fetchLaunchProject, launchDocument } from './_launch';
 import { renderSeoDocument } from './_seo';
 import { buildLeadScript } from './_mvpLeadScript';
+import { RESERVED_SUBDOMAIN_LABELS as RESERVED_LABELS } from '../src/lib/reservedSubdomains';
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL ?? 'https://rcjlaybjnozqbsoxzboa.supabase.co';
 const SUPABASE_KEY = process.env.VITE_SUPABASE_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? '';
 const BASE_DOMAIN = 'creatives-takeover.com';
-const RESERVED_LABELS = new Set(['www', 'app', 'api', 'mail', 'admin', 'staging']);
 
 const CONTENT_TYPES: Record<string, string> = {
   html: 'text/html; charset=utf-8',
@@ -127,12 +127,13 @@ function notFound(message: string): Response {
   });
 }
 
+// The site comes from the Host header only: <slug>.creatives-takeover.com.
+// A ?slug= override used to be honoured on any host, so
+// creatives-takeover.com/api/published-site?slug=<anyone> served a member's
+// HTML and JavaScript from the main site's origin, where it could read the
+// signed-in visitor's session. middleware.ts calls this from the site's own
+// subdomain, so the Host header already names the site.
 function resolveSlug(req: Request): string | null {
-  const url = new URL(req.url);
-  const fromQuery = url.searchParams.get('slug');
-  if (fromQuery) return fromQuery.toLowerCase();
-
-  // Fall back to the Host header: <slug>.creatives-takeover.com
   const host = (req.headers.get('host') ?? '').toLowerCase().split(':')[0];
   if (!host.endsWith(`.${BASE_DOMAIN}`)) return null;
   const label = host.slice(0, -1 * (`.${BASE_DOMAIN}`.length)).split('.').pop() ?? '';

@@ -2,6 +2,7 @@
 // demo_studio_* tables is the authoritative access control. Table names are cast
 // with `as any` because the generated DB types don't include these tables yet.
 import { supabase } from '@/integrations/supabase/client';
+import { RESERVED_SUBDOMAIN_LABELS } from '@/lib/reservedSubdomains';
 import type {
   CaptureMethod,
   DemoStudioProject,
@@ -142,8 +143,6 @@ export async function deleteProject(id: string): Promise<void> {
   if (error) throw new Error(error.message);
 }
 
-// Labels the wildcard host handler refuses (see api/published-site.ts).
-const RESERVED_SUBDOMAIN_LABELS = new Set(['www', 'app', 'api', 'mail', 'admin', 'staging']);
 
 export async function isLaunchSlugAvailable(slug: string, currentProjectId?: string | null): Promise<boolean> {
   const normalized = normalizeProjectSlug(slug);
