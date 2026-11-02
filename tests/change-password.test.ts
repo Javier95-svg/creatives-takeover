@@ -21,12 +21,25 @@ test('signup and password reset use the shared password policy', () => {
   const signup = read('../src/pages/Signup.tsx');
   const reset = read('../src/pages/ResetPassword.tsx');
   const auth = read('../src/pages/Auth.tsx');
-  const directSignup = read('../supabase/functions/signup-direct/index.ts');
 
   assert.match(signup, /getPasswordValidationError\(formData\.password\)/);
   assert.match(reset, /getPasswordValidationError\(formData\.password\)/);
   assert.match(auth, /getPasswordValidationError\(password\)/);
-  assert.match(directSignup, /!\/\[A-Za-z\]\/\.test\(password\) \|\| !\/\\d\/\.test\(password\)/);
+});
+
+test('email signup cannot use the preconfirmed service-role route', () => {
+  const signup = read('../src/lib/authSignup.ts');
+  const retiredEndpoint = read('../supabase/functions/signup-direct/index.ts');
+  const authPage = read('../src/pages/Auth.tsx');
+  const signupPage = read('../src/pages/Signup.tsx');
+  assert.match(signup, /supabase\.auth\.signUp\(/);
+  assert.doesNotMatch(signup, /functions\.invoke|signup-direct/);
+  assert.match(retiredEndpoint, /status: 410/);
+  assert.doesNotMatch(retiredEndpoint, /createUser|email_confirm|SUPABASE_SERVICE_ROLE_KEY/);
+  for (const page of [authPage, signupPage]) {
+    assert.match(page, /Check your email to confirm your account before signing in/);
+    assert.doesNotMatch(page, /autoSignInError|Ensure users are signed in immediately after signup/);
+  }
 });
 
 test('security settings exposes all three fields and invokes the backend', () => {

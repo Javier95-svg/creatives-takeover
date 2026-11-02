@@ -159,27 +159,9 @@ const Auth: React.FC = () => {
       setLoading(false);
     } else {
       clearPendingReferralCode();
-      let session = await getSessionSafely();
-
-      // Ensure account creation immediately logs in without email confirmation gating.
+      const session = await getSessionSafely();
       if (!session) {
-        const { error: autoSignInError } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-
-        if (autoSignInError) {
-          setError('Account created, but automatic sign in failed. Please sign in manually.');
-          setActiveTab('login');
-          setLoading(false);
-          return;
-        }
-
-        session = await getSessionSafely();
-      }
-
-      if (!session) {
-        setError('Account created, but session initialization is delayed. Please sign in.');
+        toast.success('Check your email to confirm your account before signing in.');
         setActiveTab('login');
         setLoading(false);
         return;

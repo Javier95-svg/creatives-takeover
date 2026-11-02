@@ -432,27 +432,9 @@ const Signup = () => {
         toast.error(mapSignUpError(error));
       } else {
         clearPendingReferralCode();
-        let session = await getSessionSafely();
-
-        // Ensure users are signed in immediately after signup.
+        const session = await getSessionSafely();
         if (!session) {
-          const { error: autoSignInError } = await supabase.auth.signInWithPassword({
-            email: formData.email,
-            password: formData.password,
-          });
-
-          if (autoSignInError) {
-            console.error('Auto sign-in after signup failed:', autoSignInError);
-            toast.error("Account created, but automatic sign in failed. Please sign in manually.");
-            navigate('/login');
-            return;
-          }
-
-          session = await getSessionSafely();
-        }
-
-        if (!session) {
-          toast.error("Account created, but session initialization is delayed. Please sign in.");
+          toast.success('Check your email to confirm your account before signing in.');
           navigate('/login');
           return;
         }
