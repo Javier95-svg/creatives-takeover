@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { requireMemberOrWorker } from '../_shared/guards.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -10,6 +11,11 @@ serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
+
+  // Every call spends our AI or API quota: our own jobs, or a signed-in member
+  // within a per-minute limit.
+  const caller = await requireMemberOrWorker(req, 'location-search', 30)
+  if (caller.error) return caller.error
 
   try {
     const MAPBOX_TOKEN = Deno.env.get('MAPBOX_PUBLIC_TOKEN');

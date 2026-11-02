@@ -274,9 +274,6 @@ verify_jwt = false
 verify_jwt = false
 
 # Checkout/Connect links opened before an authenticated session is established.
-[functions.create-mentor-booking-checkout]
-verify_jwt = false
-
 [functions.create-stripe-connect-link]
 verify_jwt = false
 

@@ -14,6 +14,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.55.0";
 import { Resend } from "npm:resend@2.0.0";
+import { isWorkerRequest, requireAdmin } from "../_shared/guards.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -105,6 +106,12 @@ serve(async (req: Request): Promise<Response> => {
 
   if (req.method !== "POST") {
     return jsonResponse({ error: "Method not allowed" }, 405);
+  }
+
+  // This emails every subscriber: only the publish trigger or an admin may call it.
+  if (!(await isWorkerRequest(req))) {
+    const admin = await requireAdmin(req);
+    if (admin.error) return admin.error;
   }
 
   try {

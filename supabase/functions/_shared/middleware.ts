@@ -39,48 +39,7 @@ export async function handleCORS(req: Request): Promise<Response | null> {
   return null;
 }
 
-/**
- * Extract and verify user from auth header
- */
-export async function extractUser(req: Request): Promise<{ userId: string | null; error: string | null }> {
-  const authHeader = req.headers.get('authorization');
-  
-  if (!authHeader) {
-    return { userId: null, error: 'Missing authorization header' };
-  }
-
-  try {
-    // Extract JWT token from "Bearer <token>"
-    const token = authHeader.replace('Bearer ', '');
-    
-    // In a real implementation, you would verify the JWT here
-    // For now, we'll extract the user ID from the token payload
-    const payload = JSON.parse(atob(token.split('.')[1]));
-    return { userId: payload.sub || null, error: null };
-  } catch (error) {
-    logError('Auth extraction failed', error);
-    return { userId: null, error: 'Invalid authorization token' };
-  }
-}
-
-/**
- * Require authentication for a request
- */
-export async function withAuth(
-  req: Request,
-  handler: (req: Request, userId: string) => Promise<Response>
-): Promise<Response> {
-  const { userId, error } = await extractUser(req);
-  
-  if (error || !userId) {
-    return new Response(
-      JSON.stringify({ ok: false, error: error || 'Unauthorized', code: 'AUTH_REQUIRED' }),
-      { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
-  }
-  
-  return await handler(req, userId);
-}
+// Caller checks live in ./guards.ts (requireUser, requireAdmin, requireWorker).
 
 /**
  * Global error handler wrapper
@@ -103,7 +62,7 @@ export async function withErrorHandler<T>(
       }
     );
   } catch (error: any) {
-    logError('Edge function error', error, context);
+    logError('Edge function error', { ...context, error: error?.message ?? String(error) });
     
     const statusCode = error.statusCode || error.status || 500;
     const errorMessage = error.message || 'Internal server error';

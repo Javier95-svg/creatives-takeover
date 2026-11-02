@@ -2,6 +2,7 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.55.0';
 import { emitAiGenerationCost } from "../_shared/ai-cost.ts";
+import { requireMemberOrWorker } from '../_shared/guards.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -442,9 +443,22 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Every call spends our AI or API quota: our own jobs, or a signed-in member
+  // within a per-minute limit.
+  const caller = await requireMemberOrWorker(req, 'ai-model-router', 10);
+  if (caller.error) return caller.error;
+
   try {
     const router = new ModelRouter();
     const request: ModelRequest = await req.json();
+    if (caller.userId) {
+      // A member gets the router's own model choice and no shared cache entry:
+      // a caller-chosen cache_key could read or seed another member's answer.
+      request.provider = 'auto';
+      request.model = undefined;
+      request.cache_key = undefined;
+      request.user_id = caller.userId;
+    }
     
     const response = await router.route(request);
 

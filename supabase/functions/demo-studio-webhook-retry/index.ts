@@ -1,9 +1,10 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { requireWorker } from "../_shared/guards.ts";
 
-// Cron-invoked (pg_cron via pg_net, no JWT) — verify_jwt=false. Retries failed Demo Studio
-// webhook deliveries with exponential backoff and gives up at max_attempts. Optionally
-// guarded by a shared CRON_SECRET header when that env var is set.
+// Cron-invoked (pg_cron via pg_net) — verify_jwt=false. Retries failed Demo Studio
+// webhook deliveries with exponential backoff and gives up at max_attempts. Only our
+// own jobs may start it: the service key, or the CRON_SECRET header.
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-cron-secret",
@@ -39,13 +40,8 @@ async function postWebhook(url: string, payload: unknown): Promise<{ ok: boolean
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
-  const cronSecret = Deno.env.get("CRON_SECRET");
-  if (cronSecret && req.headers.get("x-cron-secret") !== cronSecret) {
-    return new Response(JSON.stringify({ error: "unauthorized" }), {
-      status: 401,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
+  const refused = await requireWorker(req);
+  if (refused) return refused;
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");

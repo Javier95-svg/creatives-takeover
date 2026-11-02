@@ -7,6 +7,7 @@ import {
   type DraftRequestShape,
   type GuidedInput,
 } from "../_shared/icp-draft.ts";
+import { clientIp, rateLimit } from "../_shared/guards.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -207,6 +208,9 @@ serve(async (req) => {
   }
 
   try {
+    const limited = await rateLimit(req, `icp-draft-email:${clientIp(req)}`, 3);
+    if (limited) return limited;
+
     const payload = await req.json() as EmailDraftRequest;
     const validationIssues = validatePayload(payload);
     if (validationIssues.length > 0) {
@@ -215,6 +219,8 @@ serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    const perRecipient = await rateLimit(req, `icp-draft-email-to:${payload.email.trim().toLowerCase()}`, 2);
+    if (perRecipient) return perRecipient;
 
     EdgeRuntime.waitUntil(
       processEmailDraftRequest(payload).catch((error) => {

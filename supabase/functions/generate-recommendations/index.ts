@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { isWorkerRequest, rateLimit, requireUser } from "../_shared/guards.ts";
 
 import {
   buildIcpRecommendationSeeds,
@@ -24,10 +25,20 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    const { user_id } = await req.json();
+    const body = await req.json();
 
-    if (!user_id) {
-      throw new Error("user_id is required");
+    // Members refresh their own recommendations; only our own jobs may name
+    // another user_id.
+    let user_id: string;
+    if (await isWorkerRequest(req)) {
+      user_id = body?.user_id;
+      if (!user_id) throw new Error("user_id is required");
+    } else {
+      const auth = await requireUser(req);
+      if (auth.error) return auth.error;
+      user_id = auth.user.id;
+      const limited = await rateLimit(req, `generate-recommendations:${user_id}`, 6, user_id);
+      if (limited) return limited;
     }
 
     // Delete old/expired recommendations first

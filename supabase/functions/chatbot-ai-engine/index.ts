@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { checkAndDeductCredits, refundCredits } from '../_shared/credit-deduction.ts';
 import { CREDIT_COSTS } from '../_shared/credit-constants.ts';
 import { resolveCreditIdempotencyKey } from '../_shared/request-idempotency.ts';
+import { rateLimit, requireUser } from '../_shared/guards.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -32,12 +33,19 @@ serve(async (req) => {
   }
 
   try {
+    // The member comes from the session token, never from the body: a body
+    // userId used to load anyone's business context and charge their credits.
+    const auth = await requireUser(req);
+    if (auth.error) return auth.error;
+    const userId: string = auth.user.id;
+    const limited = await rateLimit(req, `chatbot-ai-engine:${userId}`, 20, userId);
+    if (limited) return limited;
+
     const { 
       message, 
       sessionId, 
       conversationHistory = [], 
       businessContext = {},
-      userId = null,
       chatMode = 'tour-guide' // 'tour-guide', 'wizard', or 'freeform'
     } = await req.json();
 
@@ -55,6 +63,7 @@ serve(async (req) => {
       .from('chatbot_conversations')
       .select('*')
       .eq('session_id', sessionId)
+      .eq('user_id', userId)
       .single();
 
     if (convError && convError.code === 'PGRST116') {
@@ -225,23 +234,23 @@ serve(async (req) => {
       });
 
     // Update conversation context and stage
-    const updatedContext = { ...updatedContext, chatMode };
-    const stage = determineConversationStage(updatedContext, conversationHistory.length);
+    const contextWithMode = { ...updatedContext, chatMode };
+    const stage = determineConversationStage(contextWithMode, conversationHistory.length);
     await supabase
       .from('chatbot_conversations')
       .update({
-        business_context: updatedContext,
+        business_context: contextWithMode,
         conversation_stage: stage,
         updated_at: new Date().toISOString()
       })
       .eq('id', conversation.id);
 
     // Generate quick actions based on context
-    const quickActions = generateQuickActions(stage, updatedContext);
+    const quickActions = generateQuickActions(stage, contextWithMode);
 
     return new Response(JSON.stringify({
       message: assistantMessage,
-      businessContext: updatedContext,
+      businessContext: contextWithMode,
       stage,
       quickActions,
       conversationId: conversation.id

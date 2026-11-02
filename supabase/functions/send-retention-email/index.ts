@@ -21,6 +21,21 @@ import {
 import { type CopySource, parseAiCopyMode, shouldUseAi } from "../_shared/retention-personalizer.ts";
 import { generatePersonalizedCopy } from "../_shared/retention-personalizer-client.ts";
 import { isServiceRoleToken } from "../_shared/service-caller.ts";
+import { rateLimit } from "../_shared/guards.ts";
+
+// The only sequences the app sends from a member's own browser.
+const MEMBER_SEQUENCES = new Set(["activation_day0", "exit_intent_reminder", "celebration"]);
+
+/** An absolute link on our own site, or undefined for anything else. */
+function appLink(url: string | undefined, appUrl: string): string | undefined {
+  if (!url) return undefined;
+  try {
+    const resolved = new URL(url, appUrl);
+    return resolved.origin === new URL(appUrl).origin ? resolved.toString() : undefined;
+  } catch {
+    return undefined;
+  }
+}
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -237,12 +252,12 @@ serve(async (req: Request): Promise<Response> => {
     const body: RetentionEmailRequest = await req.json();
     const {
       userId,
-      email,
+      email: requestedEmail,
       fullName,
       sequence,
       activationIntent,
       mentorName,
-      ctaUrl,
+      ctaUrl: requestedCtaUrl,
       ctaLabel,
       contextHeadline,
       savedMentorCount,
@@ -259,7 +274,7 @@ serve(async (req: Request): Promise<Response> => {
       replyCount,
     } = body;
 
-    if (!email || !sequence || !userId) {
+    if (!requestedEmail || !sequence || !userId) {
       return json({ error: "Missing required fields: userId, email, sequence" }, 400);
     }
 
@@ -269,6 +284,23 @@ serve(async (req: Request): Promise<Response> => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     const preferencesUrl = buildPreferencesUrl(appUrl);
+
+    // Our jobs (service role) may email any member. A signed-in member may only
+    // trigger the app-side sequences, to their own account email, with a link
+    // on our own site; anyone else is refused.
+    const callerToken = (req.headers.get("Authorization") || "").replace(/^Bearer\s+/i, "").trim();
+    const fromServer = isServiceRoleToken(callerToken, supabaseServiceKey);
+    let email = requestedEmail;
+    const ctaUrl = appLink(requestedCtaUrl, appUrl) ?? (fromServer ? requestedCtaUrl : undefined);
+    if (!fromServer) {
+      const caller = callerToken ? (await supabase.auth.getUser(callerToken)).data.user : null;
+      if (!caller || caller.id !== userId || !caller.email || !MEMBER_SEQUENCES.has(sequence)) {
+        return json({ ok: false, error: "Forbidden" }, 403);
+      }
+      const limited = await rateLimit(req, `send-retention-email:${userId}`, 3, userId);
+      if (limited) return limited;
+      email = caller.email;
+    }
 
     // Mentors are service providers offering their time on the platform, not
     // active founders. Exclude them from every retention sequence routed through
@@ -286,15 +318,6 @@ serve(async (req: Request): Promise<Response> => {
     }
 
     if (isInactiveSequence(sequence)) {
-      const authorization = req.headers.get("Authorization") || "";
-      const callerToken = authorization.replace(/^Bearer\s+/i, "").trim();
-      if (!isServiceRoleToken(callerToken, supabaseServiceKey)) {
-        const caller = callerToken ? await supabase.auth.getUser(callerToken) : null;
-        if (!caller?.data.user || caller.data.user.id !== userId) {
-          return json({ ok: false, error: "Forbidden" }, 403);
-        }
-      }
-
       const { data: settings, error: settingsError } = await supabase.from("retention_roadmap_settings")
         .select("*").eq("singleton", true).single();
 

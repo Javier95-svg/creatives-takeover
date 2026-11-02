@@ -1,6 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.55.0";
+import { isWorkerRequest, requireAdmin } from "../_shared/guards.ts";
 
 const corsHeaders: Record<string, string> = {
   "Access-Control-Allow-Origin": "*",
@@ -42,11 +43,13 @@ serve(async (req) => {
   }
 
   try {
-    if (RAG_INGEST_KEY && req.headers.get("x-rag-key") !== RAG_INGEST_KEY) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    // Writes to the shared knowledge base every member's answers draw on, so it
+    // fails closed: the ingest key, our own jobs, or an admin. An unset key used
+    // to let anyone write.
+    const keyMatches = Boolean(RAG_INGEST_KEY) && req.headers.get("x-rag-key") === RAG_INGEST_KEY;
+    if (!keyMatches && !(await isWorkerRequest(req))) {
+      const admin = await requireAdmin(req);
+      if (admin.error) return admin.error;
     }
 
     const body = await req.json() as IngestRequest;

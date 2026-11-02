@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { requireWorker } from "../_shared/guards.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -488,6 +489,10 @@ serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
+  // Scheduled job: only our own jobs may start it.
+  const refused = await requireWorker(req);
+  if (refused) return refused;
+
 
   try {
     const results: EvaluationResult[] = [];

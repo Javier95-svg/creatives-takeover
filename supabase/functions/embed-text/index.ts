@@ -1,5 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { requireMemberOrWorker } from '../_shared/guards.ts';
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 const EMBEDDING_MODEL = 'text-embedding-3-small';
@@ -29,6 +30,11 @@ serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
+
+  // Every call spends our AI or API quota: our own jobs, or a signed-in member
+  // within a per-minute limit.
+  const caller = await requireMemberOrWorker(req, 'embed-text', 30);
+  if (caller.error) return caller.error;
 
   try {
     const { texts, model = EMBEDDING_MODEL }: EmbedRequest = await req.json();

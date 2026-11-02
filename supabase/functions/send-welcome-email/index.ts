@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "npm:resend@2.0.0";
+import { rateLimit, requireUser } from "../_shared/guards.ts";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -36,7 +37,13 @@ serve(async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { email, fullName }: WelcomeRequest = await req.json();
+    // Sent right after sign-in, to the account's own address only.
+    const auth = await requireUser(req);
+    if (auth.error) return auth.error;
+    const limited = await rateLimit(req, `send-welcome-email:${auth.user.id}`, 2, auth.user.id);
+    if (limited) return limited;
+    const { fullName }: WelcomeRequest = await req.json();
+    const email = auth.user.email;
 
     if (!email) {
       return new Response(JSON.stringify({ error: "Missing 'email' in request body" }), {

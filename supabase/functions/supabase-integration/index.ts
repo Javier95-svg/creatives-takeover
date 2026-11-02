@@ -96,8 +96,11 @@ async function getServiceRoleKey(supabaseAdmin: any, connectionId: string): Prom
 }
 
 function extractProjectRef(projectUrl: string): string | null {
-  const match = projectUrl.match(/https?:\/\/([a-z0-9]+)\.supabase\.co/i);
-  return match ? match[1] : null;
+  // Anchored: the whole URL must be the project host. Unanchored, any URL that
+  // merely contained "<ref>.supabase.co" passed, and the customer's service key
+  // was then sent to it.
+  const match = projectUrl.match(/^https:\/\/([a-z0-9]{15,40})\.supabase\.co$/i);
+  return match ? match[1].toLowerCase() : null;
 }
 
 function normalizeProjectUrl(raw: string): string {
@@ -165,8 +168,9 @@ serve(async (req) => {
         return jsonResponse({ ok: false, error: "Project URL and Service Role Key are required." }, 400);
       }
 
-      const projectUrl = normalizeProjectUrl(rawUrl);
-      const projectRef = extractProjectRef(projectUrl);
+      const projectRef = extractProjectRef(normalizeProjectUrl(rawUrl));
+      // Only ever talk to the canonical project host, never the URL as typed.
+      const projectUrl = projectRef ? `https://${projectRef}.supabase.co` : "";
 
       if (!projectRef) {
         return jsonResponse({
@@ -218,7 +222,7 @@ serve(async (req) => {
         const key = await getServiceRoleKey(supabaseAdmin, connection.id);
         if (!key) throw new Error("Credentials missing. Please reconnect.");
 
-        const projectUrl = connection.supabase_account_id || `https://${connection.project_ref}.supabase.co`;
+        const projectUrl = `https://${connection.project_ref}.supabase.co`;
         await validateCredentials(projectUrl, key);
 
         await supabaseAdmin
@@ -265,13 +269,13 @@ serve(async (req) => {
     if (!key) return jsonResponse({ ok: false, error: "Credentials missing. Please reconnect Supabase." }, 401);
 
     if (action === "health") {
-      const projectUrl = connection.supabase_account_id || `https://${connection.project_ref}.supabase.co`;
+      const projectUrl = `https://${connection.project_ref}.supabase.co`;
       await validateCredentials(projectUrl, key);
       return jsonResponse({ ok: true });
     }
 
     if (action === "backend_snapshot") {
-      const projectUrl = connection.supabase_account_id || `https://${connection.project_ref}.supabase.co`;
+      const projectUrl = `https://${connection.project_ref}.supabase.co`;
       const projectRef = connection.project_ref;
 
       // Fetch what we can using the service role key directly against the project

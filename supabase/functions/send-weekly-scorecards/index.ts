@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.55.0";
+import { requireWorker } from "../_shared/guards.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -353,6 +354,10 @@ serve(async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
+  // Scheduled job: only our own jobs may start it.
+  const refused = await requireWorker(req);
+  if (refused) return refused;
+
 
   if (req.method !== "POST") {
     return jsonResponse({ error: "Method not allowed" }, 405);

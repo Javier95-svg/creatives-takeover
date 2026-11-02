@@ -1,4 +1,13 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { checkPublicUrl } from "../_shared/public-url-guard.ts";
+import { clientIp, rateLimit } from "../_shared/guards.ts";
+
+// Public newspaper pages call this for guests too, so instead of a sign-in it
+// only ever fetches LinkedIn: any other URL could point our server at internal
+// addresses or other sites.
+function isLinkedInHost(host: string): boolean {
+  return host === 'linkedin.com' || host.endsWith('.linkedin.com');
+}
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -11,7 +20,17 @@ serve(async (req) => {
   }
 
   try {
+    const limited = await rateLimit(req, `fetch-linkedin-metadata:${clientIp(req)}`, 30);
+    if (limited) return limited;
+
     const { linkedinUrl } = await req.json();
+    const checked = typeof linkedinUrl === 'string' ? checkPublicUrl(linkedinUrl) : null;
+    if (!checked?.ok || checked.url.protocol !== 'https:' || !isLinkedInHost(checked.url.hostname.toLowerCase())) {
+      return new Response(
+        JSON.stringify({ error: 'A linkedin.com post URL is required' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     if (!linkedinUrl) {
       return new Response(
@@ -21,11 +40,22 @@ serve(async (req) => {
     }
 
     // Fetch the LinkedIn post page to extract Open Graph metadata
-    const response = await fetch(linkedinUrl, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-      },
+    // Follow at most three redirects, each of which must stay on LinkedIn.
+    let target = checked.url;
+    let response = await fetch(target, {
+      redirect: 'manual',
+      headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
     });
+    for (let hop = 0; hop < 3 && response.status >= 300 && response.status < 400; hop += 1) {
+      const next = checkPublicUrl(new URL(response.headers.get('location') ?? '', target).toString());
+      if (!next.ok || next.url.protocol !== 'https:' || !isLinkedInHost(next.url.hostname.toLowerCase())) break;
+      await response.body?.cancel();
+      target = next.url;
+      response = await fetch(target, {
+        redirect: 'manual',
+        headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
+      });
+    }
 
     if (!response.ok) {
       throw new Error(`Failed to fetch LinkedIn post: ${response.status}`);

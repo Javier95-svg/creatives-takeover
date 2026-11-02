@@ -1,6 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { denied, requireUser, requireWorker } from '../_shared/guards.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -45,6 +46,32 @@ serve(async (req) => {
     const action = url.searchParams.get('action') || 'store';
 
     const body = await req.json();
+
+    // Summaries run from the nightly database job. Storing and reading memory is
+    // for the member who owns the chat session (projectId) and conversation.
+    if (action === 'summarize') {
+      const refused = await requireWorker(req);
+      if (refused) return refused;
+    } else {
+      const auth = await requireUser(req);
+      if (auth.error) return auth.error;
+      const { data: session } = await supabase
+        .from('chat_sessions')
+        .select('id')
+        .eq('id', body?.projectId ?? '')
+        .eq('user_id', auth.user.id)
+        .maybeSingle();
+      if (!session) return denied(req, 403, 'Forbidden');
+      if (body?.conversationId) {
+        const { data: conversation } = await supabase
+          .from('chatbot_conversations')
+          .select('id')
+          .eq('id', body.conversationId)
+          .eq('user_id', auth.user.id)
+          .maybeSingle();
+        if (!conversation) return denied(req, 403, 'Forbidden');
+      }
+    }
 
     switch (action) {
       case 'store':

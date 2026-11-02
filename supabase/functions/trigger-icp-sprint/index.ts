@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { isWorkerRequest, requireUser } from "../_shared/guards.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -55,8 +56,15 @@ serve(async (req: Request): Promise<Response> => {
     }
 
     const payload = (await req.json()) as TriggerPayload;
-    const userId = cleanString(payload.userId);
-    const email = cleanString(payload.email);
+    let userId = cleanString(payload.userId);
+    let email = cleanString(payload.email);
+    // A member can only schedule their own sprint, to their account's address.
+    if (!(await isWorkerRequest(req))) {
+      const auth = await requireUser(req);
+      if (auth.error) return auth.error;
+      userId = auth.user.id;
+      email = auth.user.email ?? "";
+    }
 
     if (!userId || !email) {
       return jsonResponse({ error: "Missing required fields: userId, email" }, 400);

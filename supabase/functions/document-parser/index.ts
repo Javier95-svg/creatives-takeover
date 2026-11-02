@@ -1,10 +1,14 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/middleware.ts";
+import { denied, requireUser } from "../_shared/guards.ts";
+
+const PARSEABLE_BUCKETS = new Set(["chatbot-attachments", "dashboard-files"]);
+const TARGET_TABLES = new Set(["chatbot_attachments", "dashboard_files"]);
 
 interface DocumentParseRequest {
   file_path: string;
-  user_id: string;
+  user_id?: string; // ignored: the caller comes from the session
   conversation_id?: string;
   bucket?: string;
   target_table?: "chatbot_attachments" | "dashboard_files";
@@ -33,12 +37,16 @@ serve(async (req) => {
   let parsedRequest: DocumentParseRequest | null = null;
 
   try {
-    parsedRequest = await req.json();
-    const { file_path, user_id, conversation_id, bucket, target_table, record_id } = parsedRequest;
+    const auth = await requireUser(req);
+    if (auth.error) return auth.error;
+    // The member is the session's user, never a user_id from the body.
+    const user_id = auth.user.id;
+    const request: DocumentParseRequest = await req.json();
+    const { file_path, conversation_id, bucket, target_table, record_id } = request;
 
-    if (!file_path || !user_id) {
+    if (!file_path) {
       return new Response(
-        JSON.stringify({ error: "file_path and user_id are required" }),
+        JSON.stringify({ error: "file_path is required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
@@ -49,6 +57,28 @@ serve(async (req) => {
 
     const bucketName = bucket || "chatbot-attachments";
     const targetTable = target_table || "chatbot_attachments";
+
+    // Only the caller's own uploads ({userId}/...) in the two upload buckets.
+    if (
+      !PARSEABLE_BUCKETS.has(bucketName) ||
+      !TARGET_TABLES.has(targetTable) ||
+      !file_path.startsWith(`${user_id}/`) ||
+      file_path.includes("..")
+    ) {
+      return denied(req, 403, "Forbidden");
+    }
+    if (targetTable === "dashboard_files" && record_id) {
+      const { data: owned } = await supabase.from("dashboard_files").select("id")
+        .eq("id", record_id).eq("user_id", user_id).maybeSingle();
+      if (!owned) return denied(req, 403, "Forbidden");
+    }
+    if (conversation_id) {
+      const { data: owned } = await supabase.from("chatbot_conversations").select("id")
+        .eq("id", conversation_id).eq("user_id", user_id).maybeSingle();
+      if (!owned) return denied(req, 403, "Forbidden");
+    }
+    // Set only once ownership is checked: the error path below updates this record.
+    parsedRequest = request;
 
     const { data: fileData, error: downloadError } = await supabase.storage
       .from(bucketName)

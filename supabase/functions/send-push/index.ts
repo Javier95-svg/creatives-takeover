@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import webpush from "npm:web-push@3.6.7";
+import { requireWorker } from "../_shared/guards.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -41,6 +42,9 @@ function json(body: unknown, status = 200) {
 serve(async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return json({ ok: false, error: "Method not allowed" }, 405);
+  // Pushes go out from the notifications trigger only, never on a caller's say-so.
+  const refused = await requireWorker(req);
+  if (refused) return refused;
 
   if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) {
     return json({ ok: false, error: "VAPID keys not configured" }, 500);

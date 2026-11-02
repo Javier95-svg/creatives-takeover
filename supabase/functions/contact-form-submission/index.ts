@@ -1,6 +1,8 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "npm:resend@2.0.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { clientIp, rateLimit } from "../_shared/guards.ts";
+import { escapeHtml } from "../_shared/email-voice.ts";
 
 // Initialize Supabase client with service role for database writes
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -79,8 +81,28 @@ const handler = async (req: Request): Promise<Response> => {
     
     console.log("[CONTACT-FORM] Resend client initialized successfully");
 
+    // Public form: a few submissions per minute per visitor, and per address
+    // that receives the confirmation copy.
+    const limited = await rateLimit(req, `contact-form:${clientIp(req)}`, 3);
+    if (limited) return limited;
+
     const formData: ContactFormData = await req.json();
-    const { name, email, role, reason, message } = formData;
+    const email = String(formData.email ?? "").trim();
+    if (email && !/^[^\s@<>"'&]+@[^\s@<>"'&]+\.[^\s@<>"'&]+$/.test(email)) {
+      return new Response(JSON.stringify({ error: "Please enter a valid email address", success: false }), {
+        status: 400,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
+    if (email) {
+      const perRecipient = await rateLimit(req, `contact-form-to:${email.toLowerCase()}`, 2);
+      if (perRecipient) return perRecipient;
+    }
+    // Everything the visitor typed is escaped before it reaches an email body.
+    const name = escapeHtml(String(formData.name ?? "").trim().slice(0, 120));
+    const role = escapeHtml(String(formData.role ?? "").slice(0, 80));
+    const reason = escapeHtml(String(formData.reason ?? "").slice(0, 80));
+    const message = escapeHtml(String(formData.message ?? "").slice(0, 5000));
 
     console.log("[CONTACT-FORM] Processing submission from:", email);
 

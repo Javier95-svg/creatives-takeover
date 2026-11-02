@@ -1,5 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "npm:resend@2.0.0";
+import { rateLimit, requireUser } from "../_shared/guards.ts";
+import { escapeHtml } from "../_shared/email-voice.ts";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -23,7 +25,15 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     console.log("[NOTIFY-ADMIN] Function started");
     
-    const { email, fullName, timestamp }: NotificationRequest = await req.json();
+    // New-signup notice: the signed-in account's own details, never the body's.
+    const auth = await requireUser(req);
+    if (auth.error) return auth.error;
+    const limited = await rateLimit(req, `notify-admin:${auth.user.id}`, 2, auth.user.id);
+    if (limited) return limited;
+    const body: NotificationRequest = await req.json();
+    const email = escapeHtml(auth.user.email ?? "");
+    const fullName = body.fullName ? escapeHtml(String(body.fullName).slice(0, 120)) : "";
+    const timestamp = new Date().toISOString();
     
     console.log("[NOTIFY-ADMIN] Processing notification for:", email);
 

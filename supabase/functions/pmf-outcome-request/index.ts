@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { Resend } from "npm:resend@2.0.0";
+import { requireWorker } from "../_shared/guards.ts";
 
 // Sends the "what happened with your idea?" outcome follow-up for PMF Lab and logs
 // it to retention_email_log (open/click are tracked by the existing resend-webhook).
@@ -44,6 +45,9 @@ serve(async (req) => {
   }
 
   try {
+    // Sent by the daily follow-up job (process_pmf_outcome_followups) only.
+    const refused = await requireWorker(req);
+    if (refused) return refused;
     const body: OutcomeRequest = await req.json();
     const { userId, email, analysisId } = body;
     const sequence = body.sequence === "pmf_outcome_60d" ? "pmf_outcome_60d" : "pmf_outcome_30d";

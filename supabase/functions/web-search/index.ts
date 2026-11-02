@@ -1,6 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { searchWeb } from "../_shared/web-research.ts";
+import { requireMemberOrWorker } from '../_shared/guards.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -71,6 +72,11 @@ serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
+
+  // Every call spends our AI or API quota: our own jobs, or a signed-in member
+  // within a per-minute limit.
+  const caller = await requireMemberOrWorker(req, 'web-search', 10);
+  if (caller.error) return caller.error;
 
   try {
     const payload: WebSearchRequest = await req.json();
