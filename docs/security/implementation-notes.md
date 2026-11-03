@@ -23,6 +23,9 @@ security changes in the main checkout. Nothing here has been deployed.
   committed application has no callers, but production traffic and Stripe
   reconciliation must be checked before deployment. The replacements have not
   been deployed or merged into `main`.
+- Removed direct user-message snippets and response previews from the chatbot
+  streaming function's diagnostic logs. Other edge loggers still need a
+  broader personal-data review.
 
 ## Evidence still needed before production actions
 

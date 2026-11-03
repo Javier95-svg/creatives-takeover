@@ -214,7 +214,7 @@ function matchTemplate(message: string, businessContext?: any): Template | null 
 function isBizMapPricingQuestion(message: string): boolean {
   const lowerMessage = message.toLowerCase();
   
-  logInfo('🔍 DEBUG: isBizMapPricingQuestion entry', { message: message.substring(0, 50) });
+  logInfo('🔍 DEBUG: isBizMapPricingQuestion entry', { messageLength: message.length });
   
   // Must contain service/platform references
   const serviceKeywords = ['bizmap', 'biz map', 'this service', 'this tool', 'this platform', 'this app', 'creatives takeover'];
@@ -474,12 +474,12 @@ serve(async (req) => {
 
     // 🚀 OPTIMIZATION: Check template match first (fastest path, synchronous, no crypto needed)
     // Skip for detailed business ideas
-    logInfo('🔍 DEBUG: Before template match', { message: message.substring(0, 50) });
+    logInfo('🔍 DEBUG: Before template match', { messageLength: message.length });
     const matchedTemplate = chatMode === 'pulse' ? null : matchTemplate(message, businessContext);
     logInfo('🔍 DEBUG: After template match', { 
       matched: !!matchedTemplate, 
       hasResponse: !!matchedTemplate?.response,
-      responsePreview: matchedTemplate?.response?.substring(0, 50) || 'NO RESPONSE'
+      hasResponse: Boolean(matchedTemplate?.response)
     });
     if (matchedTemplate) {
       // Determine which template type matched
@@ -493,9 +493,9 @@ serve(async (req) => {
       
       logInfo('Template match - returning instant response', { 
         messageLength: message.length,
-        templateType: matchedTemplate.response.substring(0, 50),
+        templateType,
         matchedPattern: templateType,
-        messagePreview: message.substring(0, 100)
+        messageLength: message.length
       });
       logInfo('🔍 DEBUG: Creating template stream', { templateType, responseLength: matchedTemplate.response.length });
       const templateResponse = matchedTemplate.response;
@@ -578,7 +578,7 @@ serve(async (req) => {
     
     // 🔍 SEARCH INTENT DETECTION: Classify query for routing
     const searchIntent = detectSearchIntent(message, businessContext, chatMode);
-    logInfo('Search intent detected', { searchIntent, messageLength: message.length });
+    logInfo('Search intent detected', { detected: Boolean(searchIntent), messageLength: message.length });
     
     // 🔀 HYBRID ROUTING: Detect if query needs knowledge base lookup
     const needsKnowledge = detectKnowledgeQuery(message, businessContext);
