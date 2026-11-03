@@ -24,6 +24,7 @@ Baseline: `bc4ff91`. Prepared in the isolated `codex/security-hardening-bc4ff91`
 - The repository's 410 replacements for `create-payment`, `verify-payment`, `sprint-commitment-manager`, and `signup-direct` deployed as fresh ACTIVE versions. Direct requests to all four URLs returned HTTP 410.
 - A read-only aggregate found zero purchase/refund and zero sprint credit transaction rows in the previous 30 days. This does not replace a Stripe payment reconciliation.
 - An unsigned Stripe webhook request returned 400. An unsigned Resend request returned **503 `Webhook unavailable`**: this code returns 503 when the runtime signing secret is missing or does not begin `whsec_`. The endpoint is fail closed but legitimate Resend events will also be rejected until the secret is corrected.
+- The follow-up dependency update applied compatible fixes and upgraded jsPDF, Fabric, pdfjs-dist and development jsdom. The lockfile now has **0 critical, 9 high, 22 moderate, 1 low** npm advisories. CI now blocks new critical advisories. The Vite build, typecheck, focused security tests, and lint gate passed. The full repository test suite still has failures in unrelated source-contract/page-output checks; it is not a passing release gate today.
 
 ## Release and production checks still required
 

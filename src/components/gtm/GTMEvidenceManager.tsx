@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { FileText, Link2, Plus, ShieldCheck, Trash2, Upload } from 'lucide-react';
-import * as pdfjs from 'pdfjs-dist/build/pdf.js';
-import pdfWorker from 'pdfjs-dist/build/pdf.worker.min.js?url';
+import * as pdfjs from 'pdfjs-dist';
+import pdfWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 import { toast } from 'sonner';
 
 import { Badge } from '@/components/ui/badge';
