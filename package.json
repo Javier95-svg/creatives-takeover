@@ -72,7 +72,7 @@
     "@types/mapbox-gl": "^3.4.1",
     "@vercel/analytics": "^1.5.0",
     "@vercel/og": "^0.11.1",
-    "@vercel/speed-insights": "^1.2.0",
+    "@vercel/speed-insights": "^2.0.0",
     "@webcontainer/api": "^1.6.4",
     "canvas-confetti": "^1.9.3",
     "class-variance-authority": "^0.7.1",
