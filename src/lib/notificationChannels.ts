@@ -24,6 +24,7 @@ export const SHARED_CHANNELS: readonly NotificationChannel[] = [
   { key: 'routine_in_app_enabled', label: 'Routine in-app reminders', description: 'Show routine nudges in the platform at your selected routine time.' },
   { key: 'routine_email_enabled', label: 'Routine email fallback', description: 'Email a recovery nudge after three inactive days, if your routine is enabled.' },
   { key: 'task_reminders', label: 'Task & deadline reminders', description: 'Heads-up when a task is due or overdue.' },
+  { key: 'daily_task_plan_email_enabled', label: 'Daily task-plan email', description: 'Email me my first task each morning when a plan is ready.' },
   { key: 'retention_emails', label: 'Progress & re-engagement emails', description: 'Weekly progress and occasional come-back nudges by email.' },
   { key: 'product_updates', label: 'Product updates', description: 'Major new features and announcements.' },
 ];

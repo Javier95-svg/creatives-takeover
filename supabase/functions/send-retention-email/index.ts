@@ -22,20 +22,10 @@ import { type CopySource, parseAiCopyMode, shouldUseAi } from "../_shared/retent
 import { generatePersonalizedCopy } from "../_shared/retention-personalizer-client.ts";
 import { isServiceRoleToken } from "../_shared/service-caller.ts";
 import { rateLimit } from "../_shared/guards.ts";
+import { appLink } from "../_shared/retention-cta-url.ts";
 
 // The only sequences the app sends from a member's own browser.
 const MEMBER_SEQUENCES = new Set(["activation_day0", "exit_intent_reminder", "celebration"]);
-
-/** An absolute link on our own site, or undefined for anything else. */
-function appLink(url: string | undefined, appUrl: string): string | undefined {
-  if (!url) return undefined;
-  try {
-    const resolved = new URL(url, appUrl);
-    return resolved.origin === new URL(appUrl).origin ? resolved.toString() : undefined;
-  } catch {
-    return undefined;
-  }
-}
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -291,7 +281,9 @@ serve(async (req: Request): Promise<Response> => {
     const callerToken = (req.headers.get("Authorization") || "").replace(/^Bearer\s+/i, "").trim();
     const fromServer = isServiceRoleToken(callerToken, supabaseServiceKey);
     let email = requestedEmail;
-    const ctaUrl = appLink(requestedCtaUrl, appUrl) ?? (fromServer ? requestedCtaUrl : undefined);
+    // Server jobs can make mistakes too. Keep every retention-email CTA on
+    // the configured app origin instead of forwarding an arbitrary host.
+    const ctaUrl = appLink(requestedCtaUrl, appUrl);
     if (!fromServer) {
       const caller = callerToken ? (await supabase.auth.getUser(callerToken)).data.user : null;
       if (!caller || caller.id !== userId || !caller.email || !MEMBER_SEQUENCES.has(sequence)) {

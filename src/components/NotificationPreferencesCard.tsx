@@ -23,6 +23,7 @@ const DEFAULTS: Prefs = {
   ...Object.fromEntries(allNotificationChannelKeys().map((key) => [key, true])),
   push_enabled: true,
   routine_reminders: true,
+  daily_task_plan_email_enabled: false,
   investor_updates: false,
 };
 
