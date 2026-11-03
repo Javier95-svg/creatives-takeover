@@ -16,13 +16,22 @@ Baseline: `bc4ff91`. Prepared in the isolated `codex/security-hardening-bc4ff91`
 - Full `npm run lint -- --quiet` passed after correcting one pre-existing constant-condition error in `ProfileSupportSection.tsx` without enabling the hidden panel. The full lint report still contains many warnings.
 - `git diff --check` passed.
 
+## Production evidence after release
+
+- Commit `96270c7e` was fast-forwarded to `main`; Vercel reported a successful status for that commit.
+- A read-only production query confirmed `admin@creatives-takeover.com` has an `admin` row in `user_roles`.
+- `stripe-webhook`, `resend-webhook`, `demo-studio-lead`, `demo-studio-webhook-retry`, `discovery-call-service`, and `waitlist-public-api` deployed as fresh ACTIVE versions.
+- The repository's 410 replacements for `create-payment`, `verify-payment`, `sprint-commitment-manager`, and `signup-direct` deployed as fresh ACTIVE versions. Direct requests to all four URLs returned HTTP 410.
+- A read-only aggregate found zero purchase/refund and zero sprint credit transaction rows in the previous 30 days. This does not replace a Stripe payment reconciliation.
+- An unsigned Stripe webhook request returned 400. An unsigned Resend request returned **503 `Webhook unavailable`**: this code returns 503 when the runtime signing secret is missing or does not begin `whsec_`. The endpoint is fail closed but legitimate Resend events will also be rejected until the secret is corrected.
+
 ## Release and production checks still required
 
-1. Confirm the production admin account has a row with `role = 'admin'` in `public.user_roles` before deploying the new admin route or discovery-call service.
-2. The Resend dashboard lists `resend-webhook`, `discovery-call-resend-webhook`, and the website homepage. Confirm the two function endpoints have separate signing secrets in `RESEND_WEBHOOK_SECRET` and `DISCOVERY_CALL_RESEND_WEBHOOK_SECRET`. `resend-email-events` is not configured and need not be deployed. Remove or correct the homepage webhook in the Resend dashboard. Send a signed test event and verify a forged event returns 401.
-3. Confirm the Stripe signing secret is present and send a signed test event. Reconcile recent Stripe payments against credit transactions and check live traffic before deploying the three repository 410 replacements for `create-payment`, `verify-payment`, and `sprint-commitment-manager`.
+1. Correct the production `RESEND_WEBHOOK_SECRET` from the signing secret for the configured `resend-webhook` endpoint. The owner reported both Resend endpoint secrets are configured, but the live 503 contradicts that for this variable. The Resend dashboard also lists `discovery-call-resend-webhook` and the website homepage; remove or correct the homepage webhook. `resend-email-events` is not configured and was not deployed. Send a signed test event and verify a forged event returns 401.
+2. Send a signed Stripe test event. Reconcile recent Stripe payments against credit transactions and review legacy function traffic, including any in-flight payments from before the three 410 replacements.
+3. Check the production Supabase email-confirmation setting and test a new unconfirmed account. The old `signup-direct` URL now returns 410.
 4. Take a restorable backup of database **and Storage objects** before applying `20261103100000_restrict_private_upload_buckets.sql`. Confirm the migration in production and test an allowed and disallowed upload in both buckets.
-5. Run two ordinary account tests for credits, RPCs, private files, and admin functions. Confirm an unverified signup cannot sign in and `signup-direct` returns 410.
+5. Run two ordinary account tests for credits, RPCs, private files, and admin functions.
 6. Restore GitHub Actions billing, run CI and Gitleaks history scan to completion, review alerts privately, and configure required checks and branch rules. Triage dependency advisories before adding a blocking audit gate.
 
 ## Object backup destination
