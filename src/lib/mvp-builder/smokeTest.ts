@@ -34,6 +34,7 @@ export async function runMvpBrowserSmokeTest(preview: MVPPreviewResult): Promise
       resolve(result);
     };
     const onMessage = (event: MessageEvent) => {
+      if (event.source !== iframe.contentWindow || event.origin !== 'null') return;
       const data = event.data as { type?: string; token?: string; found?: boolean; triggered?: boolean; errors?: string[] };
       if (data?.type !== 'ct-mvp-smoke' || data.token !== token) return;
       const errors = Array.isArray(data.errors) ? data.errors.filter(Boolean) : [];

@@ -8,6 +8,7 @@ import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Progress } from '@/components/ui/progress';
 import { CollaborationFile } from '@/hooks/useInteractiveCollaboration';
+import { COLLABORATION_FILE_MIME_TYPES, isAllowedCollaborationFile } from '@/lib/collaborationFilePolicy';
 import { 
   Upload, 
   File, 
@@ -64,6 +65,11 @@ export const SharedFileManager: React.FC<SharedFileManagerProps> = ({
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
+    if (!isAllowedCollaborationFile(file)) {
+      toast({ title: 'Unsupported file', description: 'Use an image or document up to 20 MB.', variant: 'destructive' });
+      event.target.value = '';
+      return;
+    }
 
     setUploading(true);
     setUploadProgress(0);
@@ -308,6 +314,7 @@ export const SharedFileManager: React.FC<SharedFileManagerProps> = ({
         <input
           ref={fileInputRef}
           type="file"
+          accept={COLLABORATION_FILE_MIME_TYPES.join(',')}
           className="hidden"
           onChange={handleFileUpload}
           onClick={() => setShowUploadForm(true)}

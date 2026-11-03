@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { Resend } from "npm:resend@2.0.0";
 import { getUserFromAuth } from "../_shared/credit-deduction.ts";
 import { emitBusinessEvent } from "../_shared/analytics.ts";
+import { checkPublicWebhookUrl } from "../_shared/public-url-guard.ts";
 
 // Public endpoint: the public launch page (a logged-out visitor) submits a signup.
 // verify_jwt stays true — supabase-js attaches the anon JWT for anonymous callers,
@@ -43,23 +44,16 @@ function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
-function isValidHttpUrl(value: string): boolean {
-  try {
-    const url = new URL(value);
-    return url.protocol === "http:" || url.protocol === "https:";
-  } catch {
-    return false;
-  }
-}
-
 /** POST a JSON payload to a user-configured webhook. Never throws. */
 async function dispatchWebhook(url: string, payload: unknown): Promise<{ ok: boolean; status?: number; error?: string }> {
-  if (!url || !isValidHttpUrl(url)) return { ok: false, error: "invalid_url" };
+  const checked = await checkPublicWebhookUrl(url);
+  if (!checked.ok) return { ok: false, error: "invalid_url" };
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), WEBHOOK_TIMEOUT_MS);
   try {
-    const res = await fetch(url, {
+    const res = await fetch(checked.url, {
       method: "POST",
+      redirect: "manual",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
       signal: controller.signal,
@@ -181,7 +175,7 @@ serve(async (req) => {
         return json({ success: false, error: "Not authorized for this project." }, 403);
       }
       const url = (body.webhookUrl || "").trim();
-      if (!isValidHttpUrl(url)) return json({ success: false, error: "Enter a valid https webhook URL." }, 400);
+      if (!(await checkPublicWebhookUrl(url)).ok) return json({ success: false, error: "Enter a valid public HTTPS webhook URL." }, 400);
       const result = await dispatchWebhook(url, {
         test: true,
         projectId,

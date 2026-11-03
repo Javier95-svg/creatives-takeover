@@ -71,6 +71,26 @@ export function isPrivateAddress(address: string): boolean {
   return false;
 }
 
+/** Refuse webhook destinations that are not HTTPS public hosts. */
+export async function checkPublicWebhookUrl(input: string): Promise<PublicUrlCheck> {
+  const checked = checkPublicUrl(input);
+  if (!checked.ok) return checked;
+  if (checked.url.protocol !== 'https:') return { ok: false, reason: 'Webhooks require HTTPS.' };
+
+  const addresses: string[] = [];
+  for (const type of ['A', 'AAAA'] as const) {
+    try {
+      addresses.push(...(await Deno.resolveDns(checked.url.hostname, type)));
+    } catch {
+      // A host may have only one address family; fail if neither resolves.
+    }
+  }
+  if (!addresses.length || addresses.some(isPrivateAddress)) {
+    return { ok: false, reason: 'Webhook host must resolve to a public address.' };
+  }
+  return checked;
+}
+
 /** Visible text of an HTML page, without scripts, styles or tags. */
 export function htmlToText(html: string): { title: string; description: string; text: string } {
   const decode = (value: string) => value

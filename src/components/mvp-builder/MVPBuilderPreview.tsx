@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   RefreshCw,
   Download,
@@ -194,6 +194,8 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({
   // Publish opens the check first (see MVPBuilderPublishCheckDialog).
   const [publishCheckOpen, setPublishCheckOpen] = useState(false);
   const [webContainerState, setWebContainerState] = useState<MVPWebContainerState>(INITIAL_WEB_CONTAINER_STATE);
+  const webContainerFrameRef = useRef<HTMLIFrameElement>(null);
+  const htmlFrameRef = useRef<HTMLIFrameElement>(null);
 
   useEffect(() => {
     if (!isGenerating) {
@@ -221,6 +223,15 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({
 
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
+      const fromHtmlPreview = event.source === htmlFrameRef.current?.contentWindow && event.origin === 'null';
+      let previewOrigin: string | null = null;
+      try {
+        if (webContainerState.previewUrl) previewOrigin = new URL(webContainerState.previewUrl).origin;
+      } catch {
+        // A malformed preview URL must not break message handling.
+      }
+      const fromWebContainer = event.source === webContainerFrameRef.current?.contentWindow && event.origin === previewOrigin;
+      if (!fromHtmlPreview && !fromWebContainer) return;
       const payload = event.data;
       if (!payload || payload.source !== 'ct-mvp-builder-runtime') return;
 
@@ -251,7 +262,7 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({
 
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
-  }, []);
+  }, [webContainerState.previewUrl]);
 
   const htmlEntryOptions = useMemo(
     () => projectFiles.filter((file) => file.path.toLowerCase().endsWith('.html')),
@@ -625,6 +636,7 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({
                 <div className="flex h-full w-full flex-col bg-black text-muted-foreground">
                   {webContainerState.previewUrl ? (
                     <iframe
+                      ref={webContainerFrameRef}
                       key={`${previewKey}-${webContainerState.previewUrl}`}
                       title="MVP Builder WebContainer Preview"
                       src={webContainerState.previewUrl}
@@ -737,6 +749,7 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({
                 )}
 
                 <iframe
+                  ref={htmlFrameRef}
                   key={previewKey}
                   srcDoc={previewHtml}
                   sandbox="allow-scripts allow-forms allow-modals allow-popups"

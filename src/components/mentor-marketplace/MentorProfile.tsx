@@ -17,12 +17,16 @@ import { useDiscoveryCallsFeature } from "@/hooks/useDiscoveryCallsFeature";
 import { useMentorPodcastEpisode } from "@/hooks/useMentorPodcastEpisode";
 import MentorInterviewBanner from "@/components/mentor-marketplace/MentorInterviewBanner";
 import { generateMentorSlug } from "@/utils/mentorSlug";
+import { normalizePostUrl } from "@/lib/postLinks";
 
 interface MentorProfileProps {
   mentor: MentorProfileType;
 }
 
 export const MentorProfile = ({ mentor }: MentorProfileProps) => {
+  const linkedinUrl = normalizePostUrl(mentor.linkedin_url ?? '');
+  const twitterUrl = normalizePostUrl(mentor.twitter_x_url ?? '');
+  const websiteUrl = normalizePostUrl(mentor.website_url ?? '');
   const navigate = useNavigate();
   const { isAuthenticated, user } = useAuth();
   const { episode: interviewEpisode } = useMentorPodcastEpisode(generateMentorSlug(mentor.name));
@@ -395,9 +399,9 @@ export const MentorProfile = ({ mentor }: MentorProfileProps) => {
                     {countryFlag}
                   </span>
                 )}
-                {mentor.linkedin_url && (
+                {linkedinUrl && (
                   <a
-                    href={mentor.linkedin_url}
+                    href={linkedinUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex h-5 w-5 items-center justify-center text-muted-foreground transition-colors hover:text-info hover:scale-110 sm:h-auto sm:w-auto"
@@ -406,9 +410,9 @@ export const MentorProfile = ({ mentor }: MentorProfileProps) => {
                     <Linkedin className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6" />
                   </a>
                 )}
-                {mentor.twitter_x_url && (
+                {twitterUrl && (
                   <a
-                    href={mentor.twitter_x_url}
+                    href={twitterUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex h-5 w-5 items-center justify-center text-muted-foreground transition-colors hover:text-foreground hover:scale-110 sm:h-auto sm:w-auto"
@@ -419,9 +423,9 @@ export const MentorProfile = ({ mentor }: MentorProfileProps) => {
                     </svg>
                   </a>
                 )}
-                {mentor.website_url && (
+                {websiteUrl && (
                   <a
-                    href={mentor.website_url}
+                    href={websiteUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex h-5 w-5 items-center justify-center text-muted-foreground transition-colors hover:text-primary hover:scale-110 sm:h-auto sm:w-auto"

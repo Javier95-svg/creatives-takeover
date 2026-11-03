@@ -26,6 +26,8 @@ import { cn } from '@/lib/utils';
 import { ProfileShareButton } from './ProfileShareButton';
 
 const AccountSignupDialog = lazy(() => import('@/components/auth/AccountSignupDialog'));
+// Keep the legacy provider-link panel hidden until the support flow is re-enabled.
+const SHOW_PROVIDER_LINK_PANEL = false;
 
 interface Props {
   username: string;
@@ -343,7 +345,7 @@ export function ProfileSupportSection({ username, name, startupName, productUrl,
             Payment is completed on the user’s external support links.
           </p>
           </>}
-          {false && <>
+          {SHOW_PROVIDER_LINK_PANEL && <>
             {canShowProviderLink ? (
               <>
                 <div>

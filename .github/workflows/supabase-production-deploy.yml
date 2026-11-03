@@ -33,7 +33,7 @@ jobs:
       contents: read
     steps:
       - name: Check out the reviewed commit
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 2
 
@@ -48,7 +48,7 @@ jobs:
           test "${#LEDGER_RECORD}" -ge 8
 
       - name: Install pinned Supabase CLI
-        uses: supabase/setup-cli@v1
+        uses: supabase/setup-cli@1dedf2c611547ede7232d26866dd3c56ab903bbb # v1
         with:
           version: 2.98.2
 
@@ -135,7 +135,7 @@ jobs:
 
       - name: Upload sanitized release evidence
         if: ${{ always() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: supabase-production-${{ github.sha }}
           path: |

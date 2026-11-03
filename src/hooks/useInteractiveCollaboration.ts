@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { RealtimeChannel } from '@supabase/supabase-js';
+import { isAllowedCollaborationFile } from '@/lib/collaborationFilePolicy';
 
 export interface CollaborationWhiteboard {
   id: string;
@@ -334,6 +335,8 @@ export const useInteractiveCollaboration = (sessionId: string) => {
   // Upload file
   const uploadFile = useCallback(async (file: File, description?: string, tags: string[] = [], isPublic = false) => {
     if (!user || !sessionId) return;
+
+    if (!isAllowedCollaborationFile(file)) return null;
 
     try {
       // Upload to Supabase Storage

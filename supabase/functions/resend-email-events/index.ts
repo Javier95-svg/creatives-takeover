@@ -1,9 +1,10 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { verifyResendWebhook } from "../_shared/resend-webhook-verification.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-resend-webhook-secret",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, svix-id, svix-timestamp, svix-signature",
 };
 
 type NotificationStatus = "pending" | "sending" | "sent" | "failed" | "skipped";
@@ -152,21 +153,9 @@ serve(async (req: Request): Promise<Response> => {
       });
     }
 
-    if (webhookSecret) {
-      const urlSecret = new URL(req.url).searchParams.get("secret");
-      const headerSecret = req.headers.get("x-resend-webhook-secret");
-      const authorized = urlSecret === webhookSecret || headerSecret === webhookSecret;
-      if (!authorized) {
-        console.warn("[RESEND-EVENTS] Unauthorized webhook request");
-        return new Response(JSON.stringify({ ok: false, error: "Unauthorized" }), {
-          status: 401,
-          headers: { "Content-Type": "application/json", ...corsHeaders },
-        });
-      }
-    }
-
-    const payload = await req.json();
-    const normalized = normalizeEvent(payload);
+    const verified = await verifyResendWebhook(req, webhookSecret);
+    if (!verified.ok) return verified.response;
+    const normalized = normalizeEvent(verified.payload);
     if (!normalized) {
       return new Response(JSON.stringify({ ok: false, error: "Invalid webhook payload" }), {
         status: 400,

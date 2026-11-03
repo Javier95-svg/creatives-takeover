@@ -11,6 +11,7 @@ import {
 } from '@/lib/waitlist';
 import { SortableList } from '@/components/ui/sortable-list';
 import { getWaitlistTemplateRenderConfig } from '@/lib/waitlistTemplateRender';
+import { normalizePostUrl } from '@/lib/postLinks';
 
 export type { WaitlistContent } from '@/lib/waitlist';
 export type SignupData = WaitlistSignupPayload;
@@ -424,6 +425,9 @@ export default function WaitlistPageTemplate({
   const editable = mode === 'preview';
   const change = onContentChange ?? (() => undefined);
   const normalized = normalizeWaitlistContent(content, productName);
+  const socialWebsite = normalizePostUrl(normalized.socialLinks?.website ?? '');
+  const socialX = normalizePostUrl(normalized.socialLinks?.x ?? '');
+  const socialLinkedin = normalizePostUrl(normalized.socialLinks?.linkedin ?? '');
   const [heroFormState, setHeroFormState] = useState<WaitlistFormState>(() => createInitialFormState(normalized.referralMessage));
   const [footerFormState, setFooterFormState] = useState<WaitlistFormState>(() => createInitialFormState(normalized.referralMessage));
 
@@ -1070,11 +1074,11 @@ export default function WaitlistPageTemplate({
           <p className="mt-2 text-sm" style={{ color: palette.textSecondary }}>{normalized.referralMessage}</p>
           <div className="mt-6">{renderFormSection('waitlist-footer-form')}</div>
 
-          {normalized.socialLinks && (normalized.socialLinks.website || normalized.socialLinks.x || normalized.socialLinks.linkedin) ? (
+          {socialWebsite || socialX || socialLinkedin ? (
             <div className="mt-6 flex justify-center gap-4 text-xs">
-              {normalized.socialLinks.website ? <a href={normalized.socialLinks.website} target="_blank" rel="noreferrer" className="underline">Website</a> : null}
-              {normalized.socialLinks.x ? <a href={normalized.socialLinks.x} target="_blank" rel="noreferrer" className="underline">X</a> : null}
-              {normalized.socialLinks.linkedin ? <a href={normalized.socialLinks.linkedin} target="_blank" rel="noreferrer" className="underline">LinkedIn</a> : null}
+              {socialWebsite ? <a href={socialWebsite} target="_blank" rel="noopener noreferrer" className="underline">Website</a> : null}
+              {socialX ? <a href={socialX} target="_blank" rel="noopener noreferrer" className="underline">X</a> : null}
+              {socialLinkedin ? <a href={socialLinkedin} target="_blank" rel="noopener noreferrer" className="underline">LinkedIn</a> : null}
             </div>
           ) : null}
         </div>

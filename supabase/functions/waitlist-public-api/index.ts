@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.55.0";
 import { Resend } from "npm:resend@2.0.0";
+import { checkPublicWebhookUrl } from "../_shared/public-url-guard.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -194,14 +195,17 @@ async function sendWebhook(page: WaitlistPageRow, payload: Record<string, unknow
   const url = sanitizeText(page.webhook_url);
   if (!url) return;
 
-  if (!/^https?:\/\//i.test(url)) {
-    console.warn("[waitlist-public-api] Skipping webhook with invalid URL", { url });
+  const checked = await checkPublicWebhookUrl(url);
+  if (!checked.ok) {
+    console.warn("[waitlist-public-api] Skipping webhook with invalid URL");
     return;
   }
 
   try {
-    await fetch(url, {
+    await fetch(checked.url, {
       method: "POST",
+      redirect: "manual",
+      signal: AbortSignal.timeout(5000),
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });

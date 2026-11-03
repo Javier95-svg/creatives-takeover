@@ -1,8 +1,7 @@
 import { type ReactNode } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-
-const ADMIN_EMAIL = "admin@creatives-takeover.com";
+import { useAdminRole } from "@/hooks/useAdminRole";
 
 /**
  * Gate for the /admin surfaces.
@@ -19,9 +18,10 @@ const ADMIN_EMAIL = "admin@creatives-takeover.com";
  */
 const AdminRoute = ({ children }: { children: ReactNode }) => {
   const { user, loading } = useAuth();
+  const { isAdmin, loading: roleLoading } = useAdminRole();
   const location = useLocation();
 
-  if (loading) {
+  if (loading || (user && roleLoading)) {
     return (
       <div role="status" aria-live="polite" className="flex min-h-screen items-center justify-center text-muted-foreground">
         Checking access…
@@ -36,7 +36,7 @@ const AdminRoute = ({ children }: { children: ReactNode }) => {
     return <Navigate to={`/login?return=${encodeURIComponent(returnPath)}`} replace />;
   }
 
-  if (user.email?.toLowerCase() !== ADMIN_EMAIL) {
+  if (!isAdmin) {
     return <Navigate to="/" replace />;
   }
 

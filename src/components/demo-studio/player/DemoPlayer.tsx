@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 import { submitDemoResponse, trackDemoEvent } from '@/lib/demoStudio/events';
 import { createLaunchSignup } from '@/lib/demoStudio/api';
 import { resolveGotoTarget } from '@/lib/demoStudio/readiness';
+import { normalizePostUrl } from '@/lib/postLinks';
 import SnapshotFrame from '@/components/demo-studio/SnapshotFrame';
 import type { DemoStepWithHotspots, DemoStudioHotspot, DemoTheme } from '@/lib/demoStudio/types';
 
@@ -82,7 +83,10 @@ export default function DemoPlayer({
   const total = steps.length;
   const current = steps[index];
   const resolvedCtaLabel = ctaLabel || theme?.endCtaLabel || 'Get started';
-  const resolvedCtaHref = ctaHref || theme?.endCtaHref || null;
+  const rawCtaHref = ctaHref || theme?.endCtaHref || null;
+  const resolvedCtaHref = rawCtaHref?.startsWith('/') && !rawCtaHref.startsWith('//')
+    ? rawCtaHref
+    : rawCtaHref ? normalizePostUrl(rawCtaHref) : null;
   const demoGoal = theme?.demoGoal ?? 'collect_signups';
 
   const sendResponse = async (response: 'interested' | 'not_for_me' | 'book_call' | 'commitment') => {
@@ -139,7 +143,8 @@ export default function DemoPlayer({
   const handleHotspot = useCallback(
     (hotspot: DemoStudioHotspot) => {
       if (hotspot.action === 'url' && hotspot.action_target) {
-        window.open(hotspot.action_target, '_blank', 'noopener,noreferrer');
+        const safeUrl = normalizePostUrl(hotspot.action_target);
+        if (safeUrl) window.open(safeUrl, '_blank', 'noopener,noreferrer');
         return;
       }
       if (hotspot.action === 'goto' && hotspot.action_target) {

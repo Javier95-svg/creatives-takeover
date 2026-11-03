@@ -10,7 +10,7 @@
 export const config = { runtime: 'edge' };
 
 import { ImageResponse } from '@vercel/og';
-import { isUsableImage, monogram, truncate } from './_og-image';
+import { loadSafeImageDataUrl, monogram, truncate } from './_og-image';
 import { FounderIdCard } from './_founder-id-card';
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL ?? 'https://rcjlaybjnozqbsoxzboa.supabase.co';
@@ -88,13 +88,13 @@ export default async function handler(request: Request) {
   // A Founder ID shows its short link, the one people type or paste.
   const linkText = founderId && profile ? `creatives-takeover.com/@${profile.username}` : 'creatives-takeover.com';
   const line = truncate(profile?.startup_tagline?.trim() || profile?.positioning_line?.trim() || '', 140);
-  const showAvatar = await isUsableImage(profile?.avatar_url);
+  const safeAvatar = await loadSafeImageDataUrl(profile?.avatar_url);
   const nameSize = name.length > 28 ? 58 : 70;
 
   if (founderId && profile) {
     return new ImageResponse(
       <FounderIdCard name={name} username={profile.username} founderNumber={profile.founder_number}
-        tagline={line} avatarUrl={showAvatar ? profile.avatar_url : null} stage={profile.stage} />,
+        tagline={line} avatarUrl={safeAvatar} stage={profile.stage} />,
       { width: 1200, height: 630 },
     );
   }
@@ -139,9 +139,9 @@ export default async function handler(request: Request) {
         ) : null}
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '28px', marginBottom: '40px' }}>
-          {showAvatar && profile?.avatar_url ? (
+          {safeAvatar ? (
             <img
-              src={profile.avatar_url}
+              src={safeAvatar}
               width={132}
               height={132}
               style={{ borderRadius: '66px', objectFit: 'cover', border: '3px solid rgba(255,255,255,0.18)' }}

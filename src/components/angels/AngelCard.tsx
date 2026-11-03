@@ -5,6 +5,7 @@ import { AngelInvestor } from "@/types/angel";
 import { Linkedin, Globe, Building2, Mail, Twitter } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { storageImageUrl } from "@/lib/storageImage";
+import { normalizePostUrl } from "@/lib/postLinks";
 
 interface AngelCardProps {
   angel: AngelInvestor;
@@ -30,6 +31,9 @@ const getStageColor = (stage: string): string => {
 };
 
 export const AngelCard = ({ angel, className, priority = false }: AngelCardProps) => {
+  const linkedinUrl = normalizePostUrl(angel.linkedin_url ?? '');
+  const twitterUrl = normalizePostUrl(angel.twitter_x_url ?? '');
+  const websiteUrl = normalizePostUrl(angel.website_url ?? '');
   return (
     <Card className={cn(
       "border-2 border-border/60 rounded-lg hover:shadow-lg hover:-translate-y-1 transition-all duration-300 bg-background",
@@ -102,7 +106,7 @@ export const AngelCard = ({ angel, className, priority = false }: AngelCardProps
             )}
 
             {/* Social Links */}
-            {(angel.email || angel.website_url || angel.linkedin_url || angel.twitter_x_url) && (
+            {(angel.email || websiteUrl || linkedinUrl || twitterUrl) && (
               <div className="flex items-center gap-4 pt-1">
                 {angel.email && (
                   <a
@@ -114,9 +118,9 @@ export const AngelCard = ({ angel, className, priority = false }: AngelCardProps
                     <span className="hidden sm:inline">Email</span>
                   </a>
                 )}
-                {angel.linkedin_url && (
+                {linkedinUrl && (
                   <a
-                    href={angel.linkedin_url}
+                    href={linkedinUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-info transition-colors"
@@ -126,9 +130,9 @@ export const AngelCard = ({ angel, className, priority = false }: AngelCardProps
                     <span className="hidden sm:inline">LinkedIn</span>
                   </a>
                 )}
-                {angel.twitter_x_url && (
+                {twitterUrl && (
                   <a
-                    href={angel.twitter_x_url}
+                    href={twitterUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
@@ -138,9 +142,9 @@ export const AngelCard = ({ angel, className, priority = false }: AngelCardProps
                     <span className="hidden sm:inline">X</span>
                   </a>
                 )}
-                {angel.website_url && (
+                {websiteUrl && (
                   <a
-                    href={angel.website_url}
+                    href={websiteUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors"

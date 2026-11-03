@@ -63,7 +63,14 @@ serve(async (req) => {
 
   const body = await req.json().catch(() => ({})) as Body;
   const action = typeof body.action === "string" ? body.action : "";
-  const isAdmin = user.email?.toLowerCase() === "admin@creatives-takeover.com";
+  const { data: adminRole, error: adminRoleError } = await admin
+    .from("user_roles")
+    .select("id")
+    .eq("user_id", user.id)
+    .eq("role", "admin")
+    .maybeSingle();
+  if (adminRoleError) return json({ success: false, error: "Unable to verify permissions" }, 503);
+  const isAdmin = Boolean(adminRole);
 
   if (["createIntent", "confirmBooking", "finalizeBooking", "manualConfirmBooking"].includes(action)) {
     return json({ success: false, errorCode: "FEATURE_RETIRED", error: "This provider-based booking action has been retired." }, 410);

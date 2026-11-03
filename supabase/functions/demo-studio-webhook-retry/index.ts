@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { requireWorker } from "../_shared/guards.ts";
+import { checkPublicWebhookUrl } from "../_shared/public-url-guard.ts";
 
 // Cron-invoked (pg_cron via pg_net) — verify_jwt=false. Retries failed Demo Studio
 // webhook deliveries with exponential backoff and gives up at max_attempts. Only our
@@ -20,11 +21,14 @@ function nextAttemptAt(attempts: number): string {
 }
 
 async function postWebhook(url: string, payload: unknown): Promise<{ ok: boolean; status?: number; error?: string }> {
+  const checked = await checkPublicWebhookUrl(url);
+  if (!checked.ok) return { ok: false, error: "invalid_url" };
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), WEBHOOK_TIMEOUT_MS);
   try {
-    const res = await fetch(url, {
+    const res = await fetch(checked.url, {
       method: "POST",
+      redirect: "manual",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
       signal: controller.signal,

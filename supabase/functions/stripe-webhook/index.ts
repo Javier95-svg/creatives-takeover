@@ -1610,6 +1610,11 @@ async function handlePaymentFailure(
 }
 
 serve(async (req) => {
+  if (!webhookSecret) {
+    console.error("[Webhook] STRIPE_WEBHOOK_SECRET is not configured");
+    return new Response("Webhook unavailable", { status: 503 });
+  }
+
   const signature = req.headers.get("stripe-signature");
 
   if (!signature) {

@@ -17,18 +17,39 @@ export function monogram(name: string): string {
  * Validate the image up front instead and fall back to a monogram. Founders can
  * paste arbitrary URLs, so this is not a theoretical case.
  */
-export async function isUsableImage(candidate: string | null | undefined): Promise<boolean> {
-  if (!candidate) return false;
-  if (!/^https:\/\//i.test(candidate)) return false;
+export async function loadSafeImageDataUrl(candidate: string | null | undefined): Promise<string | null> {
+  if (!candidate) return null;
   try {
-    const res = await fetch(candidate);
-    if (!res.ok) return false;
-    const type = res.headers.get('content-type') ?? '';
-    if (!type.toLowerCase().startsWith('image/')) return false;
+    const url = new URL(candidate);
+    const projectHost = new URL(process.env.VITE_SUPABASE_URL ?? 'https://rcjlaybjnozqbsoxzboa.supabase.co').hostname;
+    const ownPublicObject = url.hostname === projectHost && url.pathname.startsWith('/storage/v1/object/public/');
+    const googleAvatar = url.hostname.endsWith('.googleusercontent.com');
+    if (url.protocol !== 'https:' || url.port || url.username || url.password || (!ownPublicObject && !googleAvatar)) return null;
+
+    const res = await fetch(url, { redirect: 'manual', signal: AbortSignal.timeout(5000) });
+    if (!res.ok) return null;
+    const type = (res.headers.get('content-type') ?? '').split(';')[0].toLowerCase().trim();
+    if (!['image/png', 'image/jpeg', 'image/webp', 'image/gif'].includes(type)) return null;
     const length = Number(res.headers.get('content-length') ?? '0');
-    if (length && length > MAX_IMAGE_BYTES) return false;
-    return true;
+    if (length && length > MAX_IMAGE_BYTES) return null;
+    if (!res.body) return null;
+
+    const reader = res.body.getReader();
+    const chunks: Uint8Array[] = [];
+    let total = 0;
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      total += value.byteLength;
+      if (total > MAX_IMAGE_BYTES) {
+        await reader.cancel();
+        return null;
+      }
+      chunks.push(value);
+    }
+    const binary = chunks.map((chunk) => Array.from(chunk, (byte) => String.fromCharCode(byte)).join('')).join('');
+    return `data:${type};base64,${btoa(binary)}`;
   } catch {
-    return false;
+    return null;
   }
 }

@@ -12,7 +12,7 @@
 export const config = { runtime: 'edge' };
 
 import { ImageResponse } from '@vercel/og';
-import { isUsableImage, monogram, truncate } from './_og-image';
+import { loadSafeImageDataUrl, monogram, truncate } from './_og-image';
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL ?? 'https://rcjlaybjnozqbsoxzboa.supabase.co';
 const SUPABASE_KEY = process.env.VITE_SUPABASE_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? '';
@@ -45,7 +45,7 @@ export default async function handler(request: Request) {
     } catch { /* fall through to the generic card */ }
   }
 
-  const showLogo = await isUsableImage(logoUrl);
+  const safeLogo = await loadSafeImageDataUrl(logoUrl);
   const title = truncate(headline || projectName, 96);
   const subtitle = truncate(tagline ? `${projectName} — ${tagline}` : projectName, 120);
   const titleSize = title.length > 64 ? 50 : title.length > 40 ? 60 : 70;
@@ -70,9 +70,9 @@ export default async function handler(request: Request) {
 
         {/* Founder identity */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '18px', marginBottom: '36px' }}>
-          {showLogo && logoUrl ? (
+          {safeLogo ? (
             <img
-              src={logoUrl}
+              src={safeLogo}
               width={72}
               height={72}
               style={{ borderRadius: '16px', objectFit: 'cover' }}

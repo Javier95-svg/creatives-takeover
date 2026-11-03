@@ -15,6 +15,7 @@ import { useMentorSaves } from "@/hooks/useMentorSaves";
 import { clearPendingValueCapture, persistPendingValueCapture, readPendingValueCapture } from "@/lib/valueCapture";
 import { useMemo } from "react";
 import { useEffect, useRef } from "react";
+import { normalizePostUrl } from "@/lib/postLinks";
 
 interface MentorCardProps {
   mentor: Mentor;
@@ -24,6 +25,9 @@ interface MentorCardProps {
 }
 
 export const MentorCard = ({ mentor, className, priority = false }: MentorCardProps) => {
+  const linkedinUrl = normalizePostUrl(mentor.linkedin_url ?? '');
+  const twitterUrl = normalizePostUrl(mentor.twitter_x_url ?? '');
+  const websiteUrl = normalizePostUrl(mentor.website_url ?? '');
   const navigate = useNavigate();
   const { isAuthenticated, user } = useAuth();
   const { startConversation, resolveMentorUserId } = useMessaging({ autoLoad: false });
@@ -407,16 +411,16 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
                 )}
               </div>
 
-              {(countryFlag || mentor.linkedin_url || mentor.twitter_x_url || mentor.website_url) && (
+              {(countryFlag || linkedinUrl || twitterUrl || websiteUrl) && (
                 <div className="flex items-center justify-center gap-2.5 sm:gap-3 sm:justify-start">
                   {countryFlag && (
                     <span className="flex h-5 w-5 items-center justify-center text-base leading-none sm:hidden" title={getNationality() || ''}>
                       {countryFlag}
                     </span>
                   )}
-                  {mentor.linkedin_url && (
+                  {linkedinUrl && (
                     <a
-                      href={mentor.linkedin_url}
+                      href={linkedinUrl}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex h-5 w-5 items-center justify-center text-muted-foreground transition-colors hover:text-info sm:h-auto sm:w-auto"
@@ -426,9 +430,9 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
                       <Linkedin className="h-4 w-4 sm:h-5 sm:w-5" />
                     </a>
                   )}
-                  {mentor.twitter_x_url && (
+                  {twitterUrl && (
                     <a
-                      href={mentor.twitter_x_url}
+                      href={twitterUrl}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex h-5 w-5 items-center justify-center text-muted-foreground transition-colors hover:text-foreground sm:h-auto sm:w-auto"
@@ -440,9 +444,9 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
                       </svg>
                     </a>
                   )}
-                  {mentor.website_url && (
+                  {websiteUrl && (
                     <a
-                      href={mentor.website_url}
+                      href={websiteUrl}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex h-5 w-5 items-center justify-center text-muted-foreground transition-colors hover:text-primary sm:h-auto sm:w-auto"
