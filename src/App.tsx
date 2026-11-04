@@ -187,6 +187,8 @@ const BuildPage = lazy(() => import("./pages/BuildPage"));
 const FounderIdPage = lazy(() => import("./pages/FounderIdPage"));
 const CohortShowcasePage = lazy(() => import("./pages/CohortShowcasePage"));
 const TractionEnginePage = lazy(() => import("./pages/TractionEnginePage"));
+const InvestorUpdatesPage = lazy(() => import("./pages/InvestorUpdatesPage"));
+const InvestorUpdateSharePage = lazy(() => import("./pages/InvestorUpdateSharePage"));
 const ProjectsDashboard = lazy(() => import("./components/dashboard/ProjectsDashboard"));
 
 // Demo Studio (interactive demo builder + public demo viewer)
@@ -593,6 +595,8 @@ function App() {
                           }
                         />
                         <Route path="/insighta/traction-engine" element={<Navigate to="/traction-engine" replace />} />
+                        <Route path="/investor-updates" element={<RouteErrorBoundary routeName="Investor Updates"><InvestorUpdatesPage /></RouteErrorBoundary>} />
+                        <Route path="/investor-updates/share/:token" element={<RouteErrorBoundary routeName="Private investor update"><InvestorUpdateSharePage /></RouteErrorBoundary>} />
                         <Route path="/pitch-deck-analyzer" element={<ToolRouteWithCreditGate><PitchDeckAnalyzerPage /></ToolRouteWithCreditGate>} />
                         <Route path="/insighta-test" element={<ToolRouteWithCreditGate><InsightaTestPage /></ToolRouteWithCreditGate>} />
                         <Route path="/insighta/pitch-deck-analyzer" element={<Navigate to="/pitch-deck-analyzer" replace />} />

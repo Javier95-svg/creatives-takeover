@@ -6,6 +6,7 @@ import {
   Handshake,
   LineChart,
   MessageSquare,
+  FileText,
   MessagesSquare,
   Rocket,
   Telescope,
@@ -16,6 +17,7 @@ import { DocRow, DocSection } from '@/components/dashboard/DocBlocks';
 import { useDashboardData } from '@/contexts/DashboardDataContext';
 import { useLaunchpadPosts } from '@/hooks/useLaunchpad';
 import { launchpadTopic, postPath } from '@/lib/launchpadTopics';
+import { useCurrentInvestorUpdateStatus, useInvestorUpdatesAccess } from '@/hooks/useInvestorUpdatesAccess';
 
 const COMMUNITY_POSTS = 3;
 
@@ -69,12 +71,21 @@ function NetworkSection() {
 /** Insighta: traction and the investors and programs you are following up. */
 function InsightaSection() {
   const { snapshot } = useDashboardData();
+  const investorUpdatesAccess = useInvestorUpdatesAccess();
+  const investorUpdate = useCurrentInvestorUpdateStatus();
   const business = snapshot?.business;
   if (!business) return null;
   const followUps = snapshot && snapshot.version !== 1 ? snapshot.crossSectionFollowUps.insighta : [];
   const investors = followUps.filter((item) => item.entityType === 'vc').length;
   const programs = followUps.filter((item) => item.entityType === 'accelerator').length;
   const kpi = business.kpis[0] ?? null;
+  const reportState = investorUpdate.data?.shared_at
+    ? 'Shared'
+    : investorUpdate.data?.status === 'finalized'
+      ? 'Ready'
+      : investorUpdate.data?.status === 'draft'
+        ? 'Draft'
+        : 'Missing this month';
 
   return (
     <DocSection id="dashboard-insighta-title" title="Insighta" icon={Telescope} action={{ label: 'Open Insighta', to: '/traction-engine' }}>
@@ -102,6 +113,9 @@ function InsightaSection() {
           value={`${kpi.value}${kpi.target ? ` of ${kpi.target}` : ''}${kpi.unit ? ` ${kpi.unit}` : ''}`}
           to="/core-metrics"
         />
+      ) : null}
+      {investorUpdatesAccess.data ? (
+        <DocRow icon={FileText} label="Investor reporting" value={reportState} muted={!investorUpdate.data} to="/investor-updates" />
       ) : null}
       <DocRow
         icon={Telescope}

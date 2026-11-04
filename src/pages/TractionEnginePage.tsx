@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Download, Loader2, Plus } from 'lucide-react';
+import { Download, FileText, Loader2, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 
 import SEO, { createBreadcrumbSchema } from '@/components/SEO';
@@ -69,6 +69,7 @@ import {
 } from '@/lib/journeyOutcomes';
 import { getInboundHandoff } from '@/lib/journeyHandoffInbox';
 import { useOutcomeJourney } from '@/hooks/useOutcomeJourney';
+import { useInvestorUpdatesAccess } from '@/hooks/useInvestorUpdatesAccess';
 
 const SPRINTS_TABLE = 'traction_engine_sprints' as const;
 const LOGS_TABLE = 'traction_engine_weekly_logs' as const;
@@ -154,6 +155,7 @@ function Stat({ label, value, detail }: { label: string; value: string; detail?:
 
 function TractionEngineWorkflow({ userId }: { userId?: string }) {
   const outcomeJourney = useOutcomeJourney();
+  const investorUpdatesAccess = useInvestorUpdatesAccess();
   const navigate = useNavigate();
   const currentWeekStart = useMemo(() => getCurrentWeekStart(), []);
   const [experiments, setExperiments] = useState<TractionExperimentDraft[]>(() => {
@@ -942,17 +944,25 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
               </p>
             </div>
             {recentLogs.length > 0 && userId && (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  captureEvent('traction_report_exported', { verified: verifiedLedger, week_count: consecutiveWeekCount, decision_count: decisionWeekCount });
-                  void exportTractionReportPdf(userId).catch((error) => toast.error(error instanceof Error ? error.message : 'Export failed.'));
-                }}
-              >
-                <Download className="mr-1.5 h-4 w-4" aria-hidden="true" />
-                Download report
-              </Button>
+              <div className="flex flex-wrap gap-2">
+                {investorUpdatesAccess.data ? (
+                  <Button type="button" onClick={() => navigate('/investor-updates')}>
+                    <FileText className="mr-1.5 h-4 w-4" aria-hidden="true" />
+                    Create monthly update
+                  </Button>
+                ) : null}
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    captureEvent('traction_report_exported', { verified: verifiedLedger, week_count: consecutiveWeekCount, decision_count: decisionWeekCount });
+                    void exportTractionReportPdf(userId).catch((error) => toast.error(error instanceof Error ? error.message : 'Export failed.'));
+                  }}
+                >
+                  <Download className="mr-1.5 h-4 w-4" aria-hidden="true" />
+                  Download report
+                </Button>
+              </div>
             )}
           </div>
 

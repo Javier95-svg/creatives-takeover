@@ -331,3 +331,8 @@ verify_jwt = true
 
 [functions.project-import-extract]
 verify_jwt = true
+[functions.generate-investor-update]
+verify_jwt = true
+
+[functions.view-investor-update]
+verify_jwt = false
