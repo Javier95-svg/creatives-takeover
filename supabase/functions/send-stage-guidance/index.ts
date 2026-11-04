@@ -107,5 +107,6 @@ serve(async (req) => {
     }
     if (choices.length < 100) break;
   }
+  console.info("send-stage-guidance summary", { preview, counts });
   return json({ ok: true, preview, counts });
 });
