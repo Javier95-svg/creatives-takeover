@@ -23,10 +23,15 @@ export const SHARED_CHANNELS: readonly NotificationChannel[] = [
   { key: 'dm_push_enabled', label: 'Message push notifications', description: 'Send direct-message alerts to subscribed devices.' },
   { key: 'routine_in_app_enabled', label: 'Routine in-app reminders', description: 'Show routine nudges in the platform at your selected routine time.' },
   { key: 'routine_email_enabled', label: 'Routine email fallback', description: 'Email a recovery nudge after three inactive days, if your routine is enabled.' },
-  { key: 'task_reminders', label: 'Task & deadline reminders', description: 'Heads-up when a task is due or overdue.' },
-  { key: 'daily_task_plan_email_enabled', label: 'Daily task-plan email', description: 'Email me my first task each morning when a plan is ready.' },
-  { key: 'retention_emails', label: 'Progress & re-engagement emails', description: 'Weekly progress and occasional come-back nudges by email.' },
+  { key: 'task_reminders', label: 'Task & deadline notifications', description: 'Show task alerts in the platform.' },
+  { key: 'task_email_enabled', label: 'Task reminder emails', description: 'Email me about tasks that are due or overdue.' },
+  { key: 'rooms_reply_email_enabled', label: 'Rooms reply emails', description: 'Email me when someone replies to my post.' },
   { key: 'product_updates', label: 'Product updates', description: 'Major new features and announcements.' },
+];
+
+const FOUNDER_BUILDER_CHANNELS: readonly NotificationChannel[] = [
+  { key: 'daily_task_plan_email_enabled', label: 'Daily task-plan email', description: 'Email me my first task each morning when a plan is ready.' },
+  { key: 'stage_guidance_emails', label: 'Stage guidance emails', description: 'Occasional guidance for your confirmed stage, at most once every 14 days.' },
 ];
 
 const MENTOR_CHANNELS: readonly NotificationChannel[] = [
@@ -60,13 +65,14 @@ const INVESTOR_UPDATES: NotificationChannel = {
 
 export function notificationChannelsForType(userType: UserType): readonly NotificationChannel[] {
   const shared = userType === 'investor' ? SHARED_CHANNELS : [...SHARED_CHANNELS, INVESTOR_UPDATES];
-  return [...shared, ...CATEGORY_CHANNELS[userType]];
+  return [...shared, ...(userType === 'founder' || userType === 'builder' ? FOUNDER_BUILDER_CHANNELS : []), ...CATEGORY_CHANNELS[userType]];
 }
 
 /** Every column the card reads and writes, whatever the type. */
 export function allNotificationChannelKeys(): string[] {
-  const keys = new Set<string>([INVESTOR_UPDATES.key]);
+  const keys = new Set<string>([INVESTOR_UPDATES.key, 'retention_emails']);
   for (const channel of SHARED_CHANNELS) keys.add(channel.key);
+  for (const channel of FOUNDER_BUILDER_CHANNELS) keys.add(channel.key);
   for (const list of Object.values(CATEGORY_CHANNELS)) for (const channel of list) keys.add(channel.key);
   return [...keys];
 }

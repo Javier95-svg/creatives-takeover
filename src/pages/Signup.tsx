@@ -72,6 +72,7 @@ const Signup = () => {
     password: ""
   });
   const [showPassword, setShowPassword] = useState(false);
+  const [stageGuidanceOptIn, setStageGuidanceOptIn] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [usernameStatus, setUsernameStatus] = useState<"idle" | "checking" | "available" | "taken">("idle");
@@ -425,6 +426,7 @@ const Signup = () => {
         undefined,
         signupUsername,
         pendingReferralCode,
+        stageGuidanceOptIn,
       );
 
       if (error) {
@@ -892,6 +894,19 @@ const Signup = () => {
                     <p className="text-sm text-destructive animate-fade-in">{errors.password}</p>
                   )}
                 </div>
+
+                {showStepTwo && (
+                  <label className="flex items-start gap-3 text-sm text-muted-foreground">
+                    <input
+                      type="checkbox"
+                      checked={stageGuidanceOptIn}
+                      onChange={(event) => setStageGuidanceOptIn(event.target.checked)}
+                      disabled={isLoading}
+                      className="mt-1 h-4 w-4 accent-primary"
+                    />
+                    <span>Send me occasional guidance for my confirmed stage, no more than once every 14 days. Optional; change this anytime in Settings.</span>
+                  </label>
+                )}
 
                 {/* Sign Up Button */}
                 <Button

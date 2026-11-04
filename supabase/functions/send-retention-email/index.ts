@@ -309,6 +309,43 @@ serve(async (req: Request): Promise<Response> => {
       return json({ ok: true, skipped: true, reason: "mentor_excluded" });
     }
 
+    // Generic lifecycle and win-back copy is paused. The dedicated stage
+    // worker owns opt-in guidance; this sender only handles separately opted
+    // daily plans and Rooms reply alerts. Recheck at delivery, not just queue.
+    if (sequence !== "task_plan_digest" && sequence !== "rooms_reply") {
+      return json({ ok: true, skipped: true, reason: "legacy_engagement_paused" });
+    }
+    if (sequence === "task_plan_digest") {
+      const [{ data: profile }, { data: prefs }] = await Promise.all([
+        supabase.from("profiles").select("user_type").eq("id", userId).maybeSingle(),
+        supabase.from("notification_preferences").select("daily_task_plan_email_enabled").eq("user_id", userId).maybeSingle(),
+      ]);
+      if (!(["founder", "builder"].includes(profile?.user_type ?? "")) || prefs?.daily_task_plan_email_enabled !== true) {
+        return json({ ok: true, skipped: true, reason: "daily_plan_email_not_opted_in" });
+      }
+      const today = new Date().toISOString().slice(0, 10);
+      const { data: readyPlan } = await supabase.from("daily_task_plans")
+        .select("id").eq("user_id", userId).eq("status", "ready")
+        .gte("plan_date", new Date(Date.now() - 86400000).toISOString().slice(0, 10))
+        .lte("plan_date", today).order("plan_date", { ascending: false }).limit(1).maybeSingle();
+      const { data: planItem } = readyPlan ? await supabase.from("daily_task_plan_items")
+        .select("task_id").eq("plan_id", readyPlan.id).limit(1).maybeSingle() : { data: null };
+      if (!planItem) return json({ ok: true, skipped: true, reason: "no_ready_plan" });
+      const { data: alreadySent } = await supabase.from("retention_email_log")
+        .select("id").eq("user_id", userId).eq("sequence", "task_plan_digest")
+        .not("resend_id", "is", null)
+        .gte("sent_at", new Date(Date.now() - 20 * 60 * 60 * 1000).toISOString())
+        .limit(1).maybeSingle();
+      if (alreadySent) return json({ ok: true, skipped: true, reason: "daily_plan_already_sent" });
+    }
+    if (sequence === "rooms_reply") {
+      const { data: prefs } = await supabase.from("notification_preferences")
+        .select("rooms_reply_email_enabled").eq("user_id", userId).maybeSingle();
+      if (prefs?.rooms_reply_email_enabled !== true) {
+        return json({ ok: true, skipped: true, reason: "rooms_reply_email_not_opted_in" });
+      }
+    }
+
     if (isInactiveSequence(sequence)) {
       const { data: settings, error: settingsError } = await supabase.from("retention_roadmap_settings")
         .select("*").eq("singleton", true).single();

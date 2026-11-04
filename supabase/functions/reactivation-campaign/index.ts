@@ -327,6 +327,7 @@ serve(async (req: Request): Promise<Response> => {
   if (!authorization.ok) {
     return jsonResponse({ error: authorization.error }, authorization.status);
   }
+  if (req.method === "POST") return jsonResponse({ ok: true, skipped: true, reason: "generic_winback_paused" });
 
   try {
     const url = new URL(req.url);

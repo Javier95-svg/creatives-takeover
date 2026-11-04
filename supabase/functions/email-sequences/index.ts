@@ -656,6 +656,10 @@ serve(async (req: Request): Promise<Response> => {
     const auth = await authorize(req, body);
     if (!auth.ok) return json({ ok: false, error: "Unauthorized" }, 401);
 
+    // Old activation, progress and upgrade sequences have no affirmative
+    // campaign consent. Keep the unsubscribe route above available.
+    return json({ ok: true, skipped: true, reason: "legacy_engagement_paused" });
+
     if (body.mode === "cron") {
       if (!auth.serviceRole) return json({ ok: false, error: "Cron requires service role authorization" }, 401);
       const summary = await runCron();

@@ -17,13 +17,22 @@ import { toast } from "sonner";
 // in that module rather than an edit in three places here.
 type Prefs = Record<string, boolean>;
 
-// Everything on, except the investor alert nobody asked for. A channel that
-// defaults off would go unnoticed until someone wondered why it never fired.
+// In-app channels stay available; optional email always starts off.
 const DEFAULTS: Prefs = {
   ...Object.fromEntries(allNotificationChannelKeys().map((key) => [key, true])),
   push_enabled: true,
   routine_reminders: true,
+  dm_email_enabled: false,
+  connection_request_email_enabled: false,
+  routine_email_enabled: false,
+  task_email_enabled: false,
   daily_task_plan_email_enabled: false,
+  stage_guidance_emails: false,
+  rooms_reply_email_enabled: false,
+  retention_emails: false,
+  product_updates: false,
+  investor_match_email_enabled: false,
+  listing_enquiry_email_enabled: false,
   investor_updates: false,
 };
 
@@ -80,6 +89,7 @@ export function NotificationPreferencesCard() {
 
     } catch (error) {
       logError("Failed to save notification preferences", error, { userId: user.id });
+      setPrefs(prefs);
       toast.error("Couldn't save that preference. Try again.");
     }
   };
@@ -133,7 +143,7 @@ export function NotificationPreferencesCard() {
               <p className="text-xs text-muted-foreground">{row.description}</p>
             </div>
             <Switch
-              checked={prefs[row.key] ?? true}
+              checked={prefs[row.key] === true}
               onCheckedChange={(v) => save({ [row.key]: v })}
               disabled={loading}
             />

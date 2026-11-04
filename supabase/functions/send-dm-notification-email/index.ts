@@ -374,6 +374,18 @@ serve(async (req: Request): Promise<Response> => {
       });
     }
 
+    const { data: preferences, error: preferenceError } = await supabase
+      .from("notification_preferences").select("dm_email_enabled")
+      .eq("user_id", recipientId).maybeSingle();
+    if (preferenceError || preferences?.dm_email_enabled !== true) {
+      await updateDelivery(messageId, recipientId, {
+        status: "skipped", last_error: "Message email preference is off",
+      });
+      return new Response(JSON.stringify({ ok: true, skipped: "preference_disabled" }), {
+        status: 200, headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
+
     await updateDelivery(messageId, recipientId, {
       status: "sending",
       metadataPatch: { stage: "start" },

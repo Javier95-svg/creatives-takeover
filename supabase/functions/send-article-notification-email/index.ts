@@ -113,6 +113,8 @@ serve(async (req: Request): Promise<Response> => {
     const admin = await requireAdmin(req);
     if (admin.error) return admin.error;
   }
+  // The old newsletter had no affirmative opt-in or shared frequency claim.
+  return jsonResponse({ ok: true, skipped: true, reason: "generic_newsletter_paused" });
 
   try {
     const payload: ArticlePayload = await req.json();

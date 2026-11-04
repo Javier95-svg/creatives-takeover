@@ -42,6 +42,9 @@ serve(async (req: Request): Promise<Response> => {
     if (auth.error) return auth.error;
     const limited = await rateLimit(req, `send-welcome-email:${auth.user.id}`, 2, auth.user.id);
     if (limited) return limited;
+    return new Response(JSON.stringify({ ok: true, skipped: true, reason: "generic_onboarding_paused" }), {
+      status: 200, headers: { "Content-Type": "application/json", ...corsHeaders },
+    });
     const { fullName }: WelcomeRequest = await req.json();
     const email = auth.user.email;
 

@@ -114,6 +114,9 @@ serve(async (req: Request): Promise<Response> => {
   // Scheduled job: only our own jobs may start it.
   const refused = await requireWorker(req);
   if (refused) return refused;
+  return new Response(JSON.stringify({ ok: true, skipped: true, reason: "generic_followup_paused" }), {
+    status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
 
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL");

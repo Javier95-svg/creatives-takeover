@@ -178,6 +178,10 @@ serve(async (req: Request): Promise<Response> => {
     let sentCount = 0;
     for (const reminder of remindersToSend) {
       try {
+        const { data: preference, error: preferenceError } = await supabase
+          .from('notification_preferences').select('task_email_enabled')
+          .eq('user_id', reminder.user_id).maybeSingle();
+        if (preferenceError || preference?.task_email_enabled !== true) continue;
         const subject = reminder.last_checkin_days_ago === 1 
           ? `🚀 Daily Check-in: ${reminder.sprint_title}`
           : `⏰ Missing You: ${reminder.sprint_title} Check-in`;

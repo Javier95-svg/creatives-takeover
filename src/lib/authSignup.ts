@@ -10,6 +10,7 @@ interface SignUpParams {
   dateOfBirth?: string;
   username?: string;
   referralCode?: string | null;
+  stageGuidanceOptIn?: boolean;
 }
 
 // Keep the existing interface while callers move to the confirmation-aware UI.
@@ -22,6 +23,7 @@ export async function signUpWithFallback({
   dateOfBirth,
   username,
   referralCode,
+  stageGuidanceOptIn = false,
 }: SignUpParams): Promise<{ error: AuthError | null; usedDirectSignupFallback: false }> {
   const { error } = await supabase.auth.signUp({
     email,
@@ -34,6 +36,7 @@ export async function signUpWithFallback({
         date_of_birth: dateOfBirth || null,
         username: (username || "").trim().toLowerCase() || null,
         referral_code: referralCode || null,
+        stage_guidance_email_opt_in: stageGuidanceOptIn === true,
       },
     },
   });

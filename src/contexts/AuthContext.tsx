@@ -43,7 +43,8 @@ interface AuthContextType {
     fullName: string,
     dateOfBirth?: string,
     username?: string,
-    referralCode?: string | null
+    referralCode?: string | null,
+    stageGuidanceOptIn?: boolean
   ) => Promise<{ error: SupabaseAuthError | null }>;
   signIn: (email: string, password: string) => Promise<{ error: SupabaseAuthError | null }>;
   signOut: () => Promise<void>;
@@ -647,7 +648,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     fullName: string,
     dateOfBirth?: string,
     username?: string,
-    referralCode?: string | null
+    referralCode?: string | null,
+    stageGuidanceOptIn = false
   ) => {
     const { error, usedDirectSignupFallback } = await signUpWithFallback({
       email,
@@ -656,6 +658,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       dateOfBirth,
       username,
       referralCode,
+      stageGuidanceOptIn,
     });
 
     if (error) {

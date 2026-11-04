@@ -32,7 +32,7 @@ const supabaseServiceKey = getEnv("SUPABASE_SERVICE_ROLE_KEY");
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 const resendApiKey = getEnv("RESEND_API_KEY");
 const resend = resendApiKey ? new Resend(resendApiKey) : null;
-const appUrl = (getEnv("APP_URL") || "https://creatives-takeover.com").replace(/\/$/, "");
+const appUrl = "https://creatives-takeover.com";
 
 async function updateDelivery(
   friendRequestId: string,
@@ -100,7 +100,7 @@ serve(async (req: Request): Promise<Response> => {
       await updateDelivery(friendRequestId, recipientId, "skipped", { last_error: requestError?.message || "Connection request is no longer pending" });
       return new Response(JSON.stringify({ ok: true, skipped: "request_not_pending" }), { status: 200 });
     }
-    if (preference?.connection_request_email_enabled === false) {
+    if (preference?.connection_request_email_enabled !== true) {
       await updateDelivery(friendRequestId, recipientId, "skipped", { last_error: null });
       return new Response(JSON.stringify({ ok: true, skipped: "preference_disabled" }), { status: 200 });
     }

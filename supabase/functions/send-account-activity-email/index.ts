@@ -35,7 +35,7 @@ const supabaseServiceKey = getEnv("SUPABASE_SERVICE_ROLE_KEY");
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 const resendApiKey = getEnv("RESEND_API_KEY");
 const resend = resendApiKey ? new Resend(resendApiKey) : null;
-const appUrl = (getEnv("APP_URL") || "https://creatives-takeover.com").replace(/\/$/, "");
+const appUrl = "https://creatives-takeover.com";
 const fromAddress = getEnv("FROM_EMAIL") || "Creatives Takeover <noreply@creatives-takeover.com>";
 
 async function settle(deliveryId: string, status: DeliveryStatus, patch: Record<string, unknown> = {}) {
@@ -113,6 +113,17 @@ serve(async (req: Request): Promise<Response> => {
     // The queue already decided this one should not go out. Honouring the row
     // rather than re-deriving it keeps one answer to "was this suppressed".
     if (delivery.status === "skipped" || delivery.status === "sent") {
+      return new Response(JSON.stringify({ ok: true, skipped: true }), { status: 200 });
+    }
+
+    const preferenceColumn = delivery.kind === "listing_enquiry"
+      ? "listing_enquiry_email_enabled" : "investor_match_email_enabled";
+    const { data: preferences, error: preferenceError } = await supabase
+      .from("notification_preferences")
+      .select("listing_enquiry_email_enabled, investor_match_email_enabled")
+      .eq("user_id", delivery.recipient_id).maybeSingle();
+    if (preferenceError || preferences?.[preferenceColumn] !== true) {
+      await settle(deliveryId, "skipped", { last_error: "Email preference is off" });
       return new Response(JSON.stringify({ ok: true, skipped: true }), { status: 200 });
     }
 
