@@ -85,9 +85,15 @@ const StoryArticle = () => {
 
     const url = encodeURIComponent(window.location.href);
     const title = encodeURIComponent(article.title);
+    // X keeps the card it first crawled for a URL for about a week. ?ref=x gives
+    // X its own URL, so a card cached while previews were broken never sticks.
+    const xLink = new URL(window.location.href);
+    xLink.hash = "";
+    xLink.searchParams.set("ref", "x");
+    const xUrl = encodeURIComponent(xLink.toString());
 
     const shareUrls = {
-      x: `https://x.com/intent/tweet?text=${title}&url=${url}`,
+      x: `https://x.com/intent/tweet?text=${title}&url=${xUrl}`,
       linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${url}`,
       facebook: `https://www.facebook.com/sharer/sharer.php?u=${url}`,
     };
