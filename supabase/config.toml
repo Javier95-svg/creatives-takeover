@@ -336,3 +336,6 @@ verify_jwt = true
 
 [functions.view-investor-update]
 verify_jwt = false
+
+[functions.public-story-metadata]
+verify_jwt = false

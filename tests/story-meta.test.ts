@@ -89,6 +89,7 @@ test('article meta uses the opening paragraphs when the excerpt is a short tease
 
   assert.match(html, /<title>Douyin vs\. TikTok: The App China Built for Its Own Kids \| Creatives Takeover<\/title>/);
   assert.match(html, /<meta name="description" content="ByteDance built two short-video platforms\. Douyin launched in September 2016/);
+  assert.match(html, /<meta property="og:image" content="https:\/\/creatives-takeover\.com\/api\/og\?title=Douyin%20vs/);
   assert.doesNotMatch(html, /Learn about|digitalculture \|/);
 });
 

@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 
 const shellHtml = `<!DOCTYPE html>
 <html lang="en">
@@ -23,6 +24,17 @@ const shellHtml = `<!DOCTYPE html>
   </body>
 </html>`;
 
+test('social metadata lookup is public-read-only and independent of the browser key', () => {
+  const api = readFileSync(new URL('../api/newspaper-og.ts', import.meta.url), 'utf8');
+  const edge = readFileSync(new URL('../supabase/functions/public-story-metadata/index.ts', import.meta.url), 'utf8');
+  const config = readFileSync(new URL('../supabase/config.toml', import.meta.url), 'utf8');
+  assert.match(api, /functions\/v1\/public-story-metadata/);
+  assert.doesNotMatch(api, /Authorization: `Bearer \$\{SUPABASE_KEY\}`/);
+  assert.match(edge, /\.eq\('status', 'published'\)/);
+  assert.match(edge, /\^\[a-z0-9\]/);
+  assert.match(config, /\[functions\.public-story-metadata\][\s\S]*?verify_jwt = false/);
+});
+
 test('newspaper OG handler injects article-specific social metadata', async (t) => {
   process.env.VITE_SUPABASE_URL = 'https://example.supabase.co';
   process.env.VITE_SUPABASE_KEY = 'test-anon-key';
@@ -42,12 +54,9 @@ test('newspaper OG handler injects article-specific social metadata', async (t) 
       });
     }
 
-    if (url.startsWith('https://example.supabase.co/rest/v1/stories_articles')) {
-      assert.match(url, /select=slug,title,banner_image_url,excerpt,meta_title,meta_description,hashtags,published_at,updated_at,body_content/);
-      assert.doesNotMatch(url, /author_name/);
-
-      return Response.json([
-        {
+    if (url.startsWith('https://example.supabase.co/functions/v1/public-story-metadata')) {
+      assert.match(url, /slug=saas-pricing-is-dying/);
+      return Response.json({ article: {
           slug: 'saas-pricing-is-dying-founders-who-see-it-coming-are-already',
           title: 'SaaS Pricing Is Dying. The Founders Who See It Coming Are Already Switching Models.',
           banner_image_url: '/story-banners/saas-pricing.jpg',
@@ -58,8 +67,7 @@ test('newspaper OG handler injects article-specific social metadata', async (t) 
           published_at: '2026-06-09T12:00:00.000Z',
           updated_at: '2026-06-09T12:00:00.000Z',
           body_content: 'Founders are moving away from static seats and toward value-aligned pricing.',
-        },
-      ]);
+        } });
     }
 
     throw new Error(`Unexpected fetch: ${url}`);
@@ -75,10 +83,17 @@ test('newspaper OG handler injects article-specific social metadata', async (t) 
   assert.match(html, /<meta property="og:title" content="SaaS Pricing Is Dying\. The Founders Who See It Coming Are Already Switching Models\." \/>/);
   assert.match(html, /<meta property="og:description" content="Usage-based pricing is changing how founders package and monetize software for a new era of AI products and customer expectations\." \/>/);
   assert.match(html, /<meta property="og:image" content="https:\/\/creatives-takeover\.com\/story-banners\/saas-pricing\.jpg" \/>/);
+  assert.match(html, /<meta property="og:image:secure_url" content="https:\/\/creatives-takeover\.com\/story-banners\/saas-pricing\.jpg" \/>/);
+  assert.match(html, /<meta property="og:image:type" content="image\/jpeg" \/>/);
+  assert.match(html, /<meta property="og:image:width" content="1200" \/>/);
+  assert.match(html, /<meta property="og:image:height" content="630" \/>/);
+  assert.match(html, /<meta property="og:image:alt" content="SaaS Pricing Is Dying\. The Founders Who See It Coming Are Already Switching Models\." \/>/);
   assert.match(html, /<meta property="og:url" content="https:\/\/creatives-takeover\.com\/newspaper\/saas-pricing-is-dying-founders-who-see-it-coming-are-already" \/>/);
   assert.match(html, /<meta name="twitter:card" content="summary_large_image" \/>/);
   assert.match(html, /<meta name="twitter:title" content="SaaS Pricing Is Dying\. The Founders Who See It Coming Are Already Switching Models\." \/>/);
   assert.match(html, /<meta name="twitter:image" content="https:\/\/creatives-takeover\.com\/story-banners\/saas-pricing\.jpg" \/>/);
+  assert.match(html, /<meta name="twitter:image:alt" content="SaaS Pricing Is Dying\. The Founders Who See It Coming Are Already Switching Models\." \/>/);
+  assert.equal(response.headers.get('x-newspaper-og-status'), 'article');
   assert.match(html, /<link rel="canonical" href="https:\/\/creatives-takeover\.com\/newspaper\/saas-pricing-is-dying-founders-who-see-it-coming-are-already" \/>/);
   assert.doesNotMatch(html, /<meta property="og:title" content="AI Startup Builder \| Creatives Takeover" \/>/);
 });
@@ -102,9 +117,8 @@ test('routes WebP Supabase banners through the image-transform endpoint as a 120
       });
     }
 
-    if (url.startsWith('https://example.supabase.co/rest/v1/stories_articles')) {
-      return Response.json([
-        {
+    if (url.startsWith('https://example.supabase.co/functions/v1/public-story-metadata')) {
+      return Response.json({ article: {
           slug: 'webp-banner-article',
           title: 'WebP Banner Article',
           banner_image_url:
@@ -117,8 +131,7 @@ test('routes WebP Supabase banners through the image-transform endpoint as a 120
           published_at: '2026-06-12T12:00:00.000Z',
           updated_at: '2026-06-12T12:00:00.000Z',
           body_content: 'Body content.',
-        },
-      ]);
+        } });
     }
 
     throw new Error(`Unexpected fetch: ${url}`);

@@ -93,13 +93,11 @@ test("a story that is gone answers 404, not a soft 404", () => {
   assert.match(og, /status: 404/);
   assert.match(og, /'x-robots-tag': 'noindex,follow'/);
 
-  // Everything else keeps answering 200. A 404 on a transient Supabase failure
-  // would deindex live articles for the length of the outage, so exactly one
-  // branch may be the 404 — the four passthroughs are reserved slugs, a bad
-  // response, a malformed body, and the network catch.
-  assert.equal(og.match(/return passthrough\(\);/g)?.length, 4);
-  assert.match(og, /if \(!res\.ok\) \{\s*return passthrough\(\);/);
-  assert.match(og, /\} catch \{[\s\S]*?return passthrough\(\);/);
+  // Upstream failures stay 200 and identify why they used the generic shell.
+  // Only a completed lookup with no published article becomes a real 404.
+  assert.match(og, /if \(!lookupSucceeded\) return passthrough\('missing-key'\)/);
+  assert.match(og, /return passthrough\('upstream'\)/);
+  assert.match(og, /'x-newspaper-og-status': `fallback-\$\{reason\}`/);
 });
 
 test("founder and MVP indexing are review-gated server-side", () => {

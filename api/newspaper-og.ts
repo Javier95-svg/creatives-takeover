@@ -132,7 +132,12 @@ export function linkPediaTerms(markdown: string | null | undefined, base = ""): 
 // --- end of Startup Pedia term links ---
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL ?? 'https://rcjlaybjnozqbsoxzboa.supabase.co';
-const SUPABASE_KEY = process.env.VITE_SUPABASE_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? '';
+const SUPABASE_KEY =
+  process.env.SUPABASE_PUBLISHABLE_KEY ??
+  process.env.SUPABASE_ANON_KEY ??
+  process.env.VITE_SUPABASE_PUBLISHABLE_KEY ??
+  process.env.VITE_SUPABASE_KEY ??
+  '';
 const SITE_ORIGIN = 'https://creatives-takeover.com';
 
 // Single-segment paths under /newspaper that are real routes, not article slugs.
@@ -278,6 +283,15 @@ function toSocialCardImage(imageUrl: string): string {
   return `${base}/storage/v1/render/image/public/${path}?width=1200&height=630&resize=cover&quality=80`;
 }
 
+function socialImageType(imageUrl: string): string {
+  if (imageUrl.includes('/api/og?')) return 'image/png';
+  const path = imageUrl.split('?')[0].toLowerCase();
+  if (path.endsWith('.png')) return 'image/png';
+  if (path.endsWith('.webp')) return 'image/webp';
+  if (path.endsWith('.gif')) return 'image/gif';
+  return 'image/jpeg';
+}
+
 // Mirrors the meta-title/description logic in src/pages/StoryArticle.tsx so the
 // crawler preview matches what users see once the SPA hydrates.
 // Copies of src/utils/storyMeta.ts; tests/story-meta.test.ts keeps them equal.
@@ -334,7 +348,9 @@ function buildMeta(article: StoryRecord) {
     : '';
   const ogImageUrl = absoluteBanner
     ? toSocialCardImage(absoluteBanner)
-    : `${SITE_ORIGIN}/og-founders-compass-2026-09.png`;
+    : `${SITE_ORIGIN}/api/og?title=${encodeURIComponent(optimizedMetaTitle)}` +
+      `&subtitle=${encodeURIComponent(metaDescription)}` +
+      `&eyebrow=${encodeURIComponent('Newspaper')}`;
 
   return { optimizedMetaTitle, metaDescription, ogImageUrl };
 }
@@ -343,6 +359,15 @@ export default async function handler(request: Request): Promise<Response> {
   const url = new URL(request.url);
   const slug = (url.searchParams.get('slug') ?? '').trim();
   const origin = url.origin;
+
+  // Redirect malformed legacy slugs before fetching the shell or an upstream.
+  const cleanSlug = slug.replace(/[`'"]/g, '');
+  if (cleanSlug !== slug && cleanSlug) {
+    return new Response(null, {
+      status: 301,
+      headers: { location: `${SITE_ORIGIN}/newspaper/${encodeURIComponent(cleanSlug)}` },
+    });
+  }
 
   // Always serve the SPA shell as the base document.
   const shellRes = await fetch(`${origin}/index.html`, {
@@ -353,12 +378,13 @@ export default async function handler(request: Request): Promise<Response> {
   // The shell at 200, for requests that are not article lookups (real routes) and
   // for upstream failures. A transient Supabase error must NOT answer 404: that
   // would deindex live articles for the length of the outage.
-  const passthrough = () =>
+  const passthrough = (reason: string) =>
     new Response(html, {
       status: 200,
       headers: {
         'content-type': 'text/html; charset=utf-8',
         'cache-control': 'public, max-age=0, must-revalidate',
+        'x-newspaper-og-status': `fallback-${reason}`,
       },
     });
 
@@ -377,44 +403,54 @@ export default async function handler(request: Request): Promise<Response> {
     });
   };
 
-  if (!slug || RESERVED_SLUGS.has(slug) || !SUPABASE_KEY) {
-    return passthrough();
-  }
-
-  // An article was once published with backticks around its slug, and Google
-  // indexed that URL. The slug is clean now; send the old address to it.
-  const cleanSlug = slug.replace(/[`'"]/g, '');
-  if (cleanSlug !== slug && cleanSlug) {
-    return new Response(null, {
-      status: 301,
-      headers: { location: `${SITE_ORIGIN}/newspaper/${encodeURIComponent(cleanSlug)}` },
-    });
+  if (!slug || RESERVED_SLUGS.has(slug)) {
+    return passthrough('reserved-route');
   }
 
   let article: StoryRecord | null = null;
+  let lookupSucceeded = false;
   try {
+    const metadataRes = await fetch(
+      `${SUPABASE_URL}/functions/v1/public-story-metadata?slug=${encodeURIComponent(slug)}`,
+      { headers: { Accept: 'application/json' } },
+    );
+    if (metadataRes.ok) {
+      const payload = await metadataRes.json() as { article?: StoryRecord } | StoryRecord[];
+      article = Array.isArray(payload) ? payload[0] ?? null : payload.article ?? null;
+      lookupSucceeded = true;
+    } else if (metadataRes.status === 404) {
+      lookupSucceeded = true;
+    }
+  } catch {
+    // Direct public REST below covers rollout and short function outages.
+  }
+
+  if (!lookupSucceeded && SUPABASE_KEY) try {
     const res = await fetch(
       `${SUPABASE_URL}/rest/v1/stories_articles` +
         `?slug=eq.${encodeURIComponent(slug)}` +
         `&status=eq.published` +
         `&select=slug,title,banner_image_url,excerpt,meta_title,meta_description,hashtags,published_at,updated_at,body_content` +
         `&limit=1`,
-      { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } },
+      { headers: { apikey: SUPABASE_KEY } },
     );
     if (!res.ok) {
-      return passthrough();
+      return passthrough('upstream');
     }
 
     const records = await res.json();
     if (!Array.isArray(records)) {
-      return passthrough();
+      return passthrough('invalid-response');
     }
 
     article = records[0] ?? null;
+    lookupSucceeded = true;
   } catch {
     // Network/parse error — fall back to the generic shell rather than failing the page.
-    return passthrough();
+    return passthrough('upstream');
   }
+
+  if (!lookupSucceeded) return passthrough('missing-key');
 
   if (!article) {
     // Unknown or unpublished slug. The SPA already renders its not-found view,
@@ -436,6 +472,11 @@ export default async function handler(request: Request): Promise<Response> {
   html = setMeta(html, 'property', 'og:title', optimizedMetaTitle);
   html = setMeta(html, 'property', 'og:description', metaDescription);
   html = setMeta(html, 'property', 'og:image', ogImageUrl);
+  html = setMeta(html, 'property', 'og:image:secure_url', ogImageUrl);
+  html = setMeta(html, 'property', 'og:image:type', socialImageType(ogImageUrl));
+  html = setMeta(html, 'property', 'og:image:width', '1200');
+  html = setMeta(html, 'property', 'og:image:height', '630');
+  html = setMeta(html, 'property', 'og:image:alt', optimizedMetaTitle);
   html = setMeta(html, 'property', 'og:url', articleUrl);
   html = setMeta(html, 'property', 'og:site_name', 'Creatives Takeover');
 
@@ -443,6 +484,7 @@ export default async function handler(request: Request): Promise<Response> {
   html = setMeta(html, 'name', 'twitter:title', optimizedMetaTitle);
   html = setMeta(html, 'name', 'twitter:description', metaDescription);
   html = setMeta(html, 'name', 'twitter:image', ogImageUrl);
+  html = setMeta(html, 'name', 'twitter:image:alt', optimizedMetaTitle);
 
   // Article structured data (E-E-A-T: author, dates, publisher, image).
   const authorName = 'Creatives Takeover Editorial Team';
@@ -504,6 +546,7 @@ export default async function handler(request: Request): Promise<Response> {
       'content-type': 'text/html; charset=utf-8',
       // Cache per-slug at the edge; revalidate in the background so edits propagate.
       'cache-control': 'public, s-maxage=300, stale-while-revalidate=3600',
+      'x-newspaper-og-status': 'article',
     },
   });
 }
