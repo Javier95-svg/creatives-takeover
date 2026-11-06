@@ -19,6 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import FounderJourneyVideo from "./FounderJourneyVideo";
 import { ScrollReveal } from "@/components/animations/ScrollReveal";
 import { useIsMobile } from "@/hooks/use-mobile";
+import TitleFx from "@/components/home/TitleFx";
 
 type AccentColor = "blue" | "green" | "red" | "amber";
 
@@ -365,7 +366,7 @@ const EntrepreneurProblems = () => {
             Own Your Path
           </Badge>
           <h2 id="journey-heading" className="homepage-section-title founder-journey-section__title text-3xl sm:text-4xl lg:text-[2.9rem] mb-5">
-            Every Founder's Journey is Unique
+            <TitleFx variant="sunrise" text="Every Founder's Journey is Unique" />
           </h2>
           <p className="homepage-section-copy founder-journey-section__copy mx-auto text-base sm:text-lg">
             But most founders run into the same problems. Here is each one, and the part of the platform that helps you work through it.

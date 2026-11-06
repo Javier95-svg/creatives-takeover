@@ -20,6 +20,7 @@ import {
   type CarouselApi,
 } from "@/components/ui/carousel";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
+import TitleFx from "@/components/home/TitleFx";
 
 interface ValueCardImage {
   position: number;
@@ -390,7 +391,7 @@ const ValuePropositionCards = () => {
             What's Inside
           </Badge>
           <h2 className="homepage-section-title value-prop-section__title text-3xl sm:text-4xl lg:text-[2.9rem] mb-4">
-            Creatives Takeover in a Nutshell
+            <TitleFx variant="spectrum" text="Creatives Takeover in a Nutshell" />
           </h2>
         </div>
 

@@ -7,6 +7,7 @@ import {
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { HOME_FAQS } from "@/data/homeFaq";
+import TitleFx from "@/components/home/TitleFx";
 
 const HomeFAQ = () => {
   const faqs = HOME_FAQS;
@@ -18,7 +19,7 @@ const HomeFAQ = () => {
         {/* Section Header */}
         <div className="text-center mb-12 sm:mb-16">
           <h2 className="font-space-grotesk text-3xl sm:text-4xl md:text-5xl font-semibold mb-4 sm:mb-6 text-foreground">
-            FAQs
+            <TitleFx variant="underline" text="FAQs" />
           </h2>
           <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto px-4">
             Everything you need to know about Creatives Takeover.

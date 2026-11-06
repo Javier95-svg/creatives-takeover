@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { IdCard, type IdCardPerson } from "@/components/founder-id/IdCard";
 import { captureEvent } from "@/lib/analytics";
 import { FOUNDER_ID_HERO, FOUNDER_ID_PATH } from "@/data/founderIdPage";
+import TitleFx from "@/components/home/TitleFx";
 import "@/components/founder-id/founder-id.css";
 import "./home-founder-id.css";
 
@@ -54,7 +55,7 @@ export default function HomeFounderIdBand() {
                 {FOUNDER_ID_HERO.eyebrow}
               </div>
               <h2 id="home-founder-id-heading" className="mt-4 font-space-grotesk text-3xl font-semibold tracking-tight sm:text-4xl">
-                {FOUNDER_ID_HERO.titleLead} {FOUNDER_ID_HERO.titleAccent}
+                <TitleFx variant="gold" text={`${FOUNDER_ID_HERO.titleLead} ${FOUNDER_ID_HERO.titleAccent}`} />
               </h2>
               <p className="mt-6 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                 Every ID contains

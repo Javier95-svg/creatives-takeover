@@ -11,6 +11,7 @@ import cohortFounderShot from "@/assets/enterprise/cohort-founder.webp";
 import cohortFounderLightShot from "@/assets/enterprise/cohort-founder-light.webp";
 import cohortProgramShot from "@/assets/enterprise/cohort-program.webp";
 import cohortProgramLightShot from "@/assets/enterprise/cohort-program-light.webp";
+import TitleFx from "@/components/home/TitleFx";
 import "@/components/enterprise/enterprise.css";
 import "./home-programs.css";
 
@@ -60,7 +61,7 @@ export default function HomeProgramsBand() {
             For Programs
           </Badge>
           <h2 id="home-programs-heading" className="homepage-section-title text-3xl sm:text-4xl lg:text-[2.9rem]">
-            Keep Every Startup in Your Cohort Moving
+            <TitleFx variant="momentum" text="Keep Every Startup in Your Cohort Moving" />
           </h2>
         </div>
 
