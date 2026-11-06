@@ -131,7 +131,7 @@ const UserReviews = () => {
         Creatives Takeover functions as an Accelerator-as-a-Service (AaaS): every user has full access to our methodology, tools and experts from day one, without giving up equity.
       </p>
       <p className="homepage-section-copy startup-cycle-copy text-base sm:text-lg max-w-3xl mx-auto mt-4 animate-in fade-in slide-in-from-bottom duration-700 delay-300">
-        Our development cycle has 7 stages, each with a clear result, and a dashboard that always shows what to finish next.
+        Our development cycle has 7 stages, each with a clear result, and a dashboard that always shows what to focus on next.
       </p>
     </div>
   );
