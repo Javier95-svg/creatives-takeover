@@ -1,0 +1,39 @@
+/* Homepage Founder ID band: the /founder-id card deck, sized for half a row. */
+
+.home-fid {
+  overflow: hidden;
+}
+
+.home-fid__stage {
+  margin: 0 auto;
+  max-width: 560px;
+  padding: 0 6%;
+}
+
+/* The deck's wide spread is made for a full-width hero; keep the side cards
+   close so they stay inside the band. */
+.home-fid .fid-deck__slot[data-pos="1"] { transform: translate3d(-24%, -6%, -80px) rotate(-7deg) scale(0.84); }
+.home-fid .fid-deck__slot[data-pos="2"] { transform: translate3d(24%, -6%, -80px) rotate(7deg) scale(0.84); }
+
+.home-fid__slot {
+  display: block;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  text-align: left;
+}
+
+.home-fid__slot[data-pos="0"] {
+  cursor: default;
+}
+
+.home-fid__slot:focus-visible {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 6px;
+  border-radius: 22px;
+}
+
+html:not(.dark) .home-fid .fid-stage__floor {
+  background: radial-gradient(ellipse at center, rgba(138, 109, 44, 0.18), transparent 70%);
+}
