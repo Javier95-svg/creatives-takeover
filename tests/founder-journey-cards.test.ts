@@ -20,7 +20,7 @@ test("journey cards use the approved outcome labels", () => {
   // 2026-11-06: the title is the result, the chip names the tool.
   assert.match(source, /title: "Know who it’s for",[\s\S]*?outcome: "ICP Builder"/);
   assert.match(source, /title: "A clear decision on what to do next",[\s\S]*?outcome: "PMF Lab"/);
-  assert.match(source, /title: "A shortlist of investors who fit",[\s\S]*?outcome: "VC Search"/);
+  assert.match(source, /title: "Investors who back your stage and industry",[\s\S]*?outcome: "Find Your Angel"/);
 });
 
 test('all founder journey cards expose complete, concise outcome copy', () => {

@@ -51,7 +51,7 @@ const frozenFiles = {
   // description kept; each row
   // leads with the result (h4) and names the tool in the chip; rows reordered
   // with investors last, each keeping its own GIF via mediaPosition.
-  '../src/components/EntrepreneurProblems.tsx': '270a2168349f3ccaa4f551246ea6aef09d9554a3cda5dadfc97fb457e1336c25',
+  '../src/components/EntrepreneurProblems.tsx': '212583e25c9f1d804730b745009d11926012c49129b8515ba6595a20db001f44',
   // Updated for the canonical core-tool navigation: support tools no longer
   // appear as stage prerequisites, while Stage VII retains its original name
   // and order.

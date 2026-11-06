@@ -249,9 +249,9 @@ const journeyActions: JourneyAction[] = [
   },
   {
     to: "/investors",
-    title: "A shortlist of investors who fit",
-    outcome: "VC Search",
-    description: "Once you have evidence, filter investors by stage and sector and start with those who fit.",
+    title: "Investors who back your stage and industry",
+    outcome: "Find Your Angel",
+    description: "Filter angels and VC partners by stage, from pre-seed to Series C+, and by industry.",
     icon: Users,
     accentName: "emerald",
     accent: "154 59% 43%",
