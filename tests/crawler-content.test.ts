@@ -28,5 +28,5 @@ test('a captured page serves its real copy to crawlers, with one h1, and keeps t
 });
 
 test('the homepage tells crawlers what Creatives Takeover is, not just its menu', () => {
-  assert.match(captured['/'], /<h3>What is Creatives Takeover\?<\/h3>\n<p>Creatives Takeover is a SaaS platform/);
+  assert.match(captured['/'], /<h3>What is Creatives Takeover\?<\/h3>\n<p>Creatives Takeover is where founders and builders start a project/);
 });

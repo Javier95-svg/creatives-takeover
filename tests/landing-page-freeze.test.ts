@@ -43,7 +43,7 @@ const frozenFiles = {
   // Stack row with the MVP Builder offer and its /build destination.
   // Rehashed 2026-10-24 (copy audit): the subtitle and two card descriptions
   // describe what the tools do instead of promising speed or a clear path.
-  // Rehashed 2026-11-06 (homepage-positioning branch, pending review): title and
+  // Rehashed 2026-11-06 (homepage-positioning, approved by Javier): title and
   // description kept; each row
   // leads with the result (h4) and names the tool in the chip; rows reordered
   // with investors last, each keeping its own GIF via mediaPosition.
@@ -91,10 +91,10 @@ const frozenFiles = {
   // sections (Recharts trends, Startup Pedia teaser, FAQ) mount when they come
   // within 800px of the viewport instead of on first render, behind the same
   // placeholders. No section added, removed, reordered, restyled or re-copied.
-  // Rehashed 2026-11-06 (homepage-positioning branch, pending review): the AI
+  // Rehashed 2026-11-06 (homepage-positioning, approved by Javier): the AI
   // trends section is replaced by a programs band, a short Founder ID band sits
   // before the FAQ, and the title and description lead with the outcome.
-  '../src/pages/Index.tsx': 'b86e458626166430c668a3b381aca55eb592387d6859b4ad885db227581fa224',
+  '../src/pages/Index.tsx': '0928899e1a006801b20dba1e2b5621ef80d2b505fe8fd6140ae8b125caa5fcfd',
 } as const;
 
 test('the approved unauthenticated landing page remains frozen during core-tool work', () => {

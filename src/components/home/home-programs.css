@@ -1,6 +1,6 @@
-/* Homepage programs band (for program managers). Three designs under review,
-   all built on the theme tokens so they follow light and dark mode, with the
-   brand trinity (blue, coral, green) as accents. */
+/* Homepage programs band (for program managers): the pilot, day by day.
+   Built on the theme tokens so it follows light and dark mode, with the brand
+   trinity (blue, coral, green) as accents. */
 
 /* Extra room above, so the band reads as its own section after the cycle. */
 .hp-section {
@@ -61,23 +61,6 @@
 }
 
 /* ---- Shared type and controls ---- */
-
-.hp-eyebrow {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 12px;
-  border: 1px solid hsl(var(--primary) / 0.25);
-  border-radius: 999px;
-  background: hsl(var(--primary) / 0.1);
-  color: hsl(var(--primary));
-  font-size: 11.5px;
-  font-weight: 600;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-}
-
-.hp-eyebrow svg { width: 14px; height: 14px; }
 
 .hp-title {
   margin-top: 0;
@@ -155,143 +138,8 @@
   .hp-ctas .hp-btn { width: 100%; }
 }
 
-.hp-icon {
-  display: inline-flex;
-  flex-shrink: 0;
-  align-items: center;
-  justify-content: center;
-  width: 38px;
-  height: 38px;
-  border-radius: 12px;
-  background: hsl(var(--primary) / 0.12);
-  color: hsl(var(--primary));
-}
-
-.hp-icon svg { width: 18px; height: 18px; }
-
 /* The shared /enterprise product window, sized for the band. */
 .hp .ent-shot { box-shadow: 0 40px 80px -40px rgba(15, 23, 42, 0.55); }
-
-/* ---- A: Command center ---- */
-
-.hp-a__glow {
-  position: absolute;
-  z-index: -1;
-  top: -30%;
-  right: -10%;
-  width: 70%;
-  height: 120%;
-  background:
-    radial-gradient(closest-side, rgba(79, 143, 247, 0.22), transparent 70%),
-    radial-gradient(closest-side at 70% 70%, rgba(243, 117, 117, 0.12), transparent 70%);
-  filter: blur(10px);
-  pointer-events: none;
-}
-
-.hp-a__grid {
-  display: grid;
-  gap: 40px;
-  align-items: center;
-}
-
-@media (min-width: 1024px) {
-  .hp-a__grid { grid-template-columns: 0.9fr 1.1fr; gap: 56px; }
-}
-
-.hp-a__shot { min-width: 0; }
-
-@media (min-width: 1024px) {
-  .hp-a__shot { transform: perspective(1800px) rotateY(-6deg) rotateX(2deg); transform-origin: left center; }
-}
-
-.hp-facts {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1px;
-  margin: 44px 0 0;
-  overflow: hidden;
-  border: 1px solid var(--hp-line);
-  border-radius: 20px;
-  background: var(--hp-line);
-}
-
-@media (min-width: 768px) {
-  .hp-facts { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-}
-
-.hp-fact {
-  padding: 22px 20px;
-  background: hsl(var(--card));
-}
-
-.hp-fact__value {
-  font-family: "Space Grotesk", "Inter", sans-serif;
-  font-size: 2.25rem;
-  font-weight: 600;
-  line-height: 1;
-  letter-spacing: -0.03em;
-  color: var(--hp-ink);
-}
-
-.hp-fact:nth-child(1) .hp-fact__value { color: var(--hp-blue); }
-.hp-fact:nth-child(4) .hp-fact__value { color: var(--hp-green); }
-
-.hp-fact__label {
-  margin: 8px 0 0;
-  color: var(--hp-muted);
-  font-size: 0.875rem;
-  line-height: 1.4;
-}
-
-.hp-roles {
-  display: grid;
-  gap: 16px;
-  margin-top: 20px;
-}
-
-@media (min-width: 768px) {
-  .hp-roles { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-}
-
-.hp-role {
-  padding: 22px;
-  border: 1px solid var(--hp-line);
-  border-radius: 20px;
-  background: var(--hp-tile);
-}
-
-.hp-role__head { display: flex; align-items: center; gap: 12px; }
-
-.hp-role h3 {
-  font-family: "Space Grotesk", "Inter", sans-serif;
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: var(--hp-ink);
-}
-
-.hp-role ul { margin-top: 14px; display: grid; gap: 8px; }
-
-.hp-role li {
-  position: relative;
-  padding-left: 18px;
-  color: var(--hp-muted);
-  font-size: 0.9375rem;
-  line-height: 1.5;
-}
-
-.hp-role li::before {
-  content: "";
-  position: absolute;
-  left: 2px;
-  top: 0.62em;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--hp-blue);
-}
-
-.hp-role:nth-child(2) li::before { background: var(--hp-coral); }
-.hp-role:nth-child(3) li::before { background: var(--hp-green); }
 
 /* ---- B: The pilot, day by day ---- */
 
@@ -419,104 +267,6 @@
 
 .hp-b .hp-ctas { margin-top: 40px; }
 
-/* ---- C: Before and with ---- */
-
-.hp-c {
-  display: grid;
-  gap: 44px;
-  align-items: center;
-}
-
-@media (min-width: 1024px) {
-  .hp-c { grid-template-columns: 1fr 1fr; gap: 56px; }
-}
-
-.hp-shifts {
-  display: grid;
-  gap: 12px;
-  margin-top: 28px;
-}
-
-.hp-shift {
-  display: flex;
-  gap: 14px;
-  padding: 16px 18px;
-  border: 1px solid var(--hp-line);
-  border-radius: 18px;
-  background: var(--hp-tile);
-}
-
-.hp-shift__before {
-  color: var(--hp-muted);
-  font-size: 0.875rem;
-  text-decoration: line-through;
-  text-decoration-color: hsl(var(--muted-foreground) / 0.55);
-}
-
-.hp-shift__after {
-  margin-top: 4px;
-  color: var(--hp-ink);
-  font-size: 0.975rem;
-  line-height: 1.5;
-}
-
-.hp-c__visual {
-  position: relative;
-  min-width: 0;
-  padding: 24px 0 36px;
-}
-
-.hp-c__shot { position: relative; z-index: 1; }
-
-.hp-callout {
-  position: absolute;
-  z-index: 2;
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 14px 10px 10px;
-  border: 1px solid var(--hp-line);
-  border-radius: 14px;
-  background: hsl(var(--card));
-  color: var(--hp-ink);
-  font-size: 0.875rem;
-  box-shadow: 0 24px 50px -24px rgba(15, 23, 42, 0.6);
-  animation: hp-float 6s ease-in-out infinite;
-}
-
-.hp-callout--a { top: 0; right: -4px; }
-.hp-callout--b { bottom: 10px; left: -4px; animation-delay: -3s; }
-
-.hp-callout__icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 30px;
-  border-radius: 9px;
-  background: rgba(37, 203, 122, 0.15);
-  color: var(--hp-green);
-}
-
-.hp-callout__icon svg { width: 16px; height: 16px; }
-.hp-callout__icon--warn { background: rgba(243, 117, 117, 0.15); color: var(--hp-coral); }
-
-.hp-c__note {
-  position: absolute;
-  right: 4px;
-  bottom: 0;
-  color: var(--hp-muted);
-  font-size: 0.75rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-@keyframes hp-float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-6px); }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .hp-callout { animation: none; }
   .hp-btn, .hp-btn svg { transition: none; }
 }

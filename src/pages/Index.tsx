@@ -27,7 +27,7 @@ const FounderAnswerLibraryTeaser = lazy(() => import("@/components/seo/FounderAn
 // lazy() alone still fetched every chunk on first render, before the visitor
 // scrolled. LoadWhenNear defers each until it is 800px from the viewport; the
 // placeholders keep the space so nothing shifts.
-const programsPlaceholder = <div className="min-h-[2051px] lg:min-h-[1183px] animate-pulse bg-muted/20" />;
+const programsPlaceholder = <div className="min-h-[1825px] lg:min-h-[1780px] animate-pulse bg-muted/20" />;
 const founderIdPlaceholder = <div className="min-h-[1091px] lg:min-h-[728px] animate-pulse bg-muted/20" />;
 const teaserPlaceholder = <div className="h-64 animate-pulse bg-muted/20" />;
 const faqPlaceholder = <div className="h-96 animate-pulse bg-muted/20" />;
