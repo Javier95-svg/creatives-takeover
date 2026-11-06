@@ -83,10 +83,10 @@ const DEFAULT_STATS: HeroStat[] = [
 const DEFAULT_LEDE = (
   <>
     <span className="ct-hero__lede-block">
-      Customized workspace for startup founders, product managers and indie builders.
+      Where founders start a project and find out if people want it.
     </span>
     <span className="ct-hero__lede-block">
-      Identify what’s worth building, validate demand with reliable evidence, and turn insights into products and go-to-market strategies.
+      Work out who it’s for, put a demo in front of real people, and keep what you learn, your tasks and your progress in one workspace.
     </span>
     <strong className="ct-hero__lede-final">Free to start. No equity.</strong>
   </>
@@ -192,6 +192,10 @@ const Hero = ({
     setAttribution("hero_dashboard_preview", location.pathname);
   };
 
+  const handleProgramsLinkClick = () => {
+    void trackEngagement("hero-programs-link", 60);
+  };
+
   const handleEyebrowClick = () => {
     void trackEngagement("hero-referral-banner", 55);
   };
@@ -257,6 +261,9 @@ const Hero = ({
                 <button type="button" className="ct-hero__audience-link" onClick={handleWhoIsThisForClick}>
                   Who is this for?
                 </button>
+                <Link className="ct-hero__audience-link" to="/enterprise" onClick={handleProgramsLinkClick}>
+                  Running a program? See the cohort pilot
+                </Link>
               </div>
             </>
           )}
