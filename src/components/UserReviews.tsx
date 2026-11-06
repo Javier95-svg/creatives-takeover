@@ -122,16 +122,16 @@ const UserReviews = () => {
   const sectionHeader = (
     <div className="startup-cycle-header text-center mb-16 sm:mb-20 px-6 sm:px-8 lg:px-12">
       <Badge variant="outline" className="homepage-section-badge mb-5 animate-in fade-in slide-in-from-top duration-700">
-        The 7 Stage Journey
+        A Proven Methodology
       </Badge>
       <h2 className="homepage-section-title startup-cycle-title text-3xl sm:text-4xl lg:text-[2.9rem] mb-5 break-words animate-in fade-in slide-in-from-bottom duration-700 delay-100">
         Track Your Project Evolution
       </h2>
       <p className="homepage-section-copy startup-cycle-copy text-base sm:text-lg max-w-3xl mx-auto animate-in fade-in slide-in-from-bottom duration-700 delay-200">
-        We function as an Accelerator-as-a-Service (AaaS): every user has full access to the structure, tools and experts of an accelerator program from day one, without giving up equity.
+        Creatives Takeover functions as an Accelerator-as-a-Service (AaaS): every user has full access to our methodology, tools and experts from day one, without giving up equity.
       </p>
       <p className="homepage-section-copy startup-cycle-copy text-base sm:text-lg max-w-3xl mx-auto mt-4 animate-in fade-in slide-in-from-bottom duration-700 delay-300">
-        Seven stages, each with a clear result, and a dashboard that always shows what to finish next.
+        Our development cycle has 7 stages, each with a clear result, and a dashboard that always shows what to finish next.
       </p>
     </div>
   );
