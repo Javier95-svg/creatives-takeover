@@ -28,6 +28,8 @@ type JourneyStep = {
   pathway: string;
   icon: LucideIcon;
   accentColor: AccentColor;
+  /** Which journey GIF this row shows; rows were reordered, the GIFs were not. */
+  mediaPosition: number;
 };
 
 type JourneyAction = {
@@ -60,34 +62,15 @@ const journeySteps: JourneyStep[] = [
     pathway: "BizMap AI guides you from scattered thoughts to a strategic plan—clarifying your market, competitors, and next steps in one conversation.",
     icon: Lightbulb,
     accentColor: "blue",
+    mediaPosition: 0,
   },
   {
     phase: "Finding Direction",
-    challenge: "Aligning your product with a genuine market need",
+    challenge: "You can't tell if anyone wants it",
     pathway: "The Dashboard breaks down your vision into weekly sprints, tracks progress, and keeps you accountable—transforming busyness into real momentum.",
     icon: Target,
     accentColor: "green",
-  },
-  {
-    phase: "Lack of Experience",
-    challenge: "Navigating Uncertainty and Decision-Making",
-    pathway: "Our Community connects you with mentors and fellow founders who've navigated these exact challenges—offering guidance, feedback, and genuine support.",
-    icon: Users,
-    accentColor: "red",
-  },
-  {
-    phase: "Working Smartly",
-    challenge: "Task prioritization and resource management",
-    pathway: "BizMap AI helps define your ICP, select the right channels, and craft a go-to-market strategy based on proven frameworks—no more guessing.",
-    icon: Map,
-    accentColor: "blue",
-  },
-  {
-    phase: "Seeking Resources",
-    challenge: "Fundraising feels impossible without the right connections",
-    pathway: "Meet your Investor",
-    icon: Rocket,
-    accentColor: "amber",
+    mediaPosition: 1,
   },
   {
     phase: "MVP Building",
@@ -95,22 +78,48 @@ const journeySteps: JourneyStep[] = [
     pathway: "Build the core product your customers need without unnecessary features.",
     icon: Code,
     accentColor: "blue",
+    mediaPosition: 5,
+  },
+  {
+    phase: "Working Smartly",
+    challenge: "Too many tasks, not enough time",
+    pathway: "BizMap AI helps define your ICP, select the right channels, and craft a go-to-market strategy based on proven frameworks—no more guessing.",
+    icon: Map,
+    accentColor: "blue",
+    mediaPosition: 3,
+  },
+  {
+    phase: "Lack of Experience",
+    challenge: "Decisions you can't make alone",
+    pathway: "Our Community connects you with mentors and fellow founders who've navigated these exact challenges—offering guidance, feedback, and genuine support.",
+    icon: Users,
+    accentColor: "red",
+    mediaPosition: 2,
   },
   {
     phase: "Founder's Mental Tax",
-    challenge: "High risk of burnout",
+    challenge: "Doing everything yourself",
     pathway: "Find a Co-Founder",
     icon: LayoutDashboard,
     accentColor: "green",
+    mediaPosition: 6,
+  },
+  {
+    phase: "Seeking Resources",
+    challenge: "Fundraising without the right connections",
+    pathway: "Meet your Investor",
+    icon: Rocket,
+    accentColor: "amber",
+    mediaPosition: 4,
   },
 ];
 
 const journeyActions: JourneyAction[] = [
   {
     to: "/icp-builder",
-    title: "Define Your ICP",
-    outcome: "Target Correctly",
-    description: "Identify who to serve, what they need, and how to position your offer.",
+    title: "Know who it’s for",
+    outcome: "ICP Builder",
+    description: "Who has the problem, what they need, and how to describe your offer to them.",
     icon: Target,
     accentName: "cobalt",
     accent: "218 89% 60%",
@@ -130,9 +139,9 @@ const journeyActions: JourneyAction[] = [
   },
   {
     to: "/pmf-lab",
-    title: "Validate Demand",
-    outcome: "Understand the Market",
-    description: "Turn customer evidence into a clear Build, Narrow, Pivot, or Stop decision.",
+    title: "A clear decision on what to do next",
+    outcome: "PMF Lab",
+    description: "Turn what customers tell you into a Build, Narrow, Pivot or Stop decision.",
     icon: FlaskConical,
     accentName: "teal",
     accent: "183 75% 42%",
@@ -151,76 +160,10 @@ const journeyActions: JourneyAction[] = [
     delay: "0.18s",
   },
   {
-    to: "/mentorship",
-    title: "Find a Mentor",
-    outcome: "Expert guidance",
-    description: "Get focused feedback from experienced founders and leave with clear next steps.",
-    icon: GraduationCap,
-    accentName: "coral",
-    accent: "13 84% 63%",
-    accentSoft: "18 100% 96%",
-    accentGlow: "12 90% 69%",
-    accentBorder: "14 86% 78%",
-    accentStrong: "10 84% 57%",
-    panelTint: "15 66% 74%",
-    meshTint: "20 74% 93%",
-    idleVariant: "halo",
-    shimmerAngle: "124deg",
-    floatDistance: "3px",
-    hoverLift: "-5px",
-    hoverScale: "1.008",
-    sweepDuration: "760ms",
-    delay: "0.3s",
-  },
-  {
-    to: "/dashboard",
-    title: "Dashboard: Your Project Co-Pilot",
-    outcome: "Daily Focus",
-    description: "Prioritize tasks, track weekly progress, and stay accountable in one workspace.",
-    icon: LayoutDashboard,
-    accentName: "amber",
-    accent: "42 92% 57%",
-    accentSoft: "46 100% 95%",
-    accentGlow: "41 96% 66%",
-    accentBorder: "43 92% 75%",
-    accentStrong: "38 90% 52%",
-    panelTint: "43 76% 73%",
-    meshTint: "46 78% 92%",
-    idleVariant: "float",
-    shimmerAngle: "136deg",
-    floatDistance: "5px",
-    hoverLift: "-8px",
-    hoverScale: "1.014",
-    sweepDuration: "620ms",
-    delay: "0.12s",
-  },
-  {
-    to: "/investors",
-    title: "Find Investors",
-    outcome: "Angel Investor Network",
-    description: "Find relevant investors by stage and sector, then start targeted conversations.",
-    icon: Users,
-    accentName: "emerald",
-    accent: "154 59% 43%",
-    accentSoft: "152 54% 95%",
-    accentGlow: "154 64% 52%",
-    accentBorder: "154 57% 66%",
-    accentStrong: "154 67% 37%",
-    panelTint: "153 46% 69%",
-    meshTint: "152 44% 92%",
-    idleVariant: "beam",
-    shimmerAngle: "154deg",
-    floatDistance: "3px",
-    hoverLift: "-6px",
-    hoverScale: "1.01",
-    sweepDuration: "700ms",
-    delay: "0.22s",
-  },
-  {
     to: "/build",
-    title: "Build Your MVP",
-    outcome: "Working product",
-    description: "Build a working first version, share it with users, and improve it with their feedback.",
+    title: "A first version people can try",
+    outcome: "MVP Builder",
+    description: "Build a working first version, share it with users and improve it with their feedback.",
     icon: Boxes,
     accentName: "indigo-steel",
     accent: "226 31% 57%",
@@ -239,10 +182,54 @@ const journeyActions: JourneyAction[] = [
     delay: "0.36s",
   },
   {
+    to: "/dashboard",
+    title: "A plan for this week",
+    outcome: "Dashboard",
+    description: "Your next tasks, weekly progress and the evidence you’ve collected, in one place.",
+    icon: LayoutDashboard,
+    accentName: "amber",
+    accent: "42 92% 57%",
+    accentSoft: "46 100% 95%",
+    accentGlow: "41 96% 66%",
+    accentBorder: "43 92% 75%",
+    accentStrong: "38 90% 52%",
+    panelTint: "43 76% 73%",
+    meshTint: "46 78% 92%",
+    idleVariant: "float",
+    shimmerAngle: "136deg",
+    floatDistance: "5px",
+    hoverLift: "-8px",
+    hoverScale: "1.014",
+    sweepDuration: "620ms",
+    delay: "0.12s",
+  },
+  {
+    to: "/mentorship",
+    title: "Advice from people who’ve done it",
+    outcome: "Mentors",
+    description: "Find experts in specific fields and get feedback on the decision in front of you.",
+    icon: GraduationCap,
+    accentName: "coral",
+    accent: "13 84% 63%",
+    accentSoft: "18 100% 96%",
+    accentGlow: "12 90% 69%",
+    accentBorder: "14 86% 78%",
+    accentStrong: "10 84% 57%",
+    panelTint: "15 66% 74%",
+    meshTint: "20 74% 93%",
+    idleVariant: "halo",
+    shimmerAngle: "124deg",
+    floatDistance: "3px",
+    hoverLift: "-5px",
+    hoverScale: "1.008",
+    sweepDuration: "760ms",
+    delay: "0.3s",
+  },
+  {
     to: "/co-founder",
-    title: "Find a Co-Founder",
-    outcome: "Shared execution",
-    description: "Find a founder with complementary skills to share the work and the decisions.",
+    title: "Someone to share the work",
+    outcome: "Cofounder search",
+    description: "Find a cofounder whose skills fill the gaps in yours.",
     icon: Handshake,
     accentName: "raspberry",
     accent: "338 72% 58%",
@@ -259,6 +246,28 @@ const journeyActions: JourneyAction[] = [
     hoverScale: "1.012",
     sweepDuration: "740ms",
     delay: "0.28s",
+  },
+  {
+    to: "/investors",
+    title: "A shortlist of investors who fit",
+    outcome: "VC Search",
+    description: "Once you have evidence, filter investors by stage and sector and start with those who fit.",
+    icon: Users,
+    accentName: "emerald",
+    accent: "154 59% 43%",
+    accentSoft: "152 54% 95%",
+    accentGlow: "154 64% 52%",
+    accentBorder: "154 57% 66%",
+    accentStrong: "154 67% 37%",
+    panelTint: "153 46% 69%",
+    meshTint: "152 44% 92%",
+    idleVariant: "beam",
+    shimmerAngle: "154deg",
+    floatDistance: "3px",
+    hoverLift: "-6px",
+    hoverScale: "1.01",
+    sweepDuration: "700ms",
+    delay: "0.22s",
   },
 ];
 
@@ -356,10 +365,10 @@ const EntrepreneurProblems = () => {
             Own Your Path
           </Badge>
           <h2 id="journey-heading" className="homepage-section-title founder-journey-section__title text-3xl sm:text-4xl lg:text-[2.9rem] mb-5">
-            Every Founder's Journey is Unique
+            Where new projects stall
           </h2>
           <p className="homepage-section-copy founder-journey-section__copy mx-auto text-base sm:text-lg">
-            But most founders run into the same problems. Here is each one, and the part of the platform that helps you work through it.
+            Seven common sticking points, and what you leave with after working through each one here.
           </p>
         </ScrollReveal>
 
@@ -396,7 +405,7 @@ const EntrepreneurProblems = () => {
 
                     <div className="w-full">
                       {index <= 6 ? (
-                        <FounderJourneyVideo position={index} className="founder-journey-gif" />
+                        <FounderJourneyVideo position={step.mediaPosition} className="founder-journey-gif" />
                       ) : (
                         <div className={`mx-auto w-14 h-14 rounded-full flex items-center justify-center ${accentClasses.icon} shadow-sm transition-colors`}>
                           <Icon className="w-7 h-7" />
@@ -430,7 +439,7 @@ const EntrepreneurProblems = () => {
                         <div className="relative z-10 md:col-start-2 md:row-start-2 self-center">
                           {index <= 6 ? (
                             <div className="w-full md:max-w-2xl lg:max-w-3xl xl:max-w-4xl ml-2 lg:ml-4">
-                              <FounderJourneyVideo position={index} className="founder-journey-gif" />
+                              <FounderJourneyVideo position={step.mediaPosition} className="founder-journey-gif" />
                             </div>
                           ) : (
                             <div className={`w-16 h-16 rounded-full flex items-center justify-center ${accentClasses.icon} shadow-sm bg-background transition-colors`}>
@@ -455,7 +464,7 @@ const EntrepreneurProblems = () => {
                         <div className="relative z-10 md:col-start-1 md:row-start-2 self-center">
                           {index <= 6 ? (
                             <div className="w-full md:max-w-2xl lg:max-w-3xl xl:max-w-4xl mr-2 lg:mr-4">
-                              <FounderJourneyVideo position={index} className="founder-journey-gif" />
+                              <FounderJourneyVideo position={step.mediaPosition} className="founder-journey-gif" />
                             </div>
                           ) : (
                             <div className={`w-16 h-16 rounded-full flex items-center justify-center ${accentClasses.icon} shadow-sm bg-background transition-colors`}>

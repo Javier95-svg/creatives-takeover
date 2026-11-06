@@ -128,7 +128,7 @@ const UserReviews = () => {
         Startup Development Cycle
       </h2>
       <p className="homepage-section-copy startup-cycle-copy text-base sm:text-lg max-w-3xl mx-auto animate-in fade-in slide-in-from-bottom duration-700 delay-200">
-        A 7-stage roadmap in two phases: Phase A (BizMap AI) covers validation, MVP and launch; Phase B (Insighta) covers traction and preparing to raise.
+        Seven stages, each with one result to finish. Start at the stage your project is in.
       </p>
     </div>
   );

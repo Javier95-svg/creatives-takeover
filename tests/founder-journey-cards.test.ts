@@ -12,14 +12,15 @@ const actionBlock = source.match(/const journeyActions: JourneyAction\[\] = \[([
 test('the task prioritization row promotes Dashboard with a coherent outcome', () => {
   assert.match(
     actionBlock,
-    /to: "\/dashboard",[\s\S]*?title: "Dashboard: Your Project Co-Pilot",[\s\S]*?outcome: "Daily Focus",[\s\S]*?Prioritize tasks, track weekly progress, and stay accountable in one workspace\./,
+    /to: "\/dashboard",[\s\S]*?title: "A plan for this week",[\s\S]*?outcome: "Dashboard",[\s\S]*?Your next tasks, weekly progress and the evidence you’ve collected, in one place\./,
   );
 });
 
 test("journey cards use the approved outcome labels", () => {
-  assert.match(source, /title: "Define Your ICP",[\s\S]*?outcome: "Target Correctly"/);
-  assert.match(source, /title: "Validate Demand",[\s\S]*?outcome: "Understand the Market"/);
-  assert.match(source, /title: "Find Investors",[\s\S]*?outcome: "Angel Investor Network"/);
+  // 2026-11-06: the title is the result, the chip names the tool.
+  assert.match(source, /title: "Know who it’s for",[\s\S]*?outcome: "ICP Builder"/);
+  assert.match(source, /title: "A clear decision on what to do next",[\s\S]*?outcome: "PMF Lab"/);
+  assert.match(source, /title: "A shortlist of investors who fit",[\s\S]*?outcome: "VC Search"/);
 });
 
 test('all founder journey cards expose complete, concise outcome copy', () => {
