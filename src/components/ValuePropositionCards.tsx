@@ -48,10 +48,10 @@ const ValuePropositionCards = () => {
     {
       position: 6,
       icon: LayoutDashboard,
-      title: "One workspace for your project",
+      title: "Pick up where you left off",
       subtitle: "Workspace",
       buttonLabel: "Validate, Build, Launch",
-      description: "Every tool works on the same project. ICP Builder defines who you serve, Demo Studio gives people something to try, PMF Lab turns their feedback into a Build, Narrow, Pivot or Stop decision, then MVP Builder, GTM Strategist and Traction Engine help you plan your launch and measure your first sales.\n\nEach tool starts from what the last one saved, so you never begin from a blank page. Your dashboard keeps tasks, weekly progress and the evidence you collect in one place.",
+      description: "Each tool starts from what you saved in the last one, so your customer profile shapes your demo and your demo shapes your decision. Your dashboard keeps tasks, progress and evidence together.",
       link: "/demo",
       linkLabel: "Explore a sample workspace",
       image: "https://images.unsplash.com/photo-1553877522-43269d4ea984?w=800&h=600&fit=crop&q=80&fm=webp",
@@ -60,10 +60,10 @@ const ValuePropositionCards = () => {
     {
       position: 1,
       icon: Lightbulb,
-      title: "An assistant that knows your project",
+      title: "Answers that already know your project",
       subtitle: "Pulse",
       buttonLabel: "Meet Pulse",
-      description: "Pulse reads your project before you ask: your customer profile, demo, validation, product, go to market plan, traction, tasks and open assumptions. You don't have to explain your idea every time you ask.\n\nIt keeps the decisions and facts you choose to save, adds up to three notes a day on risks, opportunities or contradictions in your evidence, and shows the sources behind every answer. Pulse is included on every plan and its replies use no credits.",
+      description: "Pulse reads your customer profile, demo, validation, plans and tasks before you ask, and shows the sources behind every answer. It's on every plan and its replies use no credits.",
       link: "/demo",
       linkLabel: "See Pulse in the sample workspace",
       image: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=800&h=600&fit=crop&q=80&fm=webp",
@@ -72,10 +72,10 @@ const ValuePropositionCards = () => {
     {
       position: 4,
       icon: Handshake,
-      title: "Mentors, cofounders and experts",
+      title: "Help from people, not just tools",
       subtitle: "People",
       buttonLabel: "Find Help",
-      description: "You don't have to figure everything out alone. Book mentors who have solved the problem you are stuck on, and find a cofounder whose skills fill the gaps in your team.\n\nWhen you need hands, the service marketplace connects you with providers in sales, marketing, operations and tech support. They are on the same platform where you build, so you don't have to look for help elsewhere.",
+      description: "Find experts in specific fields, a cofounder whose skills fill your gaps, and service providers for sales, marketing, operations and tech support.",
       link: "/mentorship",
       linkLabel: "Find a mentor",
       image: "https://images.unsplash.com/photo-1587614382346-4ec70e388b28?w=800&h=600&fit=crop&q=80&fm=webp",
@@ -84,10 +84,10 @@ const ValuePropositionCards = () => {
     {
       position: 2,
       icon: GraduationCap,
-      title: "Build in public",
+      title: "Show your progress with one link",
       subtitle: "Founder ID",
       buttonLabel: "Share your Progress",
-      description: "Your Founder ID shows who you are, what you are building and how far you have come, at one short link: creatives-takeover.com/@you. Share it with customers, partners and investors instead of explaining your project from scratch.\n\nVisitors can follow your progress and offer the help you ask for, from feedback to introductions. You choose what is public; your workspace stays private.",
+      description: "creatives-takeover.com/@you shows what you're building and how far you've got. You choose what's public; your workspace stays private.",
       link: "/founder-id",
       linkLabel: "Get your Founder ID",
       image: "https://images.unsplash.com/photo-1531482615713-2afd69097998?w=800&h=600&fit=crop&q=80&fm=webp",
@@ -96,10 +96,10 @@ const ValuePropositionCards = () => {
     {
       position: 3,
       icon: TrendingUp,
-      title: "Investors and accelerators",
+      title: "Investors and programs, when you're ready",
       subtitle: "Insighta",
       buttonLabel: "Prepare to Raise",
-      description: "When your evidence is ready, know who to talk to. VC Search and Accelerator Hunt let you filter investors and programs by industry, stage and check size, so you build a focused list instead of pitching blind.\n\nInsighta Test checks your readiness and Pitch Deck Analyzer sharpens your deck. On Pro, Find Your Angel connects you with angel investors backing early stage founders.",
+      description: "Once you have evidence, filter investors and accelerators by industry, stage and check size and build a focused list. We can't promise investment.",
       link: "/vc-search",
       linkLabel: "Explore investors",
       image: "https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=800&h=600&fit=crop&q=80&fm=webp",
@@ -108,14 +108,14 @@ const ValuePropositionCards = () => {
     {
       position: 5,
       icon: BookOpen,
-      title: "Learn from founders",
-      subtitle: "Stories and Guides",
-      buttonLabel: "Founder Stories",
-      description: "Founder Stories brings real experiences from people building companies: the lessons, the wins and the mistakes, without recycled advice.\n\nWhen you have a specific question, the Founder Answer Library and the Startup Guide give you clear, practical answers on customers, validation, MVPs, go to market and fundraising.",
-      link: "/newspaper",
-      linkLabel: "Read founder stories",
+      title: "Learn from other founders",
+      subtitle: "Startup Pedia and Newspaper",
+      buttonLabel: "Learn",
+      description: "Startup Pedia answers specific questions on customers, validation, MVPs and go to market. The Newspaper covers how real companies started.",
+      link: "/startup-pedia",
+      linkLabel: "Browse Startup Pedia",
       image: "https://images.unsplash.com/photo-1456324504439-367cee3b3c32?w=800&h=600&fit=crop&q=80&fm=webp",
-      imageAlt: "Founder stories on the Creatives Takeover newspaper"
+      imageAlt: "Founder stories and guides on Creatives Takeover"
     }
   ];
 
@@ -390,7 +390,7 @@ const ValuePropositionCards = () => {
             What's Inside
           </Badge>
           <h2 className="homepage-section-title value-prop-section__title text-3xl sm:text-4xl lg:text-[2.9rem] mb-4">
-            Creatives Takeover in a Nutshell
+            Your project, and everyone around it
           </h2>
         </div>
 

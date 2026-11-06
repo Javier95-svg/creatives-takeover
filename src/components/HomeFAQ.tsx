@@ -4,6 +4,8 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { Link } from "react-router-dom";
+import { ArrowRight } from "lucide-react";
 import { HOME_FAQS } from "@/data/homeFaq";
 
 const HomeFAQ = () => {
@@ -42,6 +44,12 @@ const HomeFAQ = () => {
                         {paragraph.trim()}
                       </p>
                     ))}
+                    {faq.link ? (
+                      <Link to={faq.link.href} className="mt-3 inline-flex items-center gap-1.5 font-semibold text-primary hover:underline">
+                        {faq.link.label}
+                        <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                      </Link>
+                    ) : null}
                   </AccordionContent>
                 </AccordionItem>
               ))}

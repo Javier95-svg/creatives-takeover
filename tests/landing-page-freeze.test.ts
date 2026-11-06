@@ -35,7 +35,11 @@ const frozenFiles = {
   // programs run cohorts on the platform. The rest of the hero is unchanged.
   // Rehashed 2026-10-24 (copy audit): the dashboard preview's third stat reads
   // "open tasks" instead of "open coach reviews", a feature the product lacks.
-  '../src/components/Hero.tsx': '7b5537fadea96e52d0a02f2947e74ab368bc868d564636057597fa6cb23ed3b5',
+  // Rehashed 2026-11-06 (homepage-positioning branch, pending Javier's review):
+  // new lede ("Where founders start a project and find out if people want
+  // it."), and a "Running a program?" link to /enterprise beside "Who is this
+  // for?". The H1, idea box, dashboard preview, stats and layout are unchanged.
+  '../src/components/Hero.tsx': '02d2ed6ba146c96c3cc76495842f901a98c1261af0cd07cb62202746dd0fd80c',
   // Rehashed 2026-07-28 for the performance audit: mobile and desktop journey
   // branches are now mutually exclusive, preventing duplicate 147 MB GIF loads.
   // Content, visual order, actions, and responsive layout remain unchanged.
@@ -43,7 +47,10 @@ const frozenFiles = {
   // Stack row with the MVP Builder offer and its /build destination.
   // Rehashed 2026-10-24 (copy audit): the subtitle and two card descriptions
   // describe what the tools do instead of promising speed or a clear path.
-  '../src/components/EntrepreneurProblems.tsx': 'e13e2ed8a1cee6b26fe52e01031bbf5bc9405787b7830ae1189d2e27036da116',
+  // Rehashed 2026-11-06 (homepage-positioning branch, pending review): each row
+  // leads with the result (h4) and names the tool in the chip; rows reordered
+  // with investors last, each keeping its own GIF via mediaPosition.
+  '../src/components/EntrepreneurProblems.tsx': '1d315e7201aa02f3ba208e4b9de0b485b864ff1928e7d092e797f888756efefa',
   // Updated for the canonical core-tool navigation: support tools no longer
   // appear as stage prerequisites, while Stage VII retains its original name
   // and order.
@@ -87,7 +94,10 @@ const frozenFiles = {
   // sections (Recharts trends, Startup Pedia teaser, FAQ) mount when they come
   // within 800px of the viewport instead of on first render, behind the same
   // placeholders. No section added, removed, reordered, restyled or re-copied.
-  '../src/pages/Index.tsx': 'dea670dbab6a0eea8b4cdf939253c8bedceaf27498c2729a79d09228907244ec',
+  // Rehashed 2026-11-06 (homepage-positioning branch, pending review): the AI
+  // trends section is replaced by a programs band, a hidden proof slot sits
+  // before the FAQ, and the title and description lead with the outcome.
+  '../src/pages/Index.tsx': 'd92b18f9d773ff739441275cf9c423be0c5efb9c483c76cb31257c2d19803e62',
 } as const;
 
 test('the approved unauthenticated landing page remains frozen during core-tool work', () => {

@@ -30,8 +30,8 @@ export default function FounderAnswerLibraryTeaser({ compact = false }: FounderA
                 Practical answers for your next decision
               </h2>
               <p className="mt-4 text-sm leading-relaxed text-muted-foreground sm:text-base">
-                Explore clear guides for defining your ICP, validating demand, scoping an MVP, planning go-to-market,
-                and preparing for fundraising.
+                Clear guides for defining your customer, testing demand, scoping a first version and planning
+                go-to-market.
               </p>
               <div className="mt-6 flex flex-col gap-3 sm:flex-row">
                 <Button asChild>
