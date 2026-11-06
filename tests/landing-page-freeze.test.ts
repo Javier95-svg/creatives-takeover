@@ -35,11 +35,7 @@ const frozenFiles = {
   // programs run cohorts on the platform. The rest of the hero is unchanged.
   // Rehashed 2026-10-24 (copy audit): the dashboard preview's third stat reads
   // "open tasks" instead of "open coach reviews", a feature the product lacks.
-  // Rehashed 2026-11-06 (homepage-positioning branch, pending Javier's review):
-  // a "Running a cohort?" link to /enterprise beside "Who is this for?". The
-  // copy (H1, lede kept as requested), idea box, preview, stats and layout are
-  // unchanged.
-  '../src/components/Hero.tsx': 'b4289ef93e876ce40bd740a5510cf997a08a60fa4dd598cfb967027f86ab3cfe',
+  '../src/components/Hero.tsx': '7b5537fadea96e52d0a02f2947e74ab368bc868d564636057597fa6cb23ed3b5',
   // Rehashed 2026-07-28 for the performance audit: mobile and desktop journey
   // branches are now mutually exclusive, preventing duplicate 147 MB GIF loads.
   // Content, visual order, actions, and responsive layout remain unchanged.

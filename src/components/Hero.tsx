@@ -192,10 +192,6 @@ const Hero = ({
     setAttribution("hero_dashboard_preview", location.pathname);
   };
 
-  const handleProgramsLinkClick = () => {
-    void trackEngagement("hero-programs-link", 60);
-  };
-
   const handleEyebrowClick = () => {
     void trackEngagement("hero-referral-banner", 55);
   };
@@ -261,9 +257,6 @@ const Hero = ({
                 <button type="button" className="ct-hero__audience-link" onClick={handleWhoIsThisForClick}>
                   Who is this for?
                 </button>
-                <Link className="ct-hero__audience-link" to="/enterprise" onClick={handleProgramsLinkClick}>
-                  Running a cohort?
-                </Link>
               </div>
             </>
           )}
