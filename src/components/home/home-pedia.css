@@ -16,24 +16,18 @@
   position: relative;
 }
 
-.hpd-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 12px;
-  border: 1px solid hsl(var(--primary) / 0.25);
+/* The section badge links to the library; centred over the title. */
+.hpd-badge-link {
+  display: flex;
+  width: fit-content;
+  margin-inline: auto;
   border-radius: 999px;
-  background: hsl(var(--primary) / 0.1);
-  color: hsl(var(--primary));
-  font-size: 11.5px;
-  font-weight: 600;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
+  text-decoration: none;
+  transition: transform 0.2s ease;
 }
-.hpd-pill svg { width: 14px; height: 14px; }
-a.hpd-pill { text-decoration: none; transition: background-color 0.2s ease, border-color 0.2s ease; }
-a.hpd-pill:hover { border-color: hsl(var(--primary) / 0.5); background: hsl(var(--primary) / 0.16); }
-a.hpd-pill:focus-visible { outline: 2px solid var(--hpd-accent); outline-offset: 3px; }
+.hpd-badge-link:hover { transform: translateY(-1px); }
+.hpd-badge-link:hover .homepage-section-badge { border-color: hsl(var(--primary) / 0.5); color: hsl(var(--foreground)); }
+.hpd-badge-link:focus-visible { outline: 2px solid var(--hpd-accent); outline-offset: 3px; }
 
 .hpd-title {
   margin-top: 18px;
@@ -189,5 +183,5 @@ a.hpd-pill:focus-visible { outline: 2px solid var(--hpd-accent); outline-offset:
 
 @media (prefers-reduced-motion: reduce) {
   .hpd-a__page { animation: none; }
-  .hpd-pill, .hpd-a__topic { transition: none; }
+  .hpd-badge-link, .hpd-a__topic { transition: none; }
 }

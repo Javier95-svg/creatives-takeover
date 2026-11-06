@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, ArrowUpRight, BookOpen } from "lucide-react";
+import { ArrowRight, ArrowUpRight } from "lucide-react";
 
+import { Badge } from "@/components/ui/badge";
 import TitleFx from "@/components/home/TitleFx";
 import { FEATURED_PEDIA_ENTRIES, type FeaturedPediaEntry } from "@/data/startupPedia/featured";
 import { PEDIA_TOPICS } from "@/data/startupPedia/topics";
@@ -50,10 +51,12 @@ export default function HomePediaBand() {
       <div className="container mx-auto px-4 sm:px-6">
         <div className="hpd hpd-a">
           <div className="hpd-a__index">
-            {/* The pill is the link to the library itself; the section has no button. */}
-            <Link to="/startup-pedia" className="hpd-pill">
-              <BookOpen aria-hidden="true" />
-              Startup Pedia
+            {/* The same badge as every other section, centred over the title. It is
+                also the link to the library itself; the section has no button. */}
+            <Link to="/startup-pedia" className="hpd-badge-link">
+              <Badge variant="outline" className="homepage-section-badge">
+                Startup Pedia
+              </Badge>
             </Link>
             <h2 id="home-pedia-heading" className="hpd-title"><TitleFx variant="reading" text={TITLE} /></h2>
             <p className="hpd-lede">{INTRO}</p>
