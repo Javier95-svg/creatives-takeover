@@ -56,17 +56,10 @@ export default function HomeFounderIdBand() {
               <h2 id="home-founder-id-heading" className="mt-4 font-space-grotesk text-3xl font-semibold tracking-tight sm:text-4xl">
                 {FOUNDER_ID_HERO.titleLead} {FOUNDER_ID_HERO.titleAccent}
               </h2>
-              <p className="mt-4 text-sm leading-relaxed text-muted-foreground sm:text-base">
-                Your public page on Creatives Takeover, at{" "}
-                <span className="whitespace-nowrap">creatives-takeover.com/@yourname</span>. Put it in your bio, pitch
-                deck and email signature, and it always opens on who you are, what you’re building and your latest
-                progress. Share it on LinkedIn or X and the post shows your card.
-              </p>
-
               <p className="mt-6 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                Every card is yours to fill in
+                Every ID contains
               </p>
-              <ul className="mt-3 flex flex-wrap gap-2" aria-label="What you set on your card">
+              <ul className="mt-3 flex flex-wrap gap-2" aria-label="What every Founder ID contains">
                 {FIELDS.map((field) => (
                   <li key={field} className="rounded-full border border-border/70 bg-background/60 px-3 py-1 text-sm text-foreground">
                     {field}
