@@ -47,10 +47,11 @@ const frozenFiles = {
   // Stack row with the MVP Builder offer and its /build destination.
   // Rehashed 2026-10-24 (copy audit): the subtitle and two card descriptions
   // describe what the tools do instead of promising speed or a clear path.
-  // Rehashed 2026-11-06 (homepage-positioning branch, pending review): each row
+  // Rehashed 2026-11-06 (homepage-positioning branch, pending review): title and
+  // description kept; each row
   // leads with the result (h4) and names the tool in the chip; rows reordered
   // with investors last, each keeping its own GIF via mediaPosition.
-  '../src/components/EntrepreneurProblems.tsx': '1d315e7201aa02f3ba208e4b9de0b485b864ff1928e7d092e797f888756efefa',
+  '../src/components/EntrepreneurProblems.tsx': '270a2168349f3ccaa4f551246ea6aef09d9554a3cda5dadfc97fb457e1336c25',
   // Updated for the canonical core-tool navigation: support tools no longer
   // appear as stage prerequisites, while Stage VII retains its original name
   // and order.

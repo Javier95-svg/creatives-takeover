@@ -365,10 +365,10 @@ const EntrepreneurProblems = () => {
             Own Your Path
           </Badge>
           <h2 id="journey-heading" className="homepage-section-title founder-journey-section__title text-3xl sm:text-4xl lg:text-[2.9rem] mb-5">
-            Where new projects stall
+            Every Founder's Journey is Unique
           </h2>
           <p className="homepage-section-copy founder-journey-section__copy mx-auto text-base sm:text-lg">
-            Seven common sticking points, and what you leave with after working through each one here.
+            But most founders run into the same problems. Here is each one, and the part of the platform that helps you work through it.
           </p>
         </ScrollReveal>
 
