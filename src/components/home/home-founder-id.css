@@ -1,6 +1,6 @@
 /* Homepage Founder ID section, in the language of the card itself
    (api/_founder-id-card.tsx): charcoal, champagne gold, thin rings and
-   wide-tracked capitals. The panel stays dark in both themes, like the card. */
+   wide-tracked capitals. Charcoal in dark mode, warm ivory in light mode. */
 
 .hfid-section { padding: 72px 0; }
 @media (min-width: 1024px) { .hfid-section { padding: 104px 0; } }
@@ -39,11 +39,26 @@
   opacity: 0.7;
 }
 
-/* The silver titles keep their bright dark-mode silver on this dark panel. */
-html .hfid .ht.ht {
-  --ht-silver: linear-gradient(100deg, #f8fafc 0%, #d4d9e1 28%, #9aa4b2 52%, #e2e6ec 74%, #b4bcc8 100%);
-  --ht-shine: rgba(255, 249, 230, 0.95);
+/* Light mode: warm ivory with darker gold, like the light /founder-id page.
+   The cards themselves stay dark, as the real card is. */
+html:not(.dark) .hfid {
+  --hfid-ink: #1f1d17;
+  --hfid-muted: #6b685c;
+  --hfid-gold: #8a6d2c;
+  --hfid-gold-hi: #6b5321;
+  --hfid-line: rgba(138, 109, 44, 0.22);
+  background:
+    radial-gradient(900px 500px at 50% 0%, rgba(184, 149, 76, 0.16), transparent 60%),
+    radial-gradient(700px 500px at 100% 100%, rgba(184, 149, 76, 0.1), transparent 60%),
+    linear-gradient(160deg, #fcfaf4 0%, #f6f1e6 50%, #efe8d7 100%);
+  box-shadow: 0 50px 100px -60px rgba(90, 70, 30, 0.35);
 }
+html:not(.dark) .hfid-chip { background: rgba(255, 253, 248, 0.75); }
+html:not(.dark) .hfid-chip:hover { border-color: rgba(138, 109, 44, 0.5); background: rgba(184, 149, 76, 0.12); }
+html:not(.dark) .hfid-stage .fid-stage__floor { background: radial-gradient(ellipse at center, rgba(90, 70, 30, 0.28), transparent 70%); }
+html:not(.dark) .hfid-a__rings span { border-color: rgba(138, 109, 44, 0.16); }
+html:not(.dark) .hfid-a__rings span:nth-child(2) { border-color: rgba(138, 109, 44, 0.11); }
+html:not(.dark) .hfid-a__rings span:nth-child(3) { border-color: rgba(138, 109, 44, 0.09); }
 
 .hfid-eyebrow {
   display: inline-block;

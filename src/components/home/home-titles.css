@@ -4,8 +4,8 @@
 
 .ht {
   --ht-ease: cubic-bezier(0.22, 1, 0.36, 1);
-  /* One silver for every title: bright in dark mode, gunmetal in light mode so
-     it keeps its contrast on the pale wallpaper. */
+  /* One silver for every title: a bright silver gradient in dark mode, a solid
+     dark silver in light mode (below). */
   --ht-silver: linear-gradient(100deg, #f8fafc 0%, #d4d9e1 28%, #9aa4b2 52%, #e2e6ec 74%, #b4bcc8 100%);
   --ht-silver-flow: linear-gradient(90deg, #b4bcc8, #f8fafc, #9aa4b2, #e2e6ec, #b4bcc8);
   --ht-shine: rgba(255, 255, 255, 0.95);
@@ -83,10 +83,12 @@ html:not(.dark) html:not(.dark) html:not(.dark) html:not(.dark) .ht--evolve[data
   position: relative;
   background-image: var(--ht-silver);
 }
+/* Light mode: one solid dark silver, no gradient and no shine. The entrances
+   still play; the flowing and passing shine have nothing to move. */
 html:not(.dark) .ht {
-  --ht-silver: linear-gradient(100deg, #1f2937 0%, #4b5563 30%, #8b95a3 52%, #4b5563 74%, #111827 100%);
-  --ht-silver-flow: linear-gradient(90deg, #374151, #6b7280, #1f2937, #6b7280, #374151);
-  --ht-shine: rgba(255, 255, 255, 0.85);
+  --ht-silver: linear-gradient(#3a414c, #3a414c);
+  --ht-silver-flow: linear-gradient(#3a414c, #3a414c);
+  --ht-shine: transparent;
 }
 
 .ht--underline::after {
