@@ -128,7 +128,7 @@ const UserReviews = () => {
         Track Your Project Evolution
       </h2>
       <p className="homepage-section-copy startup-cycle-copy text-base sm:text-lg max-w-3xl mx-auto animate-in fade-in slide-in-from-bottom duration-700 delay-200">
-        An accelerator as a service: the structure, tools and experts of an accelerator program from day one, without giving up equity.
+        The platform works as an Accelerator-as-a-Service (AaaS): every user has full access to the structure, tools and experts of an accelerator program from day one, without giving up equity.
       </p>
       <p className="homepage-section-copy startup-cycle-copy text-base sm:text-lg max-w-3xl mx-auto mt-4 animate-in fade-in slide-in-from-bottom duration-700 delay-300">
         Seven stages, each with a clear result, and a dashboard that always shows what to finish next.
