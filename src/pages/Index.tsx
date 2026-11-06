@@ -4,6 +4,7 @@ import Hero from "@/components/Hero";
 import ValuePropositionCards from "@/components/ValuePropositionCards";
 import UserReviews from "@/components/UserReviews";
 import EntrepreneurProblems from "@/components/EntrepreneurProblems";
+import ProofSection from "@/components/home/ProofSection";
 import { PullToRefresh } from "@/components/mobile/PullToRefresh";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ScrollReveal } from "@/components/animations/ScrollReveal";
@@ -16,19 +17,17 @@ import HomeWallpaper from "@/components/wallpapers/HomeWallpaper";
 import { trackLandingViewed } from "@/lib/analytics";
 
 // Lazy load below-the-fold components for better performance.
-// AISpecializationTrends is the only homepage section that uses Recharts; as a
-// static import it pulled ~77KB gz of charting into the fold-blocking bundle
-// for a section that renders well below the fold. The Suspense fallback below
-// reserves its measured height (969px mobile / 753px at lg) so deferring it
-// costs no layout shift.
-const AISpecializationTrends = lazy(() => import("@/components/AISpecializationTrends"));
+// The programs band replaced the AI trends section (and with it the page's only
+// Recharts use); it carries the /enterprise styles and a product screen, so it
+// loads on approach like the other sections below.
+const HomeProgramsBand = lazy(() => import("@/components/home/HomeProgramsBand"));
 const HomeFAQ = lazy(() => import("@/components/HomeFAQ"));
 const FounderAnswerLibraryTeaser = lazy(() => import("@/components/seo/FounderAnswerLibraryTeaser"));
 
-// lazy() alone still fetched all three chunks on first render (~190KB gz with
-// Recharts), before the visitor scrolled. LoadWhenNear defers each until it is
-// 800px from the viewport; the placeholders keep the heights above.
-const trendsPlaceholder = <div className="min-h-[969px] lg:min-h-[753px] animate-pulse bg-muted/20" />;
+// lazy() alone still fetched every chunk on first render, before the visitor
+// scrolled. LoadWhenNear defers each until it is 800px from the viewport; the
+// placeholders keep the space so nothing shifts.
+const programsPlaceholder = <div className="min-h-[1060px] lg:min-h-[694px] animate-pulse bg-muted/20" />;
 const teaserPlaceholder = <div className="h-64 animate-pulse bg-muted/20" />;
 const faqPlaceholder = <div className="h-96 animate-pulse bg-muted/20" />;
 
@@ -67,9 +66,9 @@ const Index = () => {
     <div className="min-h-screen relative">
       <HomeWallpaper variant="landing" />
       <SEO
-        title="Creatives Takeover | Startup Development Platform"
-        description="Creatives Takeover is a startup development platform that helps first-time founders validate ideas, build MVPs, launch, gain traction, and prepare to raise."
-        keywords="founder operating system, startup idea validation, customer decision brief, interactive product demo, product market fit evidence, MVP builder, go-to-market execution, traction engine, first-time solo founders"
+        title="Creatives Takeover | Start and Test Your Startup Idea"
+        description="Creatives Takeover is where founders start a project and test if people want it: define your customer, show a demo to real people and decide what to build."
+        keywords="startup idea validation, test business idea, ideal customer profile, product demo, customer discovery, MVP, go-to-market, founder profile, startup programs, incubator cohort"
         url="/"
         image="/og-founders-compass-2026-09.png"
         imageWidth={3159}
@@ -91,9 +90,9 @@ const Index = () => {
             </ScrollReveal>
             <ScrollReveal variant="fade" amount={0.05}>
               <div className="homepage-band-muted">
-                <LoadWhenNear id="ai-trends" placeholder={trendsPlaceholder}>
-                  <Suspense fallback={trendsPlaceholder}>
-                    <AISpecializationTrends />
+                <LoadWhenNear id="home-programs" placeholder={programsPlaceholder}>
+                  <Suspense fallback={programsPlaceholder}>
+                    <HomeProgramsBand />
                   </Suspense>
                 </LoadWhenNear>
               </div>
@@ -108,6 +107,7 @@ const Index = () => {
                 </Suspense>
               </LoadWhenNear>
             </ScrollReveal>
+            <ProofSection />
             <ScrollReveal variant="fade" amount={0.05}>
               <div className="homepage-band-muted">
                 <LoadWhenNear id="home-faq" placeholder={faqPlaceholder}>
@@ -131,9 +131,9 @@ const Index = () => {
             </ScrollReveal>
             <ScrollReveal variant="fade" amount={0.05}>
               <div className="homepage-band-muted">
-                <LoadWhenNear id="ai-trends" placeholder={trendsPlaceholder}>
-                  <Suspense fallback={trendsPlaceholder}>
-                    <AISpecializationTrends />
+                <LoadWhenNear id="home-programs" placeholder={programsPlaceholder}>
+                  <Suspense fallback={programsPlaceholder}>
+                    <HomeProgramsBand />
                   </Suspense>
                 </LoadWhenNear>
               </div>
@@ -148,6 +148,7 @@ const Index = () => {
                 </Suspense>
               </LoadWhenNear>
             </ScrollReveal>
+            <ProofSection />
             <ScrollReveal variant="fade" amount={0.05}>
               <div className="homepage-band-muted">
                 <LoadWhenNear id="home-faq" placeholder={faqPlaceholder}>
