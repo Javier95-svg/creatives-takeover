@@ -36,10 +36,10 @@ const frozenFiles = {
   // Rehashed 2026-10-24 (copy audit): the dashboard preview's third stat reads
   // "open tasks" instead of "open coach reviews", a feature the product lacks.
   // Rehashed 2026-11-06 (homepage-positioning branch, pending Javier's review):
-  // new lede ("Where founders start a project and find out if people want
-  // it."), and a "Running a program?" link to /enterprise beside "Who is this
-  // for?". The H1, idea box, dashboard preview, stats and layout are unchanged.
-  '../src/components/Hero.tsx': '02d2ed6ba146c96c3cc76495842f901a98c1261af0cd07cb62202746dd0fd80c',
+  // a "Running a cohort?" link to /enterprise beside "Who is this for?". The
+  // copy (H1, lede kept as requested), idea box, preview, stats and layout are
+  // unchanged.
+  '../src/components/Hero.tsx': 'b4289ef93e876ce40bd740a5510cf997a08a60fa4dd598cfb967027f86ab3cfe',
   // Rehashed 2026-07-28 for the performance audit: mobile and desktop journey
   // branches are now mutually exclusive, preventing duplicate 147 MB GIF loads.
   // Content, visual order, actions, and responsive layout remain unchanged.
@@ -95,9 +95,9 @@ const frozenFiles = {
   // within 800px of the viewport instead of on first render, behind the same
   // placeholders. No section added, removed, reordered, restyled or re-copied.
   // Rehashed 2026-11-06 (homepage-positioning branch, pending review): the AI
-  // trends section is replaced by a programs band, a hidden proof slot sits
+  // trends section is replaced by a programs band, a short Founder ID band sits
   // before the FAQ, and the title and description lead with the outcome.
-  '../src/pages/Index.tsx': 'd92b18f9d773ff739441275cf9c423be0c5efb9c483c76cb31257c2d19803e62',
+  '../src/pages/Index.tsx': 'b6c2b295ad1903751ce9a3c4ba4276b2eaaa3da38d1dd9e86281c6aa7b593f04',
 } as const;
 
 test('the approved unauthenticated landing page remains frozen during core-tool work', () => {

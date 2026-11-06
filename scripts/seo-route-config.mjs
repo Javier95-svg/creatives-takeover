@@ -218,7 +218,7 @@ export const INDEXABLE_ROUTES = [
     priority: 1.0,
     heroHeading: "The Founders' Compass",
     heroCopy:
-      "Where founders start a project and find out if people want it. Work out who it’s for, put a demo in front of real people, and keep what you learn, your tasks and your progress in one workspace.",
+      "Identify what’s worth building, validate demand with reliable evidence, and turn insights into products and go-to-market strategies.",
     sections: [
       {
         heading: "Reach value before signup",

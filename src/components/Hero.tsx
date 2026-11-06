@@ -83,10 +83,10 @@ const DEFAULT_STATS: HeroStat[] = [
 const DEFAULT_LEDE = (
   <>
     <span className="ct-hero__lede-block">
-      Where founders start a project and find out if people want it.
+      Customized workspace for startup founders, product managers and indie builders.
     </span>
     <span className="ct-hero__lede-block">
-      Work out who it’s for, put a demo in front of real people, and keep what you learn, your tasks and your progress in one workspace.
+      Identify what’s worth building, validate demand with reliable evidence, and turn insights into products and go-to-market strategies.
     </span>
     <strong className="ct-hero__lede-final">Free to start. No equity.</strong>
   </>
@@ -262,7 +262,7 @@ const Hero = ({
                   Who is this for?
                 </button>
                 <Link className="ct-hero__audience-link" to="/enterprise" onClick={handleProgramsLinkClick}>
-                  Running a program? See the cohort pilot
+                  Running a cohort?
                 </Link>
               </div>
             </>

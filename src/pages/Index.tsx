@@ -4,7 +4,6 @@ import Hero from "@/components/Hero";
 import ValuePropositionCards from "@/components/ValuePropositionCards";
 import UserReviews from "@/components/UserReviews";
 import EntrepreneurProblems from "@/components/EntrepreneurProblems";
-import ProofSection from "@/components/home/ProofSection";
 import { PullToRefresh } from "@/components/mobile/PullToRefresh";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ScrollReveal } from "@/components/animations/ScrollReveal";
@@ -21,6 +20,7 @@ import { trackLandingViewed } from "@/lib/analytics";
 // Recharts use); it carries the /enterprise styles and a product screen, so it
 // loads on approach like the other sections below.
 const HomeProgramsBand = lazy(() => import("@/components/home/HomeProgramsBand"));
+const HomeFounderIdBand = lazy(() => import("@/components/home/HomeFounderIdBand"));
 const HomeFAQ = lazy(() => import("@/components/HomeFAQ"));
 const FounderAnswerLibraryTeaser = lazy(() => import("@/components/seo/FounderAnswerLibraryTeaser"));
 
@@ -28,6 +28,7 @@ const FounderAnswerLibraryTeaser = lazy(() => import("@/components/seo/FounderAn
 // scrolled. LoadWhenNear defers each until it is 800px from the viewport; the
 // placeholders keep the space so nothing shifts.
 const programsPlaceholder = <div className="min-h-[1060px] lg:min-h-[694px] animate-pulse bg-muted/20" />;
+const founderIdPlaceholder = <div className="min-h-[860px] lg:min-h-[612px] animate-pulse bg-muted/20" />;
 const teaserPlaceholder = <div className="h-64 animate-pulse bg-muted/20" />;
 const faqPlaceholder = <div className="h-96 animate-pulse bg-muted/20" />;
 
@@ -107,7 +108,13 @@ const Index = () => {
                 </Suspense>
               </LoadWhenNear>
             </ScrollReveal>
-            <ProofSection />
+            <ScrollReveal variant="fade" amount={0.05}>
+              <LoadWhenNear id="home-founder-id" placeholder={founderIdPlaceholder}>
+                <Suspense fallback={founderIdPlaceholder}>
+                  <HomeFounderIdBand />
+                </Suspense>
+              </LoadWhenNear>
+            </ScrollReveal>
             <ScrollReveal variant="fade" amount={0.05}>
               <div className="homepage-band-muted">
                 <LoadWhenNear id="home-faq" placeholder={faqPlaceholder}>
@@ -148,7 +155,13 @@ const Index = () => {
                 </Suspense>
               </LoadWhenNear>
             </ScrollReveal>
-            <ProofSection />
+            <ScrollReveal variant="fade" amount={0.05}>
+              <LoadWhenNear id="home-founder-id" placeholder={founderIdPlaceholder}>
+                <Suspense fallback={founderIdPlaceholder}>
+                  <HomeFounderIdBand />
+                </Suspense>
+              </LoadWhenNear>
+            </ScrollReveal>
             <ScrollReveal variant="fade" amount={0.05}>
               <div className="homepage-band-muted">
                 <LoadWhenNear id="home-faq" placeholder={faqPlaceholder}>
