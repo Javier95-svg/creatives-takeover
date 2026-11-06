@@ -12,8 +12,9 @@
 }
 
 /* Same header pattern as the other homepage sections. */
+/* Wide enough for the title to sit on one line on desktop. */
 .hp-header {
-  max-width: 768px;
+  max-width: 1120px;
   margin: 0 auto 48px;
   text-align: center;
 }
@@ -267,6 +268,116 @@
 
 .hp-b .hp-ctas { margin-top: 40px; }
 
+/* ---- Motion ----
+   Plays once when the band scrolls into view (data-anim="in", set by the
+   component). Only opacity and the individual translate/scale properties
+   animate, so the layout transforms above stay untouched. Nothing is hidden
+   until the component marks itself "ready", so without JS everything shows. */
+
+.hp-section[data-anim] .hp-header > *,
+.hp-section[data-anim] .hp-b__head > *,
+.hp-section[data-anim] .hp-step,
+.hp-section[data-anim] .hp-b__screen,
+.hp-section[data-anim] .hp-b .hp-ctas {
+  transition:
+    opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+    translate 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.hp-section[data-anim="ready"] .hp-header > *,
+.hp-section[data-anim="ready"] .hp-b__head > *,
+.hp-section[data-anim="ready"] .hp-b .hp-ctas {
+  opacity: 0;
+  translate: 0 18px;
+}
+
+.hp-section[data-anim="ready"] .hp-step { opacity: 0; translate: 0 14px; }
+.hp-section[data-anim="ready"] .hp-b__screen--program { opacity: 0; translate: 0 48px; }
+.hp-section[data-anim="ready"] .hp-b__screen--join { opacity: 0; translate: -56px 24px; }
+.hp-section[data-anim="ready"] .hp-b__screen--founder { opacity: 0; translate: 56px 24px; }
+
+/* Order: header, panel title, the line drawing across, steps one by one,
+   then the screens fanning in and the buttons. */
+.hp-header > :nth-child(2) { transition-delay: 0.08s; }
+.hp-b__head > :nth-child(1) { transition-delay: 0.16s; }
+.hp-b__head > :nth-child(2) { transition-delay: 0.26s; }
+.hp-step { transition-delay: calc(0.45s + var(--i, 0) * 0.13s); }
+.hp-b__screen--program { transition-delay: 0.9s; }
+.hp-b__screen--join { transition-delay: 1.05s; }
+.hp-b__screen--founder { transition-delay: 1.15s; }
+.hp-b .hp-ctas { transition-delay: 1.25s; }
+
+.hp-section[data-anim] .hp-track::before {
+  transform-origin: top center;
+  transition: scale 1.3s cubic-bezier(0.65, 0, 0.35, 1) 0.35s;
+}
+
+.hp-section[data-anim="ready"] .hp-track::before { scale: 1 0; }
+
+@media (min-width: 1024px) {
+  .hp-section[data-anim] .hp-track::before { transform-origin: left center; }
+  .hp-section[data-anim="ready"] .hp-track::before { scale: 0 1; }
+}
+
+.hp-section[data-anim] .hp-step__dot {
+  transition: scale 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition-delay: calc(0.5s + var(--i, 0) * 0.13s);
+}
+
+.hp-section[data-anim="ready"] .hp-step__dot { scale: 0.4; }
+
+/* Once in: a slow shimmer on the gradient words, a pulse on the step that is
+   happening now, and screens that lift under the pointer. */
+.hp-section[data-anim="in"] .hp-accent {
+  background-size: 200% auto;
+  animation: hp-shimmer 7s ease-in-out 1.6s infinite alternate;
+}
+
+.hp-step:nth-child(3) .hp-step__dot::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: 50%;
+  border: 2px solid var(--hp-blue);
+  opacity: 0;
+}
+
+.hp-section[data-anim="in"] .hp-step:nth-child(3) .hp-step__dot::after {
+  animation: hp-pulse 2.4s ease-out 2s infinite;
+}
+
+.hp-section[data-anim="in"] .hp-b__screen {
+  transition:
+    opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+    translate 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.hp-section[data-anim="in"] .hp-b__screen:hover { translate: 0 -8px; transition-delay: 0s; }
+
+@keyframes hp-shimmer {
+  from { background-position: 0% 50%; }
+  to { background-position: 100% 50%; }
+}
+
+@keyframes hp-pulse {
+  0% { opacity: 0.7; scale: 1; }
+  100% { opacity: 0; scale: 1.7; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .hp-btn, .hp-btn svg { transition: none; }
+  .hp-section[data-anim] .hp-header > *,
+  .hp-section[data-anim] .hp-b__head > *,
+  .hp-section[data-anim] .hp-step,
+  .hp-section[data-anim] .hp-step__dot,
+  .hp-section[data-anim] .hp-b__screen,
+  .hp-section[data-anim] .hp-b .hp-ctas,
+  .hp-section[data-anim] .hp-track::before {
+    opacity: 1 !important;
+    translate: none !important;
+    scale: none !important;
+    transition: none !important;
+  }
+  .hp-section[data-anim="in"] .hp-accent,
+  .hp-section[data-anim="in"] .hp-step:nth-child(3) .hp-step__dot::after { animation: none; }
 }

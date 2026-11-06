@@ -1,4 +1,4 @@
-import type { CSSProperties } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, ClipboardList, FileText, LineChart, Sparkles, UserCheck, type LucideIcon } from "lucide-react";
 
@@ -33,8 +33,27 @@ const MILESTONES: Array<{ when: string; title: string; body: string; icon: Lucid
 ];
 
 export default function HomeProgramsBand() {
+  // Plays the entrance once, when the band scrolls into view. The CSS only hides
+  // anything after "ready" is set, so without JS everything is simply shown.
+  const ref = useRef<HTMLElement>(null);
+  const [state, setState] = useState<"idle" | "ready" | "in">("idle");
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || !("IntersectionObserver" in window)) return;
+    setState("ready");
+    const observer = new IntersectionObserver((entries) => {
+      if (entries.some((entry) => entry.isIntersecting)) {
+        setState("in");
+        observer.disconnect();
+      }
+    }, { threshold: 0.15 });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
   return (
-    <section className="hp-section" aria-labelledby="home-programs-heading">
+    <section ref={ref} className="hp-section" data-anim={state} aria-labelledby="home-programs-heading">
       <div className="container mx-auto px-4 sm:px-6">
         <div className="hp-header">
           <Badge variant="outline" className="homepage-section-badge mb-5">
