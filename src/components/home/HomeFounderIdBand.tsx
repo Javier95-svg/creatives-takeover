@@ -26,7 +26,8 @@ const EXAMPLES: Example[] = [
   { name: "Omar Haddad", handle: "omarhaddad", number: "000 874", stage: null, project: "Swapshift", tagline: "Shift swaps for hospital staff", pitch: "a shift swap app for hospital staff" },
 ];
 
-const FIELDS = ["Your name", "@handle", "Photo", "Your project", "What you’re building", "Stage, or keep it private"];
+// "What you’re looking for" is the help a founder asks for in Support my work.
+const FIELDS = ["Your name", "@handle", "Photo", "Your project", "What you’re building", "Your posts", "What you’re looking for"];
 const TITLE = `${FOUNDER_ID_HERO.titleLead} ${FOUNDER_ID_HERO.titleAccent}`;
 
 const prefersReducedMotion = () =>

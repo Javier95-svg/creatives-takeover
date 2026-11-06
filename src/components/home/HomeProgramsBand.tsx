@@ -20,7 +20,6 @@ import "./home-programs.css";
 // one contact, consent, weekly updates, cohort report, founders keep their
 // account); the screens are the same real captures of cohort mode on sample data.
 
-const ENTERPRISE = "/enterprise";
 const CONTACT = "/enterprise#talk";
 
 const track = (placement: string) => () => captureEvent("home_programs_band_clicked", { placement });
@@ -106,9 +105,6 @@ export default function HomeProgramsBand() {
             <Link to={CONTACT} className="hp-btn hp-btn--primary" onClick={track("book_call")}>
               Book a pilot call
               <ArrowRight aria-hidden="true" />
-            </Link>
-            <Link to={ENTERPRISE} className="hp-btn hp-btn--ghost" onClick={track("how_it_works")}>
-              See how the pilot works
             </Link>
           </div>
         </div>

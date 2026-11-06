@@ -127,14 +127,6 @@
   box-shadow: 0 20px 40px -14px rgba(79, 143, 247, 0.85);
 }
 
-.hp-btn--ghost {
-  border: 1px solid var(--hp-line);
-  background: var(--hp-tile);
-  color: var(--hp-ink);
-}
-
-.hp-btn--ghost:hover { border-color: hsl(var(--foreground) / 0.35); }
-
 @media (max-width: 639px) {
   .hp-ctas .hp-btn { width: 100%; }
 }

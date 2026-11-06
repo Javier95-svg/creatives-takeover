@@ -31,10 +31,9 @@
   text-transform: uppercase;
 }
 .hpd-pill svg { width: 14px; height: 14px; }
-
-/* The pill and the button sit centred in the text column. */
-.hpd-a .hpd-pill { display: flex; width: fit-content; margin-inline: auto; }
-.hpd-a .hpd-ctas { justify-content: center; }
+a.hpd-pill { text-decoration: none; transition: background-color 0.2s ease, border-color 0.2s ease; }
+a.hpd-pill:hover { border-color: hsl(var(--primary) / 0.5); background: hsl(var(--primary) / 0.16); }
+a.hpd-pill:focus-visible { outline: 2px solid var(--hpd-accent); outline-offset: 3px; }
 
 .hpd-title {
   margin-top: 18px;
@@ -54,28 +53,6 @@
   font-size: 1.0625rem;
   line-height: 1.65;
 }
-
-.hpd-ctas { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
-
-.hpd-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  height: 48px;
-  padding: 0 20px;
-  border-radius: 14px;
-  font-size: 15px;
-  font-weight: 600;
-  text-decoration: none;
-  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
-}
-.hpd-btn svg { width: 17px; height: 17px; transition: transform 0.2s ease; }
-.hpd-btn:hover svg { transform: translateX(3px); }
-.hpd-btn:focus-visible { outline: 2px solid var(--hpd-accent); outline-offset: 3px; }
-.hpd-btn--primary { background: hsl(var(--primary)); color: hsl(var(--primary-foreground)); box-shadow: 0 14px 30px -16px hsl(var(--primary) / 0.8); }
-.hpd-btn--primary:hover { transform: translateY(-1px); }
-@media (max-width: 639px) { .hpd-ctas .hpd-btn { width: 100%; } }
 
 .hpd-kind {
   display: inline-flex;
@@ -212,5 +189,5 @@
 
 @media (prefers-reduced-motion: reduce) {
   .hpd-a__page { animation: none; }
-  .hpd-btn, .hpd-btn svg, .hpd-a__topic { transition: none; }
+  .hpd-pill, .hpd-a__topic { transition: none; }
 }

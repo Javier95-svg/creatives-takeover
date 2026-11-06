@@ -50,10 +50,11 @@ export default function HomePediaBand() {
       <div className="container mx-auto px-4 sm:px-6">
         <div className="hpd hpd-a">
           <div className="hpd-a__index">
-            <span className="hpd-pill">
+            {/* The pill is the link to the library itself; the section has no button. */}
+            <Link to="/startup-pedia" className="hpd-pill">
               <BookOpen aria-hidden="true" />
               Startup Pedia
-            </span>
+            </Link>
             <h2 id="home-pedia-heading" className="hpd-title"><TitleFx variant="reading" text={TITLE} /></h2>
             <p className="hpd-lede">{INTRO}</p>
             <ol className="hpd-a__topics" aria-label="Startup Pedia topics">
@@ -67,12 +68,6 @@ export default function HomePediaBand() {
                 </li>
               ))}
             </ol>
-            <div className="hpd-ctas">
-              <Link to="/startup-pedia" className="hpd-btn hpd-btn--primary">
-                Explore
-                <ArrowRight aria-hidden="true" />
-              </Link>
-            </div>
           </div>
 
           <div className="hpd-a__entry">
