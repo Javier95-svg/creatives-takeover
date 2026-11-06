@@ -99,9 +99,6 @@ const Index = () => {
               </div>
             </ScrollReveal>
             <ScrollReveal variant="fade" amount={0.05}>
-              <ValuePropositionCards />
-            </ScrollReveal>
-            <ScrollReveal variant="fade" amount={0.05}>
               <LoadWhenNear id="pedia-teaser" placeholder={teaserPlaceholder}>
                 <Suspense fallback={teaserPlaceholder}>
                   <FounderAnswerLibraryTeaser compact />
@@ -114,6 +111,9 @@ const Index = () => {
                   <HomeFounderIdBand />
                 </Suspense>
               </LoadWhenNear>
+            </ScrollReveal>
+            <ScrollReveal variant="fade" amount={0.05}>
+              <ValuePropositionCards />
             </ScrollReveal>
             <ScrollReveal variant="fade" amount={0.05}>
               <div className="homepage-band-muted">
@@ -146,9 +146,6 @@ const Index = () => {
               </div>
             </ScrollReveal>
             <ScrollReveal variant="fade" amount={0.05}>
-              <ValuePropositionCards />
-            </ScrollReveal>
-            <ScrollReveal variant="fade" amount={0.05}>
               <LoadWhenNear id="pedia-teaser" placeholder={teaserPlaceholder}>
                 <Suspense fallback={teaserPlaceholder}>
                   <FounderAnswerLibraryTeaser compact />
@@ -161,6 +158,9 @@ const Index = () => {
                   <HomeFounderIdBand />
                 </Suspense>
               </LoadWhenNear>
+            </ScrollReveal>
+            <ScrollReveal variant="fade" amount={0.05}>
+              <ValuePropositionCards />
             </ScrollReveal>
             <ScrollReveal variant="fade" amount={0.05}>
               <div className="homepage-band-muted">
