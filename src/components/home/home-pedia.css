@@ -32,6 +32,10 @@
 }
 .hpd-pill svg { width: 14px; height: 14px; }
 
+/* The pill and the button sit centred in the text column. */
+.hpd-a .hpd-pill { display: flex; width: fit-content; margin-inline: auto; }
+.hpd-a .hpd-ctas { justify-content: center; }
+
 .hpd-title {
   margin-top: 18px;
   font-family: "Space Grotesk", "Inter", sans-serif;

@@ -78,7 +78,7 @@ export default function HomeFounderIdBand() {
                 <ArrowRight aria-hidden="true" />
               </Link>
             </div>
-            <p className="hfid-note">{FOUNDER_ID_HERO.note}</p>
+            <p className="hfid-note hfid-note--cta">{FOUNDER_ID_HERO.note}</p>
           </div>
 
           <figure className="hfid-c__figure">

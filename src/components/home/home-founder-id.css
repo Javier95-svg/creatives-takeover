@@ -88,6 +88,11 @@ html .hfid .ht.ht {
 
 .hfid-note { margin-top: 12px; color: var(--hfid-muted); font-size: 0.875rem; line-height: 1.55; }
 
+/* The eyebrow, the button and the note under it sit centred in the column. */
+.hfid-c__copy .hfid-eyebrow { display: block; text-align: center; }
+.hfid-c__copy .hfid-ctas { justify-content: center; }
+.hfid-note--cta { margin-top: 10px; font-size: 0.75rem; text-align: center; }
+
 .hfid-caption {
   margin-top: 18px;
   color: var(--hfid-muted);
