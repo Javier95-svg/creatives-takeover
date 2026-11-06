@@ -125,10 +125,13 @@ const UserReviews = () => {
         The 7 Stage Journey
       </Badge>
       <h2 className="homepage-section-title startup-cycle-title text-3xl sm:text-4xl lg:text-[2.9rem] mb-5 break-words animate-in fade-in slide-in-from-bottom duration-700 delay-100">
-        How Your Project Evolves Inside the Platform
+        Track Your Project Evolution
       </h2>
       <p className="homepage-section-copy startup-cycle-copy text-base sm:text-lg max-w-3xl mx-auto animate-in fade-in slide-in-from-bottom duration-700 delay-200">
-        Creatives Takeover works as an accelerator as a service: the structure, tools and people of an accelerator program, available on demand from the day you start, without giving up equity. Your project moves through seven stages, and each one ends with a result you finish before moving on.
+        Creatives Takeover is an accelerator as a service: the structure of an accelerator program, the tools to do the work and experts to turn to, ready from the day you create your project. You keep all of your equity.
+      </p>
+      <p className="homepage-section-copy startup-cycle-copy text-base sm:text-lg max-w-3xl mx-auto mt-4 animate-in fade-in slide-in-from-bottom duration-700 delay-300">
+        Your project moves through seven stages, from defining who it’s for to preparing to raise. Each one ends with something you can use, like a customer profile, a demo people can try or a launch plan, and your dashboard shows which stage you’re in and what to finish next.
       </p>
     </div>
   );
