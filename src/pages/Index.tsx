@@ -28,8 +28,8 @@ const HomePediaBand = lazy(() => import("@/components/home/HomePediaBand"));
 // scrolled. LoadWhenNear defers each until it is 800px from the viewport; the
 // placeholders keep the space so nothing shifts.
 const programsPlaceholder = <div className="min-h-[1825px] lg:min-h-[1780px] animate-pulse bg-muted/20" />;
-const founderIdPlaceholder = <div className="min-h-[966px] lg:min-h-[1098px] animate-pulse bg-muted/20" />;
-const teaserPlaceholder = <div className="min-h-[1606px] lg:min-h-[922px] animate-pulse bg-muted/20" />;
+const founderIdPlaceholder = <div className="min-h-[1304px] lg:min-h-[979px] animate-pulse bg-muted/20" />;
+const teaserPlaceholder = <div className="min-h-[1546px] lg:min-h-[922px] animate-pulse bg-muted/20" />;
 const faqPlaceholder = <div className="h-96 animate-pulse bg-muted/20" />;
 
 const Index = () => {

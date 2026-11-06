@@ -9,6 +9,8 @@ export interface IdCardPerson {
   /** A stage label such as Validation, or null when the founder keeps it private. */
   stage: string | null;
   tagline: string | null;
+  /** The project name, shown above the tagline as on the share card. */
+  project?: string | null;
   /** The founder's photo. The example cards use initials instead. */
   avatarUrl?: string | null;
 }
@@ -61,7 +63,7 @@ export function IdCard({ person, label, className }: { person?: IdCardPerson; la
               ? <img className="fid-idcard__mono fid-idcard__photo" src={person.avatarUrl} alt="" loading="lazy" decoding="async" />
               : <span className="fid-idcard__mono">{initials(person.name)}</span>)}
             <span>
-              <span className="fid-idcard__small">BUILDING IN PUBLIC</span>
+              <span className="fid-idcard__small">{person?.project?.trim() ? `BUILDING ${person.project.trim().toUpperCase()}` : "BUILDING IN PUBLIC"}</span>
               <span className="fid-idcard__value">{person ? (person.tagline || 'A founder journey') : 'What you’re building'}</span>
             </span>
           </span>

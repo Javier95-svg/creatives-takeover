@@ -47,7 +47,9 @@ test("public routing and sitemap include Startup Pedia", () => {
 
 test("resources and homepage link internally to Startup Pedia", () => {
   assert.match(read("src/pages/Resources.tsx"), /FounderAnswerLibraryTeaser/);
-  assert.match(read("src/pages/Index.tsx"), /FounderAnswerLibraryTeaser/);
+  // The homepage has its own encyclopedia-style section (2026-11-06).
+  assert.match(read("src/pages/Index.tsx"), /HomePediaBand/);
+  assert.match(read("src/components/home/HomePediaBand.tsx"), /to="\/startup-pedia"/);
 });
 
 test("growth roadmap records community guardrails and channel ownership", () => {

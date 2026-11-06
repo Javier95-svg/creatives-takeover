@@ -7,8 +7,11 @@ interface FounderIdCardProps {
   avatarUrl: string | null;
   stage: string | null;
   founderNumber: number | null;
+  /** The project name, shown above the tagline; without one the card says it builds in public. */
+  project?: string | null;
 }
-export function FounderIdCard({ name, username, tagline, avatarUrl, stage, founderNumber }: FounderIdCardProps) {
+export function FounderIdCard({ name, username, tagline, avatarUrl, stage, founderNumber, project }: FounderIdCardProps) {
+  const buildingLabel = project?.trim() ? `BUILDING ${truncate(project.trim(), 24).toUpperCase()}` : 'BUILDING IN PUBLIC';
   const displayName = truncate(name, 34).toUpperCase();
   const nameSize = displayName.length > 26 ? 44 : displayName.length > 19 ? 54 : 66;
   const digits = typeof founderNumber === 'number' && Number.isInteger(founderNumber) && founderNumber > 0 && founderNumber <= 999999
@@ -40,7 +43,7 @@ export function FounderIdCard({ name, username, tagline, avatarUrl, stage, found
         {avatarUrl ? <img src={avatarUrl} width={64} height={64} style={{ borderRadius: 32, objectFit: 'cover', border: '1px solid #82785d' }} />
           : <div style={{ display: 'flex', width: 64, height: 64, borderRadius: 32, border: '1px solid #82785d', alignItems: 'center', justifyContent: 'center', color: '#d6c99f', fontSize: 28 }}>{monogram(name)}</div>}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
-          <div style={{ display: 'flex', fontSize: 12, letterSpacing: '0.22em', color: '#858a78' }}>BUILDING IN PUBLIC</div>
+          <div style={{ display: 'flex', fontSize: 12, letterSpacing: '0.22em', color: '#858a78' }}>{buildingLabel}</div>
           <div style={{ display: 'flex', fontSize: 21, color: '#bcb9a5' }}>{truncate(tagline || 'A founder journey', 40)}</div>
         </div>
       </div>

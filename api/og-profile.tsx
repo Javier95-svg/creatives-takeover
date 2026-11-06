@@ -94,7 +94,7 @@ export default async function handler(request: Request) {
   if (founderId && profile) {
     return new ImageResponse(
       <FounderIdCard name={name} username={profile.username} founderNumber={profile.founder_number}
-        tagline={line} avatarUrl={safeAvatar} stage={profile.stage} />,
+        tagline={line} avatarUrl={safeAvatar} stage={profile.stage} project={profile.startup_name} />,
       { width: 1200, height: 630 },
     );
   }

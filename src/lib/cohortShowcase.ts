@@ -81,9 +81,9 @@ export function showcaseCardPerson(member: CohortShowcaseMember): IdCardPerson {
     handle: member.username,
     number: formatFounderNumber(member.founderNumber) ?? '',
     stage: founderStageLabel(member.assignedStage) ?? null,
-    tagline: member.startupName && member.tagline
-      ? `${member.startupName}: ${member.tagline}`
-      : member.startupName || member.tagline,
+    // Same layout as the share card: the project name in the label, the tagline below.
+    project: member.startupName,
+    tagline: member.tagline,
     avatarUrl: member.avatarUrl,
   };
 }
