@@ -90,6 +90,16 @@ const Index = () => {
               <UserReviews />
             </ScrollReveal>
             <ScrollReveal variant="fade" amount={0.05}>
+              <LoadWhenNear id="home-founder-id" placeholder={founderIdPlaceholder}>
+                <Suspense fallback={founderIdPlaceholder}>
+                  <HomeFounderIdBand />
+                </Suspense>
+              </LoadWhenNear>
+            </ScrollReveal>
+            <ScrollReveal variant="fade" amount={0.05}>
+              <ValuePropositionCards />
+            </ScrollReveal>
+            <ScrollReveal variant="fade" amount={0.05}>
               <div className="homepage-band-muted">
                 <LoadWhenNear id="home-programs" placeholder={programsPlaceholder}>
                   <Suspense fallback={programsPlaceholder}>
@@ -99,21 +109,11 @@ const Index = () => {
               </div>
             </ScrollReveal>
             <ScrollReveal variant="fade" amount={0.05}>
-              <LoadWhenNear id="home-founder-id" placeholder={founderIdPlaceholder}>
-                <Suspense fallback={founderIdPlaceholder}>
-                  <HomeFounderIdBand />
-                </Suspense>
-              </LoadWhenNear>
-            </ScrollReveal>
-            <ScrollReveal variant="fade" amount={0.05}>
               <LoadWhenNear id="pedia-teaser" placeholder={teaserPlaceholder}>
                 <Suspense fallback={teaserPlaceholder}>
                   <HomePediaBand />
                 </Suspense>
               </LoadWhenNear>
-            </ScrollReveal>
-            <ScrollReveal variant="fade" amount={0.05}>
-              <ValuePropositionCards />
             </ScrollReveal>
             <ScrollReveal variant="fade" amount={0.05}>
               <div className="homepage-band-muted">
@@ -137,6 +137,16 @@ const Index = () => {
               <UserReviews />
             </ScrollReveal>
             <ScrollReveal variant="fade" amount={0.05}>
+              <LoadWhenNear id="home-founder-id" placeholder={founderIdPlaceholder}>
+                <Suspense fallback={founderIdPlaceholder}>
+                  <HomeFounderIdBand />
+                </Suspense>
+              </LoadWhenNear>
+            </ScrollReveal>
+            <ScrollReveal variant="fade" amount={0.05}>
+              <ValuePropositionCards />
+            </ScrollReveal>
+            <ScrollReveal variant="fade" amount={0.05}>
               <div className="homepage-band-muted">
                 <LoadWhenNear id="home-programs" placeholder={programsPlaceholder}>
                   <Suspense fallback={programsPlaceholder}>
@@ -146,21 +156,11 @@ const Index = () => {
               </div>
             </ScrollReveal>
             <ScrollReveal variant="fade" amount={0.05}>
-              <LoadWhenNear id="home-founder-id" placeholder={founderIdPlaceholder}>
-                <Suspense fallback={founderIdPlaceholder}>
-                  <HomeFounderIdBand />
-                </Suspense>
-              </LoadWhenNear>
-            </ScrollReveal>
-            <ScrollReveal variant="fade" amount={0.05}>
               <LoadWhenNear id="pedia-teaser" placeholder={teaserPlaceholder}>
                 <Suspense fallback={teaserPlaceholder}>
                   <HomePediaBand />
                 </Suspense>
               </LoadWhenNear>
-            </ScrollReveal>
-            <ScrollReveal variant="fade" amount={0.05}>
-              <ValuePropositionCards />
             </ScrollReveal>
             <ScrollReveal variant="fade" amount={0.05}>
               <div className="homepage-band-muted">
