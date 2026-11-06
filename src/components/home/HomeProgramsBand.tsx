@@ -248,11 +248,12 @@ export default function HomeProgramsBand() {
             For Programs
           </Badge>
           <h2 id="home-programs-heading" className="homepage-section-title text-3xl sm:text-4xl lg:text-[2.9rem] mb-4">
-            Bring Creatives Takeover to Your Cohort
+            Track Your Cohort Progress Effortlessly
           </h2>
           <p className="homepage-section-copy text-base sm:text-lg">
-            Incubators, accelerators and universities put their founders through the same methodology, and see every
-            startup’s progress on one screen.
+            We put your founders through the same tasks and methodology, you will be able to see every startup’s
+            progress on one screen. We handle the follow-ups and write your cohort report at day 30, so your team can
+            focus on the founders instead of chasing updates.
           </p>
         </div>
         {variant === "a" ? <VariantA /> : variant === "b" ? <VariantB /> : <VariantC />}
