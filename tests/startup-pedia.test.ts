@@ -226,7 +226,11 @@ test("the homepage teaser's light copy of featured entries matches the library",
     assert.ok(entry, `${featured.slug} is not a Startup Pedia entry`);
     assert.equal(featured.title, entry.title, featured.slug);
     assert.equal(featured.topicLabel, getTopic(entry.topic)?.label, featured.slug);
+    assert.equal(featured.topic, entry.topic, featured.slug);
+    assert.equal(featured.kind, entry.kind, featured.slug);
+    assert.equal(featured.answer, entry.answer, featured.slug);
   }
   // The point of the light copy: the homepage section must not import the dataset.
   assert.doesNotMatch(read("src/components/seo/FounderAnswerLibraryTeaser.tsx"), /from "@\/data\/startupPedia"/);
+  assert.doesNotMatch(read("src/components/home/HomePediaBand.tsx"), /from "@\/data\/startupPedia"/);
 });

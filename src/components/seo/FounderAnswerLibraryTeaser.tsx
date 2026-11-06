@@ -4,7 +4,6 @@ import { ArrowRight, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { FEATURED_PEDIA_ENTRIES } from "@/data/startupPedia/featured";
-import TitleFx from "@/components/home/TitleFx";
 
 // Startup Pedia replaced the Founder Answer Library (2026-10-25). The section,
 // its layout and its place on the homepage and /resources are unchanged; only
@@ -28,7 +27,7 @@ export default function FounderAnswerLibraryTeaser({ compact = false }: FounderA
                 Startup Pedia
               </div>
               <h2 className="mt-4 font-space-grotesk text-3xl font-semibold tracking-tight sm:text-4xl">
-                {compact ? <TitleFx variant="reading" text="Practical answers for your next decision" /> : "Practical answers for your next decision"}
+                Practical answers for your next decision
               </h2>
               <p className="mt-4 text-sm leading-relaxed text-muted-foreground sm:text-base">
                 Clear guides for defining your customer, testing demand, scoping a first version and planning

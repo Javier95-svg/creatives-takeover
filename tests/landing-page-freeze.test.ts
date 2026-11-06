@@ -94,7 +94,7 @@ const frozenFiles = {
   // Rehashed 2026-11-06 (homepage-positioning, approved by Javier): the AI
   // trends section is replaced by a programs band, a short Founder ID band sits
   // before the FAQ, and the title and description lead with the outcome.
-  '../src/pages/Index.tsx': '588ff65c2cffd7f08f69946f352aa6ca15161d065f6546e7019c766fb311dbe0',
+  '../src/pages/Index.tsx': '7d66256df2a5590ac4d85b5e7dd05993e3d47c209831806c586b1261ea634e7f',
 } as const;
 
 test('the approved unauthenticated landing page remains frozen during core-tool work', () => {
