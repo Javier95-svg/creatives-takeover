@@ -29,7 +29,7 @@ const cycleSteps: CycleStep[] = [
     shortLabel: "Identity",
     title: "Stage 1: Identity",
     description:
-      "In this stage, founders clarify the foundation of their startup by answering a few core questions:\n\nWhat specific problem are you solving?\nWho are you solving it for?\nWhat makes your solution different and more efficient?\nWhy are you the right person to build it?\n\nThe goal is to define your Ideal Customer Profile (ICP) and set clear, specific goals for what you want to achieve next.",
+      "Most ideas start too broad: a product for everyone, solving a bit of everything. This stage narrows it down to four answers:\n\nWhat specific problem are you solving?\nWho has it badly enough to look for a fix?\nWhat makes your solution different?\nWhy are you the right person to build it?\n\nDescribe your idea in a sentence and you get a first profile of the customer it could serve, their main pains and how to describe your offer to them. You leave with one clear customer to focus on and a goal for what to prove next.",
     icon: Fingerprint,
     color: "from-warning/20 to-warning/20"
   },
@@ -37,7 +37,7 @@ const cycleSteps: CycleStep[] = [
     shortLabel: "Prototyping",
     title: "Stage 2: Prototyping",
     description:
-      "After defining your identity, the next step is to create a simple landing page that works as your waitlist. This page should clearly explain what your product is, who it is for, and the core problem it solves so visitors quickly understand the value.\n\nIt should also describe the key features you plan to offer and give a simple overview of how the product will work, without building the MVP yet. The goal is to make the idea feel real enough to test interest, collect sign-ups, and confirm there is market demand before investing time and money into development.",
+      "People can't react to an idea they can only imagine. Before writing any code, you need something they can see: a page or a short demo that shows what the product does, who it is for and the problem it solves.\n\nOn the platform you turn your customer profile into that first version without writing code, and share it with a link. Visitors who want early access leave their email, so from day one you can see whether the idea gets real interest.",
     icon: DraftingCompass,
     color: "from-info/20 to-info/20"
   },
@@ -45,7 +45,7 @@ const cycleSteps: CycleStep[] = [
     shortLabel: "Validation",
     title: "Stage 3: Validation",
     description:
-      "In this stage, founders actively reach out to potential customers and book one-on-one conversations to gather honest feedback on the concept. The goal is to confirm real demand by tracking signals like interview insights and how many people join the waitlist.\n\nThis step is crucial because it helps you avoid building something nobody wants. If validation is strong, you move forward to Step 4; if it’s weak, you iterate by asking your ideal customers what’s missing, what would make it valuable, or what alternatives they would choose instead.",
+      "The risk here is building something nobody wants. This stage is about hearing it from real people: talking one to one with potential customers, asking what they use today, and watching how many of them sign up.\n\nYou log each conversation and every sign-up in one place, and the evidence adds up to a clear decision: build it, narrow it to a smaller group, change direction or stop. If the signal is weak, you go back to your customers and ask what is missing before you spend months building.",
     icon: CheckCircle,
     color: "from-success/20 to-success/20"
   },
@@ -53,7 +53,7 @@ const cycleSteps: CycleStep[] = [
     shortLabel: "Building",
     title: "Stage 4: Building",
     description:
-      "Once validation is confirmed, founders can start building the MVP they’ve been promising. This is where the idea becomes a working product, supported by the tools and guidance available on Creatives Takeover, such as the MVP and Tech Stack Builder, plus access to mentors who have experience launching MVPs.\n\nThe focus at this stage is not to build the “perfect” final product. Instead, founders should develop only the core features that deliver the main value, so they can launch sooner, learn faster, and improve the product steadily as they grow.",
+      "With demand confirmed, the temptation is to build everything at once. A first version only needs the few features that deliver the main value, so people can start using it and you can learn from what they do.\n\nYou build a working first version on the platform, starting from what you have already validated, and choose the tools to build it with. Experts in specific fields can review your plan when you get stuck, and you keep improving it with your users' feedback.",
     icon: Hammer,
     color: "from-warning/20 to-warning/20"
   },
@@ -61,7 +61,7 @@ const cycleSteps: CycleStep[] = [
     shortLabel: "Launch",
     title: "Stage 5: Launch",
     description:
-      "In this stage, founders bring the product to the public and start actively promoting it wherever their audience already spends time. That includes direct outreach and consistent posting across channels like Product Hunt, LinkedIn, X, Reddit, Instagram, and other relevant sites.\n\nThey should also submit the startup to directories to increase visibility and begin building the brand through clear messaging, visuals, and a steady online presence. The goal is to generate early attention, attract first users, and start building momentum.",
+      "A product nobody hears about doesn't get users. Launching means going where your customers already spend time, from LinkedIn, X and Reddit to Product Hunt and startup directories, and reaching out to people directly.\n\nYou get a launch plan built around your customer: which channel to start with, what to say and how to measure it. Email templates help with outreach, and directory listings help new people find you. The goal is your first users and a channel worth repeating.",
     icon: Rocket,
     color: "from-purple-500/20 to-purple-600/20"
   },
@@ -69,7 +69,7 @@ const cycleSteps: CycleStep[] = [
     shortLabel: "Traction",
     title: "Stage 6: Traction",
     description:
-      "Launch brings your first users. Traction is about learning which of them stay and which channel keeps bringing more. In this stage you choose one acquisition channel that fits your product, track retention in the first 30 days, and tell real growth apart from constant effort. GTM Strategist helps you choose the channel, and Traction Engine helps you run and measure it week by week.\n\nThe milestone is three consecutive weeks above your score threshold: people come back, your channel converts, and you can keep up the pace.",
+      "Launch brings your first users. Traction is about learning which of them stay and which channel keeps bringing more, so you can tell real growth from constant effort.\n\nYou pick one channel that fits your product, track who comes back in the first 30 days, and run it week by week while the platform records the results. The stage is complete after three weeks in a row above your target: people come back, your channel converts, and you can keep up the pace.",
     icon: ChartNoAxesCombined,
     color: "from-pink-500/20 to-pink-600/20"
   },
@@ -77,7 +77,7 @@ const cycleSteps: CycleStep[] = [
     shortLabel: "Fundraising",
     title: "Stage 7: Fundraising",
     description:
-      "Not every business needs to raise money. If yours does, this is the stage to prepare: a working product, evidence of demand, early paying customers, and a clear plan for what the money is for.\n\nInsighta helps you check your readiness, improve your pitch deck, and find investors and accelerators that match your stage and sector. No platform can guarantee funding; the stronger your evidence, the better your conversations with investors will be.",
+      "Not every business needs to raise money. If yours does, investors will ask for the same things: a working product, evidence of demand, early paying customers and a clear plan for what the money is for.\n\nWhen you are ready, you can check how prepared you are, improve your pitch deck and build a focused list of investors and accelerators that match your stage and sector. No platform can guarantee funding; the stronger your evidence, the better your conversations will be.",
     icon: TrendingUp,
     color: "from-indigo-500/20 to-indigo-600/20"
   }
