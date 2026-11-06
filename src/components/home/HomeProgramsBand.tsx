@@ -3,7 +3,6 @@ import { Link, useSearchParams } from "react-router-dom";
 import {
   AlertTriangle,
   ArrowRight,
-  Building2,
   CalendarCheck,
   ClipboardList,
   FileText,
@@ -16,6 +15,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
+import { Badge } from "@/components/ui/badge";
 import { ProductShot } from "@/components/enterprise/EnterpriseVisuals";
 import { captureEvent } from "@/lib/analytics";
 import cohortJoinShot from "@/assets/enterprise/cohort-join.webp";
@@ -57,13 +57,6 @@ const programShot = (hotspots = true) => (
     ] : []}
     alt="The program dashboard for five startups: customer profiles ready, median interviews, experiments run, check-ins this week and startups that need attention, then one row per startup with stage, tasks, interviews, evidence, experiments, last activity, check-in and attention flags."
   />
-);
-
-const Eyebrow = () => (
-  <span className="hp-eyebrow">
-    <Building2 aria-hidden="true" />
-    For incubators, accelerators and universities
-  </span>
 );
 
 const Ctas = ({ variant, center = false }: { variant: Variant; center?: boolean }) => (
@@ -110,10 +103,9 @@ const VariantA = () => (
     <div className="hp-a__glow" aria-hidden="true" />
     <div className="hp-a__grid">
       <div className="hp-a__copy">
-        <Eyebrow />
-        <h2 id="home-programs-heading" className="hp-title">
+        <h3 className="hp-title">
           Run a validation program <span className="hp-accent">without adding work for your team.</span>
-        </h2>
+        </h3>
         <p className="hp-lede">
           We run a 30-day pilot with your cohort: founders test their ideas with real customers, your team sees every
           startup’s progress on one screen, and your funders get a report built from recorded work.
@@ -161,10 +153,9 @@ const MILESTONES: Array<{ when: string; title: string; body: string; icon: Lucid
 const VariantB = () => (
   <div className="hp hp-b">
     <div className="hp-b__head">
-      <Eyebrow />
-      <h2 id="home-programs-heading" className="hp-title">
+      <h3 className="hp-title">
         A 30-day pilot <span className="hp-accent">your team doesn’t have to run.</span>
-      </h2>
+      </h3>
       <p className="hp-lede">
         Bring 5 to 10 startups and one contact. We onboard the founders, keep every team moving week by week and hand
         you a report your funders can read.
@@ -210,10 +201,9 @@ const SHIFTS: Array<{ icon: LucideIcon; before: string; after: string }> = [
 const VariantC = () => (
   <div className="hp hp-c">
     <div className="hp-c__copy">
-      <Eyebrow />
-      <h2 id="home-programs-heading" className="hp-title">
+      <h3 className="hp-title">
         See which startups in your cohort <span className="hp-accent">are doing the work.</span>
-      </h2>
+      </h3>
       <p className="hp-lede">
         Your sessions and mentors teach. We make sure founders act on it, and your team can see it happen.
       </p>
@@ -253,6 +243,18 @@ export default function HomeProgramsBand() {
   return (
     <section className="hp-section" aria-labelledby="home-programs-heading">
       <div className="container mx-auto px-4 sm:px-6">
+        <div className="hp-header">
+          <Badge variant="outline" className="homepage-section-badge mb-5">
+            For Programs
+          </Badge>
+          <h2 id="home-programs-heading" className="homepage-section-title text-3xl sm:text-4xl lg:text-[2.9rem] mb-4">
+            Bring Creatives Takeover to Your Cohort
+          </h2>
+          <p className="homepage-section-copy text-base sm:text-lg">
+            Incubators, accelerators and universities put their founders through the same methodology, and see every
+            startup’s progress on one screen.
+          </p>
+        </div>
         {variant === "a" ? <VariantA /> : variant === "b" ? <VariantB /> : <VariantC />}
       </div>
     </section>
