@@ -515,7 +515,7 @@ const ValuePropositionCards = () => {
                           {card.link && !ROBOTS_DISALLOWED_LINKS.has(card.link) && (
                             <Link
                               to={card.link}
-                              className="value-prop-card__link inline-flex items-center gap-1.5 text-sm font-medium text-primary underline-offset-4 transition-colors hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                              className="value-prop-card__link mt-6 inline-flex items-center gap-1.5 text-sm font-medium text-primary underline-offset-4 transition-colors hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                             >
                               {card.linkLabel || `Explore ${card.subtitle}`}
                               <ArrowRight className="h-4 w-4 shrink-0" />
