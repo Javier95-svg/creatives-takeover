@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { ArrowRight, ClipboardList, FileText, LineChart, Sparkles, UserCheck, type LucideIcon } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
-import { ProductShot } from "@/components/enterprise/EnterpriseVisuals";
+import type { ShotHotspot } from "@/components/enterprise/EnterpriseVisuals";
 import { captureEvent } from "@/lib/analytics";
 import cohortJoinShot from "@/assets/enterprise/cohort-join.webp";
 import cohortJoinLightShot from "@/assets/enterprise/cohort-join-light.webp";
@@ -31,6 +31,66 @@ const MILESTONES: Array<{ when: string; title: string; body: string; icon: Lucid
   { when: "Day 30", title: "Your cohort report", body: "Written from each startup’s recorded work, in your funder’s format if you share it.", icon: FileText },
   { when: "After", title: "Founders keep going", body: "Their account, their work and the free plan stay theirs.", icon: Sparkles },
 ];
+
+type Crop = { x: number; y: number; w: number; h: number };
+
+// The crop as CSS variables: the box's aspect ratio and the capture's size and
+// offset inside it, with a suffix for the phone crop.
+const cropVars = (width: number, crop: Crop, suffix = "") => ({
+  [`--ar${suffix}`]: `${crop.w} / ${crop.h}`,
+  [`--iw${suffix}`]: `${(width / crop.w) * 100}%`,
+  [`--il${suffix}`]: `${(-crop.x / crop.w) * 100}%`,
+  [`--it${suffix}`]: `${(-crop.y / crop.h) * 100}%`,
+});
+
+/**
+ * A real product screen cropped to the part worth reading, so its text stays
+ * legible at homepage size. The crop is in pixels of the capture (light and dark
+ * captures share dimensions); hotspots are in percent of the crop. An optional
+ * tighter crop is used on phones, where the hotspots are hidden.
+ */
+const CroppedShot = ({ src, lightSrc, width, crop, phoneCrop, title, alt, caption, hotspots = [] }: {
+  src: string;
+  lightSrc: string;
+  width: number;
+  crop: Crop;
+  phoneCrop?: Crop;
+  title: string;
+  alt: string;
+  caption: { when: string; text: string };
+  hotspots?: ShotHotspot[];
+}) => {
+  const vars = { ...cropVars(width, crop), ...cropVars(width, phoneCrop ?? crop, "-p") } as CSSProperties;
+  return (
+    <figure className="hp-shot">
+      <div className="ent-window ent-shot">
+        <div className="ent-window__bar">
+          <span className="ent-window__dots" aria-hidden="true"><i /><i /><i /></span>
+          <span className="ent-window__title">{title}</span>
+        </div>
+        <div className={`hp-shot__media${phoneCrop ? " has-phone-crop" : ""}`} style={vars}>
+          <img className="is-light" src={lightSrc} alt={alt} loading="lazy" decoding="async" />
+          <img className="is-dark" src={src} alt="" aria-hidden="true" loading="lazy" decoding="async" />
+          {hotspots.map((spot, index) => (
+            <span
+              key={spot.label}
+              className={`ent-hotspot${spot.side && spot.side !== "right" ? ` is-${spot.side}` : ""}`}
+              style={{ left: `${spot.left}%`, top: `${spot.top}%`, "--hotspot-delay": `${600 + index * 260}ms` } as CSSProperties}
+              aria-hidden="true"
+            >
+              <i className="ent-hotspot__dot" />
+              <span className="ent-hotspot__label">{spot.label}</span>
+            </span>
+          ))}
+        </div>
+      </div>
+      <figcaption className="hp-shot__caption">
+        <span className="hp-shot__when">{caption.when}</span>
+        {caption.text}
+      </figcaption>
+    </figure>
+  );
+};
 
 export default function HomeProgramsBand() {
   // Plays the entrance once, when the band scrolls into view. The CSS only hides
@@ -86,19 +146,36 @@ export default function HomeProgramsBand() {
             ))}
           </ol>
 
+          {/* The dashboard large, then what founders see and send, each cropped
+              to the part worth reading. */}
           <div className="hp-b__screens ent">
-            <div className="hp-b__screen hp-b__screen--join">
-              <ProductShot src={cohortJoinShot} lightSrc={cohortJoinLightShot} width={712} height={594} title="Founder invitation" fade={false}
-                alt="The page a founder sees when invited: what the program will see, what is never shared, and a button to join with consent." />
-            </div>
             <div className="hp-b__screen hp-b__screen--program">
-              <ProductShot src={cohortProgramShot} lightSrc={cohortProgramLightShot} width={1176} height={955} title="Program dashboard" fade={false}
+              <CroppedShot src={cohortProgramShot} lightSrc={cohortProgramLightShot} width={1176}
+                crop={{ x: 0, y: 0, w: 1176, h: 672 }} phoneCrop={{ x: 850, y: 190, w: 326, h: 482 }} title="Program dashboard"
+                caption={{ when: "Weeks 1–4", text: "What your team sees" }}
+                hotspots={[
+                  { left: 83, top: 53.4, label: "Needs attention" },
+                  { left: 40.5, top: 64.1, label: "Verified interviews and evidence", side: "below" },
+                ]}
                 alt="The program dashboard for five startups: customer profiles ready, median interviews, experiments run, check-ins this week and startups that need attention, then one row per startup with stage, tasks, interviews, evidence, experiments, last activity, check-in and attention flags." />
             </div>
-            <div className="hp-b__screen hp-b__screen--founder">
-              <ProductShot src={cohortFounderShot} lightSrc={cohortFounderLightShot} width={1176} height={727} title="Founder view" fade={false}
-                alt="A founder's cohort view: this week's tasks for their stage and the weekly check-in sent to the program." />
+            <div className="hp-b__pair">
+              <div className="hp-b__screen hp-b__screen--join">
+                <CroppedShot src={cohortJoinShot} lightSrc={cohortJoinLightShot} width={712}
+                  crop={{ x: 40, y: 40, w: 632, h: 345 }} title="Founder invitation"
+                  caption={{ when: "Day 1", text: "What founders see before joining" }}
+                  hotspots={[{ left: 78.2, top: 73.3, label: "Never shared", side: "below" }]}
+                  alt="The page a founder sees when invited: what is shared with the program and what stays private." />
+              </div>
+              <div className="hp-b__screen hp-b__screen--founder">
+                <CroppedShot src={cohortFounderShot} lightSrc={cohortFounderLightShot} width={1176}
+                  crop={{ x: 600, y: 258, w: 556, h: 382 }} title="Founder view"
+                  caption={{ when: "Every week", text: "What founders send" }}
+                  hotspots={[{ left: 39, top: 19.4, label: "Check-in sent to the program" }]}
+                  alt="A founder's weekly check-in, sent to the program: wins, blockers, next week and help needed." />
+              </div>
             </div>
+            <p className="hp-b__note">Real product screens, sample data.</p>
           </div>
 
           <div className="hp-ctas hp-ctas--center">
