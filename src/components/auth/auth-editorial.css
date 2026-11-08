@@ -146,6 +146,69 @@
   opacity: 0.88;
 }
 
+/* ---------- Sign-up note: the Founder ID that comes with the account ---------- */
+
+.signup-urgency {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 18px;
+  padding: 14px 16px;
+  border: 1px solid hsl(var(--border));
+  border-radius: 12px;
+  text-align: left;
+}
+
+.signup-urgency p { margin: 0; }
+
+.signup-urgency__title {
+  color: hsl(var(--foreground));
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.signup-urgency__body {
+  margin-top: 3px !important;
+  color: hsl(var(--muted-foreground));
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+
+/* A small Founder ID card with the number still to come. */
+.signup-urgency__card {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 86px;
+  height: 50px;
+  white-space: nowrap;
+  padding: 6px 8px;
+  border: 1px solid rgba(201, 169, 97, 0.55);
+  border-radius: 8px;
+  background: linear-gradient(145deg, #1f1d17, #2b281f);
+  box-shadow: 0 8px 20px -12px rgba(201, 169, 97, 0.6);
+}
+
+.signup-urgency__card-label {
+  color: rgba(201, 169, 97, 0.85);
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.signup-urgency__card-number {
+  color: #e9d9b0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.signup-urgency__card-number b { color: #c9a961; }
+
 /* Social buttons in the page's neutral style, brand icons kept. */
 .auth-editorial .signup-premium-social-frame {
   padding: 1px;

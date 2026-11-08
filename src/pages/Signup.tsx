@@ -17,6 +17,7 @@ import MobileFormOptimizer from "@/components/MobileFormOptimizer";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { AuthSocialButtons } from "@/components/auth/AuthSocialButtons";
 import { AuthShowcaseLine } from "@/components/auth/AuthDesign";
+import SignupUrgency from "@/components/auth/SignupUrgency";
 import { mapSignUpError } from "@/lib/authErrors";
 import { getPasswordValidationError, MIN_PASSWORD_LENGTH, PASSWORD_REQUIREMENTS } from "@/lib/passwordPolicy";
 import { captureEvent, persistSignupIntent, trackSignupCompletedAttributed } from "@/lib/analytics";
@@ -946,23 +947,8 @@ const Signup = () => {
                   </>
                 )}
 
-                {/* Hype Text */}
-                <div className="text-center mt-4 space-y-1">
-                  <p className="text-sm text-muted-foreground">
-                    Create your first startup artifact in minutes.
-                  </p>
-                  <p className="text-xs text-muted-foreground flex items-center justify-center gap-2">
-                    <span
-                      aria-hidden="true"
-                      className="pointer-events-none relative w-2 h-2 rounded-full bg-success"
-                      style={{
-                        boxShadow: '0 0 6px rgba(34, 197, 94, 0.8), 0 0 12px rgba(34, 197, 94, 0.5)'
-                      }}
-                    >
-                    </span>
-                    Demo, pitch video, ICP, and launch plan tools are ready after onboarding.
-                  </p>
-                </div>
+                {/* What comes free with the account: a Founder ID and its number. */}
+                <SignupUrgency />
 
                 {/* Security Badge */}
                 <div className="flex items-center justify-center gap-2 pt-2 pb-2 text-xs text-muted-foreground">
