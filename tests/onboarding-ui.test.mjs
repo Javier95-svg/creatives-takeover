@@ -50,22 +50,21 @@ import { existsSync as exists } from 'node:fs';
 const tick=()=>new Promise(resolve=>setTimeout(resolve,45));
 const text=dom=>dom.window.document.body.textContent;
 async function click(dom,label){const button=[...dom.window.document.querySelectorAll('button')].find(b=>b.textContent.trim()===label || b.textContent.includes(label));assert.ok(button,`Missing button ${label}`);button.click();await tick();}
-async function type(dom,input,value){assert.ok(input);const setter=Object.getOwnPropertyDescriptor(dom.window.HTMLInputElement.prototype,'value').set;input.focus();for(const char of value){setter.call(input,input.value+char);input.dispatchEvent(new dom.window.Event('input',{bubbles:true}));await tick();}}
+async function type(dom,input,value){assert.ok(input);const proto=input.tagName==='TEXTAREA'?dom.window.HTMLTextAreaElement.prototype:dom.window.HTMLInputElement.prototype;const setter=Object.getOwnPropertyDescriptor(proto,'value').set;input.focus();for(const char of value){setter.call(input,input.value+char);input.dispatchEvent(new dom.window.Event('input',{bubbles:true}));await tick();}}
 function field(dom,label){const el=[...dom.window.document.querySelectorAll('label')].find(x=>x.textContent.startsWith(label));return el&&dom.window.document.getElementById(el.htmlFor);}
 const statements={Founder:'I already have a project',Builder:'I am starting from scratch',Mentor:'I want to advise', 'Service provider':'I want to deliver services',Investor:'I want to explore projects to invest'};
 async function choose(dom,role){role=statements[role]??role;const button=[...dom.window.document.querySelectorAll('button')].find(b=>b.textContent.includes(role));assert.ok(button);button.click();await tick();await click(dom,'Continue');}
 function close(dom){dom.window.root.unmount();dom.window.close();}
 
-test('uninvited advice and services answers cannot reach application details',async()=>{
-  for(const role of ['Mentor','Service provider']) {
+test('advice and services answers go straight to the application, with no invitation check',async()=>{
+  for(const [role,title] of [['Mentor','Apply as a mentor'],['Service provider','Apply as a service provider']]) {
     const dom=await mount();try{
       dom.window.invitationTypes=[];
       await choose(dom,role);
-      assert.ok(text(dom).includes('requires an invitation for your verified sign-in email'));
+      assert.equal(dom.window.invitationChecked,undefined);
+      assert.ok(text(dom).includes(title));
+      assert.ok(!text(dom).includes('needs an invitation'));
       assert.equal(dom.window.applications.length,0);
-      assert.ok(text(dom).includes('What brings you here today?'));
-      await choose(dom,'Builder');
-      assert.ok(text(dom).includes('Where are you starting?'));
     }finally{close(dom);}
   }
 });
@@ -77,7 +76,8 @@ test('situation question precedes project questions for all five account types',
       assert.equal(dom.window.document.querySelectorAll('textarea').length,0);
       await choose(dom,role);
       if(['Founder','Builder'].includes(role)) assert.equal(dom.window.document.querySelectorAll('textarea').length,1);
-      else {assert.equal(dom.window.document.querySelectorAll('textarea').length,0);assert.ok(text(dom).includes('2 of 2'));assert.ok(!text(dom).includes('Founder launchpad'));}
+      // The application's long answers are text areas: one for a mentor, two for a provider.
+      else {assert.equal(dom.window.document.querySelectorAll('textarea').length,{Mentor:1,'Service provider':2,Investor:0}[role]);assert.ok(text(dom).includes('2 of 2'));assert.ok(!text(dom).includes('Founder launchpad'));}
     }finally{close(dom);}
   }
 });
@@ -98,11 +98,13 @@ test('mentor typing, draft reload, submission and workspace continuation',async(
     await type(dom,field(dom,'Areas of expertise'),'Go to market, Pricing');
     assert.equal(field(dom,'Areas of expertise').value,'Go to market, Pricing');
     await click(dom,'Validation');await type(dom,field(dom,'Relevant experience'),'Built a profitable business');await click(dom,'Both');
+    await type(dom,field(dom,'Your one-line intro'),'Former head of growth');await type(dom,field(dom,'LinkedIn or website'),'linkedin.com/in/test');await click(dom,'3–5 hours');
     const stored=dom.window.localStorage.getItem('adaptive_onboarding_test-session');
     assert.ok(stored);close(dom);dom=await mount({'adaptive_onboarding_test-session':stored});
     assert.ok(text(dom).includes('2 of 2'));assert.equal(field(dom,'Areas of expertise').value,'Go to market, Pricing');
     await click(dom,'Send my request');assert.equal(dom.window.applications.length,1);
     assert.deepEqual([...dom.window.applications[0].roleProfile.expertise],['Go to market','Pricing']);
+    assert.equal(dom.window.applications[0].roleProfile.link,'https://linkedin.com/in/test');assert.equal(dom.window.applications[0].roleProfile.availability,'3_5_hours');
     assert.equal(dom.window.localStorage.getItem('adaptive_onboarding_test-session'),null);
     await click(dom,'Open my workspace');assert.equal(dom.window.completedRoute,'/');
     assert.equal(dom.window.applications.length,1);dom.window.root.unmount();await tick();
@@ -227,7 +229,7 @@ test('a guest choosing Mentor answers the details before any sign-up prompt',asy
     await choose(dom,'Mentor');
     assert.equal(JSON.stringify(reviewed),JSON.stringify([]));
     assert.equal(dom.window.invitationChecked,undefined);
-    assert.ok(text(dom).includes('Tell us about your mentor work'));
+    assert.ok(text(dom).includes('Apply as a mentor'));
     const viewed=dom.window.events.filter((event)=>event.name==='onboarding_step_viewed').map((event)=>[event.data.step,event.data.step_name,event.data.is_guest]);
     assert.equal(JSON.stringify(viewed),JSON.stringify([[1,'About you',true],[2,'Your details',true]]));
   }finally{close(dom);}

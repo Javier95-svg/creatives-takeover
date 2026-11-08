@@ -6,13 +6,15 @@ import { WHO_IS_THIS_FOR_ACCOUNT_TYPES, type AudienceAccountType } from "@/compo
 import { useCTAAttribution } from "@/hooks/useCTAAttribution";
 import { captureEvent } from "@/lib/analytics";
 import { rememberIntendedAccountType } from "@/lib/intendedAccountType";
+import TitleFx from "@/components/home/TitleFx";
 import "./hero-roles.css";
 
 // The row under the hero for signed-out visitors: one card per account type,
 // on a single line. Copy, symbols and colours are the ones the "Who is this
 // for?" dialog uses (whoIsThisForProfiles.ts, WhoIsThisForAccountTypes.tsx).
-// Open accounts start sign-up with the type pre-selected, as the dialog does;
-// invitation-only ones go to the application form at /apply.
+// Every card starts sign-up with its type pre-selected, as the dialog does.
+// Mentors and providers then apply in the onboarding, and their account opens
+// once an admin approves it.
 
 type AccountId = AudienceAccountType["id"];
 
@@ -33,12 +35,12 @@ export default function HeroRoleCards() {
     captureEvent("cta_clicked", { cta_name: "hero_role_card", account_type: account.id, page: "/" });
     setAttribution(`hero_role_${account.id}`, "/");
     // The onboarding quiz pre-selects this so the person is not asked twice.
-    if (isOpen(account)) rememberIntendedAccountType(account.id);
+    rememberIntendedAccountType(account.id);
   };
 
   return (
     <section className="hr-wrap" aria-labelledby="hero-account-types">
-      <h2 id="hero-account-types" className="hr-wrap__title">Account Types</h2>
+      <h2 id="hero-account-types" className="hr-wrap__title"><TitleFx variant="underline" text="Account Types" /></h2>
       <div className="hr" role="list">
         {WHO_IS_THIS_FOR_ACCOUNT_TYPES.map((account) => {
           const { icon: Icon, tone } = ROLE[account.id];
@@ -46,7 +48,7 @@ export default function HeroRoleCards() {
           return (
             <Link
               key={account.id}
-              to={isOpen(account) ? "/signup" : `/apply?as=${account.id}`}
+              to="/signup"
               role="listitem"
               className="hr__card"
               style={{ "--tone": tone } as CSSProperties}
@@ -59,7 +61,7 @@ export default function HeroRoleCards() {
               <span className="hr__promise">“{account.promise}”</span>
               <span className="hr__next">{account.next}</span>
               <span className="hr__foot">
-                <span className={`hr__access is-${account.access}`}>{isOpen(account) ? "Open to join" : "By invitation"}</span>
+                <span className={`hr__access is-${account.access}`}>{isOpen(account) ? "Open to join" : "By application"}</span>
                 <span className="hr__cta">
                   {action}
                   <ArrowRight aria-hidden="true" />

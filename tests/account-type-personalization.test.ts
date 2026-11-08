@@ -88,18 +88,25 @@ test('sanitize rejects wrong shapes and caps sizes', () => {
 
 test('missing fields validates complete, actionable role applications', () => {
   assert.equal(missingRoleFields('founder', {}).length, 0);
-  assert.equal(missingRoleFields('mentor', {}).length, 4);
-  assert.equal(missingRoleFields('mentor', { expertise: ['Pricing'] }).length, 3);
-  assert.equal(missingRoleFields('mentor', { expertise: ['Pricing'], stages: ['Validation'], experience: 'Relevant results', engagement: 'both' }).length, 0);
+  // Since 2026-11-07 a mentor also gives a one-line intro, a link and their monthly time.
+  assert.equal(missingRoleFields('mentor', {}).length, 7);
+  assert.equal(missingRoleFields('mentor', { expertise: ['Pricing'] }).length, 6);
+  const mentor = { headline: 'Former head of growth', link: 'linkedin.com/in/test', expertise: ['Pricing'], stages: ['Validation'], experience: 'Relevant results', engagement: 'both', availability: '3_5_hours' };
+  assert.equal(missingRoleFields('mentor', mentor).length, 0);
+  // A link has to be one a reviewer can open.
+  assert.deepEqual(missingRoleFields('mentor', { ...mentor, link: 'not a link' }).map((field) => field.key), ['link']);
+  assert.equal(sanitizeRoleProfile('mentor', mentor).link, 'https://linkedin.com/in/test');
   assert.equal(missingRoleFields('investor', { sectors: ['FinTech'], stages: ['Seed'], geography: 'Global', activity: 'actively_investing' }).length, 0);
-  assert.equal(missingRoleFields('marketplace', { services: ['Design'], category: 'invalid', idealCustomer: 'Founders', portfolio: 'Example', capacity: 'available' }).length, 1);
+  assert.equal(missingRoleFields('marketplace', { businessName: 'Northlight', link: 'https://northlight.example', services: ['Design'], category: 'invalid', idealCustomer: 'Founders', portfolio: 'Example', capacity: 'available' }).length, 1);
 });
 
 test('describe renders only filled fields', () => {
   assert.deepEqual(describeRoleProfile('founder', { projectName: 'Throughline' }), []);
   const described = describeRoleProfile('mentor', { expertise: ['Pricing', 'Hiring'], yearsActive: 0 });
-  assert.deepEqual(described.map((item) => item.key), ['expertise', 'yearsActive']);
-  assert.equal(described[0].display, 'Pricing, Hiring');
+  // Schema order: years sits with the intro, under "About you".
+  assert.deepEqual(described.map((item) => item.key), ['yearsActive', 'expertise']);
+  assert.equal(described[1].display, 'Pricing, Hiring');
+  assert.equal(describeRoleProfile('mentor', { engagement: 'one_off' })[0].display, 'One-off sessions');
 });
 
 // -------------------------------------------------- acceptance: no crossover

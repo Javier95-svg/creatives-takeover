@@ -1,6 +1,6 @@
 import { ONBOARDING_SITUATIONS, classifyOnboardingSituation, situationForUserType } from '@/lib/onboardingClassification';
 import { useEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from 'react';
-import { ArrowLeft, ArrowRight, Check, ChevronDown, Info, Loader2, Lock, Sparkles } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, ChevronDown, Info, Loader2, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -52,7 +52,7 @@ import {
   saveOnboardingProgress,
 } from '@/lib/onboardingSession';
 import { buildOnboardingFailureMessage } from '@/lib/onboardingFailureMessage';
-import { submitAccountApplication, getMyAccountInvitationTypes } from '@/lib/accountApplications';
+import { submitAccountApplication } from '@/lib/accountApplications';
 import { REVIEWED_USER_TYPES, USER_TYPE_LABEL, type ReviewedUserType } from '@/lib/accountTypes';
 import { mapFounderStageToBusinessStage } from '@/lib/stageDiagnostic';
 import {
@@ -458,9 +458,6 @@ export function AdaptiveOnboardingForm({ session, onComplete, guest, autoFinish 
   const [error, setError] = useState<string | null>(null);
   const [completionAttempts, setCompletionAttempts] = useState(0);
   const [explicitIntent, setExplicitIntent] = useState(Boolean(session.answers.selectedIntent));
-  // Set when a mentor or marketplace answer has no invitation on file. Shown
-  // as a callout with a way forward rather than a bare error.
-  const [invitationBlocked, setInvitationBlocked] = useState(false);
   // A resumed draft with optional answers opens the section so they stay visible.
   const [showOptionalDetails, setShowOptionalDetails] = useState(() => Boolean(answers.country || answers.investorVisible || answers.sectors.length));
   const headingRef = useRef<HTMLHeadingElement>(null);
@@ -718,16 +715,8 @@ export function AdaptiveOnboardingForm({ session, onComplete, guest, autoFinish 
     if (submittedReview) { onComplete?.('/'); return; }
     if (currentStep === 0 && reviewStage === 'choosing') {
       if (!answers.situation || !answers.founderSegment) { setError('Choose the option that describes your situation.'); return; }
-      // The invitation check needs a sign-in, so a guest answers the details
-      // first and the check runs when they confirm the choice after signup.
-      if (!guest && (answers.founderSegment === 'mentor' || answers.founderSegment === 'marketplace')) {
-        setIsSaving(true); submittingRef.current = true;
-        try {
-          const invitations = await getMyAccountInvitationTypes();
-          if (!invitations.includes(answers.founderSegment)) { setInvitationBlocked(true); return; }
-        } catch { setError('Could not check your invitation. Please try again.'); return; }
-        finally { setIsSaving(false); submittingRef.current = false; }
-      }
+      // Mentors and providers apply openly; the review happens after they send
+      // the details (20261107120000_open_mentor_marketplace_applications.sql).
       setReviewStage('details');
       void trackRetentionEvent('onboarding_classified', { user_id: user?.id, user_type: answers.founderSegment, quiz_version: 2, onboarding_session_id: session.id });
       return;
@@ -1109,20 +1098,8 @@ export function AdaptiveOnboardingForm({ session, onComplete, guest, autoFinish 
           if (intendedType && answers.founderSegment === intendedType && founderSegment && founderSegment !== intendedType) {
             trackOnboardingAccountTypeChanged({ from_type: intendedType, to_type: founderSegment });
           }
-          setError(''); setInvitationBlocked(false); patchAnswers({ situation, founderSegment });
+          setError(''); patchAnswers({ situation, founderSegment });
         }} /></div>
-        {invitationBlocked ? (
-          <div role="alert" className="mt-5 rounded-xl border border-warning/40 bg-warning-subtle p-4">
-            <p className="flex items-center gap-2 text-sm font-semibold"><Lock className="h-4 w-4 text-warning" aria-hidden="true" />This option needs an invitation</p>
-            <p className="mt-2 text-sm leading-6 text-muted-foreground">
-              This participation requires an invitation for your verified sign-in email{user?.email ? <> (<span className="font-medium text-foreground">{user.email}</span>)</> : null}. If you were invited with another address, sign in with that one.
-            </p>
-            <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
-              <a href="/contact" className="inline-flex items-center font-semibold text-primary hover:underline">Request an invitation <ArrowRight className="ml-1 h-4 w-4" aria-hidden="true" /></a>
-              <span className="text-muted-foreground">or pick another option above.</span>
-            </div>
-          </div>
-        ) : null}
       </>;
 
       // The second and last question a reviewed type is asked.
@@ -1130,9 +1107,13 @@ export function AdaptiveOnboardingForm({ session, onComplete, guest, autoFinish 
         return (
           <>
             <StepHeading
-              eyebrow={answers.founderSegment === 'investor' ? 'Set up your account' : 'Request access'}
-              title={`Tell us about your ${USER_TYPE_LABEL[answers.founderSegment].toLowerCase()} work`}
-              description={answers.founderSegment === 'investor' ? 'These answers decide which founders you are matched with. You can refine them from your workspace.' : 'These answers help us review your request. You can refine your public profile and preferences from your workspace.'}
+              eyebrow={answers.founderSegment === 'investor' ? 'Set up your account' : 'Your application'}
+              title={answers.founderSegment === 'investor'
+                ? `Tell us about your ${USER_TYPE_LABEL[answers.founderSegment].toLowerCase()} work`
+                : `Apply as a ${answers.founderSegment === 'mentor' ? 'mentor' : 'service provider'}`}
+              description={answers.founderSegment === 'investor'
+                ? 'These answers decide which founders you are matched with. You can refine them from your workspace.'
+                : 'Our team reviews every application. Nothing is shown to founders until you are approved, and we email you either way. You can edit these answers later from your workspace.'}
               headingRef={headingRef}
             />
             <div className="mt-6">

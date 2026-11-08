@@ -36,7 +36,7 @@ const ROLE_STYLES: Record<AccountTypeId, { text: string; tint: string; solid: st
 
 const ACCESS_GROUPS = [
   { access: "open", title: "access: open", dot: "bg-success" },
-  { access: "invitation", title: "access: invite_only", dot: "bg-warning" },
+  { access: "application", title: "access: by_application", dot: "bg-warning" },
 ] as const;
 
 type Props = {
@@ -134,7 +134,7 @@ export function WhoIsThisForAccountTypes({ onJoin, onShowPreBuild }: Props) {
                   <Icon className="h-5 w-5" aria-hidden="true" />
                 </span>
                 <span className="rounded-full border border-border/70 px-2 py-0.5 font-mono text-[10px] font-semibold text-muted-foreground">
-                  {account.access === "invitation" ? "Invitation only" : "Can join"}
+                  {account.access === "application" ? "By application" : "Can join"}
                 </span>
               </div>
               <span className="mt-2 font-space-grotesk text-sm font-semibold text-foreground">{account.label}</span>
@@ -151,13 +151,10 @@ export function WhoIsThisForAccountTypes({ onJoin, onShowPreBuild }: Props) {
           </p>
           <p className="mt-1 text-sm text-muted-foreground">{selected.next}</p>
         </div>
-        {selected.access === "open" ? (
-          <Link to="/signup" onClick={() => onJoin(selected.id)} className="inline-flex shrink-0 items-center rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
-            Create an account <ArrowRight className="ml-1.5 h-4 w-4" aria-hidden="true" />
-          </Link>
-        ) : (
-          <span className="rounded-full border border-border px-3 py-1.5 text-xs font-semibold text-muted-foreground">Invitation only</span>
-        )}
+        {/* Mentors and providers apply in the onboarding after sign-up; the account opens once an admin approves it. */}
+        <Link to="/signup" onClick={() => onJoin(selected.id)} className="inline-flex shrink-0 items-center rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+          {selected.access === "open" ? "Create an account" : "Apply"} <ArrowRight className="ml-1.5 h-4 w-4" aria-hidden="true" />
+        </Link>
       </div>
     </section>
   );

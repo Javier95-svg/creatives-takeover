@@ -147,7 +147,7 @@
   background: #22c55e;
 }
 
-.hr__access.is-invitation::before { background: #f5a524; }
+.hr__access.is-application::before { background: #f5a524; }
 
 .hr__cta {
   display: inline-flex;

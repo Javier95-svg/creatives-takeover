@@ -11,7 +11,7 @@ import { REVIEWED_USER_TYPES, type UserType } from './accountTypes.ts';
  * against the same fields; adding a role also requires server validation.
  */
 
-export type RoleFieldType = 'text' | 'number' | 'tags' | 'select' | 'multi';
+export type RoleFieldType = 'text' | 'textarea' | 'url' | 'number' | 'tags' | 'select' | 'multi';
 
 export interface RoleField {
   key: string;
@@ -21,7 +21,28 @@ export interface RoleField {
   placeholder?: string;
   /** For select and multi. */
   options?: readonly string[];
+  /** How an option reads on screen, where the stored value is not plain English. */
+  optionLabels?: Readonly<Record<string, string>>;
+  /** One line under the field: what a good answer looks like. */
+  hint?: string;
+  /** The section the field is shown under; consecutive fields share a heading. */
+  group?: string;
   maxLength?: number;
+}
+
+/** "one_off" reads as "One off" unless the field gives it a label. */
+export function optionLabel(field: RoleField, option: string): string {
+  return field.optionLabels?.[option] ?? option.replace(/_/g, ' ').replace(/^./, (character) => character.toUpperCase());
+}
+
+/** A link a reviewer can open: http(s), a host with a dot, no spaces. */
+const URL_PATTERN = /^https?:\/\/[^\s/.]+\.[^\s]+$/i;
+
+/** Accepts "linkedin.com/in/name" as typed and stores it with https://. */
+export function normalizeUrl(value: string): string {
+  const trimmed = value.trim();
+  if (!trimmed) return '';
+  return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
 }
 
 /** Mirrors services.category, so a provider's answer matches the listing taxonomy. */
@@ -49,19 +70,27 @@ export const ROLE_PROFILE_SCHEMA: Record<UserType, readonly RoleField[]> = {
   builder: [
     { key: 'projectName', label: 'Working title (optional)', type: 'text', placeholder: 'Throughline', maxLength: 120 },
   ],
+  // Mentors and providers apply here; a reviewer decides from these answers,
+  // so each one asks for something checkable (a link, a result, a time).
   mentor: [
-    { key: 'expertise', label: 'Areas of expertise', type: 'tags', required: true, placeholder: 'Go to market, pricing, hiring' },
-    { key: 'stages', label: 'Stages you help with', type: 'multi', required: true, options: ['Exploring','Validation','Building','Launch','Growth'] },
-    { key: 'experience', label: 'Relevant experience or proof', type: 'text', required: true, maxLength: 500, placeholder: 'A result, previous role, or relevant portfolio link' },
-    { key: 'engagement', label: 'Preferred engagement', type: 'select', required: true, options: ['one_off','ongoing','both'] },
-    { key: 'yearsActive', label: 'Years operating', type: 'number' },
+    { key: 'headline', label: 'Your one-line intro', type: 'text', required: true, maxLength: 120, group: 'About you', placeholder: 'Former head of growth at a B2B SaaS, now advising early-stage teams' },
+    { key: 'link', label: 'LinkedIn or website', type: 'url', required: true, maxLength: 300, group: 'About you', placeholder: 'linkedin.com/in/your-name', hint: 'So we can see your background.' },
+    { key: 'yearsActive', label: 'Years of experience', type: 'number', group: 'About you' },
+    { key: 'expertise', label: 'Areas of expertise', type: 'tags', required: true, group: 'How you help', placeholder: 'Go to market, pricing, hiring', hint: 'Separate with commas.' },
+    { key: 'stages', label: 'Stages you help with', type: 'multi', required: true, group: 'How you help', options: ['Exploring','Validation','Building','Launch','Growth'] },
+    { key: 'experience', label: 'Relevant experience or proof', type: 'textarea', required: true, maxLength: 500, group: 'How you help', placeholder: 'A result you achieved, a previous role, or companies you have helped.' },
+    { key: 'engagement', label: 'How you prefer to help', type: 'select', required: true, group: 'Availability', options: ['one_off','ongoing','both'], optionLabels: { one_off: 'One-off sessions', ongoing: 'Ongoing mentoring', both: 'Both' } },
+    { key: 'availability', label: 'Time you can give each month', type: 'select', required: true, group: 'Availability', options: ['1_2_hours','3_5_hours','6_plus_hours'], optionLabels: { '1_2_hours': '1–2 hours', '3_5_hours': '3–5 hours', '6_plus_hours': '6+ hours' } },
   ],
   marketplace: [
-    { key: 'services', label: 'Services you offer', type: 'tags', required: true, placeholder: 'Landing pages, paid ads, bookkeeping' },
-    { key: 'idealCustomer', label: 'Who do you help?', type: 'text', required: true, maxLength: 500 },
-    { key: 'portfolio', label: 'Portfolio or relevant example', type: 'text', required: true, maxLength: 500 },
-    { key: 'capacity', label: 'Current capacity', type: 'select', required: true, options: ['available','limited','waitlist'] },
-    { key: 'category', label: 'Category', type: 'select', required: true, options: SERVICE_CATEGORIES },
+    { key: 'businessName', label: 'Business or studio name', type: 'text', required: true, maxLength: 120, group: 'About your business', placeholder: 'Northlight Studio' },
+    { key: 'link', label: 'Website or portfolio link', type: 'url', required: true, maxLength: 300, group: 'About your business', placeholder: 'northlight.studio' },
+    { key: 'category', label: 'Main category', type: 'select', required: true, group: 'What you offer', options: SERVICE_CATEGORIES, optionLabels: { sales: 'Sales', marketing: 'Marketing', ops: 'Operations', tech_support: 'Tech support' } },
+    { key: 'services', label: 'Services you offer', type: 'tags', required: true, group: 'What you offer', placeholder: 'Landing pages, paid ads, bookkeeping', hint: 'Separate with commas.' },
+    { key: 'idealCustomer', label: 'Who do you help?', type: 'textarea', required: true, maxLength: 500, group: 'What you offer', placeholder: 'Pre-seed SaaS founders who need their first marketing site.' },
+    { key: 'portfolio', label: 'A relevant example of your work', type: 'textarea', required: true, maxLength: 500, group: 'What you offer', placeholder: 'A project you delivered and its result, or a link to a case study.' },
+    { key: 'capacity', label: 'Current capacity', type: 'select', required: true, group: 'Availability and pricing', options: ['available','limited','waitlist'], optionLabels: { available: 'Available now', limited: 'Limited', waitlist: 'Waitlist' } },
+    { key: 'startingPrice', label: 'Starting price (optional)', type: 'text', maxLength: 120, group: 'Availability and pricing', placeholder: 'From $500 per project' },
   ],
   investor: [
     { key: 'sectors', label: 'Investment focus', type: 'multi', required: true, options: ANGEL_SECTOR_OPTIONS },
@@ -86,6 +115,7 @@ function isFilled(field: RoleField, value: unknown): boolean {
   if (value == null) return false;
   if (field.type === 'tags' || field.type === 'multi') return Array.isArray(value) && value.length > 0;
   if (field.type === 'number') return typeof value === 'number' && Number.isFinite(value);
+  if (field.type === 'url') return typeof value === 'string' && URL_PATTERN.test(value);
   return typeof value === 'string' && value.trim().length > 0;
 }
 
@@ -142,6 +172,12 @@ export function sanitizeRoleProfile(userType: UserType, input: RoleProfile | nul
       continue;
     }
 
+    if (field.type === 'url') {
+      const url = typeof value === 'string' ? normalizeUrl(value).slice(0, field.maxLength ?? 300) : '';
+      if (URL_PATTERN.test(url)) clean[field.key] = url;
+      continue;
+    }
+
     if (typeof value === 'string' && value.trim()) {
       clean[field.key] = value.trim().slice(0, field.maxLength ?? 200);
     }
@@ -159,7 +195,9 @@ export function describeRoleProfile(userType: UserType, profile: RoleProfile | n
     .map(({ field, value }) => ({
       key: field.key,
       label: field.label,
-      display: Array.isArray(value) ? value.join(', ') : String(value),
+      display: Array.isArray(value)
+        ? value.map((item) => (field.type === 'multi' ? optionLabel(field, String(item)) : String(item))).join(', ')
+        : field.type === 'select' ? optionLabel(field, String(value)) : String(value),
     }));
 }
 

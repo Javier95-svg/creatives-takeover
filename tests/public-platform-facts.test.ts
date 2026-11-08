@@ -13,8 +13,9 @@ test('the public brief covers every account type and who can join', () => {
   for (const account of WHO_IS_THIS_FOR_ACCOUNT_TYPES) {
     assert.ok(brief.includes(`- ${account.label} ("${account.promise}")`), account.label);
   }
-  assert.match(brief, /Mentor[^\n]*invitation/);
-  assert.match(brief, /Marketplace[^\n]*invitation/);
+  // Since 2026-11-07 mentors and providers apply openly; an admin reviews them.
+  assert.match(brief, /Mentor[^\n]*Anyone can apply[^\n]*admin reviews/);
+  assert.match(brief, /Marketplace[^\n]*Anyone can apply[^\n]*admin reviews/);
   assert.match(brief, /Founder[^\n]*Anyone can join/);
 });
 

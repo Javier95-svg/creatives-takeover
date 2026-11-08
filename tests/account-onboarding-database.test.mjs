@@ -7,8 +7,10 @@ const sql = name => readFileSync(new URL(`../supabase/migrations/${name}.sql`,im
 const user='10000000-0000-0000-0000-000000000001';
 const admin='10000000-0000-0000-0000-000000000099';
 const session='20000000-0000-0000-0000-000000000001';
-const mentor={expertise:['Pricing','Go to market'],stages:['Validation'],experience:'Built a profitable service business',engagement:'both'};
-const provider={services:['Landing pages'],category:'marketing',idealCustomer:'Early founders',portfolio:'Example portfolio',capacity:'available'};
+// The 2026-09-25 bundle predates the application questions added on 2026-11-07.
+const legacyMentor={expertise:['Pricing','Go to market'],stages:['Validation'],experience:'Built a profitable service business',engagement:'both'};
+const mentor={...legacyMentor,headline:'Former head of growth',link:'https://linkedin.com/in/test-mentor',availability:'3_5_hours'};
+const provider={businessName:'Northlight Studio',link:'https://northlight.example',services:['Landing pages'],category:'marketing',idealCustomer:'Early founders',portfolio:'Example portfolio',capacity:'available'};
 const investor={sectors:['FinTech'],stages:['Seed'],geography:'Global',activity:'actively_investing'};
 
 async function fixture({ bundle = false } = {}) {
@@ -54,7 +56,7 @@ async function fixture({ bundle = false } = {}) {
   const ensure=sql('20260917180000_outcomes_claim_project_slot');
   await db.exec(ensure.slice(ensure.indexOf('CREATE OR REPLACE FUNCTION public.ensure_active_project'),ensure.indexOf('COMMENT ON FUNCTION')));
   if (bundle) await db.exec(readFileSync(new URL('../docs/sql/account-type-onboarding-2026-09-25.sql',import.meta.url),'utf8'));
-  else for(const name of ['20260925155000_onboarding_invitations','20260925160000_account_onboarding_integrity','20260925161000_onboarding_classification_and_project','20260925162000_investor_matching_preferences','20260925163000_onboarding_drafts_and_reconciliation','20260928120000_onboarding_context_sync','20260929120000_onboarding_context_v2','20261001170000_investor_self_serve']) await db.exec(sql(name));
+  else for(const name of ['20260925155000_onboarding_invitations','20260925160000_account_onboarding_integrity','20260925161000_onboarding_classification_and_project','20260925162000_investor_matching_preferences','20260925163000_onboarding_drafts_and_reconciliation','20260928120000_onboarding_context_sync','20260929120000_onboarding_context_v2','20261001170000_investor_self_serve','20261107120000_open_mentor_marketplace_applications']) await db.exec(sql(name));
   await db.exec(`INSERT INTO auth.users(id,email) VALUES('${user}','test@example.invalid'),('${admin}','admin@example.invalid');
     INSERT INTO profiles(id) VALUES('${user}'),('${admin}'); INSERT INTO onboarding_sessions(id,user_id) VALUES('${session}','${user}');`);
   return db;
@@ -65,7 +67,7 @@ async function owner(db) {await db.exec('RESET ROLE');}
 test('copy-paste bundle installs and reruns without losing invitations or applications',async()=>{
   const db=await fixture({bundle:true});try{
     await invite(db);
-    const application=(await submit(db,'mentor',mentor)).rows[0].result;
+    const application=(await submit(db,'mentor',legacyMentor)).rows[0].result;
     await owner(db);
     await db.exec(readFileSync(new URL('../docs/sql/account-type-onboarding-2026-09-25.sql',import.meta.url),'utf8'));
     assert.equal((await db.query('SELECT count(*)::int n FROM account_invitations')).rows[0].n,1);
@@ -77,31 +79,43 @@ test('copy-paste bundle installs and reruns without losing invitations or applic
   }finally{await db.close();}
 });
 
-test('invitation is admin-issued, verified-email bound, expiring and revocable before approval',async()=>{
+test('mentors and providers apply without an invitation and wait for an admin review',async()=>{
   const db=await fixture();try{
     await asUser(db);
-    await assert.rejects(submit(db,'mentor',mentor),/invitation/);
-    await assert.rejects(db.query('SELECT manage_account_invitation($1,$2)',['test@example.invalid','mentor']),/administrator/);
-    await assert.rejects(db.query('SELECT list_account_invitations()'),/administrator/);
     await assert.rejects(db.query("SELECT submit_account_application('mentor',null,null,$1::jsonb,$2::uuid)",[JSON.stringify(mentor),session]),/reviewed account/);
-    await asUser(db,admin);
-    await db.query('SELECT manage_account_invitation($1,$2)',['someoneelse@example.invalid','mentor']);
-    await asUser(db);await assert.rejects(submit(db,'mentor',mentor),/invitation/);
-    await invite(db);
-    await assert.rejects(submit(db,'marketplace',provider),/invitation/);
-    await owner(db);await db.query('UPDATE auth.users SET email_confirmed_at=NULL WHERE id=$1',[user]);
-    await asUser(db);await assert.rejects(submit(db,'mentor',mentor),/invitation/);
-    assert.deepEqual((await db.query('SELECT my_account_invitation_types() result')).rows[0].result,[]);
-    await owner(db);await db.query('UPDATE auth.users SET email_confirmed_at=now() WHERE id=$1',[user]);
-    await db.exec("UPDATE account_invitations SET expires_at=now()-interval '1 day'");
-    await asUser(db);await assert.rejects(submit(db,'mentor',mentor),/invitation/);
-    await invite(db);
     const id=(await submit(db,'mentor',mentor)).rows[0].result.applicationId;
-    await owner(db);assert.equal((await db.query('SELECT approval_status FROM profiles WHERE id=$1',[user])).rows[0].approval_status,'pending');
-    await asUser(db,admin);await db.query('SELECT manage_account_invitation($1,$2,true)',['test@example.invalid','mentor']);
-    await assert.rejects(db.query('SELECT review_account_application($1,$2)',[id,'approved']),/active invitation/);
-    await db.query('SELECT manage_account_invitation($1,$2)',['test@example.invalid','mentor']);
-    await db.query('SELECT review_account_application($1,$2)',[id,'approved']);
+    await owner(db);
+    assert.equal((await db.query('SELECT approval_status FROM profiles WHERE id=$1',[user])).rows[0].approval_status,'pending');
+    assert.equal((await db.query('SELECT invitation_id FROM account_applications WHERE id=$1',[id])).rows[0].invitation_id,null);
+    // Pending is not access: only the admin's decision opens the category.
+    await asUser(db);await assert.rejects(db.query('SELECT review_account_application($1,$2)',[id,'approved']),/administrator/);
+    await asUser(db,admin);await db.query('SELECT review_account_application($1,$2)',[id,'approved']);
+    await owner(db);
+    assert.equal((await db.query('SELECT approval_status FROM profiles WHERE id=$1',[user])).rows[0].approval_status,'approved');
+  }finally{await db.close();}
+});
+
+test('invitations stay admin-only and are still claimed when one is on file',async()=>{
+  const db=await fixture();try{
+    await asUser(db);
+    await assert.rejects(db.query('SELECT manage_account_invitation($1,$2)',['test@example.invalid','marketplace']),/administrator/);
+    await assert.rejects(db.query('SELECT list_account_invitations()'),/administrator/);
+    await invite(db,'marketplace');
+    const id=(await submit(db,'marketplace',provider)).rows[0].result.applicationId;
+    await owner(db);
+    const row=(await db.query('SELECT a.invitation_id, i.claimed_by FROM account_applications a JOIN account_invitations i ON i.id=a.invitation_id WHERE a.id=$1',[id])).rows[0];
+    assert.equal(row.claimed_by,user);
+  }finally{await db.close();}
+});
+
+test('an application needs the intro, a real link and the monthly time',async()=>{
+  const db=await fixture();try{
+    await asUser(db);
+    const {link:_link,...withoutLink}=mentor;
+    await assert.rejects(submit(db,'mentor',withoutLink),/Missing link/);
+    await assert.rejects(submit(db,'mentor',{...mentor,link:'not a link'}),/Invalid link/);
+    await assert.rejects(submit(db,'mentor',{...mentor,availability:'always'}),/Invalid option for availability/);
+    await assert.rejects(submit(db,'mentor',legacyMentor),/Missing headline/);
   }finally{await db.close();}
 });
 
@@ -148,7 +162,7 @@ for(const [type,details] of Object.entries({mentor,marketplace:provider})) test(
     await asUser(db); const first=(await submit(db,type,details)).rows[0].result;
     const retry=(await submit(db,type,details)).rows[0].result;
     assert.equal(first.applicationId,retry.applicationId);
-    await assert.rejects(submit(db,type,{...details,[Object.keys(details)[0]]:['Changed']}),/already pending|Invalid option/);
+    await assert.rejects(submit(db,type,{...details,[type==='mentor'?'expertise':'services']:['Changed']}),/already pending|Invalid option/);
     await owner(db);
     assert.equal((await db.query('SELECT count(*)::int n FROM account_applications')).rows[0].n,1);
     assert.equal((await db.query('SELECT status FROM onboarding_sessions')).rows[0].status,'completed');

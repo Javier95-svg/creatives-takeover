@@ -10,7 +10,7 @@ import {
 test("the audience modal has five plain-language account types and two venture stages", () => {
   assert.deepEqual(WHO_IS_THIS_FOR_ACCOUNT_TYPES.map(({ id }) => id), ["founder", "builder", "mentor", "marketplace", "investor"]);
   assert.equal(WHO_IS_THIS_FOR_ACCOUNT_TYPES[3].label, "Marketplace");
-  assert.deepEqual(WHO_IS_THIS_FOR_ACCOUNT_TYPES.map(({ access }) => access), ["open", "open", "invitation", "invitation", "open"]);
+  assert.deepEqual(WHO_IS_THIS_FOR_ACCOUNT_TYPES.map(({ access }) => access), ["open", "open", "application", "application", "open"]);
   assert.match(WHO_IS_THIS_FOR_ACCOUNT_TYPES[0].promise, /I have a project/);
   assert.match(WHO_IS_THIS_FOR_ACCOUNT_TYPES[1].promise, /I have an idea/);
   assert.equal(WHO_IS_THIS_FOR_PROFILES.length, 2);
@@ -85,7 +85,9 @@ test("the hero opens three separate audience tabs with a visual account guide", 
   assert.match(accountPanel, /ROLE_ICONS/);
   assert.match(accountPanel, /ROLE_STYLES/);
   assert.match(accountPanel, /aria-pressed=\{selectedCard\}/);
-  assert.match(accountPanel, /Invitation only/);
+  // Since 2026-11-07 mentors and providers apply after sign-up instead of needing an invitation.
+  assert.match(accountPanel, /By application/);
+  assert.doesNotMatch(accountPanel, /Invitation only/);
   assert.match(accountPanel, /selected\.access === "open"/);
   assert.match(accountPanel, /to="\/signup"/);
 

@@ -86,7 +86,7 @@ export const PUBLIC_PULSE_QUESTIONS: readonly { id: PublicPulseQuestionId; text:
     text: 'Who is Creatives Takeover for?',
     answer: `People turning an idea or an early product into a business.
 
-${WHO_IS_THIS_FOR_ACCOUNT_TYPES.map((account) => `- **${account.label}**: ${account.promise}${account.access === 'invitation' ? ' (by invitation)' : ''}`).join('\n')}
+${WHO_IS_THIS_FOR_ACCOUNT_TYPES.map((account) => `- **${account.label}**: ${account.promise}${account.access === 'application' ? ' (by application, reviewed by the team)' : ''}`).join('\n')}
 
 The [quick quiz](/start) finds your path.`,
   },
@@ -139,7 +139,7 @@ function planLine({ id, name, outcome }: (typeof PLAN_COPY)[number]) {
 
 export function buildPublicPlatformBrief(): string {
   const accounts = WHO_IS_THIS_FOR_ACCOUNT_TYPES.map((account) =>
-    `- ${account.label} ("${account.promise}"): ${account.next} ${account.access === 'invitation' ? 'Joining needs an invitation and an admin review.' : 'Anyone can join.'}`,
+    `- ${account.label} ("${account.promise}"): ${account.next} ${account.access === 'application' ? 'Anyone can apply by creating an account and answering the application questions; an admin reviews it before the account opens.' : 'Anyone can join.'}`,
   ).join('\n');
 
   const profiles = WHO_IS_THIS_FOR_PROFILES.map((profile) =>
