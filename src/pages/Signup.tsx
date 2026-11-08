@@ -16,6 +16,7 @@ import { useConversionTracking } from "@/hooks/useConversionTracking";
 import MobileFormOptimizer from "@/components/MobileFormOptimizer";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { AuthSocialButtons } from "@/components/auth/AuthSocialButtons";
+import { AuthShowcaseLine } from "@/components/auth/AuthDesign";
 import { mapSignUpError } from "@/lib/authErrors";
 import { getPasswordValidationError, MIN_PASSWORD_LENGTH, PASSWORD_REQUIREMENTS } from "@/lib/passwordPolicy";
 import { captureEvent, persistSignupIntent, trackSignupCompletedAttributed } from "@/lib/analytics";
@@ -72,7 +73,6 @@ const Signup = () => {
     password: ""
   });
   const [showPassword, setShowPassword] = useState(false);
-  const [stageGuidanceOptIn, setStageGuidanceOptIn] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [usernameStatus, setUsernameStatus] = useState<"idle" | "checking" | "available" | "taken">("idle");
@@ -426,7 +426,8 @@ const Signup = () => {
         undefined,
         signupUsername,
         pendingReferralCode,
-        stageGuidanceOptIn,
+        // Stage guidance starts off; people turn it on in Settings > Notifications.
+        false,
       );
 
       if (error) {
@@ -571,7 +572,7 @@ const Signup = () => {
           <p className="text-sm text-muted-foreground">Setting up your account…</p>
         </div>
       )}
-    <div className="signup-premium min-h-screen bg-background md:h-screen md:overflow-hidden">
+    <div className="signup-premium auth-editorial min-h-screen bg-background md:h-screen md:overflow-hidden">
       <Helmet>
         <title>Creatives Takeover</title>
         <meta name="description" content="Create your Creatives Takeover account to start transforming creative ideas into actionable plans with AI-powered insights." />
@@ -655,6 +656,7 @@ const Signup = () => {
             </div>
           </div>
         </div>
+        <AuthShowcaseLine />
       </aside>
 
       <main className="signup-premium-right-panel md:ml-[50vw] md:h-screen md:overflow-y-scroll">
@@ -894,19 +896,6 @@ const Signup = () => {
                     <p className="text-sm text-destructive animate-fade-in">{errors.password}</p>
                   )}
                 </div>
-
-                {showStepTwo && (
-                  <label className="flex items-start gap-3 text-sm text-muted-foreground">
-                    <input
-                      type="checkbox"
-                      checked={stageGuidanceOptIn}
-                      onChange={(event) => setStageGuidanceOptIn(event.target.checked)}
-                      disabled={isLoading}
-                      className="mt-1 h-4 w-4 accent-primary"
-                    />
-                    <span>Send me occasional guidance for my confirmed stage, no more than once every 14 days. Optional; change this anytime in Settings.</span>
-                  </label>
-                )}
 
                 {/* Sign Up Button */}
                 <Button

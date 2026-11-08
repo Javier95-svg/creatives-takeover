@@ -12,6 +12,7 @@ import AuthWallpaper from "@/components/wallpapers/AuthWallpaper";
 import MobileFormOptimizer from "@/components/MobileFormOptimizer";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { AuthSocialButtons } from "@/components/auth/AuthSocialButtons";
+import { AuthShowcaseLine } from "@/components/auth/AuthDesign";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { mapSignInError } from "@/lib/authErrors";
@@ -295,7 +296,7 @@ const Login = () => {
   const handleXLogin = () => handleSocialLogin('x');
 
   return (
-    <div className="signup-premium min-h-screen bg-background md:h-screen md:overflow-hidden">
+    <div className="signup-premium auth-editorial min-h-screen bg-background md:h-screen md:overflow-hidden">
       <Helmet>
         <title>Creatives Takeover</title>
         <meta name="description" content="Sign in to your Creatives Takeover account to access AI-powered creative planning tools." />
@@ -375,6 +376,7 @@ const Login = () => {
             </div>
           </div>
         </div>
+        <AuthShowcaseLine />
       </aside>
 
       <main className="signup-premium-right-panel md:ml-[50vw] md:h-screen md:overflow-y-scroll">

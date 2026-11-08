@@ -1,0 +1,165 @@
+/* The editorial design of /login and /signup (approved by Javier, 2026-11-07).
+   The showcase is the photo, edge to edge, with one line over its foot; the
+   form sits without a card on a plain page. Scoped to .auth-editorial on the
+   page roots. The base styles live in index.css (.signup-premium-*), which sets
+   some values with !important; overrides here match that. */
+
+/* ---------- Showcase ---------- */
+
+.auth-editorial .signup-premium-left-panel::before { opacity: 0; }
+
+/* Only the photo and its line: no logo, and the headline is for screen readers. */
+.auth-editorial .signup-premium-left-logo { display: none; }
+
+.auth-editorial .signup-premium-left-title {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* The photo covers the whole panel. */
+.auth-editorial .signup-premium-left-panel > div:has(> .signup-premium-carousel-shell) {
+  position: static;
+  margin: 0;
+}
+
+.auth-editorial .signup-premium-carousel-shell {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  max-width: none;
+  animation: none;
+}
+
+.auth-editorial .signup-premium-carousel-frame {
+  position: absolute;
+  inset: 0;
+  border-radius: 0;
+}
+
+.auth-editorial .signup-premium-carousel-frame > div > div { height: 100%; }
+
+.auth-editorial .signup-premium-carousel-image {
+  width: 100%;
+  height: 100%;
+  max-height: none;
+  border-radius: 0;
+  object-fit: cover;
+}
+
+/* Shades the top and the foot of the photo, behind the line. */
+.auth-editorial .signup-premium-left-panel::after {
+  z-index: 1;
+  background: linear-gradient(180deg, rgba(4, 7, 13, 0.78) 0%, rgba(4, 7, 13, 0.2) 34%, rgba(4, 7, 13, 0.1) 55%, rgba(4, 7, 13, 0.85) 100%);
+}
+
+.auth-editorial .signup-premium-carousel-dots {
+  position: absolute;
+  right: 40px;
+  bottom: 36px;
+  z-index: 20;
+}
+
+.auth-showcase-line {
+  position: absolute;
+  left: 56px;
+  right: 120px;
+  bottom: 36px;
+  z-index: 20;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.92);
+  font-family: "Space Grotesk", Inter, sans-serif;
+  font-size: clamp(1.1rem, 0.9rem + 0.5vw, 1.35rem);
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: -0.01em;
+}
+
+@media (max-width: 1023px) {
+  .auth-showcase-line { left: 40px; }
+}
+
+/* ---------- Form ---------- */
+
+.auth-editorial .signup-premium-right-surface {
+  padding-block: 48px;
+  background: hsl(var(--background));
+}
+
+/* The orbs and dot grid behind the form. */
+.auth-editorial .signup-premium-right-surface > [aria-hidden] { display: none; }
+
+.auth-editorial .signup-premium-form-shell { max-width: 400px; }
+
+@media (min-width: 768px) {
+  .auth-editorial .signup-premium-header { margin-bottom: 4px; }
+  .auth-editorial .signup-premium-right-title { font-size: 2.4rem; letter-spacing: -0.04em; }
+  .auth-editorial .signup-premium-card-header { padding-left: 0; padding-right: 0; }
+  .auth-editorial .signup-premium-card-title { font-size: 1rem; font-weight: 500; color: hsl(var(--muted-foreground)); }
+  .auth-editorial .signup-premium-card > div:last-child { padding-left: 0; padding-right: 0; }
+}
+
+.auth-editorial .signup-premium-card {
+  border: 0 !important;
+  background: transparent !important;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: none !important;
+}
+
+.auth-editorial .signup-premium-card::before { display: none; }
+
+/* The field icons sit before their input and must stay above it. */
+.auth-editorial .signup-premium-form .relative > svg { z-index: 1; }
+
+.auth-editorial .signup-premium-form input {
+  height: 44px;
+  border-width: 1px !important;
+  border-radius: 8px;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.auth-editorial .signup-premium-form input:focus,
+.auth-editorial .signup-premium-form input:focus-visible {
+  border-color: hsl(var(--foreground) / 0.6) !important;
+  box-shadow: 0 0 0 3px hsl(var(--foreground) / 0.08) !important;
+  transform: none;
+}
+
+.auth-editorial .signup-premium-form button[type="submit"] {
+  height: 46px;
+  border-radius: 8px;
+  background: hsl(var(--foreground)) !important;
+  color: hsl(var(--background)) !important;
+  box-shadow: none;
+}
+
+.auth-editorial .signup-premium-form button[type="submit"]:hover:not(:disabled) {
+  transform: none;
+  box-shadow: none;
+  opacity: 0.88;
+}
+
+/* Social buttons in the page's neutral style, brand icons kept. */
+.auth-editorial .signup-premium-social-frame {
+  padding: 1px;
+  background: hsl(var(--border)) !important;
+  box-shadow: none;
+}
+
+.auth-editorial .signup-premium-social-button {
+  height: 46px;
+  background: hsl(var(--background)) !important;
+  color: hsl(var(--foreground)) !important;
+}
+
+.auth-editorial .signup-premium-social-button span {
+  background-image: none !important;
+  color: hsl(var(--foreground)) !important;
+}
+
+.auth-editorial .signup-premium-social-button:hover { background: hsl(var(--muted)) !important; }
