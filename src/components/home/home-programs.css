@@ -342,15 +342,26 @@
   text-transform: uppercase;
 }
 
-.hp-b__note {
-  margin-top: 32px;
-  color: var(--hp-muted);
-  font-size: 0.8125rem;
-  text-align: center;
-  opacity: 0.85;
+/* The whole panel is a link to /enterprise: it lifts and its edge glows
+   under the pointer, and keyboard focus draws a ring around it. */
+.hp--link {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  transition: translate 0.4s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
-.hp-b .hp-ctas { margin-top: 40px; }
+.hp--link:hover {
+  translate: 0 -4px;
+  border-color: color-mix(in srgb, var(--hp-blue) 45%, var(--hp-line));
+  box-shadow: 0 50px 100px -50px rgba(79, 143, 247, 0.45);
+}
+
+.hp--link:focus-visible {
+  outline: 2px solid var(--hp-blue);
+  outline-offset: 6px;
+}
 
 /* ---- Motion ----
    Plays once when the band scrolls into view (data-anim="in", set by the
@@ -361,16 +372,14 @@
 .hp-section[data-anim] .hp-header > *,
 .hp-section[data-anim] .hp-b__head > *,
 .hp-section[data-anim] .hp-step,
-.hp-section[data-anim] .hp-b__screen,
-.hp-section[data-anim] .hp-b .hp-ctas {
+.hp-section[data-anim] .hp-b__screen {
   transition:
     opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
     translate 0.9s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .hp-section[data-anim="ready"] .hp-header > *,
-.hp-section[data-anim="ready"] .hp-b__head > *,
-.hp-section[data-anim="ready"] .hp-b .hp-ctas {
+.hp-section[data-anim="ready"] .hp-b__head > * {
   opacity: 0;
   translate: 0 18px;
 }
@@ -381,7 +390,7 @@
 .hp-section[data-anim="ready"] .hp-b__screen--founder { opacity: 0; translate: 56px 24px; }
 
 /* Order: header, panel title, the line drawing across, steps one by one,
-   then the screens fanning in and the buttons. */
+   then the screens fanning in. */
 .hp-header > :nth-child(2) { transition-delay: 0.08s; }
 .hp-b__head > :nth-child(1) { transition-delay: 0.16s; }
 .hp-b__head > :nth-child(2) { transition-delay: 0.26s; }
@@ -389,7 +398,6 @@
 .hp-b__screen--program { transition-delay: 0.9s; }
 .hp-b__screen--join { transition-delay: 1.05s; }
 .hp-b__screen--founder { transition-delay: 1.15s; }
-.hp-b .hp-ctas { transition-delay: 1.25s; }
 
 .hp-section[data-anim] .hp-track::before {
   transform-origin: top center;
@@ -449,13 +457,13 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .hp-btn, .hp-btn svg { transition: none; }
+  .hp-btn, .hp-btn svg, .hp--link { transition: none; }
+  .hp--link:hover { translate: none; }
   .hp-section[data-anim] .hp-header > *,
   .hp-section[data-anim] .hp-b__head > *,
   .hp-section[data-anim] .hp-step,
   .hp-section[data-anim] .hp-step__dot,
   .hp-section[data-anim] .hp-b__screen,
-  .hp-section[data-anim] .hp-b .hp-ctas,
   .hp-section[data-anim] .hp-track::before {
     opacity: 1 !important;
     translate: none !important;

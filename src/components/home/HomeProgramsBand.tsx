@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, ClipboardList, FileText, LineChart, Sparkles, UserCheck, type LucideIcon } from "lucide-react";
+import { ClipboardList, FileText, LineChart, Sparkles, UserCheck, type LucideIcon } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import type { ShotHotspot } from "@/components/enterprise/EnterpriseVisuals";
@@ -19,8 +19,6 @@ import "./home-programs.css";
 // Every claim comes from copy already approved on /enterprise (5–10 startups,
 // one contact, consent, weekly updates, cohort report, founders keep their
 // account); the screens are the same real captures of cohort mode on sample data.
-
-const CONTACT = "/enterprise#talk";
 
 const track = (placement: string) => () => captureEvent("home_programs_band_clicked", { placement });
 
@@ -124,7 +122,8 @@ export default function HomeProgramsBand() {
           </h2>
         </div>
 
-        <div className="hp hp-b">
+        {/* The whole panel is the way in: it opens /enterprise. */}
+        <Link to="/enterprise" className="hp hp-b hp--link" onClick={track("panel")} aria-label="See how the 30-day pilot works on the Enterprise page">
           <div className="hp-b__head">
             <h3 className="hp-title">
               A 30-day pilot <span className="hp-accent">your team doesn’t have to run.</span>
@@ -175,16 +174,8 @@ export default function HomeProgramsBand() {
                   alt="A founder's weekly check-in, sent to the program: wins, blockers, next week and help needed." />
               </div>
             </div>
-            <p className="hp-b__note">Real product screens, sample data.</p>
           </div>
-
-          <div className="hp-ctas hp-ctas--center">
-            <Link to={CONTACT} className="hp-btn hp-btn--primary" onClick={track("book_call")}>
-              Book a pilot call
-              <ArrowRight aria-hidden="true" />
-            </Link>
-          </div>
-        </div>
+        </Link>
       </div>
     </section>
   );
