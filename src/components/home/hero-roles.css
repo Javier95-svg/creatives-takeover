@@ -1,0 +1,167 @@
+/* The account-type row under the hero (HeroRoleCards.tsx). It sits inside
+   .ct-hero, so it uses its theme tokens (--ct-fg, --ct-muted, --ct-line...).
+   The five cards always stay on one line: side by side on wide screens, a
+   swipeable row below that. */
+
+.hr-wrap {
+  max-width: 1180px;
+  margin: 52px auto 0;
+}
+
+.hr-wrap__title {
+  margin: 0 0 18px;
+  color: var(--ct-fg);
+  font-family: var(--ct-display);
+  font-size: clamp(22px, 2.2vw, 28px);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  text-align: center;
+}
+
+.hr {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(230px, 1fr);
+  gap: 14px;
+  padding: 12px 4px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+
+.hr::-webkit-scrollbar { display: none; }
+
+@media (max-width: 639px) {
+  .hr { grid-auto-columns: 78%; gap: 12px; }
+}
+
+@media (min-width: 1024px) {
+  .hr { grid-auto-columns: minmax(0, 1fr); overflow: visible; }
+}
+
+.hr__card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 250px;
+  overflow: hidden;
+  padding: 22px;
+  border: 1px solid var(--ct-line);
+  border-radius: 20px;
+  background:
+    radial-gradient(120% 70% at 100% 0%, color-mix(in srgb, var(--tone) 18%, transparent), transparent 60%),
+    color-mix(in srgb, var(--ct-fg) 3%, transparent);
+  color: var(--ct-fg);
+  text-align: left;
+  text-decoration: none;
+  scroll-snap-align: start;
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hr__card:hover {
+  transform: translateY(-4px);
+  border-color: color-mix(in srgb, var(--tone) 55%, transparent);
+  box-shadow: 0 24px 50px -28px color-mix(in srgb, var(--tone) 70%, transparent);
+}
+
+.hr__card:focus-visible { outline: 2px solid var(--tone); outline-offset: 3px; }
+
+/* The role's symbol, large and faint in the corner. */
+.hr__glyph {
+  position: absolute;
+  top: -14px;
+  right: -14px;
+  color: var(--tone);
+  opacity: 0.14;
+  pointer-events: none;
+  transition: opacity 0.3s ease, transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.hr__glyph svg { width: 110px; height: 110px; stroke-width: 1.4; }
+.hr__card:hover .hr__glyph { opacity: 0.24; transform: rotate(-8deg) scale(1.05); }
+
+.hr__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--tone) 16%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--tone) 38%, transparent);
+  color: var(--tone);
+}
+
+.hr__icon svg { width: 21px; height: 21px; }
+
+.hr__label {
+  margin-top: 14px;
+  font-family: var(--ct-display);
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.hr__promise {
+  margin-top: 14px;
+  color: var(--ct-fg);
+  font-size: 14.5px;
+  font-weight: 500;
+}
+
+.hr__next {
+  margin-top: 6px;
+  color: var(--ct-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.hr__foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 16px;
+}
+
+.hr__access {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ct-muted-2);
+  font-family: var(--ct-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.hr__access::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #22c55e;
+}
+
+.hr__access.is-invitation::before { background: #f5a524; }
+
+.hr__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--tone);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.hr__cta svg { width: 14px; height: 14px; transition: transform 0.2s ease; }
+.hr__card:hover .hr__cta svg { transform: translateX(3px); }
+
+@media (prefers-reduced-motion: reduce) {
+  .hr__card, .hr__glyph, .hr__cta svg { transition: none; }
+}

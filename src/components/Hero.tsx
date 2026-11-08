@@ -8,6 +8,7 @@ import { useCTAAttribution } from "@/hooks/useCTAAttribution";
 import { supabase } from "@/integrations/supabase/client";
 import heroCompass from "@/assets/hero-compass.svg";
 import StartingExperiences from "@/components/hero/StartingExperiences";
+import HeroRoleCards from "@/components/home/HeroRoleCards";
 import "./hero-cinematic-spotlight.css";
 import { trackActivationEntry } from "@/lib/activationEntry";
 
@@ -319,7 +320,8 @@ const Hero = ({
           </span>
         </Link> : null}
 
-        <div className="ct-hero__stats" aria-label="The founder landscape in numbers">
+        {/* Signed out: one card per account type. Signed in: the founder landscape in numbers. */}
+        {!isAuthenticated ? <HeroRoleCards /> : <div className="ct-hero__stats" aria-label="The founder landscape in numbers">
           <div className="ct-hero__stats-track">
             {[...stats, ...stats].map((stat, index) => (
               <div
@@ -336,7 +338,7 @@ const Hero = ({
               </div>
             ))}
           </div>
-        </div>
+        </div>}
       </div>
       {/* Mounted only once the visitor has actually asked for it, so the chunk
           is never fetched on a page view that ignores the link. */}

@@ -4,6 +4,7 @@ import { useLocation } from "react-router-dom";
 const EXACT_NOINDEX_ROUTES = new Set([
   "/login",
   "/signup",
+  "/apply",
   "/forgot-password",
   "/reset-password",
   "/onboarding",

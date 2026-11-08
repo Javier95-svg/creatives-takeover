@@ -65,6 +65,7 @@ const ForInvestors = lazy(() => import("./pages/ForInvestors"));
 const SubscriptionSuccess = lazy(() => import("./pages/SubscriptionSuccess"));
 const PurchaseHistory = lazy(() => import("./pages/PurchaseHistory"));
 const Contact = lazy(() => import("./pages/Contact"));
+const Apply = lazy(() => import("./pages/Apply"));
 const FAQPage = lazy(() => import("./pages/FAQPage"));
 const Resources = lazy(() => import("./pages/Resources"));
 const StartupPediaHub = lazy(() => import("./pages/StartupPediaHub"));
@@ -400,6 +401,7 @@ function App() {
                         <Route path="/founder-id" element={<FounderIdPage />} />
                         <Route path="/cohort/:slug" element={<CohortShowcasePage />} />
                         <Route path="/contact" element={<Contact />} />
+                        <Route path="/apply" element={<Apply />} />
                         <Route path="/faq" element={<FAQPage />} />
                         <Route path="/resources" element={<Resources />} />
                         {/* /answers and /answers/:slug 301 here from vercel.json. */}
