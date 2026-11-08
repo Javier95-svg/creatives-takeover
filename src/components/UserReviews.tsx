@@ -16,11 +16,17 @@ import {
 } from "lucide-react";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import TitleFx from "@/components/home/TitleFx";
+import StageCard from "@/components/home/StageCard";
 
 type CycleStep = {
   shortLabel: string;
+  /** The stage card's colour for this stage. */
+  accent: string;
+  /** What the stage is for. */
+  objective: string;
+  /** What the founder completes in it, from STAGE_TASKS (src/lib/bizmapStages.ts). */
+  result: string;
   title: string;
-  description: string;
   icon: React.ElementType;
   color: string;
 };
@@ -28,57 +34,78 @@ type CycleStep = {
 const cycleSteps: CycleStep[] = [
   {
     shortLabel: "Identity",
+    accent: "#f5a524",
+    objective:
+      "Every venture starts with a precise answer to who it serves. This stage turns a broad idea into a defined problem, a specific customer who feels it and a clear reason your solution is different.",
+    result:
+      "You complete an ideal customer profile, rank the top three customer pains by urgency, and select your target industries and buyer persona. You leave with one customer to focus on and a clear goal for what to prove next.",
     title: "Stage 1: Identity",
-    description:
-      "Most ideas start too broad: a product for everyone, solving a bit of everything. This stage narrows it down to four answers:\n\nWhat specific problem are you solving?\nWho has it badly enough to look for a fix?\nWhat makes your solution different?\nWhy are you the right person to build it?\n\nDescribe your idea in a sentence and you get a first profile of the customer it could serve, their main pains and how to describe your offer to them. You leave with one clear customer to focus on and a goal for what to prove next.",
     icon: Fingerprint,
     color: "from-warning/20 to-warning/20"
   },
   {
     shortLabel: "Prototyping",
+    accent: "#38bdf8",
+    objective:
+      "Before any code is written, the idea needs to be visible. This stage produces a page that explains what the product does, who it is for and the problem it solves, so real people can respond to it.",
+    result:
+      "You write a one-line value proposition, draft the headline and core benefits, and publish the page as a waitlist with a shareable link. The stage is complete once the waitlist is live and ready to collect sign-ups.",
     title: "Stage 2: Prototyping",
-    description:
-      "People can't react to an idea they can only imagine. Before writing any code, you need something they can see: a page or a short demo that shows what the product does, who it is for and the problem it solves.\n\nOn the platform you turn your customer profile into that first version without writing code, and share it with a link. Visitors who want early access leave their email, so from day one you can see whether the idea gets real interest.",
     icon: DraftingCompass,
     color: "from-info/20 to-info/20"
   },
   {
     shortLabel: "Validation",
+    accent: "#34d399",
+    objective:
+      "This stage tests whether the demand is real before time and money go into building. The evidence comes from one-to-one conversations with potential customers, the alternatives they use today and waitlist sign-ups.",
+    result:
+      "You define your key hypotheses and risks, then record at least 25 interviews or surveys against them. The evidence leads to one clear decision: build, narrow the focus, pivot or stop.",
     title: "Stage 3: Validation",
-    description:
-      "The risk here is building something nobody wants. This stage is about hearing it from real people: talking one to one with potential customers, asking what they use today, and watching how many of them sign up.\n\nYou log each conversation and every sign-up in one place, and the evidence adds up to a clear decision: build it, narrow it to a smaller group, change direction or stop. If the signal is weak, you go back to your customers and ask what is missing before you spend months building.",
     icon: CheckCircle,
     color: "from-success/20 to-success/20"
   },
   {
     shortLabel: "Building",
+    accent: "#fb923c",
+    objective:
+      "With demand confirmed, the goal is a first version, not a finished product. It covers only the core features that deliver the main value, so customers can start using it and the product improves from real use.",
+    result:
+      "You save an MVP scope and product spec based on your validated evidence, choose a tech stack with an estimated budget, and publish one workflow a customer can pay for. Experts in specific fields can review the plan along the way.",
     title: "Stage 4: Building",
-    description:
-      "With demand confirmed, the temptation is to build everything at once. A first version only needs the few features that deliver the main value, so people can start using it and you can learn from what they do.\n\nYou build a working first version on the platform, starting from what you have already validated, and choose the tools to build it with. Experts in specific fields can review your plan when you get stuck, and you keep improving it with your users' feedback.",
     icon: Hammer,
     color: "from-warning/20 to-warning/20"
   },
   {
     shortLabel: "Launch",
+    accent: "#a78bfa",
+    objective:
+      "A product gains users only when it reaches the places its customers already spend time. This stage concentrates effort on one acquisition channel instead of spreading it across many.",
+    result:
+      "You design one measurable acquisition play, then run a first-customer cycle: 10 qualified prospects, 10 direct messages and a decision on whether the channel is worth repeating. Launch directories and outreach templates extend your reach.",
     title: "Stage 5: Launch",
-    description:
-      "A product nobody hears about doesn't get users. Launching means going where your customers already spend time, from LinkedIn, X and Reddit to Product Hunt and startup directories, and reaching out to people directly.\n\nYou get a launch plan built around your customer: which channel to start with, what to say and how to measure it. Email templates help with outreach, and directory listings help new people find you. The goal is your first users and a channel worth repeating.",
     icon: Rocket,
     color: "from-purple-500/20 to-purple-600/20"
   },
   {
     shortLabel: "Traction",
+    accent: "#f472b6",
+    objective:
+      "Early users prove interest; traction proves it can be repeated. This stage separates growth that compounds from growth that depends on constant effort, measured through acquisition, retention and revenue.",
+    result:
+      "You repeat the same acquisition motion in a second cycle, log results week by week and verify at least one qualified buyer signal. Three consecutive strong weeks mark the point where fundraising preparation can begin.",
     title: "Stage 6: Traction",
-    description:
-      "Launch brings your first users. Traction is about learning which of them stay and which channel keeps bringing more, so you can tell real growth from constant effort.\n\nYou pick one channel that fits your product, track who comes back in the first 30 days, and run it week by week while the platform records the results. The stage is complete after three weeks in a row above your target: people come back, your channel converts, and you can keep up the pace.",
     icon: ChartNoAxesCombined,
     color: "from-pink-500/20 to-pink-600/20"
   },
   {
     shortLabel: "Fundraising",
+    accent: "#818cf8",
+    objective:
+      "Fundraising is optional and only makes sense once traction is verified. Investors look for the same proof: a working product, evidence of demand, early paying customers and a clear use of funds.",
+    result:
+      "You measure your fundraising readiness, review your pitch deck narrative and build a target list of investors and accelerators that match your stage and sector. No platform can guarantee funding; stronger evidence leads to stronger conversations.",
     title: "Stage 7: Fundraising",
-    description:
-      "Not every business needs to raise money. If yours does, investors will ask for the same things: a working product, evidence of demand, early paying customers and a clear plan for what the money is for.\n\nWhen you are ready, you can check how prepared you are, improve your pitch deck and build a focused list of investors and accelerators that match your stage and sector. No platform can guarantee funding; the stronger your evidence, the better your conversations will be.",
     icon: TrendingUp,
     color: "from-indigo-500/20 to-indigo-600/20"
   }
@@ -91,6 +118,12 @@ const UserReviews = () => {
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
   const isMobile = useIsMobile();
   const prefersReducedMotion = usePrefersReducedMotion();
+  // The wheel and the stage card share this index, so both always show the
+  // same stage; picking one in either place stops the auto-play.
+  const selectStep = (index: number) => {
+    setActiveStepIndex(index);
+    setIsAutoPlaying(false);
+  };
 
   // Auto-play functionality
   useEffect(() => {
@@ -317,22 +350,7 @@ const UserReviews = () => {
               </CardContent>
             </Card>
 
-            <Card className="surface-panel trust-outline overflow-hidden relative">
-              <div className={`absolute inset-0 bg-gradient-to-br ${activeStep.color} opacity-20 transition-all duration-700`} />
-              <CardContent className="relative z-10 p-5">
-                <div className="mb-4 flex items-start gap-3">
-                  <div className={`rounded-2xl border border-primary/20 bg-gradient-to-br ${activeStep.color} p-3`}>
-                    <ActiveIcon className="h-6 w-6 text-primary" />
-                  </div>
-                  <h3 className="font-space-grotesk text-xl font-semibold text-foreground">
-                    {activeStep.title}
-                  </h3>
-                </div>
-                <p className="text-sm leading-7 text-muted-foreground whitespace-pre-line">
-                  {activeStep.description}
-                </p>
-              </CardContent>
-            </Card>
+            <StageCard steps={cycleSteps} active={activeStepIndex} onSelect={selectStep} />
           </div>
         </div>
       </section>
@@ -480,55 +498,7 @@ const UserReviews = () => {
             </CardContent>
           </Card>
 
-          <Card className="surface-panel trust-outline overflow-hidden relative group">
-            {/* Animated gradient background */}
-            <div className={`absolute inset-0 bg-gradient-to-br ${activeStep.color} opacity-28 transition-all duration-700`} />
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(37,99,235,0.08),transparent)] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-
-            {/* Floating particles effect */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-              <div className="absolute top-1/4 left-1/4 w-2 h-2 bg-primary/20 rounded-full blur-sm" />
-              <div className="absolute top-3/4 right-1/4 w-3 h-3 bg-primary/15 rounded-full blur-sm" />
-              <div className="absolute top-1/2 right-1/3 w-1.5 h-1.5 bg-primary/25 rounded-full blur-sm" />
-            </div>
-
-            <CardContent className="p-6 sm:p-8 lg:p-10 h-full flex flex-col justify-center relative z-10">
-              <div className="animate-in fade-in slide-in-from-right duration-700" key={activeStepIndex}>
-                <div className="flex items-start gap-4 mb-4">
-                  <div className={`p-3 rounded-xl bg-gradient-to-br ${activeStep.color} border border-primary/18 shadow-[0_18px_32px_-24px_rgba(37,99,235,0.28)] backdrop-blur-sm hover:scale-110 transition-transform duration-300`}>
-                    <ActiveIcon className="w-6 h-6 sm:w-7 sm:h-7 text-primary" />
-                  </div>
-                  <h3 className="font-space-grotesk text-2xl sm:text-3xl font-semibold flex-1 bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">
-                    {activeStep.title}
-                  </h3>
-                </div>
-                <p className="text-muted-foreground leading-relaxed text-base sm:text-lg whitespace-pre-line animate-in fade-in duration-700 delay-100">
-                  {activeStep.description}
-                </p>
-
-                {/* Enhanced progress indicator */}
-                <div className="mt-6 flex gap-1.5 animate-in fade-in slide-in-from-bottom duration-700 delay-200">
-                  {cycleSteps.map((_, index) => (
-                    <button
-                      key={index}
-                      onClick={() => {
-                        setActiveStepIndex(index);
-                        setIsAutoPlaying(false);
-                      }}
-                      className={`h-1.5 rounded-full transition-all duration-500 hover:h-2 ${
-                        index === activeStepIndex
-                          ? "bg-gradient-to-r from-primary via-primary/90 to-primary w-8"
-                          : index < activeStepIndex
-                          ? "bg-primary/40 w-6 hover:w-7 hover:bg-primary/60"
-                          : "bg-primary/20 w-4 hover:w-5 hover:bg-primary/30"
-                      }`}
-                      aria-label={`Go to ${cycleSteps[index].shortLabel}`}
-                    />
-                  ))}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <StageCard steps={cycleSteps} active={activeStepIndex} onSelect={selectStep} />
         </div>
       </div>
     </section>
