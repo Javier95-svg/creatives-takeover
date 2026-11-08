@@ -4610,30 +4610,6 @@ img {
   }
 }
 
-/* ─── Startup Development Cycle – cross-browser SVG animations ──────────────
-   CSS @keyframes replace SMIL <animate> so Chrome and Firefox render identically.
-   r uses px units (required for valid CSS), spin animates the full circumference
-   (~245 SVG units at r=39) for one visible revolution per cycle. */
-@keyframes cycle-dash-spin {
-  from { stroke-dashoffset: 0; }
-  to   { stroke-dashoffset: -245; }
-}
-
-@keyframes cycle-ring-pulse {
-  0%, 100% { r: 39px;   }
-  50%       { r: 39.5px; }
-}
-
-@keyframes cycle-ring-pulse-mobile {
-  0%, 100% { r: 39px;   }
-  50%       { r: 39.4px; }
-}
-
-@keyframes cycle-stroke-pulse {
-  0%, 100% { stroke-width: 0.8px; }
-  50%       { stroke-width: 1px;   }
-}
-
 /* Slim scrollbar for the newspaper topic filter row */
 .topics-scrollbar { scrollbar-width: thin; scrollbar-color: hsl(var(--border)) transparent; }
 .topics-scrollbar::-webkit-scrollbar { height: 3px; }

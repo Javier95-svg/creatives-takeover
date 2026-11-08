@@ -1,0 +1,136 @@
+/* The development-cycle wheel (CycleWheel.tsx). Sized with container units,
+   so the same markup works in the phone and desktop cards. */
+
+.cw {
+  --cw-ink: hsl(var(--foreground));
+  --cw-muted: hsl(var(--muted-foreground));
+  --cw-line: hsl(var(--border));
+  --cw-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  container-type: inline-size;
+  position: relative;
+  width: 100%;
+  max-width: 560px;
+  margin: 0 auto;
+  aspect-ratio: 1 / 1;
+}
+
+/* The names sit outside the ring; on narrow wheels the ring moves in so they
+   stay inside the card. */
+.cw__stage { position: absolute; inset: 0; }
+
+@container (max-width: 440px) {
+  .cw__stage { inset: 12%; }
+}
+
+.cw__svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+
+.cw__seg {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 7;
+  transition: opacity 0.5s ease, stroke-width 0.5s var(--cw-ease);
+}
+
+.cw__seg.is-next { opacity: 0.2; }
+.cw__seg.is-past { opacity: 0.55; }
+
+.cw__seg.is-active {
+  stroke-width: 10;
+  filter: drop-shadow(0 2px 6px color-mix(in srgb, var(--accent) 55%, transparent));
+}
+
+/* The middle: the active stage. */
+.cw__centre {
+  position: absolute;
+  inset: 27%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--cw-line);
+  border-radius: 50%;
+  background: hsl(var(--card));
+  box-shadow: inset 0 0 0 6px hsl(var(--background) / 0.5), 0 24px 50px -30px rgba(15, 23, 42, 0.55);
+  text-align: center;
+}
+
+.cw__centre-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.2cqw;
+  animation: cw-in 0.5s var(--cw-ease) both;
+}
+
+.cw__centre-icon { width: 8cqw; height: 8cqw; color: var(--accent); }
+
+.cw__kicker {
+  color: var(--cw-muted);
+  font-size: clamp(9px, 2.2cqw, 12px);
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.cw__name {
+  color: var(--cw-ink);
+  font-family: "Space Grotesk", "Inter", sans-serif;
+  font-size: clamp(15px, 4.4cqw, 24px);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+@keyframes cw-in {
+  from { opacity: 0; scale: 0.92; }
+  to { opacity: 1; scale: 1; }
+}
+
+/* Each stage: its icon on the segment (the button) and its name outside. */
+.cw__node { display: contents; }
+
+.cw__icon,
+.cw__label {
+  position: absolute;
+  z-index: 1;
+  translate: -50% -50%;
+  cursor: pointer;
+}
+
+.cw__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 9cqw;
+  height: 9cqw;
+  min-width: 30px;
+  min-height: 30px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: #fff;
+}
+
+.cw__icon:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.cw__icon svg { width: 52%; height: 52%; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.35)); }
+.cw__node.is-next .cw__icon { color: var(--accent); }
+.cw__node.is-next .cw__icon svg { filter: none; }
+
+.cw__label.is-right { translate: 0 -50%; }
+.cw__label.is-left { translate: -100% -50%; }
+
+.cw__label {
+  color: var(--cw-muted);
+  font-size: clamp(10px, 2.5cqw, 13.5px);
+  font-weight: 600;
+  white-space: nowrap;
+  transition: color 0.3s ease;
+}
+
+.cw__node.is-active .cw__label,
+.cw__node:hover .cw__label { color: var(--cw-ink); }
+
+@media (prefers-reduced-motion: reduce) {
+  .cw__centre-inner { animation: none; }
+  .cw * { transition: none !important; }
+}

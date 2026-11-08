@@ -399,14 +399,6 @@
   }
 }
 
-/* Cycle wheel: scale down on the narrowest phones so edge buttons don't clip */
-@media (max-width: 375px) {
-  .startup-cycle-mobile-wheel {
-    transform: scale(0.88);
-    transform-origin: center top;
-  }
-}
-
 /* Signed-in navigation: phone drawer, compact tablet row, and unchanged large desktop. */
 .signed-in-tablet-nav,
 .signed-in-desktop-nav {
