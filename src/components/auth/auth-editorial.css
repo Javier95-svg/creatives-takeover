@@ -88,8 +88,17 @@
 
 .auth-editorial .signup-premium-right-surface {
   padding-block: 48px;
-  background: hsl(var(--background));
+  /* Graphite (approved 2026-11-08): a quiet vertical fade, a touch of the
+     ink at the top and a cool blue floor, plain where the form sits. */
+  background: linear-gradient(180deg,
+    color-mix(in srgb, hsl(var(--foreground)) 6%, hsl(var(--background))) 0%,
+    hsl(var(--background)) 42%,
+    hsl(var(--background)) 60%,
+    color-mix(in srgb, #4f8ff7 9%, hsl(var(--background))) 100%);
 }
+
+/* The divider label sits on the page colour, over the gradient. */
+.auth-editorial .signup-premium-form span.bg-card { background: hsl(var(--background)); border-radius: 6px; }
 
 /* The orbs and dot grid behind the form. */
 .auth-editorial .signup-premium-right-surface > [aria-hidden] { display: none; }
