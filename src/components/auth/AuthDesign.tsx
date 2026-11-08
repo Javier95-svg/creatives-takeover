@@ -7,7 +7,7 @@ import "./auth-editorial.css";
 export function AuthShowcaseLine() {
   return (
     <p className="auth-showcase-line">
-      Start a project, test it with real people and always know what to do next.
+      From idea to proof, one stage at a time.
     </p>
   );
 }
