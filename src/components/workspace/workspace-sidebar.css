@@ -14,9 +14,10 @@
 .ws.ws--stage [data-section="Pricing"] { --ws-accent: hsl(var(--accent-teal)); }
 
 /* The seven stage colours as a thin band under the logo. */
-.ws.ws--stage .ws-brand { position: relative; padding-bottom: 1.125rem; }
-.ws.ws--stage .ws-brand::after { content: ""; position: absolute; left: .5rem; right: .5rem; bottom: 0; height: 2px; border-radius: 2px; background: linear-gradient(90deg, #f5a524 0 14.28%, #38bdf8 14.28% 28.57%, #34d399 28.57% 42.85%, #fb923c 42.85% 57.14%, #a78bfa 57.14% 71.42%, #f472b6 71.42% 85.71%, #818cf8 85.71% 100%); opacity: .85; }
-.ws.ws--stage.is-collapsed .ws-brand::after { left: 0; right: 0; }
+/* Drawn as a background, not a positioned ::after, so the brand row stays
+   unpositioned and the collapsed expand button still centres on the aside's border. */
+.ws.ws--stage .ws-brand { padding-bottom: 1.125rem; background: linear-gradient(90deg, #f5a524 0 14.28%, #38bdf8 14.28% 28.57%, #34d399 28.57% 42.85%, #fb923c 42.85% 57.14%, #a78bfa 57.14% 71.42%, #f472b6 71.42% 85.71%, #818cf8 85.71% 100%) center bottom / calc(100% - 1rem) 2px no-repeat; }
+.ws.ws--stage.is-collapsed .ws-brand { background-size: 100% 2px; }
 .ws.ws--stage .ws-nav { margin-top: 1rem; }
 
 .ws.ws--stage .ws-item { position: relative; padding: .5rem .75rem; border-radius: .625rem; color: hsl(var(--foreground) / .8); background: transparent; transition: background-color .15s, color .15s; }
