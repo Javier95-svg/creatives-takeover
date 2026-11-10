@@ -7,8 +7,8 @@ import './pulse-founder-home.css';
 
 // The founder's Pulse home before a conversation starts. A masthead (date,
 // project, stage) over the centred rotating headline, then a journal layout:
-// labels in a left margin, today's focus, the Pulse composer and the eight
-// quick starts beside them. Pulse is the largest element on the page. Two marks
+// today's focus beside its label in a left margin, then the Pulse composer and
+// the eight quick starts across the full width under their labels. Pulse is the largest element on the page. Two marks
 // are ours: the seven-stage ring from the homepage cycle wheel and the Pulse
 // signal line.
 
@@ -106,13 +106,13 @@ export function PulseFounderHome({ heading, headingKey, projectName, stageBadge,
         </div>
       </section>
 
-      <div className="fh-row">
+      <div className="fh-row fh-row--full">
         <div className="fh-margin" aria-hidden="true"><span className="fh-label">Ask Pulse</span><Signal /></div>
         <div className="fh-main">{error}{composer}<p className="fh-footnote">{footnote}</p></div>
       </div>
 
-      <div className="fh-row">
-        <div className="fh-margin" aria-hidden="true"><span className="fh-label">Start with</span></div>
+      <div className="fh-row fh-row--full">
+        <div className="fh-margin" aria-hidden="true"><span className="fh-label">Quick routes</span></div>
         <div className="fh-main">
           <nav aria-label="Quick starts" className="fh-shortcuts">
             {PULSE_HOME_SHORTCUTS.map(({ id, label, tool, route, icon }) => {
