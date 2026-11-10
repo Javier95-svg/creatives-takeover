@@ -39,13 +39,16 @@ test('a chosen Decision Sprint idea is read from the saved draft', () => {
   assert.equal(hasChosenIdea(null), false);
 });
 
-test('only builders see the path, and moving to Founder is recorded as a milestone', () => {
+test('only builders get the path prompts, and moving to Founder is recorded as a milestone', () => {
   const home = read('../src/components/pulse/PulseHomeLive.tsx');
   assert.match(home, /\{userType === 'builder' && <BuilderPath navigate=\{enterWorkspaceRoute\} \/>\}/);
   const card = read('../src/components/pulse/BuilderPath.tsx');
   assert.match(card, /customerDefined: progress\.stageState\.IDENTITY\.completed/);
   assert.match(card, /validated: progress\.stageState\.VALIDATING\.completed/);
-  assert.match(card, /\{path\.complete && !notYet && \(/);
+  // A pop-up, not a card: Decision Sprint before an idea is picked, the move
+  // to Founder once all three steps are done, each at most once a day.
+  assert.match(card, /path\?\.next\?\.key === 'explore' \? 'sprint' : path\?\.complete \? 'graduate' : null/);
+  assert.match(card, /claimToday\(promptKey\(user\.id, prompt\)\)/);
   assert.match(card, /rpc\('state_founder_segment' as never, \{ p_segment: 'founder', p_source: 'graduation' \}/);
   // The adoption report counts exactly these as Builder to Founder conversions.
   assert.match(read('../supabase/migrations/20261014130000_adoption_by_segment.sql'), /activity_data->>'source' = 'graduation'/);
