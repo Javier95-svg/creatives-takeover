@@ -44,3 +44,28 @@
 .ws.ws--stage .ws-tool.is-active { background: color-mix(in srgb, var(--ws-accent) 15%, transparent); }
 
 .ws.ws--stage .ws-plan { font-weight: 600; color: hsl(var(--accent-teal)); }
+
+/* The logo breathes here, unlike in the public navbar (index.css keeps that one
+   still). Only transform and opacity animate, on their own layers, and the
+   sidebar has no backdrop blur, so no frame needs a repaint: the static RGB
+   glow on the image stays as it is while a soft halo behind it pulses. */
+.ws-logo { position: relative; display: inline-grid; place-items: center; }
+.ws-logo::before {
+  content: "";
+  position: absolute;
+  inset: -.25rem;
+  z-index: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, hsl(var(--blue-primary) / .35), hsl(var(--red-primary) / .18) 45%, hsl(var(--green-primary) / .1) 65%, transparent 72%);
+  opacity: .35;
+  will-change: transform, opacity;
+  animation: ws-logo-halo 5s cubic-bezier(.4, 0, .2, 1) infinite;
+  pointer-events: none;
+}
+.ws-logo__img { position: relative; z-index: 1; will-change: transform; animation: ws-logo-breathe 5s cubic-bezier(.4, 0, .2, 1) infinite; }
+.ws-logo__img:hover { animation-play-state: paused; }
+@keyframes ws-logo-breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+@keyframes ws-logo-halo { 0%, 100% { transform: scale(.9); opacity: .3; } 50% { transform: scale(1.15); opacity: .85; } }
+@media (prefers-reduced-motion: reduce) {
+  .ws-logo::before, .ws-logo__img { animation: none; }
+}
