@@ -61,8 +61,7 @@
   color: transparent;
 }
 
-.fh-extras { display: flex; flex-wrap: wrap; justify-content: center; gap: .5rem; margin-top: 1rem; }
-.fh-extras--focus { display: grid; justify-content: stretch; margin-top: .75rem; }
+.fh-extras--focus { display: grid; gap: .5rem; margin-top: .75rem; }
 
 /* ---- Journal rows: a label in the margin, the content beside it ---- */
 

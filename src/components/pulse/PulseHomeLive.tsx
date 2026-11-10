@@ -20,6 +20,7 @@ import { BuilderPath } from './BuilderPath';
 import { ProjectSetupCard } from './ProjectSetupCard';
 import { PulseMemoryChips } from './PulseMemoryChips';
 import { PulseMemoryPanel } from './PulseMemoryPanel';
+import { PulseConversations, type PulseConversationSummary } from './PulseConversations';
 import { parseCommitmentCheck, parseMemorySuggestions } from '@/lib/pulseMemory';
 import { enterWorkspaceRoute } from '@/lib/workspaceNavigation';
 import { captureEvent, trackPulseInvestorProfileClicked } from '@/lib/analytics';
@@ -57,6 +58,8 @@ function LiveConversation({ concept, scope }: { concept: PulseHomeConcept; scope
   const [streaming, setStreaming] = useState(false);
   const [error, setError] = useState('');
   const [contextNotice, setContextNotice] = useState('');
+  // Bumped when a turn finishes, so the Conversations count follows along.
+  const [historyVersion, setHistoryVersion] = useState(0);
   const pending = useRef<{ text: string; turnId: string } | null>(null);
   const retryAction = useRef<'restore' | 'send' | 'new'>('restore');
   const controller = useRef<AbortController | null>(null);
@@ -89,36 +92,43 @@ function LiveConversation({ concept, scope }: { concept: PulseHomeConcept; scope
     return nextSession;
   };
 
+  // Shows one saved conversation with its full history, and flags a turn that
+  // never got its answer so the founder can retry it.
+  const loadHistory = useCallback(async (conversation: { id: string; session_id: string }) => {
+    const { data, error: messageError } = await homeDb.from('chatbot_messages').select('id, role, content, metadata').eq('conversation_id', conversation.id).order('created_at', { ascending: false }).limit(100).abortSignal(storageRequests.current.signal);
+    if (messageError) throw messageError;
+    if (!alive.current) return;
+    setSessionId(conversation.session_id);
+    setHistoryReady(true);
+    const history = [...(data ?? [])].reverse().filter(row => row.role === 'user' || row.role === 'assistant').map(row => {
+      const metadata = row.metadata as Record<string, unknown> | null;
+      return { id: metadata?.homeTurnId ? `${metadata.homeTurnId}:${row.role}` : row.id, role: row.role as 'user' | 'assistant', content: row.content, actions: validateHomeActions(metadata?.homeActions), sources: validatePulseSources(metadata?.contextSources), retrievedSources: validatePulseRetrievalSources(metadata?.retrievalSources),
+        memorySuggestions: parseMemorySuggestions(metadata?.memorySuggestions), commitmentCheck: parseCommitmentCheck(metadata?.commitmentCheck) };
+    });
+    setMessages(history);
+    const last = data?.[0];
+    if (last?.role === 'user') {
+      const turnId = (last.metadata as Record<string, unknown> | null)?.homeTurnId;
+      if (typeof turnId === 'string') { pending.current = { text: last.content, turnId }; retryAction.current = 'send'; setError('Your last response did not finish. Retry to continue.'); }
+    }
+  }, []);
+
   const restore = useCallback(async () => {
     const started = performance.now();
     let outcome = 'success';
     retryAction.current = 'restore';
     setLoading(true); setError(''); setHistoryReady(false); pending.current = null;
     try {
-      const { data: conversation, error } = await homeDb.from('chatbot_conversations').select('id, session_id').eq('user_id', userId).eq('purpose', 'pulse_home').contains('business_context', { pulseScope: { ...scope } }).or('business_context->pulseScope->>channel.is.null,business_context->pulseScope->>channel.eq.home').order('created_at', { ascending: false }).limit(1).abortSignal(storageRequests.current.signal).maybeSingle();
+      // The most recently active conversation, so one reopened from the history stays open.
+      const { data: conversation, error } = await homeDb.from('chatbot_conversations').select('id, session_id').eq('user_id', userId).eq('purpose', 'pulse_home').contains('business_context', { pulseScope: { ...scope } }).or('business_context->pulseScope->>channel.is.null,business_context->pulseScope->>channel.eq.home').order('updated_at', { ascending: false }).limit(1).abortSignal(storageRequests.current.signal).maybeSingle();
       if (error) throw error;
       if (!conversation) { if (alive.current) { setSessionId(null); setMessages([]); setHistoryReady(true); } return; }
-      const { data, error: messageError } = await homeDb.from('chatbot_messages').select('id, role, content, metadata').eq('conversation_id', conversation.id).order('created_at', { ascending: false }).limit(100).abortSignal(storageRequests.current.signal);
-      if (messageError) throw messageError;
-      if (!alive.current) return;
-      setSessionId(conversation.session_id);
-      setHistoryReady(true);
-      const history = [...(data ?? [])].reverse().filter(row => row.role === 'user' || row.role === 'assistant').map(row => {
-        const metadata = row.metadata as Record<string, unknown> | null;
-        return { id: metadata?.homeTurnId ? `${metadata.homeTurnId}:${row.role}` : row.id, role: row.role as 'user' | 'assistant', content: row.content, actions: validateHomeActions(metadata?.homeActions), sources: validatePulseSources(metadata?.contextSources), retrievedSources: validatePulseRetrievalSources(metadata?.retrievalSources),
-          memorySuggestions: parseMemorySuggestions(metadata?.memorySuggestions), commitmentCheck: parseCommitmentCheck(metadata?.commitmentCheck) };
-      });
-      setMessages(history);
-      const last = data?.[0];
-      if (last?.role === 'user') {
-        const turnId = (last.metadata as Record<string, unknown> | null)?.homeTurnId;
-        if (typeof turnId === 'string') { pending.current = { text: last.content, turnId }; retryAction.current = 'send'; setError('Your last response did not finish. Retry to continue.'); }
-      }
+      await loadHistory(conversation);
     } catch {
       outcome = 'failure';
       if (alive.current) setError('Could not restore your conversation. Check the connection and Pulse Home migration, then retry.');
     } finally { if (alive.current) { setLoading(false); captureEvent('pulse_home_operation', { operation: 'restore', outcome, duration_ms: Math.round(performance.now() - started), workspace_version: 'founder-guide-v1' }); } }
-  }, [userId, scope]);
+  }, [userId, scope, loadHistory]);
   useEffect(() => { void restore(); }, [restore]); // Account/project changes remount and abort the previous scope.
 
   const send = async (text: string, retry = false) => {
@@ -153,7 +163,7 @@ function LiveConversation({ concept, scope }: { concept: PulseHomeConcept; scope
     } catch (error) {
       outcome = 'failure';
       if (alive.current) setError(error instanceof Error ? error.message : 'Pulse was interrupted. Please retry.');
-    } finally { busy.current = false; if (alive.current) { setStreaming(false); captureEvent('pulse_home_operation', { operation: 'stream', outcome, retry, duration_ms: Math.round(performance.now() - started), workspace_version: 'founder-guide-v1' }); } }
+    } finally { busy.current = false; if (alive.current) { setStreaming(false); setHistoryVersion(version => version + 1); captureEvent('pulse_home_operation', { operation: 'stream', outcome, retry, duration_ms: Math.round(performance.now() - started), workspace_version: 'founder-guide-v1' }); } }
   };
 
   const newConversation = async () => {
@@ -164,6 +174,20 @@ function LiveConversation({ concept, scope }: { concept: PulseHomeConcept; scope
     catch (error) { if (alive.current) setError(error instanceof Error ? error.message : 'Could not start a conversation.'); }
     finally { busy.current = false; if (alive.current) setLoading(false); }
   };
+  // Reopens a saved conversation from the history, in place of the current one.
+  const openConversation = async (conversation: PulseConversationSummary) => {
+    if (busy.current) return false;
+    busy.current = true; setLoading(true); setError(''); pending.current = null;
+    try { await loadHistory({ id: conversation.id, session_id: conversation.sessionId }); return true; }
+    catch { return false; }
+    finally { busy.current = false; if (alive.current) setLoading(false); }
+  };
+  // Deleting the open conversation returns to the home; the next message starts a new one.
+  const conversationDeleted = (conversation: PulseConversationSummary) => {
+    if (conversation.sessionId !== sessionId) return;
+    setSessionId(null); setMessages([]); setError(''); pending.current = null;
+  };
+
   // Memory, follow-ups and "Pulse noticed" are for founders and builders.
   const founderHome = !persona;
   const displayName = dashboard.snapshot?.profile?.fullName || user?.user_metadata?.full_name || '';
@@ -178,7 +202,11 @@ function LiveConversation({ concept, scope }: { concept: PulseHomeConcept; scope
       {message.memorySuggestions?.length && founderHome ? <PulseMemoryChips suggestions={message.memorySuggestions} projectId={scope.projectId} turnId={turnId} surface="home" /> : null}
       {sessionId && <PulseAnswerFeedback sessionId={sessionId} turnId={turnId} surface="home" />}
     </>}
-    headerExtras={founderHome ? <PulseMemoryPanel projectId={scope.projectId} /> : undefined}
+    composerExtras={<>
+      <PulseConversations userId={userId} scope={scope} currentSessionId={sessionId} refreshKey={historyVersion} disabled={streaming}
+        onOpen={openConversation} onDeleted={conversationDeleted} />
+      {founderHome && <PulseMemoryPanel projectId={scope.projectId} />}
+    </>}
     homeExtras={founderHome && historyReady ? <>
       {/* Builders see which three tools matter first, and the next one. */}
       {userType === 'builder' && <BuilderPath navigate={enterWorkspaceRoute} />}

@@ -49,7 +49,18 @@
 .pulse-home-input-row { display: flex; align-items: flex-start; gap: .875rem; }
 .pulse-home .pulse-home-composer textarea { min-height: 1.75rem; max-height: 180px; overflow-y: auto; font-size: 1.125rem; line-height: 1.5; }
 .pulse-home-input-hint { margin-top: .375rem; font-size: .75rem; line-height: 1.5; color: hsl(var(--muted-foreground)); }
-.pulse-home-composer-footer { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin-top: 1.25rem; }
+.pulse-home-composer-footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .75rem; margin-top: 1.25rem; }
+.pulse-home-composer-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: .5rem; margin-left: auto; }
+/* Conversations and "Pulse remembers", beside Ask Pulse. */
+.pulse-composer-chip { display: inline-flex; align-items: center; gap: .375rem; min-height: 2rem; padding: .25rem .75rem; border: 1px solid hsl(var(--border) / .7); border-radius: 999px; background: hsl(var(--card) / .6); font-size: .75rem; font-weight: 500; color: hsl(var(--foreground)); transition: border-color .2s, background-color .2s; }
+.pulse-composer-chip:hover { border-color: hsl(var(--accent-teal) / .5); background: hsl(var(--accent-teal) / .06); }
+.pulse-composer-chip:focus-visible { outline: 2px solid hsl(var(--primary)); outline-offset: 2px; }
+/* Narrow: both buttons on one row, Ask Pulse on its own row at the right. */
+@container (max-width: 520px) {
+  .pulse-home-composer-actions { width: 100%; justify-content: flex-start; margin-left: 0; }
+  .pulse-home-composer-actions > button[type=submit] { margin-left: auto; }
+  .pulse-composer-chip { gap: .25rem; padding-inline: .5rem; }
+}
 /* Solid, high-contrast send button rather than a gradient pill. */
 .pulse-home .pulse-home-composer button[type=submit] { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; flex-shrink: 0; min-height: 2.5rem; padding: .5rem .875rem; border: 0; border-radius: .75rem; background: hsl(var(--foreground)); color: hsl(var(--background)); font-size: .8125rem; font-weight: 600; transition: opacity .2s, transform .2s; }
 .pulse-home .pulse-home-composer button[type=submit]:hover:not(:disabled) { opacity: .9; transform: translateY(-1px); }

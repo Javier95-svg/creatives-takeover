@@ -50,7 +50,7 @@ export function PulseMemoryPanel({ projectId }: { projectId: string | null }) {
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <button type="button" className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-card/60 px-3 py-1 text-xs font-medium text-foreground hover:border-accent-teal/50">
+        <button type="button" className="pulse-composer-chip">
           <Bookmark aria-hidden="true" className="h-3 w-3 text-accent-teal" />Pulse remembers{loaded ? ` (${active.length})` : ''}
         </button>
       </SheetTrigger>

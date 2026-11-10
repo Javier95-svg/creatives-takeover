@@ -37,7 +37,6 @@ interface Props {
   composer: ReactNode;
   error: ReactNode;
   footnote: string;
-  headerExtras?: ReactNode;
   homeExtras?: ReactNode;
   openRoute: (event: React.MouseEvent<HTMLAnchorElement>, route: string) => void;
 }
@@ -68,7 +67,7 @@ function Signal() {
   </span>;
 }
 
-export function PulseFounderHome({ heading, headingKey, projectName, stageBadge, stageNumber, priorities, loading, emptyText, composer, error, footnote, headerExtras, homeExtras, openRoute }: Props) {
+export function PulseFounderHome({ heading, headingKey, projectName, stageBadge, stageNumber, priorities, loading, emptyText, composer, error, footnote, homeExtras, openRoute }: Props) {
   const today = new Intl.DateTimeFormat('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }).format(new Date());
   const style = (stageNumber ? { '--stage': STAGE_ACCENTS[stageNumber - 1] } : undefined) as CSSProperties | undefined;
 
@@ -85,7 +84,6 @@ export function PulseFounderHome({ heading, headingKey, projectName, stageBadge,
           <span className="fh-title__second block">{heading[1]}</span>
         </h1>
         <div className="fh-mast__rule" aria-hidden="true" />
-        {headerExtras && <div className="fh-extras">{headerExtras}</div>}
       </header>
 
       <section className="fh-row" aria-labelledby="fh-focus-title">

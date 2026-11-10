@@ -44,8 +44,9 @@ export interface PulseHomeViewProps {
       These three slots are supplied by the live page only, so the public tour
       never loads account code. */
   renderAnswerFooter?: (message: PulseHomeMessage, turnId: string) => ReactNode;
-  /** Under the founder home headline (the "Pulse remembers" button). */
-  headerExtras?: ReactNode;
+  /** In the composer footer, beside "Ask Pulse" (the Conversations and
+      "Pulse remembers" buttons). Supplied by the live page only. */
+  composerExtras?: ReactNode;
   /** After Today's Focus on the home view ("Pulse noticed"). */
   homeExtras?: ReactNode;
   /** Called before following an investor card; rank is its 1-based position. */
@@ -54,7 +55,7 @@ export interface PulseHomeViewProps {
   onSourceClick?: (action: PulseHomeAction) => void;
 }
 
-export function PulseHomeView({ concept, name, stage, projectName, assignedStage, priorities = [], messages = [], loading, streaming, unavailable, contextNotice, error, onSend, onNew, onRetry, navigate = enterWorkspaceRoute, persona = null, personaChips = [], personaInterest = null, onInvestorClick, onMentorClick, onSourceClick, renderAnswerFooter, headerExtras, homeExtras }: PulseHomeViewProps) {
+export function PulseHomeView({ concept, name, stage, projectName, assignedStage, priorities = [], messages = [], loading, streaming, unavailable, contextNotice, error, onSend, onNew, onRetry, navigate = enterWorkspaceRoute, persona = null, personaChips = [], personaInterest = null, onInvestorClick, onMentorClick, onSourceClick, renderAnswerFooter, composerExtras, homeExtras }: PulseHomeViewProps) {
   const [input, setInput] = useState('');
   const [showPriorities, setShowPriorities] = useState(false);
   const [headline, setHeadline] = useState(0);
@@ -128,7 +129,7 @@ export function PulseHomeView({ concept, name, stage, projectName, assignedStage
         <p id="pulse-composer-hint" className="pulse-home-input-hint">{exampleQuestion && !persona ? <>Try: “{exampleQuestion}”</> : 'Ask a question, explore an idea, or find your next step.'}</p>
       </div>
     </div>
-    <div className="pulse-home-composer-footer"><span role="status" className="inline-flex items-center gap-2 text-xs text-muted-foreground"><span aria-hidden="true" className={cn('h-1.5 w-1.5 shrink-0 rounded-full', unavailable || contextNotice || error ? 'bg-muted-foreground' : 'pulse-home-status-live')} />{composerStatus}</span><button type="submit" aria-label="Send message" disabled={!input.trim() || streaming || loading || Boolean(unavailable)}><span>Ask Pulse</span><ArrowUp aria-hidden="true" className="h-4 w-4" /></button></div>
+    <div className="pulse-home-composer-footer"><span role="status" className="inline-flex items-center gap-2 text-xs text-muted-foreground"><span aria-hidden="true" className={cn('h-1.5 w-1.5 shrink-0 rounded-full', unavailable || contextNotice || error ? 'bg-muted-foreground' : 'pulse-home-status-live')} />{composerStatus}</span><div className="pulse-home-composer-actions">{composerExtras}<button type="submit" aria-label="Send message" disabled={!input.trim() || streaming || loading || Boolean(unavailable)}><span>Ask Pulse</span><ArrowUp aria-hidden="true" className="h-4 w-4" /></button></div></div>
   </form>;
 
   // The founder home before a conversation starts. Other account types and the
@@ -148,7 +149,6 @@ export function PulseHomeView({ concept, name, stage, projectName, assignedStage
         composer={composer}
         error={error ? <div role="alert" className="mb-3 flex items-center justify-between gap-3 text-xs text-destructive"><span>{error}</span><button type="button" onClick={onRetry} disabled={streaming || loading} className="shrink-0 underline disabled:opacity-50">Retry</button></div> : null}
         footnote={unavailable || contextNotice || 'Pulse guides. You decide.'}
-        headerExtras={headerExtras}
         homeExtras={homeExtras}
         openRoute={openRoute}
       />
