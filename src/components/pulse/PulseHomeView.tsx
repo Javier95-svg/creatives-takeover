@@ -147,7 +147,7 @@ export function PulseHomeView({ concept, name, stage, projectName, assignedStage
         emptyText={unavailable ? 'Your dashboard priorities will appear here after sign-in.' : contextNotice ? 'Your priorities are temporarily unavailable.' : 'Nothing on your list yet. Ask Pulse below for a useful first step.'}
         composer={composer}
         error={error ? <div role="alert" className="mb-3 flex items-center justify-between gap-3 text-xs text-destructive"><span>{error}</span><button type="button" onClick={onRetry} disabled={streaming || loading} className="shrink-0 underline disabled:opacity-50">Retry</button></div> : null}
-        footnote={unavailable || contextNotice || 'Pulse guides. You decide. Review suggestions before taking action.'}
+        footnote={unavailable || contextNotice || 'Pulse guides. You decide.'}
         headerExtras={headerExtras}
         homeExtras={homeExtras}
         openRoute={openRoute}
@@ -211,7 +211,7 @@ export function PulseHomeView({ concept, name, stage, projectName, assignedStage
         {!active && persona && <nav aria-label="Quick starts" className="pulse-home-shortcuts">{personaShortcuts.map(({ label, route }) => <a key={route} href={route} onClick={event => openRoute(event, route)} className="pulse-home-shortcut">
           <span className="pulse-home-shortcut-icon"><ArrowRight aria-hidden="true" className="h-4 w-4" /></span><span className="flex-1">{label}</span><ArrowRight aria-hidden="true" className="pulse-home-shortcut-arrow h-3.5 w-3.5 shrink-0" />
         </a>)}</nav>}
-        <p className="mt-3 text-center text-xs leading-5 text-muted-foreground">{unavailable || contextNotice || 'Pulse guides. You decide. Review suggestions before taking action.'}</p>
+        <p className="mt-3 text-center text-xs leading-5 text-muted-foreground">{unavailable || contextNotice || 'Pulse guides. You decide.'}</p>
       </div>
     </div>
     </div>

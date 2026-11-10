@@ -110,7 +110,7 @@ export function PulseFounderHome({ heading, headingKey, projectName, stageBadge,
 
       <div className="fh-row">
         <div className="fh-margin" aria-hidden="true"><span className="fh-label">Ask Pulse</span><Signal /></div>
-        <div className="fh-main">{error}{composer}</div>
+        <div className="fh-main">{error}{composer}<p className="fh-footnote">{footnote}</p></div>
       </div>
 
       <div className="fh-row">
@@ -126,7 +126,6 @@ export function PulseFounderHome({ heading, headingKey, projectName, stageBadge,
               </a>;
             })}
           </nav>
-          <p className="fh-footnote">{footnote}</p>
         </div>
       </div>
     </div>

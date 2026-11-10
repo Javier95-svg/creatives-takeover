@@ -162,7 +162,8 @@
 .fh-shortcut:hover .fh-shortcut__arrow { color: hsl(var(--foreground)); transform: translateX(2px); }
 .fh-shortcut:focus-visible { outline: 2px solid hsl(var(--primary)); outline-offset: -2px; }
 
-.fh-footnote { margin-top: 1.25rem; font-size: .75rem; line-height: 1.5; color: hsl(var(--muted-foreground)); }
+/* Under the composer, centred. */
+.fh-footnote { margin-top: .875rem; text-align: center; font-size: .75rem; line-height: 1.5; color: hsl(var(--muted-foreground)); }
 
 /* ---- Small screens ---- */
 
