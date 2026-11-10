@@ -7,8 +7,8 @@ import './pulse-founder-home.css';
 
 // The founder's Pulse home before a conversation starts. A masthead (date,
 // project, stage) over the centred rotating headline, then a journal layout:
-// today's focus beside its label in a left margin, then the Pulse composer and
-// the eight quick starts across the full width under their labels. Pulse is the largest element on the page. Two marks
+// today's focus, the Pulse composer and the eight quick starts, each across
+// the full width under its label, on the same spacing. Pulse is the largest element on the page. Two marks
 // are ours: the seven-stage ring from the homepage cycle wheel and the Pulse
 // signal line.
 
@@ -86,7 +86,7 @@ export function PulseFounderHome({ heading, headingKey, projectName, stageBadge,
         <div className="fh-mast__rule" aria-hidden="true" />
       </header>
 
-      <section className="fh-row" aria-labelledby="fh-focus-title">
+      <section className="fh-row fh-row--full" aria-labelledby="fh-focus-title">
         <div className="fh-margin"><span className="fh-margin__tag"><StageRing stage={stageNumber} /><h2 id="fh-focus-title" className="fh-label">Today’s focus</h2></span></div>
         <div className="fh-main">
           {loading && !priorities.length ? <p role="status" className="fh-empty">Loading your workspace…</p>
@@ -106,7 +106,7 @@ export function PulseFounderHome({ heading, headingKey, projectName, stageBadge,
         </div>
       </section>
 
-      <div className="fh-row fh-row--full">
+      <div className="fh-row fh-row--full fh-row--pulse">
         <div className="fh-margin" aria-hidden="true"><span className="fh-label">Ask Pulse</span><Signal /></div>
         <div className="fh-main">{error}{composer}<p className="fh-footnote">{footnote}</p></div>
       </div>

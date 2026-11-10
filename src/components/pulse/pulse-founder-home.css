@@ -18,7 +18,7 @@
 
 /* ---- Masthead: a dateline between rules, the headline, a double rule ---- */
 
-.fh-hero { padding-bottom: 1.75rem; text-align: center; }
+.fh-hero { text-align: center; }
 
 .fh-mast {
   display: grid;
@@ -70,10 +70,12 @@
 .fh-margin { display: flex; flex-direction: column; align-items: flex-start; gap: .5rem; padding-top: .25rem; }
 .fh-margin__tag { display: inline-flex; align-items: center; gap: .5rem; }
 
-/* Pulse and the quick starts take the full width, their label on a line above. */
+/* Each section takes the full width, its label on a line above. */
 .fh-row--full { grid-template-columns: minmax(0, 1fr); gap: .875rem; }
-.fh-row--full .fh-margin { flex-direction: row; align-items: center; gap: .875rem; padding-top: 0; }
+.fh-row--full .fh-margin { flex-direction: row; align-items: center; gap: .875rem; height: 1.375rem; padding-top: 0; }
 .fh-row--full .fh-signal { width: auto; flex: 1; }
+/* A little more air between the Ask Pulse label and the chatbot. */
+.fh-row--pulse { gap: 1.25rem; }
 
 /* Small sentence-case labels: the page's quiet voice. */
 .fh-label { margin: 0; font-size: .75rem; font-weight: 600; line-height: 1.2; color: hsl(var(--foreground) / .62); }
@@ -173,6 +175,7 @@
 
 @container (max-width: 640px) {
   .fh-row { grid-template-columns: 1fr; gap: .625rem; padding: 1.25rem 0; }
+  .fh-row--pulse { gap: 1rem; }
   .fh-margin { flex-direction: row; align-items: center; padding-top: 0; }
   .fh-signal { width: auto; flex: 1; }
 }
