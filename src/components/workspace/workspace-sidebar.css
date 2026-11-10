@@ -1,0 +1,46 @@
+/* The workspace sidebar (WorkspaceSidebar.tsx) in stage colours: each section
+   in a colour from the homepage cycle wheel, the current one tinted with a
+   glowing bar, and the BizMap stage headings in their own stage colour.
+   Selectors start with .ws.ws--stage so they outrank the Tailwind utilities on
+   the same elements. */
+
+.ws.ws--stage [data-section="Dashboard"] { --ws-accent: #38bdf8; }
+.ws.ws--stage [data-section="BizMap"] { --ws-accent: #f5a524; }
+.ws.ws--stage [data-section="Network"] { --ws-accent: #34d399; }
+.ws.ws--stage [data-section="Insighta"] { --ws-accent: #a78bfa; }
+.ws.ws--stage [data-section="Community"] { --ws-accent: #f472b6; }
+.ws.ws--stage [data-section="Content"] { --ws-accent: #fb923c; }
+.ws.ws--stage [data-section="Bonus"] { --ws-accent: #818cf8; }
+.ws.ws--stage [data-section="Pricing"] { --ws-accent: hsl(var(--accent-teal)); }
+
+/* The seven stage colours as a thin band under the logo. */
+.ws.ws--stage .ws-brand { position: relative; padding-bottom: 1.125rem; }
+.ws.ws--stage .ws-brand::after { content: ""; position: absolute; left: .5rem; right: .5rem; bottom: 0; height: 2px; border-radius: 2px; background: linear-gradient(90deg, #f5a524 0 14.28%, #38bdf8 14.28% 28.57%, #34d399 28.57% 42.85%, #fb923c 42.85% 57.14%, #a78bfa 57.14% 71.42%, #f472b6 71.42% 85.71%, #818cf8 85.71% 100%); opacity: .85; }
+.ws.ws--stage.is-collapsed .ws-brand::after { left: 0; right: 0; }
+.ws.ws--stage .ws-nav { margin-top: 1rem; }
+
+.ws.ws--stage .ws-item { position: relative; padding: .5rem .75rem; border-radius: .625rem; color: hsl(var(--foreground) / .8); background: transparent; transition: background-color .15s, color .15s; }
+.ws.ws--stage .ws-item svg { width: 1.125rem; height: 1.125rem; color: var(--ws-accent); }
+.ws.ws--stage .ws-item:hover, .ws.ws--stage .ws-item:focus-visible { color: hsl(var(--foreground)); background: color-mix(in srgb, var(--ws-accent) 9%, transparent); }
+.ws.ws--stage .ws-item.is-active { color: hsl(var(--foreground)); background: color-mix(in srgb, var(--ws-accent) 15%, transparent); }
+.ws.ws--stage .ws-item.is-active::before { content: ""; position: absolute; left: .1875rem; top: 50%; width: 3px; height: 1.25rem; border-radius: 3px; background: var(--ws-accent); box-shadow: 0 0 10px var(--ws-accent); transform: translateY(-50%); }
+.ws.ws--stage .ws-item svg.ws-chevron { width: .875rem; height: .875rem; color: hsl(var(--muted-foreground)); }
+
+.ws.ws--stage .ws-tools { border-left-color: color-mix(in srgb, var(--ws-accent) 45%, transparent); }
+.ws.ws--stage .ws-slogan { border-bottom: 0; padding-block: .375rem .5rem; font-weight: 500; color: hsl(var(--muted-foreground)); }
+.ws.ws--stage .ws-stage { display: flex; align-items: center; gap: .375rem; font-size: .6875rem; letter-spacing: .06em; color: var(--stage-colour, hsl(var(--muted-foreground))); }
+.ws.ws--stage .ws-stage::before { content: ""; width: .375rem; height: .375rem; border-radius: 50%; background: currentColor; }
+.ws.ws--stage .ws-stage[data-stage="I"] { --stage-colour: #f5a524; }
+.ws.ws--stage .ws-stage[data-stage="II"] { --stage-colour: #38bdf8; }
+.ws.ws--stage .ws-stage[data-stage="III"] { --stage-colour: #34d399; }
+.ws.ws--stage .ws-stage[data-stage="IV"] { --stage-colour: #fb923c; }
+.ws.ws--stage .ws-stage[data-stage="V"] { --stage-colour: #a78bfa; }
+.ws.ws--stage .ws-stage[data-stage="VI"] { --stage-colour: #f472b6; }
+.ws.ws--stage .ws-stage[data-stage="VII"] { --stage-colour: #818cf8; }
+.ws.ws--stage .ws-tool { padding: .375rem .5rem; }
+.ws.ws--stage .ws-tool:hover { background: color-mix(in srgb, var(--ws-accent) 9%, transparent); color: hsl(var(--foreground)); }
+.ws.ws--stage .ws-tool svg { color: var(--ws-accent); }
+.ws.ws--stage .ws-tool-desc { color: hsl(var(--muted-foreground)); }
+.ws.ws--stage .ws-tool.is-active { background: color-mix(in srgb, var(--ws-accent) 15%, transparent); }
+
+.ws.ws--stage .ws-plan { font-weight: 600; color: hsl(var(--accent-teal)); }

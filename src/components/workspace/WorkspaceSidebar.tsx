@@ -19,10 +19,8 @@ import { enterWorkspaceRoute, WORKSPACE_ROUTES } from "@/lib/workspaceNavigation
 import { navSectionsForType, navToolsForType } from "@/lib/workspaceNavForType";
 import { SIDEBAR_HIDDEN_TOOLS, WORKSPACE_SECTION_TOOLS } from "@/lib/workspaceSections";
 import type { UserType } from "@/lib/accountTypes";
-
-
-
-
+// Stage colours: each section in a colour from the cycle wheel (workspace-sidebar.css).
+import "./workspace-sidebar.css";
 
 import { WORKSPACE_ROUTE_ICONS, WORKSPACE_TOOL_STAGES, routeDescriptionFor, sectionSloganFor } from '@/lib/workspaceRouteDetails';
 
@@ -108,10 +106,11 @@ export function WorkspaceSidebar({ navigateTo = enterWorkspaceRoute, currentPath
 
   return (
     <aside className={cn(
+      "ws ws--stage", collapsed && "is-collapsed",
       "relative flex h-dvh shrink-0 flex-col border-r border-border/70 bg-card pt-5 pb-3 text-foreground transition-all duration-300 motion-reduce:transition-none",
       mobile ? "h-full w-full px-4" : collapsed ? "w-20 px-3" : "w-72 px-4",
     )}>
-      <div className={cn("flex items-center", collapsed ? "justify-center" : "justify-between px-2")}>
+      <div className={cn("ws-brand flex items-center", collapsed ? "justify-center" : "justify-between px-2")}>
         <Brand collapsed={collapsed} navigateTo={navigateTo} />
         {!mobile && <button
           type="button"
@@ -126,14 +125,15 @@ export function WorkspaceSidebar({ navigateTo = enterWorkspaceRoute, currentPath
         </button>}
       </div>
 
-      <nav id="workspace-navigation" aria-label="Product navigation" className="mt-9 min-h-0 flex-1 space-y-1.5 overflow-y-auto">
+      <nav id="workspace-navigation" aria-label="Product navigation" className="ws-nav mt-9 min-h-0 flex-1 space-y-1.5 overflow-y-auto">
         {NAV_ITEMS.filter(({ label }) => sections.includes(label)).map(({ label, icon: NavIcon }) => (
           <div key={label}>
             {label === 'Pricing' ? <a href={WORKSPACE_ROUTES.Pricing} aria-label="Pricing" aria-current={selected === 'Pricing' ? 'page' : undefined}
               title={collapsed ? 'Pricing' : undefined}
               onClick={event => { if (event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey) { event.preventDefault(); openRoute('Pricing'); } }}
-              className={cn('flex w-full items-center gap-3 rounded-button px-3 py-2.5 text-sm font-medium hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent focus-visible:outline-none', collapsed && 'justify-center', selected === 'Pricing' && 'bg-primary/15')}>
-              <NavIcon className="h-5 w-5 shrink-0" />{!collapsed && <span>Pricing</span>}
+              data-section="Pricing"
+              className={cn('ws-item flex w-full items-center gap-3 rounded-button px-3 py-2.5 text-sm font-medium hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent focus-visible:outline-none', collapsed && 'justify-center', selected === 'Pricing' && 'is-active bg-primary/15')}>
+              <span className="ws-icon contents"><NavIcon className="h-5 w-5 shrink-0" /></span>{!collapsed && <span className="ws-text">Pricing</span>}
             </a> : <button
               type="button"
               aria-label={label}
@@ -141,45 +141,46 @@ export function WorkspaceSidebar({ navigateTo = enterWorkspaceRoute, currentPath
               aria-controls={toolsFor(label) ? `workspace-tools-${label.replace(/\s+/g, "-")}` : undefined}
               title={collapsed ? label : undefined}
               onClick={() => handleSectionClick(label)}
+              data-section={label}
               className={cn(
-                "flex w-full items-center gap-3 rounded-button px-3 py-2.5 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent focus-visible:text-accent-foreground focus-visible:outline-none",
+                "ws-item flex w-full items-center gap-3 rounded-button px-3 py-2.5 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent focus-visible:text-accent-foreground focus-visible:outline-none",
                 collapsed ? "justify-center" : "justify-start",
                 (selected === label || toolsFor(label)?.includes(selected))
-                  ? "bg-primary/15 text-foreground"
+                  ? "is-active bg-primary/15 text-foreground"
                   : "text-foreground",
               )}
             >
-              <NavIcon className="h-5 w-5 shrink-0" />
-              {!collapsed && <span>{label}</span>}
+              <span className="ws-icon contents"><NavIcon className="h-5 w-5 shrink-0" /></span>
+              {!collapsed && <span className="ws-text">{label}</span>}
               {!collapsed && toolsFor(label) && (
-                <ChevronDown className={cn("ml-auto h-3.5 w-3.5 transition-transform", openSection === label && "rotate-180")} />
+                <ChevronDown className={cn("ws-chevron ml-auto h-3.5 w-3.5 transition-transform", openSection === label && "rotate-180")} />
               )}
             </button>}
 
             {!collapsed && openSection === label && toolsFor(label) && (
-              <div id={`workspace-tools-${label.replace(/\s+/g, "-")}`} role="group" aria-label={`${label} tools`} className="mb-2 ml-5 mt-1 space-y-0.5 border-l border-border/70 pl-4">
-                <p className="mb-2 border-b border-border/60 px-2 py-3 text-xs font-semibold leading-5 text-foreground">{sectionSloganFor(userType, label)}</p>
+              <div id={`workspace-tools-${label.replace(/\s+/g, "-")}`} role="group" aria-label={`${label} tools`} data-section={label} className="ws-tools mb-2 ml-5 mt-1 space-y-0.5 border-l border-border/70 pl-4">
+                <p className="ws-slogan mb-2 border-b border-border/60 px-2 py-3 text-xs font-semibold leading-5 text-foreground">{sectionSloganFor(userType, label)}</p>
                 {toolsFor(label)!.map((tool, index) => {
                   const ToolIcon = WORKSPACE_ROUTE_ICONS[tool];
                   return (
                   <div key={tool}>
                   {(label === 'BizMap' || label === 'Insighta') && WORKSPACE_TOOL_STAGES[tool] &&
                     (index === 0 || WORKSPACE_TOOL_STAGES[tool] !== WORKSPACE_TOOL_STAGES[toolsFor(label)![index - 1]]) &&
-                    <p className="px-2 pb-1 pt-3 text-xs font-semibold uppercase tracking-wide text-primary">{WORKSPACE_TOOL_STAGES[tool]}</p>}
+                    <p data-stage={WORKSPACE_TOOL_STAGES[tool].match(/Stage ([IVX]+)/)?.[1]} className="ws-stage px-2 pb-1 pt-3 text-xs font-semibold uppercase tracking-wide text-primary">{WORKSPACE_TOOL_STAGES[tool]}</p>}
                   <a
                     href={WORKSPACE_ROUTES[tool]}
                     aria-label={tool}
                     aria-current={selected === tool ? 'page' : undefined}
                     onClick={event => { if (event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey) { event.preventDefault(); openRoute(tool); } }}
                     className={cn(
-                      "group flex w-full items-start gap-2 rounded-lg px-2 py-2 text-left text-xs transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent focus-visible:text-accent-foreground focus-visible:outline-none",
-                      selected === tool ? "bg-primary/10 text-foreground" : "text-foreground",
+                      "ws-tool group flex w-full items-start gap-2 rounded-lg px-2 py-2 text-left text-xs transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent focus-visible:text-accent-foreground focus-visible:outline-none",
+                      selected === tool ? "is-active bg-primary/10 text-foreground" : "text-foreground",
                     )}
                   >
                     <ToolIcon aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0" />
                     <span className="min-w-0">
                       <span className="block font-medium leading-5">{tool}</span>
-                      <span className="mt-0.5 block text-xs font-normal leading-4 text-foreground group-hover:text-accent-foreground group-focus-visible:text-accent-foreground">{routeDescriptionFor(userType, tool)}</span>
+                      <span className="ws-tool-desc mt-0.5 block text-xs font-normal leading-4 text-foreground group-hover:text-accent-foreground group-focus-visible:text-accent-foreground">{routeDescriptionFor(userType, tool)}</span>
                     </span>
                   </a>
                   </div>
@@ -194,8 +195,8 @@ export function WorkspaceSidebar({ navigateTo = enterWorkspaceRoute, currentPath
       <div className="mt-auto shrink-0 space-y-1">
         {!collapsed && updates}
 
-        <div className="border-t border-border/60 pt-2">
-          <div title={`${account.username} · ${account.plan}`} className={cn("flex items-center gap-3 rounded-xl py-2 transition-colors hover:bg-muted/70", collapsed ? "justify-center" : "px-2")}>
+        <div className="ws-foot border-t border-border/60 pt-2">
+          <div title={`${account.username} · ${account.plan}`} className={cn("ws-account flex items-center gap-3 rounded-xl py-2 transition-colors hover:bg-muted/70", collapsed ? "justify-center" : "px-2")}>
             <a href={profileHref} aria-label="View my profile" title="View my profile" onClick={(event) => {
               if (event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey) {
                 event.preventDefault();
@@ -205,7 +206,7 @@ export function WorkspaceSidebar({ navigateTo = enterWorkspaceRoute, currentPath
             }} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-medium text-primary-foreground transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card">{avatar}</a>
             {!collapsed && <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-medium leading-5 text-foreground">{account.username}</p>
-              <p className="text-xs leading-5 text-foreground">{account.plan}</p>
+              <p className="ws-plan text-xs leading-5 text-foreground">{account.plan}</p>
             </div>}
             {!collapsed && <a href={WORKSPACE_ROUTES.Referrals} onClick={(event) => { if (event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey) { event.preventDefault(); openRoute("Referrals"); } }} aria-label="Referrals" title="Referrals" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><Gift className="h-5 w-5" /></a>}
             {!collapsed && <a href={WORKSPACE_ROUTES.Settings} onClick={(event) => { if (event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey) { event.preventDefault(); openRoute("Settings"); } }} aria-label="Account settings" title="Account settings" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><Settings className="h-5 w-5" /></a>}
