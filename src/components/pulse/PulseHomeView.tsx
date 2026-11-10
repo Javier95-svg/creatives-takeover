@@ -1,21 +1,17 @@
 import { useEffect, useRef, useState } from 'react';
 import type React from 'react';
 import type { ReactNode } from 'react';
-import { ArrowRight, ArrowUp, ChevronDown, Plus, Sparkles, Target, GraduationCap, Users, LayoutDashboard, Layers, FlaskConical, Rocket, Megaphone, type LucideIcon } from 'lucide-react';
+import { ArrowRight, ArrowUp, ChevronDown, Plus, Sparkles } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { cn } from '@/lib/utils';
 import { enterWorkspaceRoute } from '@/lib/workspaceNavigation';
-import { PULSE_HOME_SHORTCUTS, STAGE_EXAMPLE_QUESTION, toolNameForRoute, type PulseShortcutIcon } from '@/lib/pulseHomeShortcuts';
+import { STAGE_EXAMPLE_QUESTION, toolNameForRoute } from '@/lib/pulseHomeShortcuts';
 import { BIZMAP_STAGE_ORDER } from '@/lib/bizmapStageOrder';
 import type { PulseHomeAction, PulseHomeConcept, PulseHomeMessage, PulseHomePriority } from '@/lib/pulseHome';
 import type { PersonaChip, PersonaHome } from '@/lib/personaHome';
 import './pulse-home.css';
 import { PulseRetrievedSources, PulseSources } from './PulseSources';
-
-const SHORTCUT_ICONS: Record<PulseShortcutIcon, LucideIcon> = {
-  focus: LayoutDashboard, mentor: GraduationCap, cofounder: Users, customer: Target, demo: Layers, validate: FlaskConical,
-  mvp: Rocket, launch: Megaphone,
-};
+import { PulseFounderHome } from './PulseFounderHome';
 
 export interface PulseHomeViewProps {
   concept: PulseHomeConcept;
@@ -36,7 +32,7 @@ export interface PulseHomeViewProps {
   onNew?: () => void;
   onRetry?: () => void;
   /** Set for mentors, marketplace members and investors. Absent means the
-      founder home, rendered exactly as it always has been. */
+      founder home (PulseFounderHome until a conversation starts). */
   persona?: PersonaHome | null;
   /** Counts already resolved, shown beside the type chip. */
   personaChips?: readonly PersonaChip[];
@@ -48,7 +44,7 @@ export interface PulseHomeViewProps {
       These three slots are supplied by the live page only, so the public tour
       never loads account code. */
   renderAnswerFooter?: (message: PulseHomeMessage, turnId: string) => ReactNode;
-  /** Next to the project and stage chips (the "Pulse remembers" button). */
+  /** Under the founder home headline (the "Pulse remembers" button). */
   headerExtras?: ReactNode;
   /** After Today's Focus on the home view ("Pulse noticed"). */
   homeExtras?: ReactNode;
@@ -124,6 +120,40 @@ export function PulseHomeView({ concept, name, stage, projectName, assignedStage
     if (!event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey && event.button === 0) { event.preventDefault(); navigate(route); }
   };
   const personaShortcuts = persona ? persona.shortcuts.map(shortcut => ({ label: shortcut.label, route: shortcut.route })) : [];
+  const composer = <form onSubmit={event => { event.preventDefault(); send(input); }} className="pulse-home-composer">
+    <div className="pulse-home-input-row">
+      <span aria-hidden="true" className={cn('pulse-home-wave', streaming && !unavailable && 'pulse-home-wave--active')}>{[0, 1, 2, 3, 4].map(bar => <span key={bar} />)}</span>
+      <div className="min-w-0 flex-1">
+        <textarea ref={textarea} aria-label="Message Pulse" aria-describedby="pulse-composer-hint" placeholder="What's on your mind?" rows={1} maxLength={4000} value={input} onChange={event => setInput(event.target.value)} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} onKeyDown={event => { if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) { event.preventDefault(); send(input); } }} className="block w-full resize-none bg-transparent text-foreground outline-none placeholder:text-muted-foreground" />
+        <p id="pulse-composer-hint" className="pulse-home-input-hint">{exampleQuestion && !persona ? <>Try: “{exampleQuestion}”</> : 'Ask a question, explore an idea, or find your next step.'}</p>
+      </div>
+    </div>
+    <div className="pulse-home-composer-footer"><span role="status" className="inline-flex items-center gap-2 text-xs text-muted-foreground"><span aria-hidden="true" className={cn('h-1.5 w-1.5 shrink-0 rounded-full', unavailable || contextNotice || error ? 'bg-muted-foreground' : 'pulse-home-status-live')} />{composerStatus}</span><button type="submit" aria-label="Send message" disabled={!input.trim() || streaming || loading || Boolean(unavailable)}><span>Ask Pulse</span><ArrowUp aria-hidden="true" className="h-4 w-4" /></button></div>
+  </form>;
+
+  // The founder home before a conversation starts. Other account types and the
+  // conversation itself keep the view below.
+  if (!active && !persona) {
+    return <section aria-label="Pulse home" data-telemetry-private className={cn('ph-no-capture ph-mask pulse-home relative isolate flex min-h-0 flex-1 flex-col overflow-hidden', `pulse-home--${concept}`)}>
+      <div className="pulse-home-wallpaper pointer-events-none absolute inset-0 -z-10 overflow-hidden" aria-hidden="true"><div className="pulse-home-glow pulse-home-glow--blue" /><div className="pulse-home-glow pulse-home-glow--teal" /><div className="pulse-home-glow pulse-home-glow--accent" /><div className="pulse-home-grid" /></div>
+      <PulseFounderHome
+        heading={currentHeading}
+        headingKey={headline}
+        projectName={trimmedProjectName}
+        stageBadge={stageBadge}
+        stageNumber={resolvedStage?.number}
+        priorities={priorities}
+        loading={loading}
+        emptyText={unavailable ? 'Your dashboard priorities will appear here after sign-in.' : contextNotice ? 'Your priorities are temporarily unavailable.' : 'Nothing on your list yet. Ask Pulse below for a useful first step.'}
+        composer={composer}
+        error={error ? <div role="alert" className="mb-3 flex items-center justify-between gap-3 text-xs text-destructive"><span>{error}</span><button type="button" onClick={onRetry} disabled={streaming || loading} className="shrink-0 underline disabled:opacity-50">Retry</button></div> : null}
+        footnote={unavailable || contextNotice || 'Pulse guides. You decide. Review suggestions before taking action.'}
+        headerExtras={headerExtras}
+        homeExtras={homeExtras}
+        openRoute={openRoute}
+      />
+    </section>;
+  }
 
   return <section aria-label="Pulse home" data-telemetry-private className={cn('ph-no-capture ph-mask pulse-home relative isolate flex min-h-0 flex-1 flex-col overflow-hidden', `pulse-home--${concept}`, active && 'pulse-home--chat')}>
     <div className="pulse-home-wallpaper pointer-events-none absolute inset-0 -z-10 overflow-hidden" aria-hidden="true"><div className="pulse-home-glow pulse-home-glow--blue" /><div className="pulse-home-glow pulse-home-glow--teal" /><div className="pulse-home-glow pulse-home-glow--accent" /><div className="pulse-home-grid" /></div>
@@ -138,11 +168,6 @@ export function PulseHomeView({ concept, name, stage, projectName, assignedStage
             <span className="rounded-full border border-border/60 bg-card/60 px-3 py-1 text-xs font-medium text-foreground">{persona.label}</span>
             {personaInterest && <a href="/account" onClick={event => { event.preventDefault(); navigate('/account'); }} className="rounded-full border border-border/60 bg-card/60 px-3 py-1 text-xs text-foreground hover:border-primary/50" title="Edit your profile focus">Focus: {personaInterest}</a>}
             {personaChips.map(chip => <span key={chip.key} className="rounded-full border border-primary/40 bg-primary/10 px-3 py-1 text-xs font-medium text-primary">{chip.count} {chip.label}</span>)}
-          </div>}
-          {!persona && concept === 'guided-journey' && !active && (trimmedProjectName || stageBadge) && <div className="mb-4 flex flex-wrap items-center justify-center gap-2">
-            {trimmedProjectName && <span className="rounded-full border border-border/60 bg-card/60 px-3 py-1 text-xs font-medium text-foreground">{trimmedProjectName}</span>}
-            {stageBadge && <span className="pulse-home-stage-chip rounded-full px-3 py-1 text-xs font-medium">{stageBadge}</span>}
-            {headerExtras}
           </div>}
           <h1 key={active ? 'active' : headline} className={cn('font-space-grotesk font-semibold tracking-tight text-foreground', active ? 'text-xl' : 'pulse-home-headline')}>
             {active ? 'Let’s work through it.'
@@ -182,29 +207,10 @@ export function PulseHomeView({ concept, name, stage, projectName, assignedStage
     <div className={cn('pulse-home-compose shrink-0 px-6 pb-6 lg:px-12', active && 'border-t border-border/40 bg-background/80 pt-4 backdrop-blur')}>
       <div className="mx-auto w-full max-w-3xl">
         {error && <div role="alert" className="mb-3 flex items-center justify-between gap-3 text-xs text-destructive"><span>{error}</span><button type="button" onClick={onRetry} disabled={streaming || loading} className="shrink-0 underline disabled:opacity-50">Retry</button></div>}
-        <form onSubmit={event => { event.preventDefault(); send(input); }} className="pulse-home-composer">
-          <div className="pulse-home-input-row">
-            <span aria-hidden="true" className={cn('pulse-home-wave', streaming && !unavailable && 'pulse-home-wave--active')}>{[0, 1, 2, 3, 4].map(bar => <span key={bar} />)}</span>
-            <div className="min-w-0 flex-1">
-              <textarea ref={textarea} aria-label="Message Pulse" aria-describedby="pulse-composer-hint" placeholder="What's on your mind?" rows={1} maxLength={4000} value={input} onChange={event => setInput(event.target.value)} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} onKeyDown={event => { if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) { event.preventDefault(); send(input); } }} className="block w-full resize-none bg-transparent text-foreground outline-none placeholder:text-muted-foreground" />
-              <p id="pulse-composer-hint" className="pulse-home-input-hint">{exampleQuestion && !persona ? <>Try: “{exampleQuestion}”</> : 'Ask a question, explore an idea, or find your next step.'}</p>
-            </div>
-          </div>
-          <div className="pulse-home-composer-footer"><span role="status" className="inline-flex items-center gap-2 text-xs text-muted-foreground"><span aria-hidden="true" className={cn('h-1.5 w-1.5 shrink-0 rounded-full', unavailable || contextNotice || error ? 'bg-muted-foreground' : 'pulse-home-status-live')} />{composerStatus}</span><button type="submit" aria-label="Send message" disabled={!input.trim() || streaming || loading || Boolean(unavailable)}><span>Ask Pulse</span><ArrowUp aria-hidden="true" className="h-4 w-4" /></button></div>
-        </form>
+        {composer}
         {!active && persona && <nav aria-label="Quick starts" className="pulse-home-shortcuts">{personaShortcuts.map(({ label, route }) => <a key={route} href={route} onClick={event => openRoute(event, route)} className="pulse-home-shortcut">
           <span className="pulse-home-shortcut-icon"><ArrowRight aria-hidden="true" className="h-4 w-4" /></span><span className="flex-1">{label}</span><ArrowRight aria-hidden="true" className="pulse-home-shortcut-arrow h-3.5 w-3.5 shrink-0" />
         </a>)}</nav>}
-        {!active && !persona && <nav aria-label="Quick starts">
-          <div className="pulse-home-shortcuts">{PULSE_HOME_SHORTCUTS.map(({ id, label, tool, route, icon }) => {
-            const Icon = SHORTCUT_ICONS[icon];
-            return <a key={id} href={route} onClick={event => openRoute(event, route)} className="pulse-home-shortcut">
-              <span className="pulse-home-shortcut-icon"><Icon aria-hidden="true" className="h-4 w-4" /></span>
-              <span className="min-w-0 flex-1"><span className="block">{label}</span><span className="pulse-home-shortcut-tool">{tool}</span></span>
-              <ArrowRight aria-hidden="true" className="pulse-home-shortcut-arrow h-3.5 w-3.5 shrink-0" />
-            </a>;
-          })}</div>
-        </nav>}
         <p className="mt-3 text-center text-xs leading-5 text-muted-foreground">{unavailable || contextNotice || 'Pulse guides. You decide. Review suggestions before taking action.'}</p>
       </div>
     </div>
