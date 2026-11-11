@@ -6,6 +6,7 @@ import { checkAndDeductCredits, getUserFromAuth, refundCredits } from '../_share
 import { resolveCreditIdempotencyKey } from '../_shared/request-idempotency.ts';
 import { assessPmfEvidence, PMF_SIGNAL_THRESHOLDS } from '../_shared/pmf-evidence.ts';
 import { emitBusinessEvent, resolveAnalyticsErrorCode } from '../_shared/analytics.ts';
+import { generateJsonText } from '../_shared/json-generation.ts';
 
 const MIN_INTERVIEWS_FOR_READY = 25;
 const DECISION_GRADE_SIGNAL_THRESHOLD = 25;
@@ -368,8 +369,10 @@ serve(async (req) => {
       }
     }
 
-    const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
-    if (!openaiApiKey) throw new Error('OpenAI API key not configured');
+    // Gemini first, OpenAI as fallback (_shared/json-generation.ts).
+    if (!Deno.env.get('GEMINI_API_KEY')?.trim() && !Deno.env.get('OPENAI_API_KEY')?.trim()) {
+      throw new Error('No AI provider configured');
+    }
 
     const derivedStrongInterestCount = interviews.filter(
       (item) => item.interestLevel >= 4 || item.buyingIntent === 'high' || item.buyingIntent === 'ready_to_pay'
@@ -694,37 +697,21 @@ LIVE DEMO BEHAVIOR is also first-class BEHAVIORAL evidence — people acted, the
 Apply the scoring rubric to this evidence and return the PMF readiness JSON. Make the final recommendation founder-friendly and concrete.`;
 
     try {
-      const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${openaiApiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'gpt-4o',
-          messages: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: userPrompt },
-          ],
-          response_format: { type: 'json_object' },
-          temperature: 0.3,
-          max_tokens: 3500,
-        }),
+      const generation = await generateJsonText({
+        label: 'pmf-evidence-scorer',
+        system: systemPrompt,
+        prompt: userPrompt,
+        temperature: 0.3,
+        maxTokens: 3500,
+        timeoutMs: 60_000,
+        openaiModel: 'gpt-4o',
       });
-
-      if (!openaiResponse.ok) {
-        const errorText = await openaiResponse.text();
-        console.error('OpenAI API Error:', errorText);
-        throw new Error(`OpenAI API Error: ${openaiResponse.status}`);
-      }
-
-      const aiData = await openaiResponse.json();
       let analysis;
 
       try {
-        analysis = JSON.parse(aiData.choices[0].message.content);
+        analysis = JSON.parse(generation.text);
       } catch {
-        const content = aiData.choices[0].message.content;
+        const content = generation.text;
         const jsonMatch = content.match(/```json\s*([\s\S]*?)\s*```/) || content.match(/```\s*([\s\S]*?)\s*```/);
         if (jsonMatch) {
           analysis = JSON.parse(jsonMatch[1]);

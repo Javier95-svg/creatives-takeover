@@ -17,6 +17,7 @@ import {
   type ValidationStage,
 } from '../_shared/pmf-discovery-search.ts';
 import { searchHackerNews } from '../_shared/hackernews.ts';
+import { generateJsonText } from '../_shared/json-generation.ts';
 import { toExternalMention, type ExternalMention } from '../_shared/external-mentions.ts';
 
 const corsHeaders = {
@@ -83,28 +84,18 @@ const sourceFailureFor = (state: RedditSourceState): DiscoveryFailure => {
   return new DiscoveryFailure('Reddit customer discovery is temporarily unavailable.', 'REDDIT_API_UNAVAILABLE', 'source', 503, true, state);
 };
 
-async function callOpenAIJson(apiKey: string, system: string, user: string, maxTokens = 3000, timeoutMs = 10_000): Promise<any> {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-      signal: controller.signal,
-      body: JSON.stringify({
-        model: 'gpt-4o',
-        messages: [{ role: 'system', content: system }, { role: 'user', content: user }],
-        response_format: { type: 'json_object' },
-        temperature: 0.3,
-        max_tokens: maxTokens,
-      }),
-    });
-    if (!response.ok) throw new Error(`OpenAI API Error: ${response.status}`);
-    const data = await response.json();
-    return JSON.parse(data.choices[0].message.content);
-  } finally {
-    clearTimeout(timer);
-  }
+/** Gemini first, OpenAI as fallback (_shared/json-generation.ts). Name kept for callers. */
+async function callOpenAIJson(_apiKey: string, system: string, user: string, maxTokens = 3000, timeoutMs = 10_000): Promise<any> {
+  const generation = await generateJsonText({
+    label: 'pmf-customer-discovery',
+    system,
+    prompt: user,
+    temperature: 0.3,
+    maxTokens,
+    timeoutMs,
+    openaiModel: 'gpt-4o',
+  });
+  return JSON.parse(generation.text);
 }
 
 async function mapWithConcurrency<T, R>(items: T[], concurrency: number, task: (item: T, index: number) => Promise<R>): Promise<R[]> {
@@ -246,7 +237,8 @@ serve(async (req) => {
 
     const audience = targetAudience || 'the target customers';
     const topic = problem || productName || industry || 'this problem';
-    const openaiApiKey = Deno.env.get('OPENAI_API_KEY')?.trim();
+    // Truthy when any AI provider is configured; callOpenAIJson tries Gemini first.
+    const openaiApiKey = (Deno.env.get('GEMINI_API_KEY') || Deno.env.get('OPENAI_API_KEY'))?.trim();
     const deterministicQueries = buildDiscoveryQueries({ productName, targetAudience, industry, problem }, validationStage);
     let queryVariants = searchVersion === 2 ? deterministicQueries : deterministicQueries.slice(0, 1);
     if (searchVersion === 2 && openaiApiKey && Date.now() < deadlineAt - 8000) {

@@ -1,5 +1,6 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.55.0';
+import { generateJsonText } from '../_shared/json-generation.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -61,29 +62,22 @@ serve(async (request) => {
 
     let variants = fallback(sprint as Sprint);
     let usedFallback = true;
-    const apiKey = Deno.env.get('OPENAI_API_KEY');
-    if (apiKey) {
+    // Gemini first, OpenAI as fallback (_shared/json-generation.ts); templates if both fail.
+    if (Deno.env.get('GEMINI_API_KEY') || Deno.env.get('OPENAI_API_KEY')) {
       try {
-        const response = await fetch('https://api.openai.com/v1/chat/completions', {
-          method: 'POST',
-          headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            model: Deno.env.get('GTM_OPENAI_MODEL') ?? 'gpt-4o-mini',
-            temperature: 0.45,
-            response_format: { type: 'json_object' },
-            messages: [
-              { role: 'system', content: 'Write concise, respectful B2B founder outreach. Return JSON {"variants":[{"key":"discovery|problem|offer","label":"...","body":"..."}]}. Exactly three items in that order. Use only the supplied facts. Keep {{first_name}} as the only personalization token. Never claim research, results, or familiarity not supplied. Each message under 120 words.' },
-              { role: 'user', content: JSON.stringify({ offer: sprint.offer, targetSegment: sprint.target_segment, problemHypothesis: sprint.problem_hypothesis }) },
-            ],
-          }),
+        const generation = await generateJsonText({
+          label: 'first-customer-messages',
+          openaiModel: Deno.env.get('GTM_OPENAI_MODEL') ?? 'gpt-4o-mini',
+          temperature: 0.45,
+          maxTokens: 1200,
+          timeoutMs: 30_000,
+          system: 'Write concise, respectful B2B founder outreach. Return JSON {"variants":[{"key":"discovery|problem|offer","label":"...","body":"..."}]}. Exactly three items in that order. Use only the supplied facts. Keep {{first_name}} as the only personalization token. Never claim research, results, or familiarity not supplied. Each message under 120 words.',
+          prompt: JSON.stringify({ offer: sprint.offer, targetSegment: sprint.target_segment, problemHypothesis: sprint.problem_hypothesis }),
         });
-        if (response.ok) {
-          const payload = await response.json();
-          const parsed = JSON.parse(payload.choices?.[0]?.message?.content ?? '{}');
-          if (validVariants(parsed.variants)) {
-            variants = parsed.variants;
-            usedFallback = false;
-          }
+        const parsed = JSON.parse(generation.text || '{}');
+        if (validVariants(parsed.variants)) {
+          variants = parsed.variants;
+          usedFallback = false;
         }
       } catch (generationError) {
         console.warn('First customer message generation fell back to templates', generationError);

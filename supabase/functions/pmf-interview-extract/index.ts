@@ -1,6 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { getUserFromAuth } from "../_shared/credit-deduction.ts";
+import { generateJsonText } from "../_shared/json-generation.ts";
 
 // Turns raw interview notes / call transcripts into structured PMF Lab
 // interview-log entries. Free (no credit charge): it removes the biggest
@@ -120,34 +121,17 @@ serve(async (req) => {
       });
     }
 
-    const openaiApiKey = Deno.env.get("OPENAI_API_KEY");
-    if (!openaiApiKey) throw new Error("OpenAI API key not configured");
-
-    const completion = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${openaiApiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "gpt-4o-mini",
-        response_format: { type: "json_object" },
-        temperature: 0.2,
-        max_tokens: 4000,
-        messages: [
-          { role: "system", content: SYSTEM_PROMPT },
-          { role: "user", content: `FOUNDER'S RAW INTERVIEW NOTES:\n\n${notes.slice(0, MAX_NOTES_CHARS)}` },
-        ],
-      }),
+    // Gemini first, OpenAI as fallback (_shared/json-generation.ts).
+    const generation = await generateJsonText({
+      label: "pmf-interview-extract",
+      system: SYSTEM_PROMPT,
+      prompt: `FOUNDER'S RAW INTERVIEW NOTES:\n\n${notes.slice(0, MAX_NOTES_CHARS)}`,
+      temperature: 0.2,
+      maxTokens: 4000,
+      timeoutMs: 60_000,
+      openaiModel: "gpt-4o-mini",
     });
-
-    if (!completion.ok) {
-      const errBody = await completion.text().catch(() => "");
-      throw new Error(`OpenAI API Error: ${completion.status} ${errBody.slice(0, 200)}`.trim());
-    }
-
-    const aiData = await completion.json();
-    const content = aiData?.choices?.[0]?.message?.content;
+    const content = generation.text;
     if (typeof content !== "string" || !content.trim()) {
       throw new Error("Extraction returned no content");
     }

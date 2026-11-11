@@ -1,6 +1,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.55.0';
 import { getUserFromAuth } from '../_shared/credit-deduction.ts';
+import { generateJsonText } from '../_shared/json-generation.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -101,7 +102,8 @@ async function generateAdaptiveReview(args: {
   reviewInput: ReviewInput;
   fallback: { objective: string; actions: string[]; target: number };
 }) {
-  const apiKey = Deno.env.get('OPENAI_API_KEY');
+  // Any AI provider will do: Gemini first, OpenAI as fallback (_shared/json-generation.ts).
+  const apiKey = Deno.env.get('GEMINI_API_KEY') || Deno.env.get('OPENAI_API_KEY');
   const founderSignals = Object.entries(args.reviewInput).filter(([, value]) => value).map(([key, value]) => `${key}: ${value}`);
   if (!apiKey || (args.experimentHistory.length === 0 && founderSignals.length === 0)) {
     return {
@@ -114,23 +116,16 @@ async function generateAdaptiveReview(args: {
     };
   }
   try {
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'gpt-4o',
-        temperature: 0.2,
-        response_format: { type: 'json_object' },
-        max_tokens: 2200,
-        messages: [
-          { role: 'system', content: 'You revise a founder GTM plan from measured evidence. The supplied Traction decision is immutable: never override it. Return JSON only. Change the minimum necessary future work; never claim a result not present in the evidence.' },
-          { role: 'user', content: `FIXED DECISION: ${args.decision}\nCHANNEL: ${args.channel}\nMETRIC/TARGET: ${args.metric} / ${args.target}\nEXPERIMENT HISTORY: ${JSON.stringify(args.experimentHistory)}\nFOUNDER CHECK-IN: ${JSON.stringify(args.reviewInput)}\nCURRENT POSITIONING: ${JSON.stringify(args.analysis.positioning)}\nCURRENT PLAY: ${JSON.stringify((args.analysis.plays ?? []).find((item: any) => item.channelName === args.channel))}\nFALLBACK ADAPTATION: ${JSON.stringify(args.fallback)}\n\nReturn {"objective":"","actions":["","",""],"target":0,"changedVariables":[""],"rationale":"","signals":[""],"changeLog":[""],"assumptionsToAdd":[""],"assumptionsToRetire":[""],"messagePatch":"","assetUpdates":[{"type":"outreach_sequence","content":""}]}. Preserve comparability. For iterate, change exactly one of audience, trigger, offer, or message. Use exact customer language only when supplied.` },
-        ],
-      }),
+    const generation = await generateJsonText({
+      label: 'gtm-plan-review',
+      openaiModel: 'gpt-4o',
+      temperature: 0.2,
+      maxTokens: 2200,
+      timeoutMs: 45_000,
+      system: 'You revise a founder GTM plan from measured evidence. The supplied Traction decision is immutable: never override it. Return JSON only. Change the minimum necessary future work; never claim a result not present in the evidence.',
+      prompt: `FIXED DECISION: ${args.decision}\nCHANNEL: ${args.channel}\nMETRIC/TARGET: ${args.metric} / ${args.target}\nEXPERIMENT HISTORY: ${JSON.stringify(args.experimentHistory)}\nFOUNDER CHECK-IN: ${JSON.stringify(args.reviewInput)}\nCURRENT POSITIONING: ${JSON.stringify(args.analysis.positioning)}\nCURRENT PLAY: ${JSON.stringify((args.analysis.plays ?? []).find((item: any) => item.channelName === args.channel))}\nFALLBACK ADAPTATION: ${JSON.stringify(args.fallback)}\n\nReturn {"objective":"","actions":["","",""],"target":0,"changedVariables":[""],"rationale":"","signals":[""],"changeLog":[""],"assumptionsToAdd":[""],"assumptionsToRetire":[""],"messagePatch":"","assetUpdates":[{"type":"outreach_sequence","content":""}]}. Preserve comparability. For iterate, change exactly one of audience, trigger, offer, or message. Use exact customer language only when supplied.`,
     });
-    if (!response.ok) throw new Error(`Adaptive review model failed: ${response.status}`);
-    const data = await response.json();
-    const parsed = JSON.parse(data.choices?.[0]?.message?.content ?? '{}');
+    const parsed = JSON.parse(generation.text || '{}');
     return normalizeAdaptation(parsed, args.decision, args.fallback);
   } catch (error) {
     console.warn('Adaptive GTM review fell back to deterministic rules:', error);

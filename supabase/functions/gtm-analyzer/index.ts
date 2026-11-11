@@ -8,6 +8,7 @@ import { inferMotion, rankChannels, type GTMIntakeV2 } from '../_shared/gtm-chan
 import { emitBusinessEvent, resolveAnalyticsErrorCode } from '../_shared/analytics.ts';
 import { callGemini, GEMINI_TEXT_MODELS } from '../_shared/gemini.ts';
 import { searchWeb } from '../_shared/web-research.ts';
+import { generateJsonText } from '../_shared/json-generation.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -227,7 +228,8 @@ function fallbackFunnel(model: GTMIntakeV2['businessModel']) {
 }
 
 async function generateV2Plan(args: { intake: GTMIntakeV2; userId: string; existingPlanId?: string; openaiApiKey: string }) {
-  const { intake, userId, existingPlanId, openaiApiKey } = args;
+  // args.openaiApiKey is unused since 2026-11-11: json-generation.ts reads the keys.
+  const { intake, userId, existingPlanId } = args;
   const admin = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
   let previousPipelineRows: Array<Record<string, any>> = [];
   if (existingPlanId) {
@@ -292,23 +294,18 @@ Return only JSON with this shape:
   "playAssets":{"channel-id":[{"type":"outreach_sequence","title":"","content":""}]}
 }`;
 
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${openaiApiKey}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model: 'gpt-4o',
-      messages: [
-        { role: 'system', content: 'Return valid JSON only. Never invent citations or modify the provided channel selection.' },
-        { role: 'user', content: prompt },
-      ],
-      response_format: { type: 'json_object' },
-      temperature: 0.3,
-      max_tokens: 6000,
-    }),
+  // Gemini first, OpenAI as fallback (_shared/json-generation.ts). Research can
+  // take ~60s before this, so generation keeps under the function's time limit.
+  const generation = await generateJsonText({
+    label: 'gtm-v2-plan',
+    system: 'Return valid JSON only. Never invent citations or modify the provided channel selection.',
+    prompt,
+    temperature: 0.3,
+    maxTokens: 6000,
+    timeoutMs: 75_000,
+    openaiModel: 'gpt-4o',
   });
-  if (!response.ok) throw new Error(`OpenAI API Error: ${response.status}`);
-  const aiData = await response.json();
-  const content = aiData.choices?.[0]?.message?.content;
+  const content = generation.text;
   if (typeof content !== 'string') throw new Error('GTM strategy response was empty');
   const strategic = JSON.parse(content) as Record<string, any>;
   const narratives = strategic.channelNarratives && typeof strategic.channelNarratives === 'object' ? strategic.channelNarratives : {};
@@ -571,7 +568,8 @@ Return only JSON with this shape:
     p_claim_attributions: plan.claimAttributions,
     p_pipeline_entries: plan.pipeline,
   });
-  if (persistError) throw persistError;
+  // A PostgrestError is a plain object: thrown as is, it was logged as "[object Object]".
+  if (persistError) throw new Error(`persist_gtm_competitive_plan failed: ${[persistError.code, persistError.message, persistError.details, persistError.hint].filter(Boolean).join(' | ')}`);
   const persistedRow = (Array.isArray(persisted) ? persisted[0] : persisted) as { plan_id?: string; version?: number } | null;
   const planId = persistedRow?.plan_id;
   if (!planId) throw new Error('Failed to persist GTM plan');
@@ -638,8 +636,9 @@ serve(async (req) => {
       });
     }
 
-    const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
-    if (!openaiApiKey) throw new Error('OpenAI API key not configured');
+    // Gemini first, OpenAI as fallback; either key is enough.
+    const openaiApiKey = Deno.env.get('OPENAI_API_KEY') ?? '';
+    if (!Deno.env.get('GEMINI_API_KEY')?.trim() && !openaiApiKey.trim()) throw new Error('No AI provider configured');
 
     if (isV2 && intakeV2) {
       try {
@@ -652,7 +651,11 @@ serve(async (req) => {
           newBalance: creditResult.newBalance,
         }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       } catch (v2Error) {
-        const error = v2Error instanceof Error ? v2Error : new Error(String(v2Error));
+        const error = v2Error instanceof Error
+          ? v2Error
+          : new Error(typeof v2Error === 'object' && v2Error !== null
+            ? [(v2Error as Record<string, unknown>).code, (v2Error as Record<string, unknown>).message, (v2Error as Record<string, unknown>).details].filter(Boolean).join(' | ') || JSON.stringify(v2Error)
+            : String(v2Error));
         const refundSucceeded = chargedCredits > 0
           ? await refundCredits(user.id, chargedCredits, 'GTM Analysis', 'Refund: GTM V2 generation failed', { error: error.message })
           : true;
@@ -776,38 +779,23 @@ Founder Strengths: ${strengths}${icpContext}${icpNiche}
 Apply the scoring matrix, enforce all constraint rules, then generate the GTM Brief JSON.`;
 
     try {
-      const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${openaiApiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'gpt-4o',
-          messages: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: userPrompt },
-          ],
-          response_format: { type: 'json_object' },
-          temperature: 0.5,
-          max_tokens: 6000,
-        }),
+      // Gemini first, OpenAI as fallback (_shared/json-generation.ts).
+      const generation = await generateJsonText({
+        label: 'gtm-v1-brief',
+        system: systemPrompt,
+        prompt: userPrompt,
+        temperature: 0.5,
+        maxTokens: 6000,
+        timeoutMs: 90_000,
+        openaiModel: 'gpt-4o',
       });
-
-      if (!openaiResponse.ok) {
-        const errorText = await openaiResponse.text();
-        console.error('OpenAI API Error:', errorText);
-        throw new Error(`OpenAI API Error: ${openaiResponse.status}`);
-      }
-
-      const aiData = await openaiResponse.json();
       let analysis;
 
       try {
-        const content = aiData.choices[0].message.content;
+        const content = generation.text;
         analysis = JSON.parse(content);
       } catch {
-        const content = aiData.choices[0].message.content;
+        const content = generation.text;
         const jsonMatch = content.match(/```json\s*([\s\S]*?)\s*```/) || content.match(/```\s*([\s\S]*?)\s*```/);
         if (jsonMatch) {
           analysis = JSON.parse(jsonMatch[1]);
