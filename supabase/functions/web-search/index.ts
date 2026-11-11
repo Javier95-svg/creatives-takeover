@@ -43,7 +43,7 @@ interface WebSearchRequest {
   query: string;
   model?: string;
   maxResults?: number;
-  searchRecency?: 'day' | 'week' | 'month' | 'year';
+  searchRecency?: 'day' | 'week' | 'month' | 'year' | 'any';
   businessContext?: {
     industry?: string;
     businessType?: string;

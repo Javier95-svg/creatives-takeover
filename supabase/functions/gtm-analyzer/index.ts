@@ -6,9 +6,9 @@ import { CREDIT_COSTS } from '../_shared/credit-constants.ts';
 import { resolveCreditIdempotencyKey } from '../_shared/request-idempotency.ts';
 import { inferMotion, rankChannels, type GTMIntakeV2 } from '../_shared/gtm-channel-engine.ts';
 import { emitBusinessEvent, resolveAnalyticsErrorCode } from '../_shared/analytics.ts';
-import { callGemini, GEMINI_TEXT_MODELS } from '../_shared/gemini.ts';
+import { callGemini } from '../_shared/gemini.ts';
 import { searchWeb } from '../_shared/web-research.ts';
-import { generateJsonText } from '../_shared/json-generation.ts';
+import { FAST_JSON_MODELS, generateJsonText } from '../_shared/json-generation.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -104,13 +104,15 @@ async function researchGTM(intake: GTMIntakeV2) {
       return { provider: search.provider, providerStatus: 'empty' as const, status: 'unavailable' as const, answer: '', sources, sourceCount: 0, retrievedAt };
     }
 
+    // Fast models first and a 25s cap: with gemini-3.8-flash first, this step
+    // timed out at 40s and left the plan too little time (2026-11-11).
     const brief = await callGemini({
-      models: GEMINI_TEXT_MODELS,
+      models: FAST_JSON_MODELS,
       systemInstruction: 'Research current go-to-market evidence for a launch-ready founder. Use only the numbered sources provided and cite them as [n]. Separate evidence from inference, and say plainly when the sources do not cover something.',
       parts: [{ text: `Product: ${intake.productName}\nURL: ${intake.productUrl || 'not supplied'}\nMarket: ${intake.targetSegment}\nGeography: ${intake.geography}\nProblem: ${intake.problem}\nKnown alternatives: ${intake.knownCompetitors.join(', ') || 'unknown'}\nFounder evidence summary: ${(intake.firstPartyEvidence ?? []).map((item) => `${item.title}: ${item.content.slice(0, 800)}`).join('\n').slice(0, 5000) || 'none supplied'}\n\nSources:\n${sources.map((source, index) => `[${index + 1}] ${source.title} (${source.url})\n${source.snippet ?? ''}`).join('\n\n')}\n\nFrom these sources, report current competitors and alternatives, pricing, positioning, where buyers discover solutions, buying triggers, and channel conditions. Return concise evidence with citations. Do not treat founder-provided claims as independently verified market facts.` }],
       temperature: 0.2,
       maxOutputTokens: 6000,
-      timeoutMs: 40_000,
+      timeoutMs: 25_000,
     });
     return { provider: search.provider, providerStatus: 'healthy' as const, status: sources.length >= 3 ? 'complete' as const : 'limited' as const, answer: brief.text, sources, sourceCount: sources.length, retrievedAt };
   } catch (error) {

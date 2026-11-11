@@ -8,7 +8,7 @@
  * founder's draft. Prompts are unchanged; both providers return the same JSON.
  */
 
-import { callGemini, type GeminiModelSpec } from "./gemini.ts";
+import { callGemini, GeminiError, type GeminiModelSpec } from "./gemini.ts";
 
 /**
  * Fast models first. callGemini shares one deadline across its models, and
@@ -18,7 +18,23 @@ import { callGemini, type GeminiModelSpec } from "./gemini.ts";
 export const FAST_JSON_MODELS: GeminiModelSpec[] = [
   { model: "gemini-3.5-flash-lite" },
   { model: "gemini-3.6-flash", thinkingLevel: "low" },
+  // Last: slow and often busy, but a separate capacity pool when the others are.
+  { model: "gemini-3.8-flash", thinkingLevel: "low" },
 ];
+
+/**
+ * The free tier answers 503 "high demand" (and 429 per-minute limits) in short
+ * bursts: on 2026-11-11 every model returned 503 within five seconds and the
+ * ICP draft failed. Such errors are retried after a pause while time remains.
+ */
+const RETRY_PAUSES_MS = [2_000, 5_000];
+const MIN_ATTEMPT_MS = 8_000;
+// callGemini reports an upstream 503 as status 502 with "Gemini error: 503" as
+// the message, so the message is what identifies it.
+const isTransientGeminiError = (error: unknown) =>
+  error instanceof GeminiError
+  && (error.status === 503 || error.status === 429 || /Gemini error: (503|429)\b|high demand/i.test(error.message));
+const pause = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export interface JsonGenerationRequest {
   /** Shown in logs, e.g. "icp-draft". */
@@ -51,30 +67,35 @@ export async function generateJsonText(request: JsonGenerationRequest): Promise<
   let geminiError: unknown = null;
 
   if (Deno.env.get("GEMINI_API_KEY")?.trim()) {
-    const geminiBudget = hasOpenAI && request.timeoutMs > OPENAI_RESERVE_MS * 2
-      ? request.timeoutMs - OPENAI_RESERVE_MS
-      : request.timeoutMs;
-    try {
-      const result = await callGemini({
-        models: request.geminiModels ?? FAST_JSON_MODELS,
-        systemInstruction: request.system,
-        parts: [{ text: request.prompt }],
-        temperature: request.temperature,
-        maxOutputTokens: request.maxTokens,
-        json: true,
-        timeoutMs: geminiBudget,
-      });
-      return {
-        text: result.text,
-        provider: "gemini",
-        model: result.model,
-        inputTokens: result.inputTokens,
-        outputTokens: result.outputTokens,
-      };
-    } catch (error) {
-      geminiError = error;
-      console.error(`${request.label}: Gemini failed${hasOpenAI ? ", trying OpenAI" : ""}:`,
-        error instanceof Error ? error.message : error);
+    const geminiDeadline = deadline - (hasOpenAI && request.timeoutMs > OPENAI_RESERVE_MS * 2 ? OPENAI_RESERVE_MS : 0);
+    for (let attempt = 0; attempt <= RETRY_PAUSES_MS.length; attempt++) {
+      try {
+        const result = await callGemini({
+          models: request.geminiModels ?? FAST_JSON_MODELS,
+          systemInstruction: request.system,
+          parts: [{ text: request.prompt }],
+          temperature: request.temperature,
+          maxOutputTokens: request.maxTokens,
+          json: true,
+          timeoutMs: Math.max(1_000, geminiDeadline - Date.now()),
+        });
+        return {
+          text: result.text,
+          provider: "gemini",
+          model: result.model,
+          inputTokens: result.inputTokens,
+          outputTokens: result.outputTokens,
+        };
+      } catch (error) {
+        geminiError = error;
+        const wait = RETRY_PAUSES_MS[attempt];
+        const retry = wait !== undefined && isTransientGeminiError(error)
+          && geminiDeadline - Date.now() - wait >= MIN_ATTEMPT_MS;
+        console.error(`${request.label}: Gemini failed (attempt ${attempt + 1})${retry ? `, retrying in ${wait}ms` : hasOpenAI ? ", trying OpenAI" : ""}:`,
+          error instanceof Error ? error.message : error);
+        if (!retry) break;
+        await pause(wait);
+      }
     }
   }
 

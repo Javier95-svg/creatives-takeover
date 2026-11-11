@@ -18,6 +18,7 @@
 import { createRedditClient, type RedditPost, type RedditSourceState } from "./reddit.ts";
 import { buildDiscoveryQueries, rankDiscoveryPosts } from "./pmf-discovery-search.ts";
 import type { DraftSource } from "./icp-draft.ts";
+import { competitorQuery, selectCompetitors } from "./icp-competitor-filter.ts";
 
 export interface IcpEvidenceInput {
   description: string;
@@ -50,6 +51,7 @@ export interface IcpEvidenceResult {
 
 const MAX_COMMUNITY_SOURCES = 5;
 const MAX_COMPETITOR_SOURCES = 4;
+const COMPETITOR_SEARCH_RESULTS = 10;
 /** Below this rank score a post is noise, and citing noise is worse than citing nothing. */
 const MIN_RANK_SCORE = 35;
 function emptyResult(reddit: RedditSourceState, startedAt: number): IcpEvidenceResult {
@@ -133,10 +135,13 @@ async function gatherCompetitorEvidence(
         Authorization: `Bearer ${input.serviceRoleKey}`,
         "Content-Type": "application/json",
       },
+      // A short product query with no date limit (homepages are often older
+      // than a year), and more raw results than we keep, because most of them
+      // are filtered out by icp-competitor-filter.ts.
       body: JSON.stringify({
-        query: `existing products, apps or services that already solve this: ${input.description}. List the specific product names and their official websites.`,
-        maxResults: MAX_COMPETITOR_SOURCES,
-        searchRecency: "year",
+        query: competitorQuery(input.description),
+        maxResults: COMPETITOR_SEARCH_RESULTS,
+        searchRecency: "any",
       }),
     });
 
@@ -155,23 +160,9 @@ async function gatherCompetitorEvidence(
       return { competitors: [], status: "unavailable" };
     }
 
-    const seen = new Set<string>();
-    const competitors: Array<{ name: string; url: string | null }> = [];
-    for (const source of data.sources) {
-      const url = typeof source?.url === "string" && source.url.trim() ? source.url.trim() : null;
-      if (!url) continue;
-      let host: string;
-      try {
-        host = new URL(url).hostname.replace(/^www\./, "").toLowerCase();
-      } catch {
-        continue;
-      }
-      if (seen.has(host)) continue;
-      seen.add(host);
-      const title = typeof source?.title === "string" ? source.title.trim() : "";
-      competitors.push({ name: title || host, url });
-      if (competitors.length >= MAX_COMPETITOR_SOURCES) break;
-    }
+    // Only results that look like a product page about this problem: no social
+    // posts, documents or public-sector pages, and on topic (2026-11-11).
+    const competitors = selectCompetitors(data.sources, input.description, MAX_COMPETITOR_SOURCES);
     return { competitors, status: "available" };
   } catch {
     return { competitors: [], status: "unavailable" };
@@ -221,7 +212,9 @@ export async function gatherIcpEvidence(input: IcpEvidenceInput): Promise<IcpEvi
       type: "competitor",
       title: competitor.name,
       url: competitor.url,
-      detail: "Competitor",
+      // What the page says about itself, so the founder can judge the match.
+      detail: ("snippet" in competitor && typeof competitor.snippet === "string" && competitor.snippet)
+        || "Existing product found on the web",
     })),
   ];
 

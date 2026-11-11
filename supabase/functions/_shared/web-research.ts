@@ -20,7 +20,11 @@ const TAVILY_SEARCH_URL = "https://api.tavily.com/search";
 const TAVILY_MAX_QUERY_LENGTH = 400;
 const SNIPPET_LENGTH = 500;
 
-export type SearchRecency = "day" | "week" | "month" | "year";
+/** "any" sets no date limit: product homepages are often older than a year. */
+export type SearchRecency = "day" | "week" | "month" | "year" | "any";
+
+const recencyHint = (recency: SearchRecency) =>
+  recency === "any" ? "" : `\n\nPrefer sources from the past ${recency}.`;
 
 export interface WebSearchInput {
   query: string;
@@ -61,7 +65,7 @@ export async function searchWeb(input: WebSearchInput): Promise<WebSearchResult>
         models: GEMINI_SEARCH_MODELS,
         systemInstruction: input.systemInstruction ??
           "Search the web and answer from what you find, accurately and concisely.",
-        parts: [{ text: `${input.query}\n\nPrefer sources from the past ${input.recency}.` }],
+        parts: [{ text: `${input.query}${recencyHint(input.recency)}` }],
         temperature: 0.2,
         maxOutputTokens: 1500,
         googleSearch: true,
@@ -113,7 +117,7 @@ async function searchOpenAI(input: WebSearchInput, deadline: number): Promise<We
           instructions: (input.systemInstruction ??
             "Search the web and answer from what you find, accurately and concisely.") +
             " Cite the pages you used.",
-          input: `${input.query}\n\nPrefer sources from the past ${input.recency}.`,
+          input: `${input.query}${recencyHint(input.recency)}`,
           max_output_tokens: 1500,
         }),
       });
@@ -187,7 +191,7 @@ async function searchTavily(input: WebSearchInput, deadline: number): Promise<We
         search_depth: "basic",
         max_results: Math.min(20, Math.max(1, input.maxResults)),
         include_answer: input.withAnswer ? "basic" : false,
-        time_range: input.recency,
+        ...(input.recency === "any" ? {} : { time_range: input.recency }),
       }),
     });
     if (!response.ok) {
