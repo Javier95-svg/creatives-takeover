@@ -125,7 +125,7 @@ export function WorkspaceSidebar({ navigateTo = enterWorkspaceRoute, currentPath
         </button>}
       </div>
 
-      <nav id="workspace-navigation" aria-label="Product navigation" className="ws-nav mt-9 min-h-0 flex-1 space-y-1.5 overflow-y-auto">
+      <nav id="workspace-navigation" aria-label="Product navigation" className="ws-nav mt-9 min-h-0 flex-1 space-y-3 overflow-y-auto">
         {NAV_ITEMS.filter(({ label }) => sections.includes(label)).map(({ label, icon: NavIcon }) => (
           <div key={label}>
             {label === 'Pricing' ? <a href={WORKSPACE_ROUTES.Pricing} aria-label="Pricing" aria-current={selected === 'Pricing' ? 'page' : undefined}
