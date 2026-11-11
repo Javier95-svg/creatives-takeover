@@ -1,3 +1,5 @@
+import { generateJsonText } from "./json-generation.ts";
+
 export type EntryMode = "fast" | "guided";
 
 export interface GuidedInput {
@@ -1070,11 +1072,11 @@ function normalizeDraftDocument(parsed: Record<string, any>, enrichment: DraftEn
 }
 
 export async function generateIcpDraftArtifact({
-  openaiApiKey,
   request,
   enrichment,
 }: {
-  openaiApiKey: string;
+  /** Unused since 2026-11-11: the provider keys are read by json-generation.ts. */
+  openaiApiKey?: string;
   request: DraftRequestShape;
   enrichment?: Partial<DraftEnrichment>;
 }) {
@@ -1088,50 +1090,21 @@ export async function generateIcpDraftArtifact({
     retrievalAvailable: enrichment?.retrievalAvailable ?? true,
   };
 
-  // Hard timeout so a hung OpenAI request fails fast and clean instead of
-  // letting the client hit its own timeout with no diagnostic.
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 38000);
-  let completion: Response;
-  try {
-    completion = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      signal: controller.signal,
-      headers: {
-        Authorization: `Bearer ${openaiApiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "gpt-4o",
-        response_format: { type: "json_object" },
-        temperature: 0.35,
-        // A full 4-section ICP draft overruns a low ceiling -> the JSON gets
-        // truncated and JSON.parse throws. Give it enough room to complete.
-        max_tokens: 6000,
-        messages: [
-          { role: "system", content: "Return valid JSON only." },
-          { role: "user", content: buildDraftPrompt(request, resolvedEnrichment) },
-        ],
-      }),
-    });
-  } finally {
-    clearTimeout(timeoutId);
-  }
-
-  if (!completion.ok) {
-    const errBody = await completion.text().catch(() => "");
-    throw new Error(`OpenAI API Error: ${completion.status} ${errBody.slice(0, 200)}`.trim());
-  }
-
-  const aiData = await completion.json();
-  const choice = aiData?.choices?.[0];
-  const content = choice?.message?.content;
-  if (typeof content !== "string" || !content.trim()) {
-    throw new Error("OpenAI returned an empty ICP draft response");
-  }
-  if (choice?.finish_reason === "length") {
-    throw new Error("ICP draft response was truncated before completion");
-  }
+  // Gemini first, OpenAI as fallback (see _shared/json-generation.ts). The
+  // client waits 65s and retrieval may take 15s of that, so the draft gets 45s
+  // and fails clean instead of letting the client time out with no diagnostic.
+  const generation = await generateJsonText({
+    label: "icp-draft",
+    system: "Return valid JSON only.",
+    prompt: buildDraftPrompt(request, resolvedEnrichment),
+    temperature: 0.35,
+    // A full 4-section ICP draft overruns a low ceiling -> the JSON gets
+    // truncated and JSON.parse throws. Give it enough room to complete.
+    maxTokens: 6000,
+    timeoutMs: 45_000,
+    openaiModel: "gpt-4o",
+  });
+  const content = generation.text;
   let parsed: ReturnType<typeof JSON.parse>;
   try {
     parsed = JSON.parse(content);

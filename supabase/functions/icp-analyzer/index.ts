@@ -13,6 +13,7 @@ import {
   type GuidedInput,
 } from "../_shared/icp-draft.ts";
 import { gatherIcpEvidence } from "../_shared/icp-evidence.ts";
+import { generateJsonText } from "../_shared/json-generation.ts";
 import { computeIcpViabilityScore } from "../_shared/icp-viability-score.ts";
 
 const corsHeaders = {
@@ -238,47 +239,21 @@ function normalizeHeroDecisionBrief(value: Record<string, unknown>): HeroDecisio
   };
 }
 
-async function generateHeroDecisionBrief(openaiApiKey: string, description: string): Promise<HeroDecisionBrief> {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), FIRST_SLICE_TIMEOUT_MS);
-  let completion: Response;
-  try {
-    completion = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      signal: controller.signal,
-      headers: {
-        Authorization: `Bearer ${openaiApiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "gpt-4o-mini",
-        response_format: { type: "json_object" },
-        temperature: 0.35,
-        max_tokens: 850,
-        messages: [
-          { role: "system", content: "Return valid JSON only." },
-          { role: "user", content: buildFirstSlicePrompt(description) },
-        ],
-      }),
-    });
-  } finally {
-    clearTimeout(timeout);
-  }
+async function generateHeroDecisionBrief(_openaiApiKey: string, description: string): Promise<HeroDecisionBrief> {
+  // Gemini first, OpenAI as fallback (see _shared/json-generation.ts).
+  const generation = await generateJsonText({
+    label: "icp-first-slice",
+    system: "Return valid JSON only.",
+    prompt: buildFirstSlicePrompt(description),
+    temperature: 0.35,
+    maxTokens: 850,
+    timeoutMs: FIRST_SLICE_TIMEOUT_MS,
+    openaiModel: "gpt-4o-mini",
+  });
 
-  if (!completion.ok) {
-    const body = await completion.text().catch(() => "");
-    throw new Error(`OpenAI API Error: ${completion.status} ${body.slice(0, 200)}`.trim());
-  }
-
-  const data = await completion.json();
-  const content = data?.choices?.[0]?.message?.content;
-  if (typeof content !== "string" || !content.trim()) {
-    throw new Error("OpenAI returned an empty hero decision brief");
-  }
-
-  const brief = normalizeHeroDecisionBrief(JSON.parse(content));
+  const brief = normalizeHeroDecisionBrief(JSON.parse(generation.text));
   if (!brief.personaName || !brief.primarySegment || !brief.urgentProblem || !brief.validationStep) {
-    throw new Error("OpenAI returned an incomplete hero decision brief");
+    throw new Error(`${generation.provider} returned an incomplete hero decision brief`);
   }
   return brief;
 }
@@ -598,10 +573,12 @@ serve(async (req) => {
       });
     }
 
-    const openaiApiKey = Deno.env.get("OPENAI_API_KEY");
+    // Generation needs one AI provider: Gemini first, OpenAI as fallback.
+    const openaiApiKey = Deno.env.get("OPENAI_API_KEY") ?? "";
+    const hasAiProvider = Boolean(Deno.env.get("GEMINI_API_KEY")?.trim() || openaiApiKey.trim());
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-    if (!openaiApiKey || !supabaseUrl || !supabaseKey) {
+    if (!hasAiProvider || !supabaseUrl || !supabaseKey) {
       throw new Error("Missing required environment configuration");
     }
 
@@ -898,34 +875,17 @@ serve(async (req) => {
     }
 
     if (payload.operation === "seed_prefill") {
-      const completion = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${openaiApiKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "gpt-4o-mini",
-          response_format: { type: "json_object" },
-          temperature: 0.35,
-          max_tokens: 400,
-          messages: [
-            { role: "system", content: "Return valid JSON only." },
-            { role: "user", content: buildSeedPrompt(payload.seed) },
-          ],
-        }),
+      // Gemini first, OpenAI as fallback; the client waits 25s for this.
+      const seedGeneration = await generateJsonText({
+        label: "icp-seed-prefill",
+        system: "Return valid JSON only.",
+        prompt: buildSeedPrompt(payload.seed),
+        temperature: 0.35,
+        maxTokens: 400,
+        timeoutMs: 20_000,
+        openaiModel: "gpt-4o-mini",
       });
-
-      if (!completion.ok) {
-        const errBody = await completion.text().catch(() => "");
-        throw new Error(`OpenAI API Error: ${completion.status} ${errBody.slice(0, 200)}`.trim());
-      }
-
-      const aiData = await completion.json();
-      const seedContent = aiData?.choices?.[0]?.message?.content;
-      if (typeof seedContent !== "string" || !seedContent.trim()) {
-        throw new Error("OpenAI returned an empty persona suggestion");
-      }
+      const seedContent = seedGeneration.text;
       let parsed: ReturnType<typeof JSON.parse>;
       try {
         parsed = JSON.parse(seedContent);
