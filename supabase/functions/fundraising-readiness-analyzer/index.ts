@@ -3,6 +3,15 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 import { checkAndDeductCredits, getUserFromAuth, refundCredits } from '../_shared/credit-deduction.ts';
 import { CREDIT_COSTS } from '../_shared/credit-constants.ts';
 import { resolveCreditIdempotencyKey } from '../_shared/request-idempotency.ts';
+import { callGemini, type GeminiModelSpec } from '../_shared/gemini.ts';
+
+// Fast models first. callGemini shares one deadline across models, and on
+// 2026-11-11 gemini-3.8-flash (first in GEMINI_TEXT_MODELS) timed out and
+// returned 503 "high demand", spending the whole budget before any fallback.
+const READINESS_MODELS: GeminiModelSpec[] = [
+  { model: "gemini-3.5-flash-lite" },
+  { model: "gemini-3.6-flash", thinkingLevel: "low" },
+];
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -227,16 +236,19 @@ serve(async (req) => {
 
     const meetsInvestorThreshold = meetsAverage && meetsCriticalMinimums;
 
-    // Use Lovable AI to analyze the results
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) {
+    // Gemini text models analyse the results (2026-11-11: moved off the Lovable
+    // AI gateway, the last tool still on it). Not OpenAI: that key had no
+    // credits left. Gemini's ungrounded text models answered the live Pitch
+    // Deck Analyzer test the same day; only its Google-Search calls are capped.
+    const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
+    if (!GEMINI_API_KEY) {
       if (chargedCredits > 0) {
         await refundCredits(user.id, chargedCredits, 'Fundraising Readiness Analysis', 'Refund: service unavailable');
       }
       if (giftUsed) {
         await supabase.from('feature_gifts').delete().eq('user_id', user.id).eq('feature', 'FUNDRAISING_READINESS_ANALYSIS');
       }
-      throw new Error('LOVABLE_API_KEY not configured');
+      throw new Error('GEMINI_API_KEY not configured');
     }
 
     const scoreLabels = {
@@ -352,17 +364,7 @@ Provide a comprehensive, stage-appropriate analysis with concrete examples and s
 
     // Wrap AI processing in try/catch for credit refund on failure
     try {
-    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [{
-          role: 'system',
-          content: `You are an expert fundraising advisor helping ${experienceLabel} founders in the ${stage} stage.
+    const systemInstruction = `You are an expert fundraising advisor helping ${experienceLabel} founders in the ${stage} stage.
 
 Your role is to provide stage-appropriate, actionable feedback that is:
 1. Calibrated to ${stage} expectations (not absolute perfection)
@@ -370,16 +372,9 @@ Your role is to provide stage-appropriate, actionable feedback that is:
 3. Focused on the next 1-2 most important actions
 ${industry ? `4. Specific to their industry (${industry}) and business model (${business_model || 'their business model'})` : ''}
 
-CRITICAL: Judge against ${stage} standards, NOT scaling-stage perfection.`
-        }, {
-          role: 'user',
-          content: prompt
-        }],
-        tools: [{
-          type: 'function',
-          function: {
-            name: 'analyze_readiness',
-            parameters: {
+CRITICAL: Judge against ${stage} standards, NOT scaling-stage perfection.`;
+    // The schema the gateway's forced tool call used; Gemini returns it as JSON.
+    const readinessSchema = {
               type: 'object',
               properties: {
                 verdict: {
@@ -472,28 +467,37 @@ CRITICAL: Judge against ${stage} standards, NOT scaling-stage perfection.`
                 }
               },
               required: ['verdict', 'confidence', 'strengths', 'critical_gaps', 'prioritized_actions', 'summary']
-            }
-          }
-        }],
-        tool_choice: { type: 'function', function: { name: 'analyze_readiness' } }
-      }),
+            };
+
+    const generation = await callGemini({
+      models: READINESS_MODELS,
+      systemInstruction,
+      parts: [{
+        text: `${prompt}\n\nReturn only a JSON object that matches this JSON Schema (fields marked required must be present):\n${JSON.stringify(readinessSchema)}`,
+      }],
+      temperature: 0.4,
+      maxOutputTokens: 4096,
+      json: true,
+      timeoutMs: 90_000,
     });
 
-    if (!aiResponse.ok) {
-      const errorText = await aiResponse.text();
-      console.error('AI API Error:', errorText);
-      throw new Error(`AI API Error: ${aiResponse.status}`);
-    }
+    const parsedAnalysis = (() => {
+      try {
+        const value = JSON.parse(generation.text);
+        return value && typeof value === 'object' && typeof value.verdict === 'string' && typeof value.summary === 'string'
+          ? value
+          : null;
+      } catch {
+        return null;
+      }
+    })();
 
-    const aiData = await aiResponse.json();
-    const toolCall = aiData.choices[0]?.message?.tool_calls?.[0];
-
-    const analysis = toolCall
-      ? JSON.parse(toolCall.function.arguments)
+    const analysis = parsedAnalysis
+      ? parsedAnalysis
       : (() => {
-        const textResponse = aiData.choices[0]?.message?.content || '';
+        const textResponse = generation.text || '';
         return {
-          verdict: isReady ? 'Ready' : 'Not Ready',
+          verdict: meetsInvestorThreshold ? 'Ready' : 'Not Ready',
           confidence: Math.round(averageScore * 20),
           summary: textResponse.substring(0, 500),
           strengths: [],
