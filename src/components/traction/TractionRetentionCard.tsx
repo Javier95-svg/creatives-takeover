@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react';
+import { CheckCircle2 } from 'lucide-react';
 
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -10,6 +12,7 @@ import {
   type TractionProductCategory,
   type TractionRetentionInput,
 } from '@/lib/tractionEngine';
+import { hasMeasuredActivity, type WeeklySignals } from '@/lib/tractionSignals';
 
 // Cohort retention in plain words: of the people who started in one week, how
 // many came back. A window that has not closed yet shows as "still open" and is
@@ -42,8 +45,71 @@ interface TractionRetentionCardProps {
   cohortWeekStart: string;
   sevenDayStatus: RetentionWindowStatus;
   thirtyDayStatus: RetentionWindowStatus;
-  platformVisitors: number | null;
+  /** What the platform measured for the cohort week, or null when unavailable. */
+  measured: WeeklySignals | null;
+  /** True while the cohort fields still hold the measured numbers. */
+  measuredInUse: boolean;
+  onUseMeasured: () => void;
   onChange: (patch: Partial<TractionRetentionInput>) => void;
+}
+
+const plural = (count: number, one: string, many: string) => `${count} ${count === 1 ? one : many}`;
+
+/**
+ * Numbers the platform measured for the selected week. The cohort comes from
+ * visits to the founder's published MVP apps, so it can fill the fields above;
+ * signups, survey responses and pipeline are shown as context.
+ */
+function MeasuredBlock({
+  measured,
+  weekLabel,
+  inUse,
+  onUse,
+}: {
+  measured: WeeklySignals;
+  weekLabel: string;
+  inUse: boolean;
+  onUse: () => void;
+}) {
+  const extras = [
+    measured.signups > 0 ? plural(measured.signups, 'signup', 'signups') : null,
+    measured.surveyResponses > 0 ? plural(measured.surveyResponses, 'survey response', 'survey responses') : null,
+    measured.pipelineQualified > 0 ? plural(measured.pipelineQualified, 'qualified lead in your pipeline', 'qualified leads in your pipeline') : null,
+  ].filter(Boolean);
+
+  return (
+    <div className="space-y-2 rounded-lg bg-muted/50 p-3 sm:p-4">
+      <p className="text-sm font-medium text-foreground">Measured on Creatives Takeover, week of {weekLabel}</p>
+      {measured.cohortNewVisitors > 0 ? (
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-muted-foreground">
+            {plural(measured.cohortNewVisitors, 'person', 'people')} visited your published app for the first time.{' '}
+            {measured.cohortBack7d} came back within 7 days and {measured.cohortBack30d} within 30 days.
+          </p>
+          {inUse ? (
+            <span className="inline-flex shrink-0 items-center gap-1.5 text-sm font-medium text-success">
+              <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
+              Using measured numbers
+            </span>
+          ) : (
+            <Button type="button" size="sm" variant="outline" className="shrink-0" onClick={onUse}>
+              Use these numbers
+            </Button>
+          )}
+        </div>
+      ) : (
+        <p className="text-sm text-muted-foreground">
+          No first-time visitors to your published apps that week.
+        </p>
+      )}
+      {extras.length > 0 ? (
+        <p className="text-sm text-muted-foreground">Also that week: {extras.join(', ')}.</p>
+      ) : null}
+      {inUse ? (
+        <p className="text-xs text-muted-foreground">Saved as platform-measured while these fields stay unchanged.</p>
+      ) : null}
+    </div>
+  );
 }
 
 export function TractionRetentionCard({
@@ -51,7 +117,9 @@ export function TractionRetentionCard({
   cohortWeekStart,
   sevenDayStatus,
   thirtyDayStatus,
-  platformVisitors,
+  measured,
+  measuredInUse,
+  onUseMeasured,
   onChange,
 }: TractionRetentionCardProps) {
   const scored = { ...retention, sevenDayStatus, thirtyDayStatus };
@@ -119,11 +187,14 @@ export function TractionRetentionCard({
         </Field>
       </div>
 
-      {platformVisitors !== null && (
-        <p className="text-xs text-muted-foreground">
-          Your published MVP site has recorded {platformVisitors} visitor{platformVisitors === 1 ? '' : 's'}. Use your analytics to count the people from one starting week.
-        </p>
-      )}
+      {hasMeasuredActivity(measured) ? (
+        <MeasuredBlock
+          measured={measured!}
+          weekLabel={formatWeek(cohortWeekStart)}
+          inUse={measuredInUse}
+          onUse={onUseMeasured}
+        />
+      ) : null}
     </section>
   );
 }

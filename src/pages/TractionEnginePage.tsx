@@ -33,6 +33,13 @@ import {
   isSprintAtBoundary,
   type TractionRetentionInput,
 } from '@/lib/tractionEngine';
+import {
+  isPlatformMeasured,
+  isWeekStart,
+  parseWeeklySignals,
+  type AppliedSignals,
+  type WeeklySignals,
+} from '@/lib/tractionSignals';
 import { getTractionNextStep } from '@/lib/tractionNextStep';
 import { exportTractionReportPdf } from '@/lib/tractionReport';
 import { markFirstArtifactCreated } from '@/lib/retentionSystem';
@@ -175,7 +182,8 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
   const [journeyAssumptions, setJourneyAssumptions] = useState<JourneyAssumption[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [platformVisitors, setPlatformVisitors] = useState<number | null>(null);
+  const [measured, setMeasured] = useState<WeeklySignals | null>(null);
+  const [appliedSignals, setAppliedSignals] = useState<AppliedSignals | null>(null);
   const [benchmarks, setBenchmarks] = useState<{ cohortUsers: number; p25: number; p50: number; p75: number } | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
   const gtmPlanId = searchParams.get('planId');
@@ -295,18 +303,42 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
     trackToolOpened('traction_engine');
   }, []);
 
-  // The platform snapshot counts site visitors, not a cohort, so it is shown as
-  // context next to the retention fields rather than filled into them.
+  // What the platform measured for the selected cohort week: the visitor cohort
+  // of the founder's published apps, plus that week's signups, survey responses
+  // and qualified pipeline. If the database function is missing or fails, the
+  // card simply works as before, without the measured block.
   useEffect(() => {
-    if (!userId) return;
+    if (!userId || !isWeekStart(cohortWeekStart)) {
+      setMeasured(null);
+      return;
+    }
     let active = true;
-    void supabase.rpc('get_mvp_retention_snapshot' as never).then(({ data, error }) => {
-      if (!active || error || !data) return;
-      const row = (Array.isArray(data) ? data[0] : data) as { total_visitors: number | null } | null;
-      if (row?.total_visitors) setPlatformVisitors(row.total_visitors);
-    });
+    void supabase
+      .rpc('get_founder_weekly_signals_v1' as never, { p_week_start: cohortWeekStart } as never)
+      .then(({ data, error }) => {
+        if (!active) return;
+        setMeasured(error || !data ? null : parseWeeklySignals(Array.isArray(data) ? data[0] : data, cohortWeekStart));
+      });
     return () => { active = false; };
-  }, [userId]);
+  }, [userId, cohortWeekStart]);
+
+  const applyMeasuredNumbers = () => {
+    if (!measured) return;
+    const applied: AppliedSignals = {
+      weekStart: measured.weekStart,
+      newUsers: measured.cohortNewVisitors,
+      sevenDayActiveUsers: measured.cohortBack7d,
+      thirtyDayActiveUsers: measured.cohortBack30d,
+    };
+    setAppliedSignals(applied);
+    setRetention((current) => ({
+      ...current,
+      newUsers: applied.newUsers,
+      sevenDayActiveUsers: applied.sevenDayActiveUsers,
+      thirtyDayActiveUsers: applied.thirtyDayActiveUsers,
+    }));
+    captureEvent('traction_measured_numbers_applied', { cohort_size: applied.newUsers });
+  };
 
   // Cross-founder benchmark for the product category; hidden until 10+ founders.
   useEffect(() => {
@@ -550,6 +582,9 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
       // Logging a week is free (no credit charge since Oct 2026).
       const sprintByChannel = await ensureSprints();
       const readiness = experiments.map((experiment) => readinessFor(experiment));
+      // Platform-measured only while the cohort fields still hold the applied
+      // numbers; the database re-checks this against what it measured.
+      const measuredWeek = isPlatformMeasured({ ...retention, cohortWeekStart }, appliedSignals);
       const logPayload = {
         week_start_date: currentWeekStart,
         new_users: retention.newUsers,
@@ -569,11 +604,11 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
         phase_seven_ready: score.phaseSevenReady,
         score_breakdown: {
           experimentScores: score.experimentScores,
-          retentionSource: 'manual',
+          retentionSource: measuredWeek ? 'platform' : 'manual',
           retention: { method: 'cohort', cohortWeekStart, sevenDayStatus, thirtyDayStatus },
           recommendedDecisions: readiness.map((item) => item.recommendedDecision),
         },
-        verification_mode: 'founder_reported',
+        verification_mode: measuredWeek ? 'platform_verified' : 'founder_reported',
         calculation_version: TRACTION_CALCULATION_VERSION,
       };
       const experimentRows = experiments.map((experiment, index) => {
@@ -920,7 +955,9 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
             cohortWeekStart={cohortWeekStart}
             sevenDayStatus={sevenDayStatus}
             thirtyDayStatus={thirtyDayStatus}
-            platformVisitors={platformVisitors}
+            measured={measured}
+            measuredInUse={isPlatformMeasured({ ...retention, cohortWeekStart }, appliedSignals)}
+            onUseMeasured={applyMeasuredNumbers}
             onChange={(patch) => setRetention((current) => ({ ...current, ...patch }))}
           />
 

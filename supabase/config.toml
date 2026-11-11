@@ -284,9 +284,6 @@ verify_jwt = false
 [functions.daily-reminder-service]
 verify_jwt = false
 
-[functions.stripe-revenue-metrics]
-verify_jwt = false
-
 [functions.model-comparison-audit]
 verify_jwt = false
 

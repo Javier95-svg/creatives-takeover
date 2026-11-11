@@ -42,7 +42,7 @@ Founder plans are self-serve with no equity taken and no application required. I
 - [MVP Scope](https://creatives-takeover.com/mvp-scope): Prioritizes MVP features and cuts scope to a buildable first release.
 - [Demo Studio](https://creatives-takeover.com/demo-studio): Builds personalized product demos and launch assets that can be shared or embedded.
 - [Go-to-Market Strategist](https://creatives-takeover.com/go-to-market): Produces a channel-by-channel GTM plan for a defined ICP.
-- [Traction Engine](https://creatives-takeover.com/traction-engine): Tracks acquisition experiments and early traction metrics.
+- [Traction Engine](https://creatives-takeover.com/traction-engine): Logs weekly acquisition experiments and cohort retention (how many people who started in a week came back within 7 and 30 days). It does not connect to payment or analytics accounts.
 - [Tech Stack Advisor](https://creatives-takeover.com/tech-stack): Recommends a stack based on team skills, budget, and product type.
 - [Decision Sprint](https://creatives-takeover.com/decision-sprint): Structures a single high-stakes founder decision into a timeboxed sprint.
 - [Waitlist Builder](https://creatives-takeover.com/waitlist): Publishes a waitlist landing page to collect demand signal before building.

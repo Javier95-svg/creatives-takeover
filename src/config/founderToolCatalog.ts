@@ -148,7 +148,7 @@ export const FOUNDER_TOOL_CATALOG = [
     role: 'core',
     name: 'Traction Engine',
     route: '/traction-engine',
-    purpose: 'Track weekly growth and retention signals.',
+    purpose: 'Log weekly acquisition tests and who comes back.',
     promisedArtifact: 'Comparable acquisition-cycle ledger',
     responsibleOutcome: 'Repeat the same ICP, offer, and channel in a second cycle and verify at least one qualified buyer signal.',
     entitlement: 'gtm_strategist',
