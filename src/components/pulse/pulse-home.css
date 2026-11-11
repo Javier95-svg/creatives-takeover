@@ -87,26 +87,27 @@
 .pulse-home-shortcut:hover .pulse-home-shortcut-arrow { color: hsl(var(--foreground)); transform: translateX(2px); }
 .pulse-home-shortcut:focus-visible { outline: 2px solid hsl(var(--primary)); outline-offset: 3px; }
 @container (max-width: 480px) { .pulse-home-shortcuts { grid-template-columns: 1fr; } }
-/* Broad moving light fields, not a particle canvas or video. */
+/* The wallpaper layer behind the Pulse home; its art is PulseGuillocheWallpaper. */
 .pulse-home-wallpaper { position: absolute; inset: 0; }
-.pulse-home-glow { position: absolute; width: 85%; height: 95%; border-radius: 50%; filter: blur(42px); will-change: transform; animation: pulse-home-drift 14s ease-in-out infinite alternate; }
-/* Quieter than before: the glow sets the mood, the content carries the colour. */
-.pulse-home-glow--blue { top: -25%; left: -15%; background: radial-gradient(ellipse, hsl(var(--primary) / .2), transparent 65%); }
-.pulse-home-glow--teal { bottom: -22%; right: -20%; background: radial-gradient(ellipse, hsl(var(--accent-teal) / .14), transparent 65%); animation-name: pulse-home-tide; animation-duration: 18s; animation-delay: -6s; }
-.pulse-home-glow--accent { top: 5%; left: 20%; width: 65%; height: 70%; background: radial-gradient(ellipse, hsl(var(--primary) / .1), transparent 65%); animation-duration: 11s; animation-delay: -5s; }
-.pulse-home-grid { position: absolute; inset: 0; background-image: linear-gradient(hsl(var(--foreground) / .03) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--foreground) / .03) 1px, transparent 1px); background-size: 64px 64px; mask-image: radial-gradient(ellipse at 50% 30%, black, transparent 70%); }
 .pulse-home--command-center:not(.pulse-home--chat) .pulse-home-column, .pulse-home--command-center:not(.pulse-home--chat) .pulse-home-compose > div { max-width: 54rem; }
 .pulse-home--command-center .pulse-home-priorities, .pulse-home--command-center .pulse-home-hero > p { margin-left: 0; }
 .pulse-home--command-center:not(.pulse-home--chat) .pulse-home-priorities { margin-left: 0; }
 .pulse-home--command-center:not(.pulse-home--chat) .pulse-home-priorities > div { justify-content: flex-start; }
-.pulse-home--command-center .pulse-home-glow--blue { left: 25%; top: -30%; }
-.pulse-home--guided-journey .pulse-home-glow--teal { bottom: 0; right: -5%; }
-.pulse-home--guided-journey .pulse-home-grid { opacity: .5; }
 .pulse-home--chat .pulse-home-wallpaper { opacity: .4; transition: opacity .6s; }
 .pulse-home--chat .pulse-home-composer { padding: 1rem; }
-@keyframes pulse-home-drift { from { transform: translate3d(-6%, -5%, 0) scale(.95); } to { transform: translate3d(24%, 16%, 0) scale(1.2); } }
-@keyframes pulse-home-tide { from { transform: translate3d(10%, 10%, 0) scale(1); } to { transform: translate3d(-25%, -18%, 0) scale(1.2); } }
 @keyframes pulse-home-reveal { from { opacity: 0; transform: translateY(.5rem); } to { opacity: 1; transform: translateY(0); } }
 @media (max-height: 800px) { .pulse-home:not(.pulse-home--chat) .pulse-home-column { padding-top: 2rem; } }
 @container (max-width: 640px) { .pulse-home .pulse-home-headline { font-size: clamp(2.5rem, 11cqw, 3.5rem); } .pulse-home:not(.pulse-home--chat) .pulse-home-column { padding-top: 2.5rem; } }
-@media (prefers-reduced-motion: reduce) { .pulse-home-glow, .pulse-home .pulse-home-headline, .pulse-home-focus-dot, .pulse-home .pulse-home-composer::before { animation: none; will-change: auto; } }
+@media (prefers-reduced-motion: reduce) { .pulse-home .pulse-home-headline, .pulse-home-focus-dot, .pulse-home .pulse-home-composer::before { animation: none; will-change: auto; } }
+/* Guilloché wallpaper (PulseGuillocheWallpaper.tsx): engraved hairline rosettes
+   in two corners over a faint plaster grain. The margins carry the engraving;
+   it fades behind the column so the content stays clean. */
+.pulse-guilloche { position: absolute; inset: 0; -webkit-mask-image: linear-gradient(90deg, #000 0, #000 14%, rgb(0 0 0 / .2) 30%, rgb(0 0 0 / .2) 70%, #000 86%, #000 100%); mask-image: linear-gradient(90deg, #000 0, #000 14%, rgb(0 0 0 / .2) 30%, rgb(0 0 0 / .2) 70%, #000 86%, #000 100%); }
+.pulse-guilloche .pg-grain { position: absolute; inset: 0; opacity: .32; }
+.pulse-guilloche .pg-panel { position: absolute; top: 0; height: 100%; width: auto; aspect-ratio: 420 / 900; overflow: visible; }
+.pulse-guilloche .pg-panel--left { left: 0; }
+.pulse-guilloche .pg-panel--right { right: 0; }
+.pulse-guilloche .pg-ring--a, .pulse-guilloche .pg-panel--right .pg-ring--b { stroke: hsl(var(--primary) / .3); }
+.pulse-guilloche .pg-ring--b, .pulse-guilloche .pg-panel--right .pg-ring--a { stroke: hsl(var(--accent-teal) / .26); }
+.pulse-guilloche .pg-ring--rule { stroke: hsl(var(--foreground) / .12); }
+@container (max-width: 640px) { .pulse-guilloche { opacity: .4; } }

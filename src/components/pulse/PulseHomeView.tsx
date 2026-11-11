@@ -12,6 +12,7 @@ import type { PersonaChip, PersonaHome } from '@/lib/personaHome';
 import './pulse-home.css';
 import { PulseRetrievedSources, PulseSources } from './PulseSources';
 import { PulseFounderHome } from './PulseFounderHome';
+import { PulseGuillocheWallpaper } from './PulseGuillocheWallpaper';
 
 export interface PulseHomeViewProps {
   concept: PulseHomeConcept;
@@ -136,7 +137,7 @@ export function PulseHomeView({ concept, name, stage, projectName, assignedStage
   // conversation itself keep the view below.
   if (!active && !persona) {
     return <section aria-label="Pulse home" data-telemetry-private className={cn('ph-no-capture ph-mask pulse-home relative isolate flex min-h-0 flex-1 flex-col overflow-hidden', `pulse-home--${concept}`)}>
-      <div className="pulse-home-wallpaper pointer-events-none absolute inset-0 -z-10 overflow-hidden" aria-hidden="true"><div className="pulse-home-glow pulse-home-glow--blue" /><div className="pulse-home-glow pulse-home-glow--teal" /><div className="pulse-home-glow pulse-home-glow--accent" /><div className="pulse-home-grid" /></div>
+      <div className="pulse-home-wallpaper pointer-events-none absolute inset-0 -z-10 overflow-hidden" aria-hidden="true"><PulseGuillocheWallpaper /></div>
       <PulseFounderHome
         heading={currentHeading}
         headingKey={headline}
@@ -156,7 +157,7 @@ export function PulseHomeView({ concept, name, stage, projectName, assignedStage
   }
 
   return <section aria-label="Pulse home" data-telemetry-private className={cn('ph-no-capture ph-mask pulse-home relative isolate flex min-h-0 flex-1 flex-col overflow-hidden', `pulse-home--${concept}`, active && 'pulse-home--chat')}>
-    <div className="pulse-home-wallpaper pointer-events-none absolute inset-0 -z-10 overflow-hidden" aria-hidden="true"><div className="pulse-home-glow pulse-home-glow--blue" /><div className="pulse-home-glow pulse-home-glow--teal" /><div className="pulse-home-glow pulse-home-glow--accent" /><div className="pulse-home-grid" /></div>
+    <div className="pulse-home-wallpaper pointer-events-none absolute inset-0 -z-10 overflow-hidden" aria-hidden="true"><PulseGuillocheWallpaper /></div>
     <div className="pulse-home-content">
     <div className="pulse-home-scroll min-h-0 flex-1 overflow-y-auto px-6 lg:px-12">
       <div className={cn('pulse-home-column mx-auto w-full max-w-3xl', active ? 'pt-6' : 'pt-16 lg:pt-20')}>
