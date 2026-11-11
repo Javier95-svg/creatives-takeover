@@ -146,12 +146,14 @@ function buildDraftRequest(payload: EmailDraftRequest): DraftRequestShape {
 }
 
 async function processEmailDraftRequest(payload: EmailDraftRequest) {
-  const openaiApiKey = Deno.env.get("OPENAI_API_KEY");
+  // Drafts generate with Gemini first, OpenAI as fallback (_shared/json-generation.ts).
+  const openaiApiKey = Deno.env.get("OPENAI_API_KEY") ?? "";
+  const hasAiProvider = Boolean(Deno.env.get("GEMINI_API_KEY")?.trim() || openaiApiKey.trim());
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
   const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   const appUrl = (Deno.env.get("APP_URL") || "https://creatives-takeover.com").replace(/\/$/, "");
 
-  if (!openaiApiKey || !supabaseUrl || !supabaseKey) {
+  if (!hasAiProvider || !supabaseUrl || !supabaseKey) {
     throw new Error("Missing required environment configuration");
   }
 
