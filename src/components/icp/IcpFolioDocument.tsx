@@ -12,6 +12,7 @@ import {
 import { ExternalLink, Gauge, HelpCircle, Lock, UserRound } from "lucide-react";
 
 import type { IcpDraftDocument } from "@/lib/icpBuilderSession";
+import { ICP_NO_SOURCES_NOTICE, icpSourcesSummary } from "@/lib/icpSources";
 import { collectLabelledOpenQuestions, fieldIsReal } from "@/lib/icpFieldProvenance";
 import { computeViabilityScore } from "@/lib/icpViabilityScore";
 import { IcpVerdictSpread } from "@/components/icp/IcpVerdictSpread";
@@ -1387,7 +1388,7 @@ export function IcpFolioDocument({
                     Evidence &amp; sources
                   </h2>
                   <p className="mt-1 text-sm leading-6 text-foreground/65">
-                    Grounded in real customer discussions and competitor research — not generic AI guesses.
+                    {icpSourcesSummary(draft.sources)}
                   </p>
                   <ul className="mt-4 space-y-2.5">
                     {draft.sources.map((source, index) => {
@@ -1428,6 +1429,17 @@ export function IcpFolioDocument({
                       );
                     })}
                   </ul>
+                </div>
+              ) : tone !== "landingPreview" ? (
+                // A real draft with nothing retrieved says so; the marketing
+                // sample (landingPreview) is not a founder's draft.
+                <div className="mt-12 border-t border-border/80 pt-8">
+                  <h2 className="text-sm font-semibold uppercase tracking-[0.16em] text-foreground/60">
+                    Evidence &amp; sources
+                  </h2>
+                  <p className="mt-1 text-sm leading-6 text-foreground/65">
+                    {ICP_NO_SOURCES_NOTICE}
+                  </p>
                 </div>
               ) : null}
               </div>

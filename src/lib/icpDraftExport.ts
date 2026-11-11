@@ -1,4 +1,5 @@
 import type { IcpDraftDocument } from "@/lib/icpBuilderSession";
+import { ICP_NO_SOURCES_NOTICE, icpSourcesSummary } from "@/lib/icpSources";
 
 // Brand assets for export watermarking. Same trifoil logo used across the app.
 const LOGO_URL = "/lovable-uploads/04a4b9d0-4213-4186-ba00-c7acd22bad98.png";
@@ -311,9 +312,13 @@ export async function downloadIcpDraftDocx(draft: IcpDraftDocument, fileName: st
   }
 
   // 7. Evidence & sources (citations)
+  if (!draft.sources?.length) {
+    children.push(heading("Evidence & Sources"));
+    children.push(body(ICP_NO_SOURCES_NOTICE));
+  }
   if (draft.sources?.length) {
     children.push(heading("Evidence & Sources"));
-    children.push(body("Grounded in real customer discussions and competitor research."));
+    children.push(body(icpSourcesSummary(draft.sources)));
     draft.sources.forEach((source) => {
       const label = source.type === "competitor" ? "Competitor" : source.type === "market" ? "Market" : "Community";
       const runs = [
