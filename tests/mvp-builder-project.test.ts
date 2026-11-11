@@ -291,3 +291,30 @@ test('zip export creates an archive blob without deployment substitutions', asyn
   assert.equal(blob.type, 'application/zip');
   assert.ok(blob.size > 0);
 });
+
+test('a saved React project reopens as React, not as static HTML', async () => {
+  const { normalizeMVPStoredProjectType, frameworkForStoredProjectType } = await import('../src/lib/mvp-builder/phase1.ts');
+  const { inferProjectFramework } = await import('../src/lib/mvp-builder/project.ts');
+
+  // Loading used to keep only react_multi and turn react_vite into html_single.
+  assert.equal(normalizeMVPStoredProjectType('react_vite'), 'react_vite');
+  assert.equal(normalizeMVPStoredProjectType('react_multi'), 'react_multi');
+  assert.equal(normalizeMVPStoredProjectType('html_single'), 'html_single');
+  assert.equal(normalizeMVPStoredProjectType(null), 'html_single');
+  assert.equal(normalizeMVPStoredProjectType('something_else'), 'html_single');
+
+  assert.deepEqual(frameworkForStoredProjectType('react_vite'), { framework: 'react-vite', projectType: 'web-app' });
+  assert.deepEqual(frameworkForStoredProjectType('html_single'), { framework: 'static-html', projectType: 'landing-page' });
+
+  // A project an earlier load already re-saved as html_single is recovered from its files.
+  const reactFiles = [
+    { path: 'package.json', content: JSON.stringify({ dependencies: { react: '^18.3.1', 'react-dom': '^18.3.1' }, devDependencies: { vite: '^5.4.0' } }), language: 'json' as const },
+    { path: 'index.html', content: '<div id="root"></div><script type="module" src="/src/main.tsx"></script>', language: 'html' as const },
+    { path: 'src/main.tsx', content: 'import React from "react";', language: 'tsx' as const },
+  ];
+  assert.equal(inferProjectFramework(reactFiles, frameworkForStoredProjectType('html_single').framework), 'react-vite');
+
+  // A plain landing page stays static HTML.
+  const htmlFiles = [{ path: 'index.html', content: '<!doctype html><h1>Hi</h1>', language: 'html' as const }];
+  assert.equal(inferProjectFramework(htmlFiles, frameworkForStoredProjectType('html_single').framework), 'static-html');
+});

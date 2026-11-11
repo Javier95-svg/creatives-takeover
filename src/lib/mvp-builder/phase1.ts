@@ -231,6 +231,24 @@ export function sanitizeMVPBuilderTemplate(value: unknown): MVPBuilderTemplateId
     : 'waitlist_landing';
 }
 
+export type MVPStoredProjectType = 'html_single' | 'react_multi' | 'react_vite';
+
+/**
+ * The project_type column as stored. Loading used to keep only react_multi and
+ * turn everything else, react_vite included, into html_single, so a React
+ * project reopened as static HTML and the next autosave made that permanent.
+ */
+export function normalizeMVPStoredProjectType(value: unknown): MVPStoredProjectType {
+  return value === 'react_vite' || value === 'react_multi' ? value : 'html_single';
+}
+
+/** How a stored project should be opened in the builder. */
+export function frameworkForStoredProjectType(value: unknown): { framework: 'react-vite' | 'static-html'; projectType: 'web-app' | 'landing-page' } {
+  return normalizeMVPStoredProjectType(value) === 'html_single'
+    ? { framework: 'static-html', projectType: 'landing-page' }
+    : { framework: 'react-vite', projectType: 'web-app' };
+}
+
 export function sanitizeMVPBuilderPalette(value: unknown): MVPBuilderPaletteId {
   return MVP_BUILDER_PALETTES.some((palette) => palette.id === value)
     ? (value as MVPBuilderPaletteId)

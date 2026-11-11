@@ -790,12 +790,12 @@ export const INDEXABLE_ROUTES = [
     path: "/mvp-builder",
     title: "AI MVP Builder | Creatives Takeover",
     description:
-      "Describe your product, generate a working MVP, and iterate with live preview and code updates inside an AI MVP builder.",
+      "Describe your product and publish a landing page or simple prototype on its own live URL, then iterate with live preview and see how many people visit.",
     changefreq: "weekly",
     priority: 0.8,
-    heroHeading: "Build your MVP with AI",
+    heroHeading: "Publish a first version people can try",
     heroCopy:
-      "Turn a product idea into a working prototype with prompt-based generation, live preview, and iterative edits.",
+      "Turn a product idea into a landing page or simple prototype on a live URL. Edit it with prompts, preview each change, and see how many people visit.",
   },
   {
     path: "/mvp-scope",

@@ -38,7 +38,7 @@ Founder plans are self-serve with no equity taken and no application required. I
 - [ICP Builder](https://creatives-takeover.com/icp-builder): Drafts an ideal customer profile — segment, pain points, positioning, and a niche score — and produces a shareable ICP document.
 - [Validate](https://creatives-takeover.com/validate): Turns a customer hypothesis into a testable validation plan.
 - [PMF Lab](https://creatives-takeover.com/pmf-lab): Scores product-market-fit evidence across five dimensions and runs PMF surveys against real respondents.
-- [MVP Builder](https://creatives-takeover.com/mvp-builder): Generates a working MVP web app and publishes it to a live URL on its own subdomain.
+- [MVP Builder](https://creatives-takeover.com/mvp-builder): Generates a landing page or simple prototype from a description and publishes it to a live URL on its own subdomain, with visit tracking.
 - [MVP Scope](https://creatives-takeover.com/mvp-scope): Prioritizes MVP features and cuts scope to a buildable first release.
 - [Demo Studio](https://creatives-takeover.com/demo-studio): Builds personalized product demos and launch assets that can be shared or embedded.
 - [Go-to-Market Strategist](https://creatives-takeover.com/go-to-market): Produces a channel-by-channel GTM plan for a defined ICP.

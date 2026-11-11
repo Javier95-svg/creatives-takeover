@@ -52,7 +52,9 @@ import {
   buildMVPProjectZip,
   classifyMVPBuilderAction,
   createMVPBuilderVersion,
+  frameworkForStoredProjectType,
   MVP_BUILDER_ACTION_CREDIT_FEATURE,
+  normalizeMVPStoredProjectType,
   parseMVPBuilderOutput,
   sanitizeMVPBuilderPalette,
   sanitizeMVPBuilderTemplate,
@@ -1527,11 +1529,15 @@ export function useMVPBuilder() {
         : [];
 
       if (recordFiles.length > 0 || record.generated_code) {
+        // Reopen React projects as React. The stored type is the preference;
+        // the files (a package.json) also recover projects an earlier load
+        // had already re-saved as html_single.
+        const framework = inferProjectFramework(recordFiles, frameworkForStoredProjectType(record.project_type).framework);
         const artifact = recordFiles.length > 0
           ? {
               projectName: record.title || DEFAULT_PROJECT_NAME,
-              framework: 'static-html' as const,
-              projectType: 'landing-page' as const,
+              framework,
+              projectType: framework === 'static-html' ? 'landing-page' as const : 'web-app' as const,
               entryFile: pickProjectEntryFile(recordFiles) ?? recordFiles[0]?.path ?? 'index.html',
               summary: 'Loaded from MVP Builder project storage.',
               dependencies: [],
@@ -1589,7 +1595,7 @@ export function useMVPBuilder() {
               title: typeof record.title === 'string' && record.title.trim() ? record.title.trim() : DEFAULT_PROJECT_NAME,
               prompt_history: Array.isArray(record.prompt_history) ? (record.prompt_history as MVPMessage[]) : [],
               generated_code: typeof record.generated_code === 'string' ? record.generated_code : null,
-              project_type: record.project_type === 'react_multi' ? 'react_multi' : 'html_single',
+              project_type: normalizeMVPStoredProjectType(record.project_type),
               template: sanitizeMVPBuilderTemplate(record.template),
               project_files: Array.isArray(record.project_files) ? record.project_files as MVPProjectRecord['project_files'] : [],
               versions: Array.isArray(record.versions) ? record.versions as MVPBuilderVersion[] : [],
@@ -1852,7 +1858,7 @@ export function useMVPBuilder() {
           title: typeof data.title === 'string' && data.title.trim() ? data.title.trim() : DEFAULT_PROJECT_NAME,
           prompt_history: Array.isArray(data.prompt_history) ? (data.prompt_history as MVPMessage[]) : payload.prompt_history,
           generated_code: typeof data.generated_code === 'string' ? data.generated_code : codeToSave,
-          project_type: data.project_type === 'react_multi' ? 'react_multi' : 'html_single',
+          project_type: normalizeMVPStoredProjectType(data.project_type),
           template: sanitizeMVPBuilderTemplate(data.template),
           project_files: Array.isArray(data.project_files) ? data.project_files as MVPProjectRecord['project_files'] : payload.project_files,
           versions: Array.isArray(data.versions) ? data.versions as MVPBuilderVersion[] : projectVersions,
@@ -1917,7 +1923,7 @@ export function useMVPBuilder() {
             title: typeof data.title === 'string' && data.title.trim() ? data.title.trim() : DEFAULT_PROJECT_NAME,
             prompt_history: Array.isArray(data.prompt_history) ? (data.prompt_history as MVPMessage[]) : [],
             generated_code: typeof data.generated_code === 'string' ? data.generated_code : null,
-            project_type: data.project_type === 'react_multi' ? 'react_multi' : 'html_single',
+            project_type: normalizeMVPStoredProjectType(data.project_type),
             template: sanitizeMVPBuilderTemplate(data.template),
             project_files: Array.isArray(data.project_files) ? data.project_files as MVPProjectRecord['project_files'] : [],
             versions: Array.isArray(data.versions) ? data.versions as MVPBuilderVersion[] : [],

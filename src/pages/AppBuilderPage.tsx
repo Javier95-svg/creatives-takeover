@@ -77,7 +77,7 @@ export default function AppBuilderPage() {
     <div className="tool-theme-mvp h-screen w-screen overflow-hidden bg-background">
       <SEO
         title="AI MVP Builder | Creatives Takeover"
-        description="Describe your product, generate a working MVP, and iterate with live preview and code updates inside an AI MVP builder."
+        description="Describe your product and publish a landing page or simple prototype on its own live URL, then iterate with live preview and see how many people visit."
         keywords="ai mvp builder, app builder ai, startup prototype builder, mvp generator, prompt to app"
         url="/mvp-builder"
         structuredData={structuredData}
@@ -89,11 +89,12 @@ export default function AppBuilderPage() {
           <section className="mx-auto w-full max-w-3xl px-4 pb-10 pt-16 text-center">
             <p className="mb-3 text-sm font-medium text-primary">MVP Builder</p>
             <h1 className="text-3xl font-bold text-foreground sm:text-4xl">
-              Describe your idea. Get a working MVP.
+              Describe your idea. Publish a first version people can try.
             </h1>
             <p className="mx-auto mt-3 max-w-xl text-base text-muted-foreground">
-              Type what you want to build and MVP Builder generates a working React app with live
-              preview, then change it with plain-English requests. Your first build is free.
+              Type what you want to build and MVP Builder generates a landing page or simple prototype
+              with live preview, then change it with plain-English requests and publish it to its own
+              URL. Your first build is free.
             </p>
             <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
               <Button asChild size="lg" className="gap-2">
