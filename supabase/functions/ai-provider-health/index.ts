@@ -168,6 +168,64 @@ const CHECKS: ProviderCheck[] = [
       if (!response.ok) throw new Error(await describeFailure(response));
     },
   },
+  {
+    provider: "groq",
+    affects: "Free text fallback (added 2026-11-12, not wired into tools yet)",
+    // Groq retires model ids often, so ask which chat models this key has
+    // and ping one of them rather than naming a model that may be gone.
+    run: async () => {
+      const headers = { Authorization: `Bearer ${env("GROQ_API_KEY")}`, "Content-Type": "application/json" };
+      const listed = await withTimeout("https://api.groq.com/openai/v1/models", { headers });
+      if (!listed.ok) throw new Error(await describeFailure(listed));
+      const ids: string[] = ((await listed.json())?.data ?? [])
+        .filter((model: { active?: boolean }) => model?.active !== false)
+        .map((model: { id?: string }) => String(model?.id ?? ""))
+        .filter((id: string) => id && !/whisper|tts|guard|playai|orpheus|distil/i.test(id));
+      const model = ids.find((id) => /llama.*instant/i.test(id)) ?? ids.find((id) => /llama/i.test(id)) ?? ids[0];
+      if (!model) throw new Error("Key works but no chat models are listed");
+      const response = await withTimeout("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ model, max_tokens: 1, messages: [{ role: "user", content: "ok" }] }),
+      });
+      if (!response.ok) throw new Error(`${model}: ${await describeFailure(response)}`);
+    },
+  },
+  {
+    // videos.list costs 1 unit of the 10,000 daily quota (search costs 100).
+    provider: "youtube",
+    affects: "Customer discovery from YouTube (added 2026-11-12, not wired into tools yet)",
+    run: async () => {
+      const response = await withTimeout("https://www.googleapis.com/youtube/v3/videos?part=id&chart=mostPopular&maxResults=1", {
+        headers: { "x-goog-api-key": env("YOUTUBE_API_KEY") },
+      });
+      if (!response.ok) throw new Error(await describeFailure(response));
+    },
+  },
+  {
+    provider: "lovable_gateway",
+    affects: "Chatbot, business insights, market validation, outreach generator, community feedback, Pulse insights",
+    run: async () => {
+      const response = await withTimeout("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${env("LOVABLE_API_KEY")}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ model: "google/gemini-2.5-flash", max_tokens: 1, messages: [{ role: "user", content: "ok" }] }),
+      });
+      if (!response.ok) throw new Error(await describeFailure(response));
+    },
+  },
+  {
+    provider: "perplexity",
+    affects: "BizMap research, trends analyzer, market provider health",
+    run: async () => {
+      const response = await withTimeout("https://api.perplexity.ai/chat/completions", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${env("PERPLEXITY_API_KEY")}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ model: "sonar", max_tokens: 1, messages: [{ role: "user", content: "ok" }] }),
+      });
+      if (!response.ok) throw new Error(await describeFailure(response));
+    },
+  },
 ];
 
 const KEY_FOR: Record<string, string> = {
@@ -178,6 +236,10 @@ const KEY_FOR: Record<string, string> = {
   openai: "OPENAI_API_KEY",
   anthropic: "ANTHROPIC_API_KEY",
   deepseek: "DEEPSEEK_API_KEY",
+  groq: "GROQ_API_KEY",
+  youtube: "YOUTUBE_API_KEY",
+  lovable_gateway: "LOVABLE_API_KEY",
+  perplexity: "PERPLEXITY_API_KEY",
 };
 
 async function runCheck(check: ProviderCheck): Promise<CheckResult> {
