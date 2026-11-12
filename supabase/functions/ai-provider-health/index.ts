@@ -194,6 +194,28 @@ async function runCheck(check: ProviderCheck): Promise<CheckResult> {
   }
 }
 
+// Same two inboxes contact-form-submission always notifies.
+const REQUIRED_ADMIN_RECIPIENTS = ["admin@creatives-takeover.com", "javier@creatives-takeover.com"];
+const EMAIL_PATTERN = /^[^\s@<>"',;]+@[^\s@<>"',;]+\.[a-z]{2,}$/i;
+
+/**
+ * The required inboxes plus every valid address in ADMIN_NOTIFICATION_EMAILS.
+ * On 2026-11-12 Resend rejected that secret's value as a `to` list, so it is
+ * read loosely (commas, semicolons, spaces, quotes, "Name <a@b.c>") and
+ * entries that are not addresses are dropped instead of failing the send.
+ */
+function adminRecipients(): string[] {
+  const configured = (Deno.env.get("ADMIN_NOTIFICATION_EMAILS") || "")
+    .split(/[,;\s]+/)
+    .map((entry) => entry.replace(/^[\s"'<[(]+|[\s"'>\])]+$/g, "").trim().toLowerCase())
+    .filter(Boolean);
+  const valid = configured.filter((entry) => EMAIL_PATTERN.test(entry));
+  if (configured.length !== valid.length) {
+    console.warn(`ai-provider-health: ignored ${configured.length - valid.length} invalid ADMIN_NOTIFICATION_EMAILS entr${configured.length - valid.length === 1 ? "y" : "ies"}`);
+  }
+  return Array.from(new Set([...REQUIRED_ADMIN_RECIPIENTS, ...valid]));
+}
+
 function alertEmail(changes: Array<CheckResult & { recovered: boolean }>, all: CheckResult[]) {
   const row = (r: CheckResult & { recovered?: boolean }) => `
     <tr>
@@ -259,27 +281,32 @@ serve(async (req) => {
       if (writeError) console.error(`ai-provider-health could not save ${result.provider}:`, writeError.message);
     }
 
+    // forceEmail re-sends the current failures, e.g. after an email that did
+    // not go out (the state is already saved, so it would not count as a change).
+    const body = await req.json().catch(() => ({}));
+    if (body?.forceEmail === true && changes.length === 0) {
+      changes.push(...results.filter((result) => !result.ok).map((result) => ({ ...result, recovered: false })));
+    }
+
     let emailed = false;
     const resendKey = Deno.env.get("RESEND_API_KEY");
     if (changes.length > 0 && resendKey) {
-      const recipients = (Deno.env.get("ADMIN_NOTIFICATION_EMAILS") || "").split(",").map((email) => email.trim()).filter(Boolean);
-      if (recipients.length > 0) {
-        const failing = changes.filter((change) => !change.ok).map((change) => change.provider);
-        const recovered = changes.filter((change) => change.recovered).map((change) => change.provider);
-        const subject = failing.length
-          ? `AI provider failing: ${failing.join(", ")}`
-          : `AI provider recovered: ${recovered.join(", ")}`;
-        const fromEmail = Deno.env.get("FROM_EMAIL") || "onboarding@resend.dev";
-        const fromName = Deno.env.get("FROM_NAME") || "Creatives Takeover";
-        const sent = await new Resend(resendKey).emails.send({
-          from: `${fromName} <${fromEmail}>`,
-          to: recipients,
-          subject,
-          html: alertEmail(changes, results),
-        });
-        emailed = !sent.error;
-        if (sent.error) console.error("ai-provider-health email failed:", sent.error);
-      }
+      const recipients = adminRecipients();
+      const failing = changes.filter((change) => !change.ok).map((change) => change.provider);
+      const recovered = changes.filter((change) => change.recovered).map((change) => change.provider);
+      const subject = failing.length
+        ? `AI provider failing: ${failing.join(", ")}`
+        : `AI provider recovered: ${recovered.join(", ")}`;
+      const fromEmail = Deno.env.get("FROM_EMAIL") || "onboarding@resend.dev";
+      const fromName = Deno.env.get("FROM_NAME") || "Creatives Takeover";
+      const sent = await new Resend(resendKey).emails.send({
+        from: `${fromName} <${fromEmail}>`,
+        to: recipients,
+        subject,
+        html: alertEmail(changes, results),
+      });
+      emailed = !sent.error;
+      if (sent.error) console.error("ai-provider-health email failed:", sent.error);
     }
 
     return new Response(JSON.stringify({
