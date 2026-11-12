@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { ChevronRight, FileText, LogOut, MessageCircle, UserPlus, X } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -72,6 +72,11 @@ export default function WorkspaceLive({ children, home }: { children: ReactNode;
   // Founder until the answer arrives, so no type specific nav flashes at anyone.
   const { userType, isLoading: accountLoading, isError: accountError, refresh: refreshAccount } = useAccountContext();
   const usesProject = userType === 'founder' || userType === 'builder';
+  // Newspaper articles are read and shared from here. The setup prompts are
+  // modal, so on an article they covered the share buttons until dismissed,
+  // and came back on every visit. They still appear on every other route.
+  const { pathname } = useLocation();
+  const readingArticle = pathname === '/newspaper' || pathname.startsWith('/newspaper/');
   useEffect(() => {
     if (accountLoading || accountError || !user?.id) return;
     const key = `workspace-entered:${user.id}:${userType}`;
@@ -110,9 +115,9 @@ export default function WorkspaceLive({ children, home }: { children: ReactNode;
     </>}>
     {/* Founders and builders without a project are asked for one here,
         because the shell is the one thing every workspace route renders. */}
-    <ProjectSetupGate />
+    {!readingArticle && <ProjectSetupGate />}
     {/* Founders and builders whose label was inferred are asked which they are. */}
-    <SegmentCheckGate />
+    {!readingArticle && <SegmentCheckGate />}
     {/* A reviewed account waiting on a decision is told so once, here, rather
         than left to wonder why its category features are empty. */}
     <AccountReviewBanner />
