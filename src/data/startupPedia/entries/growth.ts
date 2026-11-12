@@ -75,7 +75,7 @@ export const growthEntries: PediaEntry[] = [
     cta: {
       label: "Plan your go-to-market",
       href: "/go-to-market",
-      description: "GTM Strategist turns your customer and offer into channel recommendations, messaging and a 30-day launch plan.",
+      description: "GTM Strategist turns your customer and offer into ranked channels, messaging and a six-week plan with weekly tasks.",
     },
     publishedAt: "2026-05-17",
     modifiedAt: "2026-10-25",
@@ -383,7 +383,7 @@ export const growthEntries: PediaEntry[] = [
     ],
     relatedSlugs: ["go-to-market-strategy", "product-hunt-launch-guide", "how-to-get-your-first-100-users", "how-to-build-an-mvp"],
     cta: {
-      label: "Get a 30-day launch plan",
+      label: "Get a six-week launch plan",
       href: "/go-to-market",
       description: "GTM Strategist turns this checklist into a launch plan with channels, messaging and priorities.",
     },

@@ -55,7 +55,7 @@ export const PEDIA_TOPICS: PediaTopic[] = [
     intro:
       "Building the product is only half the work. The other half is reaching the people who need it, with a message they understand, through a channel where they already spend time. Early go-to-market is less about big campaigns and more about focus: one audience, one or two channels and a weekly habit of testing what works. This topic covers the go-to-market strategy itself and the tactics founders lean on for their first users, including direct outreach, cold email, launch platforms and a launch checklist that ties them together. Each guide ends with what to measure, because attention that does not turn into learning is wasted.",
     tools: [
-      { href: "/go-to-market", label: "GTM Strategist", description: "Channel recommendations, messaging and a 30-day launch plan." },
+      { href: "/go-to-market", label: "GTM Strategist", description: "Ranked channels, messaging and a six-week plan with weekly tasks." },
       { href: "/directories", label: "Launch Directories", description: "Places to submit and promote a product launch." },
     ],
   },

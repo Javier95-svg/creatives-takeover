@@ -2,7 +2,7 @@
 
 > Last updated: 2026-10-25
 
-> Creatives Takeover is the startup ecosystem workspace. Founders test and build their ideas with AI tools that draft startup artifacts (ideal customer profile, MVP scope, go-to-market plan, pitch deck review) and a marketplace of reviewed human startup mentors who can be booked directly. Incubators, accelerators and universities use it to see how every team in a cohort is progressing, and VCs and family offices use it to meet founders who are executing. Founders can start free without applying and keep 100% equity.
+> Creatives Takeover is the startup ecosystem workspace. Founders define who they are building for, test demand, plan how to reach their first customers and log what happens, using AI tools that draft the working documents (an ideal customer profile with cited competitor research, a go-to-market plan, a pitch deck review) and pages that record real responses (surveys, waitlists, demo pages and simple published apps). It also has a marketplace of reviewed human startup mentors who can be booked directly. Incubators, accelerators and universities use it to see how every team in a cohort is progressing, and VCs and family offices use it to meet founders who are executing. Founders can start free without applying and keep 100% equity.
 
 ## Who it is for
 
@@ -18,6 +18,7 @@ Two things distinguish it from general AI assistants and from single-purpose ide
 
 - **Outputs record what they do not know.** Each generated field is marked as either model-answered or backfilled by the generator, and the viability score is damped by that ratio, so a confident draft resting on little evidence cannot score highly. Unanswered fields are listed back to the founder as open questions rather than presented as findings.
 - **Viewer responses are observed, not self-reported.** Founder demos, launch pages, waitlists, surveys, and published MVP sites are hosted on the platform, so views, interactions, and signups from non-owner visitors are recorded first-hand. Owner previews are marked and excluded from evidence.
+- **Measured numbers are checked, not claimed.** Traction Engine can fill a week's retention cohort from visits to the founder's published app. A week only counts as platform-verified when its numbers match what the platform recorded; numbers typed or edited by hand are labelled founder-reported.
 
 ## Pricing
 
@@ -35,13 +36,13 @@ Founder plans are self-serve with no equity taken and no application required. I
 ## AI startup tools
 
 - [BizMap AI](https://creatives-takeover.com/bizmap-ai): Entry point to the connected tool suite, organized by founder stage.
-- [ICP Builder](https://creatives-takeover.com/icp-builder): Drafts an ideal customer profile — segment, pain points, positioning, and a niche score — and produces a shareable ICP document.
+- [ICP Builder](https://creatives-takeover.com/icp-builder): Drafts an ideal customer profile — segment, pain points, positioning, and a niche score — and produces a shareable ICP document. It searches the web for existing products in the same space and cites them; when nothing relevant is found, the draft says so and suggests testing the pain in customer interviews.
 - [Validate](https://creatives-takeover.com/validate): Turns a customer hypothesis into a testable validation plan.
-- [PMF Lab](https://creatives-takeover.com/pmf-lab): Scores product-market-fit evidence across five dimensions and runs PMF surveys against real respondents.
+- [PMF Lab](https://creatives-takeover.com/pmf-lab): Scores product-market-fit evidence across five dimensions, turns pasted interview notes into structured interviews, and runs PMF surveys against real respondents.
 - [MVP Builder](https://creatives-takeover.com/mvp-builder): Generates a landing page or simple prototype from a description and publishes it to a live URL on its own subdomain, with visit tracking.
 - [MVP Scope](https://creatives-takeover.com/mvp-scope): Prioritizes MVP features and cuts scope to a buildable first release.
 - [Demo Studio](https://creatives-takeover.com/demo-studio): Builds personalized product demos and launch assets that can be shared or embedded.
-- [Go-to-Market Strategist](https://creatives-takeover.com/go-to-market): Produces a channel-by-channel GTM plan for a defined ICP.
+- [Go-to-Market Strategist](https://creatives-takeover.com/go-to-market): Produces a go-to-market plan for a defined ICP: channels ranked against the founder's weekly time and budget, a play for each with outreach assets and a stop rule, competitor briefs, and a six-week plan with weekly tasks. The plan, plays and tasks are saved so the founder can work through them and review the results each week.
 - [Traction Engine](https://creatives-takeover.com/traction-engine): Logs weekly acquisition experiments and cohort retention (how many people who started in a week came back within 7 and 30 days). For founders with a published MVP Builder app, the cohort can be filled from visits the platform recorded, and a week saved with those unedited numbers is marked platform-verified; that week's signups, survey responses and qualified pipeline are shown alongside. It does not connect to payment or analytics accounts.
 - [Tech Stack Advisor](https://creatives-takeover.com/tech-stack): Recommends a stack based on team skills, budget, and product type.
 - [Decision Sprint](https://creatives-takeover.com/decision-sprint): Structures a single high-stakes founder decision into a timeboxed sprint.

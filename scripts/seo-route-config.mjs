@@ -716,7 +716,7 @@ export const INDEXABLE_ROUTES = [
     path: "/icp-builder",
     title: "ICP Builder: Define Your Ideal Customer | Creatives Takeover",
     description:
-      "Define your ideal customer profile, sharpen positioning, and choose the customer segment your startup should target first.",
+      "Define your ideal customer, sharpen positioning and pick the segment to target first, citing existing products in your space found on the web.",
     changefreq: "weekly",
     priority: 0.8,
     heroHeading: "Ideal Customer Profile Builder",
@@ -812,12 +812,12 @@ export const INDEXABLE_ROUTES = [
     path: "/go-to-market",
     title: "Go-To-Market Strategy Generator | Creatives Takeover",
     description:
-      "Generate a go-to-market strategy with channel recommendations, positioning, messaging, and a 30-day startup launch plan.",
+      "Generate a go-to-market plan: channels ranked for your time and budget, positioning, messaging, a stop rule per channel and a six-week plan of weekly tasks.",
     changefreq: "weekly",
     priority: 0.8,
     heroHeading: "Plan how you will get customers",
     heroCopy:
-      "Get channel recommendations, positioning, messaging, and launch priorities designed for early-stage execution.",
+      "Get channels ranked for the time and budget you have, positioning and messaging, and a six-week plan with weekly tasks you can work through and review.",
     updatedLabel: "March 2026",
     sections: [
       {
