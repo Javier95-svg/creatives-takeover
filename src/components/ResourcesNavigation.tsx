@@ -24,10 +24,10 @@ const ResourcesNavigation = () => {
     },
     {
       icon: <Settings className="w-8 h-8 text-success" />,
-      title: "Our Services",
-      description: "Discover our comprehensive creative subscription and platform services",
-      link: "/services",
-      cta: "View Services",
+      title: "Plans and pricing",
+      description: "Compare the founder plans and what each one includes",
+      link: "/pricing",
+      cta: "View plans",
       highlight: false
     },
     {
@@ -100,8 +100,8 @@ const ResourcesNavigation = () => {
                 </Link>
               </Button>
               <Button variant="outline" size="lg" className="text-lg px-8 py-6" asChild>
-                <Link to="/services">
-                  Explore Premium Features
+                <Link to="/pricing">
+                  See plans
                 </Link>
               </Button>
             </div>

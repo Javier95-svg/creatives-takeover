@@ -41,7 +41,7 @@ export const PEDIA_TOPICS: PediaTopic[] = [
       "Your first product should answer one question as cheaply as possible: does this deliver the outcome a specific customer wants badly enough to come back? That is the job of a minimum viable product, and it is why the hardest part of building one is deciding what to leave out. This topic explains the vocabulary, MVP and product-market fit, and the practical choices that follow: which features to keep, whether to use no-code tools or write code, and how to pick a tech stack your team can maintain. The guides assume you have done some validation first. If you have not, the validation topic is the better place to begin.",
     tools: [
       { href: "/mvp-scope", label: "MVP Scope", description: "Cut a feature list down to a buildable first version." },
-      { href: "/mvp-builder", label: "MVP Builder", description: "Generate and iterate on a working MVP from a description." },
+      { href: "/mvp-builder", label: "MVP Builder", description: "Publish a landing page or simple prototype from a description." },
       { href: "/tech-stack", label: "Tech Stack Builder", description: "Compare frameworks and tools for your product." },
     ],
   },

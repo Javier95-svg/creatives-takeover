@@ -72,7 +72,6 @@ const StartupPediaHub = lazy(() => import("./pages/StartupPediaHub"));
 const StartupPediaTopic = lazy(() => import("./pages/StartupPediaTopic"));
 const StartupPediaEntry = lazy(() => import("./pages/StartupPediaEntry"));
 const StartupGuide = lazy(() => import("./pages/StartupGuide"));
-const Services = lazy(() => import("./pages/Services"));
 const Software = lazy(() => import("./pages/Software"));
 const CommunityPage = lazy(() => import("./pages/CommunityPage"));
 const LaunchpadHome = lazy(() => import("./pages/launchpad/LaunchpadHome"));
@@ -409,7 +408,9 @@ function App() {
                         <Route path="/startup-pedia/topics/:topic" element={<StartupPediaTopic />} />
                         <Route path="/startup-pedia/:slug" element={<StartupPediaEntry />} />
                         <Route path="/startup-guide" element={<StartupGuide />} />
-                        <Route path="/services" element={<Services />} />
+                        {/* Legacy "Creative Subscription" page (unlimited design access, a money-back
+                            guarantee the Terms do not offer); 301 to /pricing in vercel.json too. */}
+                        <Route path="/services" element={<Navigate to="/pricing" replace />} />
                         <Route path="/software" element={<Software />} />
                         <Route path="/mentorship" element={<CommunityPage />} />
                         {/* Community: Rooms (/rooms) and Launches (/launchpad). The

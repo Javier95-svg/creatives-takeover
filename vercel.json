@@ -18,6 +18,7 @@
     { "source": "/community/:path*", "destination": "/mentorship", "permanent": true },
     { "source": "/community", "destination": "/mentorship", "permanent": true },
     { "source": "/explore", "destination": "/marketplace", "permanent": true },
+    { "source": "/services", "destination": "/pricing", "permanent": true },
     { "source": "/marketplace/growth-consulting-for-startups", "destination": "/marketplace/get-marketing", "permanent": true },
     { "source": "/waitlist/templates", "destination": "/demo-studio/classic/templates", "permanent": true },
     { "source": "/waitlist", "destination": "/demo-studio/classic", "permanent": true },

@@ -103,7 +103,7 @@ const SearchableFAQ = () => {
       id: 9,
       category: "Community",
       question: "Is the community beginner-friendly?",
-      answer: "Absolutely. Our community welcomes founders at every stage, from those with just an idea to experienced entrepreneurs. The platform is designed to guide first-time founders through the entire startup journey with tools like BizMap AI that adapt to your experience level. Our Founder Stories feature includes content from both new and seasoned entrepreneurs.",
+      answer: "Absolutely. Our community welcomes founders at every stage, from those with just an idea to experienced entrepreneurs. The platform guides first-time founders stage by stage, with BizMap's tools ordered from defining a customer to launching. Our Founder Stories feature includes content from both new and seasoned entrepreneurs.",
       popular: true,
       tags: ["beginner friendly", "first-time founders", "supportive", "learning"]
     },
@@ -121,9 +121,9 @@ const SearchableFAQ = () => {
       id: 11,
       category: "Features",
       question: "What is BizMap AI and how does it work?",
-      answer: "BizMap AI is your AI-powered co-founder inside the Startup Development Cycle. It helps you move from rough idea to real startup through natural conversation: clarifying the problem, shaping the offer, validating demand, planning the MVP, and deciding what to do next. It remembers your previous conversations and adapts its guidance to your startup context. Each message costs 1 credit.",
+      answer: "BizMap is the founder tools section of the workspace, in the order you use them: ICP Builder to define your ideal customer (it cites existing products it finds on the web), Demo Studio to publish a page people can try, PMF Lab to score your customer evidence, MVP Builder to publish a landing page or simple prototype, GTM Strategist to plan one measurable go-to-market test, and Directories to choose where to launch.",
       popular: true,
-      tags: ["bizmap ai", "ai co-founder", "business planning", "conversation"]
+      tags: ["bizmap", "founder tools", "icp builder", "gtm strategist"]
     },
     {
       id: 12,
@@ -169,9 +169,9 @@ const SearchableFAQ = () => {
       id: 17,
       category: "Features",
       question: "What is Focus Funnel?",
-      answer: "Focus Funnel is your founder execution system. It helps you turn startup goals into concrete projects and daily tasks so you do not get lost in idea overload. Features include goal tracking, project management, task prioritization, and progress visualization, all designed to keep you moving once you are inside the build and launch stages.",
+      answer: "Focus Funnel is now Tasks, inside your Dashboard. Your Overview shows today's tasks, a suggested next step and your daily routine in one checklist you can tick off, and Tasks keeps your upcoming work, backlog and history. You can add your own tasks and set routine reminders.",
       popular: false,
-      tags: ["focus funnel", "goals", "tasks", "productivity", "planning"]
+      tags: ["focus funnel", "tasks", "dashboard", "routine"]
     },
     {
       id: 18,

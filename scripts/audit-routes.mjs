@@ -20,7 +20,6 @@ const CORE_ROUTES = [
   '/about',
   '/faq',
   '/contact',
-  '/services',
   '/resources',
   '/login',
   '/signup',

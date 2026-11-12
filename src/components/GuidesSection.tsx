@@ -272,8 +272,8 @@ const GuidesSection = () => {
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
             <Button variant="outline" size="lg" className="text-lg px-8 py-6" asChild>
-              <Link to="/services">
-                Explore Our Services
+              <Link to="/pricing">
+                See plans
               </Link>
             </Button>
           </div>
