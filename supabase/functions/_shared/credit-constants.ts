@@ -125,6 +125,7 @@ export const MVP_MODEL_COST_WEIGHTS: Record<string, number> = {
   'claude-opus-4-8': 15,
   'gemini-3.5-flash': 1,
   'gemini-3.1-flash-lite': 1,
+  'gemini-3.6-flash': 1,
   'deepseek-v4-flash': 1,
 };
 

@@ -9,6 +9,7 @@ import {
   reserveMVPBuilderCredits,
 } from "../_shared/mvp-builder-credit-reservations.ts";
 import { emitBusinessEvent } from "../_shared/analytics.ts";
+import { htmlTracksFormSubmissions, parseJsonTolerant } from "../_shared/mvp-model-output.ts";
 
 // Per-model provider pricing (USD per million tokens) for live margin
 // measurement. Used only for telemetry, not for charging.
@@ -18,6 +19,7 @@ const MODEL_PRICING_PER_MTOK: Record<string, { input: number; output: number }> 
   "claude-opus-4-8": { input: 15, output: 75 },
   "gemini-3.5-flash": { input: 0.3, output: 2.5 },
   "gemini-3.1-flash-lite": { input: 0.1, output: 0.4 },
+  "gemini-3.6-flash": { input: 0.75, output: 3.75 },
   "deepseek-v4-flash": { input: 0.14, output: 0.28 },
 };
 // Lowest revenue-per-credit we sell (Starter annual: $79/12/100). Margin is
@@ -37,11 +39,22 @@ const GEMINI_OPENAI_API_URL = "https://generativelanguage.googleapis.com/v1beta/
 const DEEPSEEK_OPENAI_API_URL = "https://api.deepseek.com/chat/completions";
 const FREE_DEFAULT_MODEL = "gemini-3.5-flash";
 const GEMINI_FALLBACK_MODEL = "gemini-3.1-flash-lite";
+// Third Gemini backup, used only when both above fail. Gemini is the one
+// provider with working credit (Anthropic and DeepSeek ran dry in Oct 2026),
+// and its free tier has busy spells where one model 503s while another works.
+const GEMINI_EXTRA_FALLBACK_MODEL = "gemini-3.6-flash";
 const PREMIUM_DEFAULT_MODEL = "claude-sonnet-4-6";
 const DEFAULT_MODEL = FREE_DEFAULT_MODEL;
 const DEEPSEEK_FALLBACK_MODEL = "deepseek-v4-flash";
 const MAX_COMBO_MODELS = 3;
 const MODEL_TIMEOUT_MS = 120000;
+// How long to wait for a streaming model to start answering before moving to
+// the next model. On 2026-10-22 gemini-3.5-flash hung for the full 120 s, which
+// left no time for the backups; a healthy model starts within a few seconds.
+const STREAM_FIRST_BYTE_TIMEOUT_MS = 45000;
+// One retry after a pause for Gemini's transient "high demand" responses.
+const GEMINI_RETRY_DELAY_MS = 3000;
+const GEMINI_RETRY_STATUSES = new Set([429, 500, 502, 503]);
 const PROVIDER_ERROR_TEXT_MAX = 600;
 
 const SUPPORTED_MODELS = [
@@ -50,12 +63,15 @@ const SUPPORTED_MODELS = [
   "claude-haiku-4-5-20251001",
   "gemini-3.5-flash",
   "gemini-3.1-flash-lite",
+  "gemini-3.6-flash",
   "deepseek-v4-flash",
 ] as const;
 
 const SUPPORTED_MODEL_SET = new Set<string>(SUPPORTED_MODELS);
 const HTML_CAPABLE_MODEL_SET = new Set<string>(SUPPORTED_MODELS);
-const SELECTABLE_MODEL_SET = new Set<string>(SUPPORTED_MODELS.filter((model) => model !== DEEPSEEK_FALLBACK_MODEL));
+const SELECTABLE_MODEL_SET = new Set<string>(
+  SUPPORTED_MODELS.filter((model) => model !== DEEPSEEK_FALLBACK_MODEL && model !== GEMINI_EXTRA_FALLBACK_MODEL),
+);
 
 // Provider routing: Claude -> Anthropic, Gemini -> Google, DeepSeek -> DeepSeek.
 function isClaudeModel(model: string): boolean {
@@ -536,7 +552,7 @@ function normalizeSelectedModels(raw: unknown, plan: Plan): string[] {
 }
 
 function getFallbackCandidates(primaryModel: string, plan: Plan): string[] {
-  const geminiBackups = [FREE_DEFAULT_MODEL, GEMINI_FALLBACK_MODEL].filter((model) => model !== primaryModel);
+  const geminiBackups = [FREE_DEFAULT_MODEL, GEMINI_FALLBACK_MODEL, GEMINI_EXTRA_FALLBACK_MODEL].filter((model) => model !== primaryModel);
   const candidates = isGeminiModel(primaryModel)
     ? [primaryModel, ...geminiBackups, DEEPSEEK_FALLBACK_MODEL, getPlanDefaultModel(plan)]
     : [primaryModel, DEEPSEEK_FALLBACK_MODEL, getPlanDefaultModel(plan), ...geminiBackups];
@@ -554,6 +570,7 @@ function getRepairCandidates(selectedModel: string, plan: Plan): string[] {
       getPlanDefaultModel(plan),
       FREE_DEFAULT_MODEL,
       GEMINI_FALLBACK_MODEL,
+      GEMINI_EXTRA_FALLBACK_MODEL,
     ])
   ).filter((model) => isModelAllowedForPlan(model, plan));
 }
@@ -663,10 +680,10 @@ function parseModelJson(fullText: string): unknown {
     .replace(/\s*```$/i, "")
     .trim();
   try {
-    return JSON.parse(cleaned);
+    return parseJsonTolerant(cleaned);
   } catch (error) {
     const jsonObject = extractBalancedJsonObject(cleaned);
-    if (jsonObject) return JSON.parse(jsonObject);
+    if (jsonObject) return parseJsonTolerant(jsonObject);
     const htmlDocument = extractHtmlDocument(cleaned);
     if (htmlDocument) {
       return {
@@ -941,9 +958,11 @@ function validateOutput(raw: unknown) {
     if (!htmlFile) throw new Error("html_single output must include index.html or another HTML file");
     if (!/<title>[^<]+<\/title>/i.test(htmlFile.content)) throw new Error("HTML must include a title tag");
     if (!/<meta\s+name=["']description["']\s+content=["'][^"']+["']/i.test(htmlFile.content)) throw new Error("HTML must include a meta description");
-    for (const eventName of ["page_view", "cta_clicked", "form_submitted"]) {
+    for (const eventName of ["page_view", "cta_clicked"]) {
       if (!htmlFile.content.includes(eventName)) throw new Error(`HTML must track ${eventName}`);
     }
+    // data-ct-lead forms are tracked by the platform's lead script.
+    if (!htmlTracksFormSubmissions(htmlFile.content)) throw new Error("HTML must track form_submitted");
   } else {
     for (const required of ["package.json", "index.html"]) {
       if (!files.some((f) => f.filename === required)) throw new Error(`react_vite output must include ${required}`);
@@ -1354,7 +1373,7 @@ async function requestModelStream(
   config: { temperature: number; maxTokens: number }
 ): Promise<Response> {
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), MODEL_TIMEOUT_MS);
+  const timeoutId = setTimeout(() => controller.abort(), STREAM_FIRST_BYTE_TIMEOUT_MS);
   try {
     if (isOpenAICompatibleModel(model)) {
       const apiKey = isGeminiModel(model)
@@ -1815,12 +1834,18 @@ serve(async (req: Request) => {
   for (const candidate of modelCandidates) {
     selectedModel = candidate;
     try {
-      const attempt = await requestModelStream(
+      let attempt = await requestModelStream(
         candidate,
         systemPrompt,
         messages,
         ACTION_CONFIG[classifiedAction]
       );
+      if (!attempt.ok && isGeminiModel(candidate) && GEMINI_RETRY_STATUSES.has(attempt.status)) {
+        console.warn("Gemini busy, retrying once:", candidate, attempt.status);
+        await attempt.body?.cancel().catch(() => {});
+        await new Promise((resolve) => setTimeout(resolve, GEMINI_RETRY_DELAY_MS));
+        attempt = await requestModelStream(candidate, systemPrompt, messages, ACTION_CONFIG[classifiedAction]);
+      }
       if (attempt.ok) {
         aiResponse = attempt;
         break;

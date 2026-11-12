@@ -14,8 +14,11 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { Resend } from "npm:resend@2.0.0";
 import { requireAdminOrWorker } from "../_shared/guards.ts";
 import { escapeHtml } from "../_shared/email-voice.ts";
-import { callGemini, GEMINI_SEARCH_MODELS } from "../_shared/gemini.ts";
+import { callGemini, GEMINI_SEARCH_MODELS, GEMINI_TEXT_MODELS } from "../_shared/gemini.ts";
 import { FAST_JSON_MODELS } from "../_shared/json-generation.ts";
+
+/** Gemini models mvp-builder-generate calls (FREE_DEFAULT_MODEL, GEMINI_FALLBACK_MODEL there). */
+const MVP_BUILDER_GEMINI_MODELS = ["gemini-3.5-flash", "gemini-3.1-flash-lite"];
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -66,6 +69,14 @@ const describeFailure = async (response: Response) => {
 
 const env = (name: string) => Deno.env.get(name)?.trim() ?? "";
 
+/** Every Gemini model id the edge functions name. Keep in sync when models change. */
+const REQUIRED_GEMINI_MODELS = Array.from(new Set([
+  ...GEMINI_TEXT_MODELS.map((spec) => spec.model),
+  ...GEMINI_SEARCH_MODELS.map((spec) => spec.model),
+  ...FAST_JSON_MODELS.map((spec) => spec.model),
+  ...MVP_BUILDER_GEMINI_MODELS,
+]));
+
 const CHECKS: ProviderCheck[] = [
   {
     provider: "gemini_text",
@@ -78,6 +89,22 @@ const CHECKS: ProviderCheck[] = [
         json: true,
         timeoutMs: TIMEOUT_MS,
       });
+    },
+  },
+  {
+    // Listing models is free. Catches a model our code names being retired
+    // or never existing for this key (MVP Builder failed this way in Oct 2026).
+    provider: "gemini_models",
+    affects: "Any tool whose Gemini model is missing falls back or fails",
+    run: async () => {
+      const response = await withTimeout("https://generativelanguage.googleapis.com/v1beta/models?pageSize=1000", {
+        headers: { "x-goog-api-key": env("GEMINI_API_KEY") },
+      });
+      if (!response.ok) throw new Error(await describeFailure(response));
+      const body = await response.json();
+      const available = new Set((body?.models ?? []).map((model: { name?: string }) => String(model?.name ?? "").replace(/^models\//, "")));
+      const missing = REQUIRED_GEMINI_MODELS.filter((model) => !available.has(model));
+      if (missing.length) throw new Error(`Missing models: ${missing.join(", ")}`);
     },
   },
   {
@@ -145,6 +172,7 @@ const CHECKS: ProviderCheck[] = [
 
 const KEY_FOR: Record<string, string> = {
   gemini_text: "GEMINI_API_KEY",
+  gemini_models: "GEMINI_API_KEY",
   gemini_search: "GEMINI_API_KEY",
   tavily: "TAVILY_API_KEY",
   openai: "OPENAI_API_KEY",
@@ -201,7 +229,13 @@ serve(async (req) => {
     // Without the previous state every run would look like a first run and
     // email about every failing provider, so a read failure stops here.
     const { data: previousRows, error: readError } = await admin.from("ai_provider_health").select("provider, ok, failing_since, last_ok_at");
-    if (readError) throw new Error(`Could not read ai_provider_health: ${readError.message}`);
+    if (readError) {
+      return new Response(JSON.stringify({
+        success: false,
+        error: `Could not read ai_provider_health, nothing saved or emailed: ${readError.message}`,
+        results: results.map(({ provider, ok, configured, message, latencyMs }) => ({ provider, ok, configured, message, latencyMs })),
+      }), { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
     const previous = new Map((previousRows ?? []).map((row: { provider: string; ok: boolean; failing_since: string | null; last_ok_at: string | null }) => [row.provider, row]));
 
     const changes: Array<CheckResult & { recovered: boolean }> = [];

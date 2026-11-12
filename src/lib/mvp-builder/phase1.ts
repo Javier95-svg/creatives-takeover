@@ -222,7 +222,18 @@ const FORBIDDEN_COPY_PATTERNS = [
   /coming soon/i,
 ];
 
-const REQUIRED_PHASE_1_EVENTS = ['page_view', 'cta_clicked', 'form_submitted'];
+const REQUIRED_PHASE_1_EVENTS = ['page_view', 'cta_clicked'];
+
+/**
+ * data-ct-lead forms are submitted by the platform's lead script, which fires
+ * form_submitted itself, and a page without a form has nothing to track.
+ * Mirrors htmlTracksFormSubmissions in supabase/functions/_shared/mvp-model-output.ts.
+ */
+export function htmlTracksFormSubmissions(html: string): boolean {
+  if (html.includes('form_submitted')) return true;
+  const forms = html.match(/<form\b[^>]*>/gi) ?? [];
+  return forms.every((tag) => /\bdata-ct-lead\b/i.test(tag));
+}
 const REQUIRED_REACT_FILES = ['package.json', 'index.html'];
 
 export function sanitizeMVPBuilderTemplate(value: unknown): MVPBuilderTemplateId {
@@ -392,6 +403,9 @@ export function validateMVPBuilderOutput(raw: unknown, options: { phase1Only?: b
       if (!indexFile.content.includes(eventName)) {
         throw new Error(`HTML output must track ${eventName}.`);
       }
+    }
+    if (!htmlTracksFormSubmissions(indexFile.content)) {
+      throw new Error('HTML output must track form_submitted.');
     }
   }
 
