@@ -1,6 +1,6 @@
 import { Fragment, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { ChevronRight, Info, Loader2 } from 'lucide-react';
+import { CheckCircle2, ChevronRight, Info, Loader2 } from 'lucide-react';
 
 import SEO from '@/components/SEO';
 import { ToolPageShell } from '@/components/tool-shell/ToolPageShell';
@@ -13,6 +13,8 @@ import {
   cohortTotals, segmentComparison, share, timeSpent, topSection, type AdoptionMetrics, type AdoptionSegment,
 } from '@/lib/adoptionMetrics';
 import { funnelRows, type DiscoveryFunnel } from '@/lib/discoveryFunnel';
+import { FOUNDER_PATH_STEPS, founderPathRows, furthestLabel, type FounderPath } from '@/lib/founderPath';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { roomsMeasures, type RoomsEngagement } from '@/lib/roomsEngagement';
 import { cn } from '@/lib/utils';
 
@@ -53,6 +55,26 @@ const fetchDiscoveryFunnel = async () => {
   return data as unknown as DiscoveryFunnel;
 };
 
+/** How far real founders get along the validation path (20261111170000). */
+const fetchFounderPath = async (cohortId: string | null) => {
+  const { data, error } = await supabase.rpc('admin_founder_path_v1' as never, (cohortId ? { p_cohort_id: cohortId } : {}) as never);
+  if (error) throw error;
+  return data as unknown as FounderPath;
+};
+
+/** Cohorts to filter the founder path by, newest first. */
+const fetchCohortOptions = async () => {
+  const { data, error } = await (supabase as unknown as { from: (table: string) => any })
+    .from('launch_cohorts')
+    .select('id,cohort_name,program_name')
+    .order('start_date', { ascending: false });
+  if (error) throw error;
+  return ((data ?? []) as Array<{ id: string; cohort_name: string | null; program_name: string | null }>).map((row) => ({
+    id: row.id,
+    label: [row.cohort_name, row.program_name].filter(Boolean).join(' · ') || 'Unnamed cohort',
+  }));
+};
+
 /** Whether people talk to each other in Rooms (20261018130000). */
 const fetchRoomsEngagement = async () => {
   const { data, error } = await supabase.rpc('admin_rooms_engagement' as never, { p_days: 30 } as never);
@@ -77,6 +99,13 @@ export default function AdminAdoption() {
   const builders = useQuery({ queryKey: ['admin-adoption-metrics', WEEKS, 'builder'], queryFn: () => fetchReport('builder'), retry: false });
   const discovery = useQuery({ queryKey: ['admin-discovery-funnel', 30], queryFn: fetchDiscoveryFunnel, retry: false });
   const rooms = useQuery({ queryKey: ['admin-rooms-engagement', 30], queryFn: fetchRoomsEngagement, retry: false });
+  const [pathCohort, setPathCohort] = useState('all');
+  const cohorts = useQuery({ queryKey: ['admin-launch-cohorts'], queryFn: fetchCohortOptions, retry: false });
+  const founderPath = useQuery({
+    queryKey: ['admin-founder-path', pathCohort],
+    queryFn: () => fetchFounderPath(pathCohort === 'all' ? null : pathCohort),
+    retry: false,
+  });
   const maxRoomsWeek = Math.max(1, ...(rooms.data?.weekly ?? []).map((week) => week.foundersBuilders + week.others));
   const segmentsReady = Boolean(founders.data?.summary?.accounts !== undefined && builders.data?.summary?.accounts !== undefined);
   const metrics = segment === 'founder' && segmentsReady ? founders : segment === 'builder' && segmentsReady ? builders : all;
@@ -345,6 +374,80 @@ export default function AdminAdoption() {
                   </TableRow>)}
                 </TableBody>
               </Table>
+            </>}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Founder path</CardTitle>
+            <CardDescription>
+              How far real founders get, from an ICP to a logged Traction week. Founders and builders only; admin and internal accounts excluded.
+              Steps count independently, so a founder can skip one. Target for the founder pilot: 3 founders with a PMF score and 1 with First Customer Proof.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="text-sm text-muted-foreground" id="founder-path-cohort-label">Show</span>
+              <Select value={pathCohort} onValueChange={setPathCohort}>
+                <SelectTrigger className="w-64" aria-labelledby="founder-path-cohort-label"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All founders and builders</SelectItem>
+                  {(cohorts.data ?? []).map((cohort) => <SelectItem key={cohort.id} value={cohort.id}>{cohort.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            {founderPath.isPending && <p role="status" className="text-sm text-muted-foreground">Loading the founder path…</p>}
+            {founderPath.isError && <p className="text-sm text-muted-foreground">This card needs the 20261111170000_admin_founder_path migration. Run it and reload.</p>}
+            {founderPath.data && <>
+              <Table>
+                <TableHeader><TableRow>
+                  <TableHead>Step</TableHead>
+                  <TableHead className="text-right">Founders</TableHead>
+                  <TableHead className="text-right">Of {founderPath.data.accounts} accounts</TableHead>
+                  <TableHead className="text-right">Pilot target</TableHead>
+                </TableRow></TableHeader>
+                <TableBody>
+                  {founderPathRows(founderPath.data).map((row) => <TableRow key={row.key}>
+                    <TableCell>
+                      <span className="font-medium">{row.label}</span>
+                      <span className="block text-xs text-muted-foreground">{row.hint}</span>
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums">{row.founders}</TableCell>
+                    <TableCell className="text-right tabular-nums">{row.ofAccounts}</TableCell>
+                    <TableCell className={cn('text-right tabular-nums', row.targetMet === true && 'text-success')}>
+                      {row.target === null ? '–' : `${row.target}${row.targetMet ? ', met' : ''}`}
+                    </TableCell>
+                  </TableRow>)}
+                </TableBody>
+              </Table>
+              {founderPath.data.founders.length === 0
+                ? <p className="text-sm text-muted-foreground">No founder has reached the first step yet.</p>
+                : <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader><TableRow>
+                      <TableHead>Founder</TableHead>
+                      <TableHead>Furthest step</TableHead>
+                      {FOUNDER_PATH_STEPS.map((step) => <TableHead key={step.key} className="text-center" title={step.label}>{step.short}</TableHead>)}
+                    </TableRow></TableHeader>
+                    <TableBody>
+                      {founderPath.data.founders.map((founder) => <TableRow key={founder.userId}>
+                        <TableCell>
+                          <span className="font-medium">{founder.name}</span>
+                          <span className="block text-xs text-muted-foreground">
+                            {founder.email ?? ''}{founder.email ? ' · ' : ''}joined {new Date(founder.signedUpAt).toLocaleDateString('en-GB')}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-sm">{furthestLabel(founder.furthest)}</TableCell>
+                        {FOUNDER_PATH_STEPS.map((step) => <TableCell key={step.key} className="text-center">
+                          {founder.reached[step.key]
+                            ? <CheckCircle2 className="mx-auto h-4 w-4 text-success" aria-label={`${step.label}: yes`} />
+                            : <span className="text-muted-foreground" aria-label={`${step.label}: no`}>·</span>}
+                        </TableCell>)}
+                      </TableRow>)}
+                    </TableBody>
+                  </Table>
+                </div>}
             </>}
           </CardContent>
         </Card>
