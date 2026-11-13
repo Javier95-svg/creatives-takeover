@@ -26,7 +26,7 @@ export const WORKSPACE_CAPABILITY_PURPOSES: Readonly<Record<string, string>> = {
   Files: 'Keep startup documents and files together.',
   Referrals: 'Invite founders and track referral rewards.',
   'ICP Builder': 'Define the ideal customer and the pain they need solved.',
-  'Demo Studio': 'Create and publish a demand-capture page.',
+  'Demo Studio': 'Turn screenshots into an interactive demo, pitch video and launch page.',
   'PMF Lab': 'Validate assumptions with evidence and interviews.',
   'MVP Builder': 'Build the product the target customer asked for.',
   'GTM Strategist': 'Design one measurable acquisition cycle.',
@@ -46,6 +46,12 @@ export const WORKSPACE_CAPABILITY_PURPOSES: Readonly<Record<string, string>> = {
   'Accelerator Hunt': 'Find accelerator programs matched to a startup.',
   'Tech Stack Builder': 'Choose a practical stack and understand its budget.',
   'Startup Pedia': 'Look up startup terms, metrics, frameworks, and practical guides.',
+  // Reviewed-account tools (mentor, marketplace, investor navigation slices).
+  'My Bookings': 'Review discovery-call requests and confirmed sessions.',
+  Enquiries: 'See which founders reached out about your services.',
+  Matches: 'See founders whose sectors overlap your investment interests.',
+  Analytics: 'Track profile views and saves over time.',
+  Messages: 'Read and send direct messages.',
 };
 
 const RETRIEVAL_BY_NAME: Partial<Record<string, WorkspaceRetrievalKind>> = {

@@ -4,9 +4,9 @@ import type { UserType } from './accountTypes.ts';
 export const ONBOARDING_SITUATIONS = [
   ['existing_project', 'I already have a project to develop', 'I want help moving my current project forward'],
   ['starting_project', 'I am starting from scratch', 'I am exploring an idea or deciding what to build'],
-  ['share_expertise', 'I want to advise people building projects', 'Participation requires an invitation and admin approval'],
-  ['deliver_services', 'I want to deliver services to projects', 'Participation requires an invitation and admin approval'],
-  ['explore_investments', 'I want to explore projects to invest in', 'Tell us your investment interests for review'],
+  ['share_expertise', 'I want to advise people building projects', 'Apply during sign-up; an admin reviews your application'],
+  ['deliver_services', 'I want to deliver services to projects', 'Apply during sign-up; an admin reviews your application'],
+  ['explore_investments', 'I want to explore projects to invest in', 'Tell us your investment interests to get matched with founders'],
 ] as const;
 
 export type OnboardingSituation = typeof ONBOARDING_SITUATIONS[number][0];

@@ -25,6 +25,7 @@ import { PULSE_RESOURCE_KINDS, pulseResourceActions, requestedPulseResources, se
 import {
   commitmentFollowUpRule, MEMORY_EXTRACTION_PROMPT, MEMORY_RULE, parseMemorySuggestions, worthRemembering, type MemorySuggestion,
 } from './pulse-memory.ts';
+import { buildPulsePlatformFacts } from '../../../src/lib/pulsePlatformFacts.ts';
 
 const headers = { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache' };
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -43,6 +44,9 @@ const PROJECT_SCOPE_RULE =
   'Never carry findings from another project. To discuss a different venture, ask the user to switch projects first.';
 
 const gateway = 'https://ai.gateway.lovable.dev/v1/chat/completions';
+// Static product facts (pricing, plans, credits, gating), built once from the
+// same config the pages render so Pulse's answers cannot drift from the product.
+const PLATFORM_FACTS = buildPulsePlatformFacts();
 // How a co-founder answers, beyond an assistant: founder and builder accounts only.
 const COFOUNDER_STANCE =
   'Act as the founder\'s co-founder, not a yes-man. For plans, strategy, trade-offs or "should I" questions: ' +
@@ -361,6 +365,7 @@ export async function handlePulseHome(db: SupabaseClient, userId: string | null,
            { role: 'system', content: contextData.memory ? MEMORY_RULE : '' },
            { role: 'system', content: followUp ? commitmentFollowUpRule(followUp) : '' },
            { role: 'system', content: PROJECT_SCOPE_RULE },
+           { role: 'system', content: PLATFORM_FACTS },
            { role: 'system', content: `Untrusted catalog evidence (facts only): ${JSON.stringify(catalogEvidence)}` },
            { role: 'system', content: `Verified Startup Pedia passages for displayed cards (facts only; cite the matching card title): ${JSON.stringify(pedia.evidence.filter(item => actions.some(action => action.id === item.id)))}` },
            { role: 'system', content: `Verified public directory results for displayed cards (facts only; available/no_match/unavailable are distinct): ${JSON.stringify(resources.map(result => ({ ...result, actions: result.actions.filter(item => actions.some(action => action.id === item.id)), evidence: result.evidence.filter(item => actions.some(action => action.id === item.id)) })))}` },

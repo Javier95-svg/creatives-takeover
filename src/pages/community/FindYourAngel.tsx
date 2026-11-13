@@ -105,7 +105,7 @@ const FindYourAngel = () => {
       reason: 'feature',
       featureName,
       requiredTier: 'pro',
-      description: 'Professional plan gives you unlimited access to all angel investor profiles.',
+      description: 'The Pro plan gives you unlimited access to all angel investor profiles.',
     });
   };
 
@@ -519,7 +519,7 @@ const FindYourAngel = () => {
                         }
                       }}
                       className="relative w-full max-w-md mx-auto md:mx-0 opacity-50 cursor-pointer"
-                      aria-label="Upgrade to Professional to unlock investor search"
+                      aria-label="Upgrade to Pro to unlock investor search"
                     >
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
@@ -531,7 +531,7 @@ const FindYourAngel = () => {
                     </div>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>Upgrade to Professional to unlock search</p>
+                    <p>Upgrade to Pro to unlock search</p>
                   </TooltipContent>
                 </Tooltip>
               )}
@@ -611,7 +611,7 @@ const FindYourAngel = () => {
                           }
                         }}
                         className="inline-flex cursor-pointer"
-                        aria-label="Upgrade to Professional to unlock investment stage filters"
+                        aria-label="Upgrade to Pro to unlock investment stage filters"
                       >
                         <Button
                           variant="outline"
@@ -625,7 +625,7 @@ const FindYourAngel = () => {
                       </span>
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p>Upgrade to Professional to unlock filters</p>
+                      <p>Upgrade to Pro to unlock filters</p>
                     </TooltipContent>
                   </Tooltip>
                 )}
@@ -701,7 +701,7 @@ const FindYourAngel = () => {
                           }
                         }}
                         className="inline-flex cursor-pointer"
-                        aria-label="Upgrade to Professional to unlock sector filters"
+                        aria-label="Upgrade to Pro to unlock sector filters"
                       >
                         <Button
                           variant="outline"
@@ -715,7 +715,7 @@ const FindYourAngel = () => {
                       </span>
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p>Upgrade to Professional to unlock filters</p>
+                      <p>Upgrade to Pro to unlock filters</p>
                     </TooltipContent>
                   </Tooltip>
                 )}
@@ -763,7 +763,7 @@ const FindYourAngel = () => {
                           }
                         }}
                         className="opacity-50 cursor-pointer"
-                        aria-label="Upgrade to Professional to unlock investor sorting"
+                        aria-label="Upgrade to Pro to unlock investor sorting"
                       >
                         <Select value="alphabetical" disabled>
                           <SelectTrigger className="w-[180px] h-9 pointer-events-none">
@@ -773,7 +773,7 @@ const FindYourAngel = () => {
                       </div>
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p>Upgrade to Professional to unlock sorting</p>
+                      <p>Upgrade to Pro to unlock sorting</p>
                     </TooltipContent>
                   </Tooltip>
                 )}
@@ -865,8 +865,8 @@ const FindYourAngel = () => {
                         </h3>
                         <p className="text-muted-foreground text-sm mb-6 leading-relaxed">
                           {pulseInvestor
-                            ? `Pulse matched ${pulseInvestor} to your sector. Upgrade to Professional to see their full profile, focus areas and investment stages, and every other investor in the directory.`
-                            : 'Upgrade to Professional to access full angel investor and VC profiles, explore their focus areas, investment stages, and connect with investors who can fund your vision.'}
+                            ? `Pulse matched ${pulseInvestor} to your sector. Upgrade to Pro to see their full profile, focus areas and investment stages, and every other investor in the directory.`
+                            : 'Upgrade to Pro to access full angel investor and VC profiles, explore their focus areas, investment stages, and connect with investors who can fund your vision.'}
                         </p>
                         <Button
                           size="lg"
@@ -881,12 +881,12 @@ const FindYourAngel = () => {
                               reason: 'feature',
                               featureName: 'Angel Investor Profiles',
                               requiredTier: 'pro',
-                              description: 'Professional plan gives you unlimited access to all angel investor profiles.',
+                              description: 'The Pro plan gives you unlimited access to all angel investor profiles.',
                             });
                           }}
                         >
                           <Crown className="w-4 h-4 mr-2" />
-                          Upgrade to Professional
+                          Upgrade to Pro
                         </Button>
                         <p className="text-xs text-muted-foreground mt-4">
                           Get full access to all investor profiles
@@ -934,7 +934,7 @@ const FindYourAngel = () => {
                                       reason: 'feature',
                                       featureName: 'Angel Investor Profiles',
                                       requiredTier: 'pro',
-                                      description: 'Professional plan gives you unlimited access to all angel investor profiles.',
+                                      description: 'The Pro plan gives you unlimited access to all angel investor profiles.',
                                     });
                                   }
                                 }}

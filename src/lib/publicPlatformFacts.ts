@@ -149,7 +149,7 @@ export function buildPublicPlatformBrief(): string {
   return `FACTS FOR VISITORS WHO ARE NOT SIGNED IN (use only these for platform questions):
 
 What it is:
-Creatives Takeover is a place to turn an idea or an early product into real progress. It gives you tools to test an idea, one place to save your work, and people who can help: mentors, service providers and investors. There is no application process and the platform takes no equity (mention this only if asked about joining requirements or equity). Creating an account is free.
+Creatives Takeover is a place to turn an idea or an early product into real progress. It gives you tools to test an idea, one place to save your work, and people who can help: mentors, service providers and investors. Founders and builders join without any application, and the platform takes no equity (mention this only if asked about joining requirements or equity). Creating an account is free.
 
 Who it is for (account types):
 ${accounts}
@@ -167,7 +167,7 @@ Full details: /pricing
 
 How to start:
 - Type your idea (Idea mode) or what you are building (Product mode) in the box on the homepage. You answer a few quick questions, get a plan with your stage and a first step, then create a free account to save it.
-- Mentors and marketplace providers need an invitation and an admin review. Investors join on their own and can see founder matches right away.
+- Mentors and marketplace providers apply when creating an account, and an admin reviews the application. Investors join on their own and can see founder matches right away.
 
 Pages you can link to (use these exact paths, nothing else):
 ${PUBLIC_PULSE_LINKS.map((link) => `- [${link.title}](${link.route}): ${link.reason}`).join('\n')}
