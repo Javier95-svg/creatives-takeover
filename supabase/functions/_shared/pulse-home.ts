@@ -28,6 +28,7 @@ import {
 import { buildPulsePlatformFacts, describeUserPlan } from '../../../src/lib/pulsePlatformFacts.ts';
 import { findPulseGuide, guideEvidence } from '../../../src/lib/pulseGuides.ts';
 import { withPilotPlan, type Plan } from '../../../src/config/planPermissions.ts';
+import { resolvePulseProvider } from './pulse-provider.ts';
 
 const headers = { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache' };
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -45,7 +46,6 @@ const PROJECT_SCOPE_RULE =
   'Navigation is client-reported location, never proof of completion or access. ' +
   'Never carry findings from another project. To discuss a different venture, ask the user to switch projects first.';
 
-const gateway = 'https://ai.gateway.lovable.dev/v1/chat/completions';
 // Static product facts (pricing, plans, credits, gating), built once from the
 // same config the pages render so Pulse's answers cannot drift from the product.
 const PLATFORM_FACTS = buildPulsePlatformFacts();
@@ -161,8 +161,8 @@ export async function handlePulseHome(db: SupabaseClient, userId: string | null,
     stream.enqueue(encode({ type: 'complete', model: savedAnswer.metadata?.model, depth: savedAnswer.metadata?.depth })); stream.close();
   } }), { headers });
 
-  const key = Deno.env.get('LOVABLE_API_KEY');
-  if (!key) return failure(503, 'Pulse is not configured yet.');
+  const provider = resolvePulseProvider();
+  if (!provider) return failure(503, 'Pulse is not configured yet.');
   if (!savedUser) {
     const { error } = await db.from('chatbot_messages').insert({ conversation_id: conversation.id,
       role: 'user', content: message, metadata: { homeTurnId: turnId } });
@@ -199,9 +199,9 @@ export async function handlePulseHome(db: SupabaseClient, userId: string | null,
   const roleGuidance = pulseRoleGuidance(contextData);
   const founderToolsAllowed = contextData.account.userType === 'founder' || contextData.account.userType === 'builder';
   const allowedTools = workspaceCapabilitiesForType(contextData.account.userType);
-  const call = (messages: ChatMessage[], stream: boolean, useModel: string = PULSE_FAST_MODEL) => fetchWithRetry(gateway, {
-    method: 'POST', headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ model: useModel, messages, stream, temperature: 0.3,
+  const call = (messages: ChatMessage[], stream: boolean, useModel: string = PULSE_FAST_MODEL) => fetchWithRetry(provider.url, {
+    method: 'POST', headers: { Authorization: `Bearer ${provider.key}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ model: provider.model(useModel), messages, stream, temperature: 0.3,
       max_tokens: stream ? (useModel === PULSE_STRATEGY_MODEL ? 1800 : 1200) : 300,
       ...(!stream ? { response_format: { type: 'json_object' } } : {}) }),
     // The stronger model thinks before its first token; give it room, and one attempt (flash is the retry).

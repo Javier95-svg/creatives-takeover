@@ -4,24 +4,26 @@
 //
 // Costs real model calls, so it is NOT part of `npm test`. Run it before and
 // after a Pulse change and compare the reports:
-//   $env:LOVABLE_API_KEY = "<key from Supabase secrets>"
+//   $env:GEMINI_API_KEY = "<the project's Google key>"   (or LOVABLE_API_KEY)
 //   node --experimental-strip-types scripts/pulse-eval.ts [scenario-id ...]
 // Writes reports/pulse-eval-<date>.md and prints a summary.
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { handlePulseHome } from '../supabase/functions/_shared/pulse-home.ts';
+import { resolvePulseProvider } from '../supabase/functions/_shared/pulse-provider.ts';
 import { PulseDatabase } from '../tests/helpers/pulseDatabase.ts';
 
 type Scenario = { id: string; message: string; strategy: boolean; rubric: string[]; profile?: Record<string, unknown>; tables?: Record<string, Record<string, unknown>[]> };
 const file = JSON.parse(readFileSync(new URL('../tests/pulse-golden/scenarios.json', import.meta.url), 'utf8')) as { defaults: { profile: Record<string, unknown> }; scenarios: Scenario[] };
 
-const key = process.env.LOVABLE_API_KEY;
-if (!key) { console.error('Set LOVABLE_API_KEY (Supabase > Edge Functions > Secrets) to run the eval.'); process.exit(1); }
-(globalThis as { Deno?: unknown }).Deno = { env: { get: (name: string) => name === 'LOVABLE_API_KEY' ? key : undefined } };
+// The pipeline reads its key the way the edge function does; the same provider grades the answers.
+const env = (name: string) => process.env[name];
+(globalThis as { Deno?: unknown }).Deno = { env: { get: env } };
+const provider = resolvePulseProvider(env);
+if (!provider) { console.error('Set GEMINI_API_KEY (the project\'s Google key) or LOVABLE_API_KEY to run the eval.'); process.exit(1); }
 
 const only = process.argv.slice(2);
 const scenarios = file.scenarios.filter(scenario => !only.length || only.includes(scenario.id));
-const JUDGE_MODEL = 'google/gemini-2.5-pro';
-const gateway = 'https://ai.gateway.lovable.dev/v1/chat/completions';
+const JUDGE_MODEL = provider.model('google/gemini-2.5-pro');
 const today = new Date().toISOString().slice(0, 10);
 
 async function runScenario(scenario: Scenario, index: number) {
@@ -37,8 +39,8 @@ async function runScenario(scenario: Scenario, index: number) {
   const stream = await (await handlePulseHome(db as never, 'owner', { message: scenario.message, sessionId: '11111111-1111-4111-8111-111111111111', turnId })).text();
   const saved = db.tables.chatbot_messages.find(row => row.role === 'assistant');
   if (!saved) return { scenario, answer: '', model: 'none', depth: 'none', scores: [], failed: stream.match(/"error":"([^"]+)"/)?.[1] ?? 'no answer' };
-  const judge = await fetch(gateway, {
-    method: 'POST', headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+  const judge = await fetch(provider.url, {
+    method: 'POST', headers: { Authorization: `Bearer ${provider.key}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ model: JUDGE_MODEL, temperature: 0, response_format: { type: 'json_object' }, messages: [
       { role: 'system', content: 'You grade an AI co-founder\'s answer. For each rubric line, give pass true/false and a short reason. Also check "invented": true if the answer states any specific fact, number, customer or result that is not in the provided context. Return JSON: {"rubric":[{"line":"...","pass":true,"reason":"..."}],"invented":false,"inventedReason":""}.' },
       { role: 'user', content: JSON.stringify({ context: { profile: db.tables.profiles[0], savedMemory: db.tables.pulse_memories }, userMessage: scenario.message, answer: saved.content, rubric: scenario.rubric }) },
