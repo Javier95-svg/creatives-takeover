@@ -239,6 +239,13 @@
       "sourceFile": "src/lib/analytics.ts",
       "requiredProperties": ["surface", "outcome"]
     },
+    "pulse_task_added": {
+      "stage": "retention",
+      "owner": "product",
+      "source": "client",
+      "sourceFile": "src/lib/analytics.ts",
+      "requiredProperties": ["surface", "edited", "has_due_date"]
+    },
     "pulse_insight_shown": {
       "stage": "retention",
       "owner": "product",

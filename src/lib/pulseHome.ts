@@ -3,6 +3,7 @@ import type { DashboardAction, DashboardSnapshot } from '../types/dashboardSnaps
 import { PULSE_UUID } from './pulseScope.ts';
 import type { PulseRetrievalReference, PulseSourceReference } from './pulseSources.ts';
 import type { CommitmentCheck, MemorySuggestion } from './pulseMemory.ts';
+import type { TaskSuggestion } from './pulseActions.ts';
 import { workspaceCapabilityById } from './workspaceCapabilities.ts';
 import { PEDIA_SLUGS } from '../data/startupPedia/slugs.ts';
 import { LAUNCH_DIRECTORIES } from '../data/launchDirectories.ts';
@@ -34,6 +35,8 @@ export interface PulseHomeMessage {
   memorySuggestions?: MemorySuggestion[];
   /** A saved commitment this answer asked about. */
   commitmentCheck?: CommitmentCheck | null;
+  /** Next actions Pulse proposed; the founder adds them to the task list with one tap. */
+  taskSuggestions?: TaskSuggestion[];
 }
 export interface PulseHomePriority { id: string; title: string; route: string }
 

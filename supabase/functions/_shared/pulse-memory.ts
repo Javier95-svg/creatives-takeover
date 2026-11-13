@@ -1,6 +1,7 @@
 // Founder memory for Pulse: what is worth suggesting, and the prompts that use
 // memory. Validation is shared with the app (src/lib/pulseMemory.ts).
 export { parseMemorySuggestions, type MemorySuggestion } from '../../../src/lib/pulseMemory.ts';
+export { parseTaskSuggestions, type TaskSuggestion } from '../../../src/lib/pulseActions.ts';
 
 /**
  * Cheap gate before the extraction call: the founder said something that sounds
@@ -20,7 +21,9 @@ export const MEMORY_EXTRACTION_PROMPT =
   'kind: "decision" (a choice made), "hypothesis" (a belief not yet proven), "commitment" (something they will do), "fact" (a stable fact about the business). ' +
   'text: one short sentence from the founder\'s point of view, max 200 characters, no quotes, e.g. "Target independent dental clinics first". ' +
   'dueOn: only for commitments with a stated deadline, as YYYY-MM-DD resolved against asOf; otherwise null. ' +
-  'Return JSON only: {"memories":[{"kind":"decision","text":"...","dueOn":null}]}. Return {"memories":[]} when nothing qualifies, which is the usual case.';
+  'Separately, list at most 2 tasks: concrete next actions that Pulse proposed in its latest answer, or that the user said they will do, as short imperative sentences (max 120 characters) a founder could put on a task list, e.g. "Interview five dental clinic owners". ' +
+  'A task needs a clear, doable action; never vague advice ("think about pricing"), questions, or anything already done. dueOn as YYYY-MM-DD when a deadline was stated, else null. ' +
+  'Return JSON only: {"memories":[{"kind":"decision","text":"...","dueOn":null}],"tasks":[{"title":"...","dueOn":null}]}. Return empty arrays when nothing qualifies, which is the usual case for memories.';
 
 export const MEMORY_RULE =
   'Saved memory (memory.items) is the founder\'s own confirmed decisions, hypotheses, commitments and facts. Use it: refer to it naturally ("You decided to…"), keep advice consistent with it, ' +

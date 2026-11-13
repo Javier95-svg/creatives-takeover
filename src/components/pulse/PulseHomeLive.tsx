@@ -19,7 +19,9 @@ import { PulseInsights } from './PulseInsights';
 import { BuilderPath } from './BuilderPath';
 import { ProjectSetupCard } from './ProjectSetupCard';
 import { PulseMemoryChips } from './PulseMemoryChips';
+import { PulseTaskChips } from './PulseTaskChips';
 import { PulseMemoryPanel } from './PulseMemoryPanel';
+import { parseTaskSuggestions } from '@/lib/pulseActions';
 import { PulseConversations, type PulseConversationSummary } from './PulseConversations';
 import { parseCommitmentCheck, parseMemorySuggestions } from '@/lib/pulseMemory';
 import { enterWorkspaceRoute } from '@/lib/workspaceNavigation';
@@ -103,7 +105,8 @@ function LiveConversation({ concept, scope }: { concept: PulseHomeConcept; scope
     const history = [...(data ?? [])].reverse().filter(row => row.role === 'user' || row.role === 'assistant').map(row => {
       const metadata = row.metadata as Record<string, unknown> | null;
       return { id: metadata?.homeTurnId ? `${metadata.homeTurnId}:${row.role}` : row.id, role: row.role as 'user' | 'assistant', content: row.content, actions: validateHomeActions(metadata?.homeActions), sources: validatePulseSources(metadata?.contextSources), retrievedSources: validatePulseRetrievalSources(metadata?.retrievalSources),
-        memorySuggestions: parseMemorySuggestions(metadata?.memorySuggestions), commitmentCheck: parseCommitmentCheck(metadata?.commitmentCheck) };
+        memorySuggestions: parseMemorySuggestions(metadata?.memorySuggestions), commitmentCheck: parseCommitmentCheck(metadata?.commitmentCheck),
+        taskSuggestions: parseTaskSuggestions(metadata?.taskSuggestions) };
     });
     setMessages(history);
     const last = data?.[0];
@@ -157,6 +160,7 @@ function LiveConversation({ concept, scope }: { concept: PulseHomeConcept; scope
           trackInvestorCards(actions, 'home');
         },
         onMemorySuggestions: memorySuggestions => { if (alive.current) setMessages(previous => previous.map(message => message.id === assistantId ? { ...message, memorySuggestions } : message)); },
+        onTaskSuggestions: taskSuggestions => { if (alive.current) setMessages(previous => previous.map(message => message.id === assistantId ? { ...message, taskSuggestions } : message)); },
         onCommitmentCheck: commitmentCheck => { if (alive.current) setMessages(previous => previous.map(message => message.id === assistantId ? { ...message, commitmentCheck } : message)); },
       });
       pending.current = null;
@@ -200,6 +204,7 @@ function LiveConversation({ concept, scope }: { concept: PulseHomeConcept; scope
     renderAnswerFooter={(message, turnId) => <>
       {message.commitmentCheck && founderHome && <PulseCommitmentCheck commitment={message.commitmentCheck} surface="home" />}
       {message.memorySuggestions?.length && founderHome ? <PulseMemoryChips suggestions={message.memorySuggestions} projectId={scope.projectId} turnId={turnId} surface="home" /> : null}
+      {message.taskSuggestions?.length && founderHome ? <PulseTaskChips suggestions={message.taskSuggestions} turnId={turnId} surface="home" /> : null}
       {sessionId && <PulseAnswerFeedback sessionId={sessionId} turnId={turnId} surface="home" />}
     </>}
     composerExtras={<>

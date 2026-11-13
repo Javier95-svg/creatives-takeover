@@ -5,6 +5,8 @@ import { validateHomeActions, type PulseHomeMessage } from '@/lib/pulseHome';
 import { pulseSourceNotice, validatePulseRetrievalSources, validatePulseSources } from '@/lib/pulseSources';
 import { trackInvestorCards } from '@/lib/pulseInvestorTracking';
 import { parseCommitmentCheck, parseMemorySuggestions } from '@/lib/pulseMemory';
+import { parseTaskSuggestions } from '@/lib/pulseActions';
+import { readPulseToolState } from '@/lib/pulseToolState';
 import type { PulseScope } from '@/lib/pulseScope';
 
 const db = supabase.schema('public');
@@ -42,7 +44,8 @@ export function usePulseConversation(userId: string | undefined, scope: PulseSco
           const metadata = row.metadata as Record<string, unknown> | null;
           return { id: metadata?.homeTurnId ? `${metadata.homeTurnId}:${row.role}` : row.id, role: row.role as 'user' | 'assistant', content: row.content,
             actions: validateHomeActions(metadata?.homeActions), sources: validatePulseSources(metadata?.contextSources), retrievedSources: validatePulseRetrievalSources(metadata?.retrievalSources),
-            memorySuggestions: parseMemorySuggestions(metadata?.memorySuggestions), commitmentCheck: parseCommitmentCheck(metadata?.commitmentCheck) };
+            memorySuggestions: parseMemorySuggestions(metadata?.memorySuggestions), commitmentCheck: parseCommitmentCheck(metadata?.commitmentCheck),
+            taskSuggestions: parseTaskSuggestions(metadata?.taskSuggestions) };
         });
         const last = data?.[0];
         const turnId = (last?.metadata as Record<string, unknown> | null)?.homeTurnId;
@@ -79,7 +82,9 @@ export function usePulseConversation(userId: string | undefined, scope: PulseSco
         if (alive()) setState(previous => ({ ...previous, messages: previous.messages.map(message => message.id === assistantId ? transform(message) : message) }));
       };
       await streamPulseHome({ sessionId: session.current, turnId: turn.turnId, message: turn.text, projectId: scope.projectId, surface: 'pulse_widget', pagePath, signal: abort.signal,
+        toolState: readPulseToolState(),
         onText: chunk => update(message => ({ ...message, content: message.content + chunk })),
+        onTaskSuggestions: taskSuggestions => update(message => ({ ...message, taskSuggestions })),
         onActions: actions => { update(message => ({ ...message, actions })); trackInvestorCards(actions, 'widget'); },
         onSources: sources => { update(message => ({ ...message, sources })); if (alive()) setState(previous => ({ ...previous, notice: pulseSourceNotice(sources) })); },
         onRetrievedSources: retrievedSources => update(message => ({ ...message, retrievedSources })),

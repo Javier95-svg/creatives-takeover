@@ -23,8 +23,10 @@ import {
 import { loadPulseActivity, pulseActivityAction } from './pulse-activity.ts';
 import { PULSE_RESOURCE_KINDS, pulseResourceActions, requestedPulseResources, searchPulseResources, type PulseResourceKind } from './pulse-resources.ts';
 import {
-  commitmentFollowUpRule, MEMORY_EXTRACTION_PROMPT, MEMORY_RULE, parseMemorySuggestions, worthRemembering, type MemorySuggestion,
+  commitmentFollowUpRule, MEMORY_EXTRACTION_PROMPT, MEMORY_RULE, parseMemorySuggestions, parseTaskSuggestions, worthRemembering,
+  type MemorySuggestion, type TaskSuggestion,
 } from './pulse-memory.ts';
+import { validatePulseToolState } from '../../../src/lib/pulseToolState.ts';
 import { buildPulsePlatformFacts, describeUserPlan } from '../../../src/lib/pulsePlatformFacts.ts';
 import { findPulseGuide, guideEvidence } from '../../../src/lib/pulseGuides.ts';
 import { withPilotPlan, type Plan } from '../../../src/config/planPermissions.ts';
@@ -108,7 +110,7 @@ function failure(status: number, error: string) {
 // This branch shares Pulse's streaming gateway and free-credit policy, but
 // owns its durable history. Nothing from client/model data grants authority.
 export async function handlePulseHome(db: SupabaseClient, userId: string | null, input: {
-  message: unknown; sessionId: unknown; turnId: unknown; projectId?: unknown; businessContext?: unknown; surface?: string; pagePath?: unknown;
+  message: unknown; sessionId: unknown; turnId: unknown; projectId?: unknown; businessContext?: unknown; surface?: string; pagePath?: unknown; toolState?: unknown;
 }, callerDb?: SupabaseClient): Promise<Response> {
   const started = Date.now();
   if (!userId) return failure(401, 'Sign in to use Pulse Home.');
@@ -155,6 +157,7 @@ export async function handlePulseHome(db: SupabaseClient, userId: string | null,
     stream.enqueue(encode({ type: 'delta', content: savedAnswer.content }));
     if (savedAnswer.metadata?.commitmentCheck) stream.enqueue(encode({ type: 'commitment_check', commitment: savedAnswer.metadata.commitmentCheck }));
     if (savedAnswer.metadata?.memorySuggestions) stream.enqueue(encode({ type: 'memory_suggestions', suggestions: savedAnswer.metadata.memorySuggestions }));
+    if (savedAnswer.metadata?.taskSuggestions) stream.enqueue(encode({ type: 'task_suggestions', tasks: savedAnswer.metadata.taskSuggestions }));
     stream.enqueue(encode({ type: 'recommendations', actions: savedAnswer.metadata?.homeActions ?? [] }));
     stream.enqueue(encode({ type: 'sources', sources: savedAnswer.metadata?.contextSources ?? [] }));
     stream.enqueue(encode({ type: 'retrieved_sources', sources: savedAnswer.metadata?.retrievalSources ?? [] }));
@@ -192,7 +195,12 @@ export async function handlePulseHome(db: SupabaseClient, userId: string | null,
     .map(row => (row.metadata as Record<string, unknown>).investorQuery)
     .find(query => query && typeof query === 'object') as { requested?: unknown; fromProject?: unknown; stages?: unknown } | undefined;
   const pageTool = typeof input.pagePath === 'string' ? workspaceCapabilityForPath(input.pagePath) : undefined;
-  const context = JSON.stringify({ ...contextData, asOf: new Date().toISOString(), navigation: pageTool ? { name: pageTool.name, purpose: pageTool.purpose } : null });
+  // The open tool's own summary of its state (widget only), accepted only for
+  // the tool the page actually is; bounded and typed before it reaches the model.
+  const reported = input.surface === 'pulse_widget' ? validatePulseToolState(input.toolState) : null;
+  const toolState = reported && pageTool && reported.tool === pageTool.id ? reported : null;
+  const context = JSON.stringify({ ...contextData, asOf: new Date().toISOString(),
+    navigation: pageTool ? { name: pageTool.name, purpose: pageTool.purpose, state: toolState ? { ...toolState.summary, asOf: toolState.asOf } : null } : null });
   const contextReady = Date.now();
   let firstTokenMs: number | null = null;
   let plannerMode = 'model';
@@ -411,6 +419,7 @@ export async function handlePulseHome(db: SupabaseClient, userId: string | null,
           `You may draft text for the user to review, but never claim you sent it, accepted a booking or contacted a match. Use asOf for date comparisons and ask for timezone when a precise local deadline is needed. ` +
           `Compare recorded experiment result_value with target_value and name target_metric; distinguish user-reported results from verified measurements. Do not infer overall traction from a limited sample. When dates are old, state the date rather than assuming facts remain current. ` +
           `When a verified platform guide is supplied, answer how-to questions by walking through its steps in order, in your own words, fitted to what the user already has; never invent buttons, pages or settings beyond the guide. ` +
+          `navigation.state, when present, is the open tool's client-reported state (counts, blockers, status): make in-tool help specific to it, naming the screens or checks it lists; it is never proof of completion or access. ` +
           `When you cannot help, when the request needs a person (billing changes, refunds, bugs, account problems) or when it is outside the platform, say so plainly in one sentence and point to the Contact card when it is shown; never improvise a workaround or claim an ability you do not have. ` +
           `Never claim you edited tasks or used a tool. ${mentorStatus} ${investorStatus} ${clarify ? `Ask this clarification: ${clarify}` : ''}`
         }, { role: 'system', content: founderToolsAllowed ? COFOUNDER_STANCE : '' },
@@ -457,22 +466,28 @@ export async function handlePulseHome(db: SupabaseClient, userId: string | null,
         // Suggest memories only for founders, and only when the turn sounds worth
         // remembering; a failed extraction never fails the answer.
         let memorySuggestions: MemorySuggestion[] = [];
-        if (founderToolsAllowed && contextData.memory && !clarify && !lookup && worthRemembering(message)) {
+        let taskSuggestions: TaskSuggestion[] = [];
+        // Strategy answers usually end in a next action, so they are read for
+        // tasks even when the founder's message stated nothing to remember.
+        if (founderToolsAllowed && contextData.memory && !clarify && !lookup && (worthRemembering(message) || depth === 'strategy')) {
           try {
             const extraction = await call([{ role: 'system', content: MEMORY_EXTRACTION_PROMPT },
               { role: 'system', content: `asOf: ${new Date().toISOString().slice(0, 10)}. Saved memory: ${JSON.stringify(contextData.memory.items.map(item => item.text))}` },
               ...chat, { role: 'assistant', content: answer }], false);
             if (extraction.ok) {
               const json = await extraction.json();
-              memorySuggestions = parseMemorySuggestions(JSON.parse(json.choices?.[0]?.message?.content ?? '{}'), contextData.memory.items.map(item => item.text));
+              const extracted = JSON.parse(json.choices?.[0]?.message?.content ?? '{}');
+              memorySuggestions = parseMemorySuggestions(extracted, contextData.memory.items.map(item => item.text));
+              taskSuggestions = parseTaskSuggestions(extracted);
             }
-          } catch { memorySuggestions = []; }
+          } catch { memorySuggestions = []; taskSuggestions = []; }
         }
         const { error: saveError } = await db.from('chatbot_messages').insert({ conversation_id: conversation.id,
           role: 'assistant', content: answer, metadata: { homeTurnId: turnId, homeActions: actions, model: answerModel, depth,
             ...(investorQuery ? { investorQuery } : {}),
             ...(mentorQuery ? { mentorQuery, mentorResultIds: mentorMatches.map(match => match.mentor.id) } : {}),
             ...(memorySuggestions.length ? { memorySuggestions } : {}),
+            ...(taskSuggestions.length ? { taskSuggestions } : {}),
             ...(followUp ? { commitmentCheck: { id: followUp.id, text: followUp.text, dueOn: followUp.dueOn } } : {}),
             pulseScope: contextData.scope,
             contextSources: sources, catalogEvidence: catalogEvidence.map(result => ({ kind: result.kind, state: result.state,
@@ -496,6 +511,7 @@ export async function handlePulseHome(db: SupabaseClient, userId: string | null,
           emit({ type: 'commitment_check', commitment: { id: followUp.id, text: followUp.text, dueOn: followUp.dueOn } });
         }
         if (memorySuggestions.length) emit({ type: 'memory_suggestions', suggestions: memorySuggestions });
+        if (taskSuggestions.length) emit({ type: 'task_suggestions', tasks: taskSuggestions });
         emit({ type: 'recommendations', actions }); emit({ type: 'complete', model: answerModel, depth });
         console.info('pulse_home_operation', { operation: 'stream', outcome: 'success', planner_mode: plannerMode, model: answerModel, depth, context_ms: contextReady - started, first_token_ms: firstTokenMs, duration_ms: Date.now() - started });
       } catch {

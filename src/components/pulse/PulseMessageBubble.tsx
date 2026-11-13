@@ -6,6 +6,7 @@ import { PulseSources } from './PulseSources';
 import { PulseAnswerFeedback } from './PulseAnswerFeedback';
 import { PulseCommitmentCheck } from './PulseCommitmentCheck';
 import { PulseMemoryChips } from './PulseMemoryChips';
+import { PulseTaskChips } from './PulseTaskChips';
 import { validateHomeActions } from '@/lib/pulseHome';
 import { trackPulseMentorClicked, trackPulseSourceOpened } from '@/lib/pulseMentorTracking';
 import { findPublicPulseLink, type PublicPulseLink } from '@/lib/publicPlatformFacts';
@@ -97,6 +98,8 @@ export const PulseMessageBubble = ({ message, isStreaming }: PulseMessageBubbleP
           {message.memoryScope && message.commitmentCheck && !isStreaming && <PulseCommitmentCheck commitment={message.commitmentCheck} surface="widget" />}
           {message.memoryScope && message.memorySuggestions?.length && message.id.endsWith(':assistant') && !isStreaming
             ? <PulseMemoryChips suggestions={message.memorySuggestions} projectId={message.memoryScope.projectId} turnId={message.id.slice(0, -':assistant'.length)} surface="widget" /> : null}
+          {message.memoryScope && message.taskSuggestions?.length && message.id.endsWith(':assistant') && !isStreaming
+            ? <PulseTaskChips suggestions={message.taskSuggestions} turnId={message.id.slice(0, -':assistant'.length)} surface="widget" /> : null}
           {message.feedbackSessionId && message.id.endsWith(':assistant') && message.content && !isStreaming &&
             <PulseAnswerFeedback sessionId={message.feedbackSessionId} turnId={message.id.slice(0, -':assistant'.length)} surface="widget" />}
         </>}

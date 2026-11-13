@@ -342,7 +342,8 @@ serve(async (req) => {
       turnId,
       projectId,
       pagePath,
-      sessionId, 
+      toolState,
+      sessionId,
       conversationHistory = [], 
       businessContext = {},
       userId = null,
@@ -402,7 +403,7 @@ serve(async (req) => {
         global: { headers: { Authorization: req.headers.get('Authorization')! } },
         auth: { persistSession: false, autoRefreshToken: false },
       }) : undefined;
-      return handlePulseHome(homeDb, resolvedUserId, { message, sessionId, turnId, projectId, surface, pagePath }, callerDb);
+      return handlePulseHome(homeDb, resolvedUserId, { message, sessionId, turnId, projectId, surface, pagePath, toolState }, callerDb);
     }
 
     if (!message || !sessionId) {

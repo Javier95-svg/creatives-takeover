@@ -54,7 +54,8 @@ test('widget and Home share verified context, retain source metadata on replay, 
     assert.match(response, /"type":"sources"/); assert.match(response, /"type":"complete"/);
     assert.match(prompts[0], /MVP Builder/); assert.match(prompts[0], /Orchard/); assert.doesNotMatch(prompts[0], /FAKE_CONTEXT/);
     const saved = db.tables.chatbot_messages[1].metadata.contextSources;
+    const afterFirstTurn = prompts.length;
     const replay = await (await handlePulseHome(db as never, 'owner', input)).text();
-    assert.ok(replay.includes(JSON.stringify(saved))); assert.equal(prompts.length, 2);
+    assert.ok(replay.includes(JSON.stringify(saved))); assert.equal(prompts.length, afterFirstTurn, 'a replay makes no new model calls');
   } finally { globalThis.fetch = original; delete (globalThis as any).Deno; }
 });

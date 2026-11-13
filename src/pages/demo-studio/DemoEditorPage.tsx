@@ -73,6 +73,8 @@ import {
   uploadStepHtmlSnapshot,
 } from '@/lib/demoStudio/api';
 import { getDemoReadiness } from '@/lib/demoStudio/readiness';
+import { demoStudioPulseState } from '@/lib/demoStudio/pulseState';
+import { publishPulseToolState } from '@/lib/pulseToolState';
 import { createSaveQueue, type SaveQueue, type SaveQueueState } from '@/lib/demoStudio/saveQueue';
 import { createEditHistory, toRestorePayload, type EditSnapshot } from '@/lib/demoStudio/editHistory';
 import { fileToDownscaledDataUrl } from '@/lib/demoStudio/tryDraft';
@@ -343,6 +345,12 @@ export default function DemoEditorPage() {
     [selectedStep, selectedHotspotId],
   );
   const demoReadiness = useMemo(() => getDemoReadiness(steps, theme), [steps, theme]);
+  // Pulse's view of this editor: the same readiness the publish panel shows.
+  useEffect(() => {
+    if (loading) return;
+    publishPulseToolState(demoStudioPulseState({ status: demo?.status, readiness: demoReadiness, saveStatus: saveState.status }));
+  }, [loading, demo?.status, demoReadiness, saveState.status]);
+  useEffect(() => () => publishPulseToolState(null), []);
   const staleDays = useMemo(() => {
     const captures = steps.map((s) => s.asset_captured_at).filter(Boolean) as string[];
     if (captures.length === 0) return 0;

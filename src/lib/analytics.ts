@@ -977,6 +977,10 @@ export const trackOnboardingGuestResumed = (properties: {
 export const trackPulseMemorySaved = (properties: { surface: 'home' | 'widget'; kind: string; edited: boolean } & AnalyticsProperties) =>
   captureEvent('pulse_memory_saved', properties);
 
+/** A founder added a task Pulse proposed under an answer. */
+export const trackPulseTaskAdded = (properties: { surface: 'home' | 'widget'; edited: boolean; has_due_date: boolean } & AnalyticsProperties) =>
+  captureEvent('pulse_task_added', properties);
+
 /** A founder answered Pulse's follow-up on a due commitment. */
 export const trackPulseCommitmentUpdated = (properties: { surface: 'home' | 'widget'; outcome: 'done' | 'not_yet' | 'dropped' } & AnalyticsProperties) =>
   captureEvent('pulse_commitment_updated', properties);

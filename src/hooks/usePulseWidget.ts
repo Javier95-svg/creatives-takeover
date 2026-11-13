@@ -7,6 +7,7 @@ import { usePulseConversation } from '@/hooks/usePulseConversation';
 import { streamChat } from '@/hooks/useStreamingChat';
 import { getPulseRouteContext } from '@/config/pulseRoutes';
 import { pulseScope } from '@/lib/pulseScope';
+import { describePulseToolState, readPulseToolState } from '@/lib/pulseToolState';
 import type { PulseHomeMessage } from '@/lib/pulseHome';
 import { trackPulseGuestOpened, trackPulseGuestQuestionAsked } from '@/lib/analytics';
 import {
@@ -82,14 +83,17 @@ export const usePulseWidget = () => {
     return () => { guestEpoch.current = generation + 1; };
   }, [identity, isGuestIdentity]);
   useEffect(() => { if (isGuestIdentity && !guestStreaming) saveGuestChat(guestMessages); }, [isGuestIdentity, guestStreaming, guestMessages]);
+  // When the open tool has published its state, the greeting is about it
+  // ("2 of your 5 screens are not ready"); otherwise it names the tool.
+  const [toolGreeting, setToolGreeting] = useState<string | null>(null);
   const proactiveMessage = !isAuthenticated
     ? "Hi, I'm Pulse. Ask me anything about Creatives Takeover."
-    : founder && route ? `I can help with ${route.toolName}. What are you working through?` : 'Welcome back. What would you like help with today?';
+    : founder && route ? (toolGreeting ?? `I can help with ${route.toolName}. What are you working through?`) : 'Welcome back. What would you like help with today?';
   useEffect(() => {
     if (!loaded || sessionStorage.getItem('pulse_proactive_dismissed') === 'true') return;
-    const timer = setTimeout(() => setProactiveVisible(true), 3000);
+    const timer = setTimeout(() => { setToolGreeting(founder ? describePulseToolState(readPulseToolState()) : null); setProactiveVisible(true); }, 3000);
     return () => clearTimeout(timer);
-  }, [loaded, identity]);
+  }, [loaded, identity, founder]);
   const dismissProactive = useCallback(() => { setProactiveVisible(false); sessionStorage.setItem('pulse_proactive_dismissed', 'true'); }, []);
   const openPanel = useCallback(() => {
     setIsOpen(true); setActiveTab('chat'); dismissProactive();
