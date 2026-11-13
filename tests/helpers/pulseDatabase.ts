@@ -12,6 +12,7 @@ export class PulseDatabase {
     icp_analysis_results: [], pmf_analysis_results: [], mvp_projects: [], gtm_plans: [], demo_studio_projects: [], traction_engine_sprints: [],
     pulse_memories: [], journey_assumptions: [], pulse_insights: [],
     pulse_mentor_recommendation_impressions: [],
+    subscribers: [], user_credits: [], cohort_members: [], launch_cohorts: [],
   };
   from(table: string) {
     assert.ok(table in this.tables, `Unexpected table/action: ${table}`);

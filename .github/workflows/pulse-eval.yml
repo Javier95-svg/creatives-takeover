@@ -1,0 +1,43 @@
+name: Pulse eval
+
+# Runs the golden conversations in tests/pulse-golden through the real Pulse
+# pipeline and grades them with a judge model. It costs model calls, so it runs
+# weekly and on demand, not on every push. Needs the LOVABLE_API_KEY repository
+# secret (the same key the chatbot-streaming function uses).
+on:
+  schedule:
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+    inputs:
+      scenarios:
+        description: 'Scenario ids to run, space-separated; empty runs all'
+        required: false
+        default: ''
+
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run the Pulse golden scenarios
+        run: node --experimental-strip-types scripts/pulse-eval.ts ${{ inputs.scenarios }}
+        env:
+          LOVABLE_API_KEY: ${{ secrets.LOVABLE_API_KEY }}
+
+      - name: Upload the report
+        if: ${{ always() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: pulse-eval-report
+          path: reports/
+          retention-days: 30

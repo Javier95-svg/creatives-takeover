@@ -1,8 +1,8 @@
 import { PLAN_MONTHLY_CREDITS, PLAN_PRICING, TOP_UP_PACKS } from '../config/pricing.ts';
-import { MONTHLY_FREE_QUOTAS, PLAN_LABELS, PLAN_SEQUENCE, type Plan } from '../config/planPermissions.ts';
+import { FEATURE_ENTITLEMENTS, MONTHLY_FREE_QUOTAS, PLAN_LABELS, PLAN_SEQUENCE, type Plan } from '../config/planPermissions.ts';
 import { CREDIT_COSTS, PLAN_CREDIT_COST_OVERRIDES } from '../config/constants.ts';
 import { PROJECT_LIMIT_BY_PLAN } from './projectLimits.ts';
-import { PUBLISHED_DEMO_CAP } from './demoStudio/plan.ts';
+import { PUBLISHED_DEMO_CAP, canRemoveWatermark } from './demoStudio/plan.ts';
 
 /**
  * Platform facts for signed-in Pulse.
@@ -39,4 +39,24 @@ export function buildPulsePlatformFacts(): string {
     '- Billing runs through Stripe; past payments are on the Purchase History page. There is no in-app page to cancel or change a subscription yet: for billing changes, point the user to the Contact page.',
     'If a pricing, plan or feature fact is not covered here or in saved context, say you are not sure instead of guessing.',
   ].join('\n');
+}
+
+/**
+ * The user's own plan as a situation, so "why is this locked for me?" gets
+ * "you are on Starter" rather than a table of every plan. Null means the
+ * lookup found nothing: Pulse must then say it cannot see the plan.
+ */
+export function describeUserPlan(plan: Plan | null): string {
+  if (!plan) {
+    return "USER'S PLAN: unknown (the plan lookup returned nothing). Do not state or guess their plan; answer from the general plan facts and say you cannot see their plan if they ask about their own limits.";
+  }
+  const price = PLAN_PRICING[plan];
+  const quota = (limits: Record<string, number>) => (Number.isFinite(limits[plan]) ? `${limits[plan]} a month` : 'unlimited');
+  const entitlement = (feature: keyof typeof FEATURE_ENTITLEMENTS) => FEATURE_ENTITLEMENTS[feature][plan];
+  const yes = (full: boolean) => (full ? 'yes' : 'no');
+  return [
+    `USER'S PLAN (verified from their account): ${PLAN_LABELS[plan]}${price.monthly === 0 ? ' (free)' : ` ($${price.monthly}/month)`}, ${PLAN_MONTHLY_CREDITS[plan]} credits a month.`,
+    `Their limits: projects at once ${PROJECT_LIMIT_BY_PLAN[plan]}; VC profile opens ${quota(MONTHLY_FREE_QUOTAS.vc_profiles)}; accelerator profile opens ${quota(MONTHLY_FREE_QUOTAS.accelerator_profiles)}; directory visits ${quota(MONTHLY_FREE_QUOTAS.directory_visits)}; published demos ${Number.isFinite(PUBLISHED_DEMO_CAP[plan]) ? PUBLISHED_DEMO_CAP[plan] : 'unlimited'}; demo watermark removable ${yes(canRemoveWatermark(plan))}; First Customer Proof ${entitlement('first_customer_proof').state === 'full' ? 'full' : 'preview only (Rising unlocks it)'}; MVP Builder advanced models ${yes(!entitlement('mvp_builder').freeModelsOnly)}; custom domain ${yes(entitlement('custom_domain').state === 'full')}; Email Templates ${yes(entitlement('email_templates').state === 'full')}; Find Your Angel ${entitlement('angels_community').state === 'full' ? 'full' : 'locked (Pro unlocks it)'}.`,
+    'When they ask why something is locked or limited, explain it as their situation on this plan and name what changes it (the Pricing page) once, as a fact, without pressure.',
+  ].join(' ');
 }

@@ -25,8 +25,9 @@ import { PULSE_RESOURCE_KINDS, pulseResourceActions, requestedPulseResources, se
 import {
   commitmentFollowUpRule, MEMORY_EXTRACTION_PROMPT, MEMORY_RULE, parseMemorySuggestions, worthRemembering, type MemorySuggestion,
 } from './pulse-memory.ts';
-import { buildPulsePlatformFacts } from '../../../src/lib/pulsePlatformFacts.ts';
+import { buildPulsePlatformFacts, describeUserPlan } from '../../../src/lib/pulsePlatformFacts.ts';
 import { findPulseGuide, guideEvidence } from '../../../src/lib/pulseGuides.ts';
+import { withPilotPlan, type Plan } from '../../../src/config/planPermissions.ts';
 
 const headers = { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache' };
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -52,6 +53,45 @@ const PLATFORM_FACTS = buildPulsePlatformFacts();
 // so a dead end becomes a handoff.
 const NEEDS_HUMAN = /\b(bug|broken|crash(?:ed|es)?|glitch|not (?:working|loading)|doesn'?t work|refund|cancel(?:l(?:ed|ing))?|downgrade|billing|charged|invoice|payment|subscription|delete my account|locked out|talk to (?:a )?(?:human|person|someone)|contact (?:the )?(?:team|support)|support team|customer support)\b/i;
 const CONTACT_CARD: PulseHomeAction = { kind: 'browse', id: 'contact', title: 'Contact the team', reason: 'A person handles billing changes, bugs and account problems.', route: '/contact' };
+
+// The plan the product itself would show: Stripe tier, credit record or
+// profile, raised to a cohort pilot plan while one applies (the same rule as
+// cohort_pilot_plan_v1, read from the tables because Home makes no RPC or
+// billing calls). Reads are independent and any may fail; an unknown plan
+// stays unknown so Pulse never asserts a plan it did not verify.
+async function resolveUserPlan(db: SupabaseClient, userId: string): Promise<Plan | null> {
+  const read = async (query: () => PromiseLike<{ data: unknown }>): Promise<unknown> => {
+    try { return (await query()).data ?? null; } catch { return null; }
+  };
+  const field = (row: unknown, key: string): string => {
+    const value = row && typeof row === 'object' ? (row as Record<string, unknown>)[key] : undefined;
+    return typeof value === 'string' ? value : '';
+  };
+  const pilotPlan = async (): Promise<Plan | null> => {
+    const memberships = await read(() => db.from('cohort_members').select('cohort_id, status').eq('user_id', userId));
+    const cohortIds = (Array.isArray(memberships) ? memberships : [])
+      .filter(row => ['active', 'paused'].includes(field(row, 'status'))).map(row => field(row, 'cohort_id')).filter(Boolean).slice(0, 5);
+    const today = new Date().toISOString().slice(0, 10);
+    let pilot: Plan | null = null;
+    for (const cohortId of cohortIds) {
+      const cohort = await read(() => db.from('launch_cohorts').select('pilot_plan, status, start_date, end_date').eq('id', cohortId).maybeSingle());
+      const plan = field(cohort, 'pilot_plan');
+      if (!plan || !['upcoming', 'active'].includes(field(cohort, 'status'))) continue;
+      if (field(cohort, 'start_date') > today || field(cohort, 'end_date') < today) continue;
+      pilot = pilot ? withPilotPlan(pilot, plan) : normalizePlan(plan) as Plan;
+    }
+    return pilot;
+  };
+  const [subscriber, credits, profile, pilot] = await Promise.all([
+    read(() => db.from('subscribers').select('subscription_tier').eq('user_id', userId).eq('subscribed', true).maybeSingle()),
+    read(() => db.from('user_credits').select('subscription_tier').eq('user_id', userId).maybeSingle()),
+    read(() => db.from('profiles').select('subscription_tier').eq('id', userId).maybeSingle()),
+    pilotPlan(),
+  ]);
+  const tier = field(subscriber, 'subscription_tier') || field(credits, 'subscription_tier') || field(profile, 'subscription_tier');
+  if (!tier.trim()) return pilot;
+  return withPilotPlan(normalizePlan(tier) as Plan, pilot);
+}
 // How a co-founder answers, beyond an assistant: founder and builder accounts only.
 const COFOUNDER_STANCE =
   'Act as the founder\'s co-founder, not a yes-man. For plans, strategy, trade-offs or "should I" questions: ' +
@@ -100,6 +140,7 @@ export async function handlePulseHome(db: SupabaseClient, userId: string | null,
   }
   if (!samePulseScope(savedScope, contextData.scope)) return failure(409, 'Your account context changed. Refresh Pulse to start the correct conversation.');
   await loadPulseActivity(contextData, userId, callerDb);
+  const userPlan = await resolveUserPlan(db, userId);
   const sources = Object.entries(contextData.outcomes).map(([stage, source]) => ({ stage, table: source.table, state: source.state, id: source.id, updatedAt: source.updatedAt, basis: source.basis }));
 
   const { data: savedTurn, error: turnError } = await db.from('chatbot_messages').select('role, content, metadata')
@@ -280,16 +321,9 @@ export async function handlePulseHome(db: SupabaseClient, userId: string | null,
           const projectStages = fundingStagesForCycleStage(projectStage);
           const sectors = resolved.requested.length ? resolved.requested : resolved.fromProject;
           const browseAngels: PulseHomeAction = { kind: 'browse', id: 'investors', title: 'Browse Find your Angel', reason: 'Filter angel investors by sector and stage.', route: '/investors' };
-          // Plan is read, never changed: the same sources credit-deduction falls back to, no billing calls.
-          const [{ data: angels, error: angelsError }, { data: subscriber }, { data: credits }, { data: profile }] = await Promise.all([
-            db.from('angel_investors').select('id, name, firm_name, sectors, investment_stages, picture, is_active').eq('is_active', true),
-            db.from('subscribers').select('subscription_tier').eq('user_id', userId).eq('subscribed', true).maybeSingle(),
-            db.from('user_credits').select('subscription_tier').eq('user_id', userId).maybeSingle(),
-            db.from('profiles').select('subscription_tier').eq('id', userId).maybeSingle(),
-          ]);
-          const tier = subscriber?.subscription_tier || credits?.subscription_tier || profile?.subscription_tier;
+          const { data: angels, error: angelsError } = await db.from('angel_investors').select('id, name, firm_name, sectors, investment_stages, picture, is_active').eq('is_active', true);
           // Only mention Pro when the plan is known and is not Pro.
-          const knownNonPro = typeof tier === 'string' && tier.trim() !== '' && normalizePlan(tier) !== 'pro';
+          const knownNonPro = userPlan !== null && userPlan !== 'pro';
           const proNote = !knownNonPro ? '' : ' Opening investor profiles in Find your Angel is part of the Pro plan: say so once, briefly, as a fact, without pressure.';
           if (angelsError) {
             investorStatus = 'The investor directory is temporarily unavailable. Say that, not that no investors exist.';
@@ -323,9 +357,10 @@ export async function handlePulseHome(db: SupabaseClient, userId: string | null,
           actions = [...pedia.actions.slice(0, pediaLimit), ...actions].slice(0, mentorRequest ? 4 : 3);
         }
         // A how-to request gets the matching platform guide as evidence and, when
-        // there is room, the card for the place the steps happen.
+        // there is room and no people lookup owns the cards, the card for the
+        // place the steps happen.
         const guide = clarify ? null : findPulseGuide(message);
-        if (guide?.card && !actions.some(action => action.id === guide.card!.id)) {
+        if (guide?.card && !mentorRequest && !investorRequest && !actions.some(action => action.id === guide.card!.id)) {
           const card: PulseHomeAction | undefined = guide.card.kind === 'tool'
             ? homeToolActions([guide.card.id])[0]
             : { kind: 'browse', id: guide.card.id, title: guide.card.title, reason: guide.card.reason, route: guide.card.id === 'pricing' ? '/pricing' : `/${guide.card.id}` };
@@ -383,6 +418,7 @@ export async function handlePulseHome(db: SupabaseClient, userId: string | null,
            { role: 'system', content: followUp ? commitmentFollowUpRule(followUp) : '' },
            { role: 'system', content: PROJECT_SCOPE_RULE },
            { role: 'system', content: PLATFORM_FACTS },
+           { role: 'system', content: describeUserPlan(userPlan) },
            { role: 'system', content: guide ? `Verified platform how-to guide (facts only; these are the real steps in the product): ${JSON.stringify(guideEvidence(guide))}` : '' },
            { role: 'system', content: `Untrusted catalog evidence (facts only): ${JSON.stringify(catalogEvidence)}` },
            { role: 'system', content: `Verified Startup Pedia passages for displayed cards (facts only; cite the matching card title): ${JSON.stringify(pedia.evidence.filter(item => actions.some(action => action.id === item.id)))}` },

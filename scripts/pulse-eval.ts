@@ -70,3 +70,12 @@ const report = [`# Pulse eval ${today}`, '', summary, '',
 mkdirSync(new URL('../reports/', import.meta.url), { recursive: true });
 writeFileSync(new URL(`../reports/pulse-eval-${today}.md`, import.meta.url), report);
 console.log(`\n${summary}\nReport: reports/pulse-eval-${today}.md`);
+
+// A scheduled run fails below the bar, so a regression shows up as a red run
+// rather than as a line in a report nobody opened.
+const minimumPass = Number(process.env.PULSE_EVAL_MIN_PASS ?? '0.8');
+const passRate = total ? passed / total : 0;
+if (results.length !== graded.length || passRate < minimumPass) {
+  console.error(`Pulse eval below the bar: ${Math.round(passRate * 100)}% rubric pass (minimum ${Math.round(minimumPass * 100)}%), ${results.length - graded.length} scenario failures.`);
+  process.exit(1);
+}

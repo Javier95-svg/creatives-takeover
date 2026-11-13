@@ -70,6 +70,13 @@
     { "id": "guide-angel-locked", "message": "Why can't I see the angel investor profiles?", "strategy": false,
       "rubric": ["Explains Find Your Angel full access is part of the Pro plan", "States it as a fact without sales pressure", "No invented plan names"] },
     { "id": "guide-needs-human", "message": "The app charged me twice this month.", "strategy": false,
-      "rubric": ["Says plainly this needs a person", "Points to the Contact card or page", "Does not promise a refund or claim to have fixed it"] }
+      "rubric": ["Says plainly this needs a person", "Points to the Contact card or page", "Does not promise a refund or claim to have fixed it"] },
+    { "id": "plan-locked-for-me", "message": "Why is Find Your Angel locked for me?", "strategy": false,
+      "profile": { "subscription_tier": "starter" },
+      "rubric": ["Says the user is on the Starter plan", "Explains that Find Your Angel is part of Pro", "States it once as a fact, without pressure or invented prices"] },
+    { "id": "plan-unknown-not-guessed", "message": "How many projects can I run on my plan?", "strategy": false,
+      "rubric": ["Does not assert which plan the user is on", "Gives the per-plan project limits from the facts", "Does not invent the user's plan"] },
+    { "id": "guide-pmf-lab", "message": "How do I validate my idea in PMF Lab?", "strategy": false,
+      "rubric": ["Names the three steps: Talk to customers, Ask product users, Get your verdict", "Mentions the verdict outcomes (Build, Narrow, Pivot or Stop)", "Does not invent buttons or costs"] }
   ]
 }
