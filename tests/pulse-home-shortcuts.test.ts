@@ -5,8 +5,8 @@ import { PULSE_HOME_SHORTCUTS, STAGE_EXAMPLE_QUESTION, toolNameForRoute } from '
 
 test('the founder home keeps its eight quick starts, each with a destination', () => {
   assert.deepEqual(PULSE_HOME_SHORTCUTS.map((shortcut) => shortcut.label), [
-    'What should I focus next?', 'Find me a mentor', 'Find me a co-founder', 'Help me define my customer',
-    'Help me create a demo', 'Help me validate my idea', 'Help me build my MVP', 'Help me plan my launch',
+    "See today's focus", 'Find a mentor', 'Find a co-founder', 'Define my ideal customer',
+    'Create a product demo', 'Validate my idea', 'Build my MVP', 'Plan my launch',
   ]);
   for (const shortcut of PULSE_HOME_SHORTCUTS) {
     assert.ok(shortcut.route.startsWith('/'), shortcut.id);

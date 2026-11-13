@@ -16,16 +16,17 @@ export interface PulseShortcut {
 
 const toolRoute = (key: string) => FOUNDER_TOOL_CATALOG.find((tool) => tool.key === key)!.route;
 
-// Four rows of two, in this order.
+// Four rows of two, in this order. These are links that open a place, so
+// they are worded as destinations, not as questions for Pulse.
 export const PULSE_HOME_SHORTCUTS: readonly PulseShortcut[] = [
-  { id: 'focus', label: 'What should I focus next?', tool: 'Dashboard', route: '/dashboard', icon: 'focus' },
-  { id: 'mentor', label: 'Find me a mentor', tool: 'Mentorship', route: '/mentorship', icon: 'mentor' },
-  { id: 'cofounder', label: 'Find me a co-founder', tool: 'Co-founder match', route: '/co-founder/create', icon: 'cofounder' },
-  { id: 'customer', label: 'Help me define my customer', tool: 'ICP Builder', route: toolRoute('icp_builder'), icon: 'customer' },
-  { id: 'demo', label: 'Help me create a demo', tool: 'Demo Studio', route: toolRoute('demo_studio'), icon: 'demo' },
-  { id: 'validate', label: 'Help me validate my idea', tool: 'PMF Lab', route: toolRoute('pmf_lab'), icon: 'validate' },
-  { id: 'mvp', label: 'Help me build my MVP', tool: 'MVP Builder', route: toolRoute('mvp_builder'), icon: 'mvp' },
-  { id: 'launch', label: 'Help me plan my launch', tool: 'GTM Strategist', route: toolRoute('gtm_strategist'), icon: 'launch' },
+  { id: 'focus', label: "See today's focus", tool: 'Dashboard', route: '/dashboard', icon: 'focus' },
+  { id: 'mentor', label: 'Find a mentor', tool: 'Mentorship', route: '/mentorship', icon: 'mentor' },
+  { id: 'cofounder', label: 'Find a co-founder', tool: 'Co-founder match', route: '/co-founder', icon: 'cofounder' },
+  { id: 'customer', label: 'Define my ideal customer', tool: 'ICP Builder', route: toolRoute('icp_builder'), icon: 'customer' },
+  { id: 'demo', label: 'Create a product demo', tool: 'Demo Studio', route: toolRoute('demo_studio'), icon: 'demo' },
+  { id: 'validate', label: 'Validate my idea', tool: 'PMF Lab', route: toolRoute('pmf_lab'), icon: 'validate' },
+  { id: 'mvp', label: 'Build my MVP', tool: 'MVP Builder', route: toolRoute('mvp_builder'), icon: 'mvp' },
+  { id: 'launch', label: 'Plan my launch', tool: 'GTM Strategist', route: toolRoute('gtm_strategist'), icon: 'launch' },
 ];
 
 /** The tool a focus item opens, from its route, e.g. "ICP Builder" for /icp-builder?x=1. */

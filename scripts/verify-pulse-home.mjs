@@ -56,12 +56,12 @@ try {
   const shortcuts = page.getByRole('navigation', { name: 'Quick starts' });
   assert.equal(await shortcuts.getByRole('link').count(), 8);
   for (const [label, route] of [
-    ['Help me define my customer', '/icp-builder'], ['Find me a mentor', '/mentorship'],
-    ['Find me a co-founder', '/co-founder/create'], ['What should I focus on next?', '/dashboard'],
-    ['Help me create a demo', '/demo-studio'], ['Help me validate my idea', '/pmf-lab'],
-    ['Help me build my MVP', '/mvp-builder'], ['Help me plan my launch', '/go-to-market'],
+    ['Define my ideal customer', '/icp-builder'], ['Find a mentor', '/mentorship'],
+    ['Find a co-founder', '/co-founder'], ["See today's focus", '/dashboard'],
+    ['Create a product demo', '/demo-studio'], ['Validate my idea', '/pmf-lab'],
+    ['Build my MVP', '/mvp-builder'], ['Plan my launch', '/go-to-market'],
   ]) assert.equal(await shortcuts.getByRole('link', { name: label, exact: true }).getAttribute('href'), route);
-  await shortcuts.getByRole('link', { name: 'Help me define my customer', exact: true }).click();
+  await shortcuts.getByRole('link', { name: 'Define my ideal customer', exact: true }).click();
   await page.waitForURL('**/icp-builder');
   assert.equal(await page.locator('.workspace-shell').count(), 0, 'Preview navigation must not enable a production shell while signed out');
   await page.goto('http://127.0.0.1:8080/prototypes/founder-guide');

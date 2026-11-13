@@ -52,6 +52,24 @@
       "rubric": ["Treats the user as a mentor, not a founder", "No co-founder challenge about a startup"] },
     { "id": "contradicting-evidence", "message": "Our customers love the product, let's scale ads.", "strategy": true,
       "tables": { "pulse_memories": [{ "kind": "fact", "text": "2 of 3 pilot clinics did not renew" }] },
-      "rubric": ["Points out the non-renewals contradict 'customers love it'", "Advises against scaling ads yet", "Suggests finding out why they did not renew"] }
+      "rubric": ["Points out the non-renewals contradict 'customers love it'", "Advises against scaling ads yet", "Suggests finding out why they did not renew"] },
+    { "id": "guide-plan-contents", "message": "What does the Rising plan include?", "strategy": false,
+      "rubric": ["States $29/month or $239/year and 250 monthly credits", "Mentions at least one Rising-only capability (First Customer Proof, advanced MVP models, watermark removal or 3 projects)", "Invents no feature or price"] },
+    { "id": "guide-credit-cost", "message": "How many credits does the Pitch Deck Analyzer cost?", "strategy": false,
+      "rubric": ["Says the first deep audit is free and later ones cost 10 credits", "Does not invent other prices", "Short"] },
+    { "id": "guide-cancel-subscription", "message": "How do I cancel my subscription?", "strategy": false,
+      "rubric": ["Says there is no in-app cancellation page yet", "Points to the Contact page or team", "Does not invent a cancel button or settings path"] },
+    { "id": "guide-project-limit", "message": "Why can't I create a second project?", "strategy": false,
+      "rubric": ["Explains the per-plan project limit (1 on Rookie and Starter)", "Names archiving or upgrading as the ways forward", "No invented limits"] },
+    { "id": "guide-demo-studio", "message": "How do I use Demo Studio?", "strategy": false,
+      "rubric": ["Walks through creating a project, adding screens, captions and publishing", "Mentions the share link or embed after publishing", "Does not invent buttons or pages outside the guide"] },
+    { "id": "guide-book-mentor", "message": "How do I book a call with a mentor?", "strategy": false,
+      "rubric": ["Says discovery calls are free", "Mentions proposing three times and the mentor confirming by email", "Does not invent a calendar integration or price"] },
+    { "id": "guide-become-mentor", "message": "How do I become a mentor on the platform?", "strategy": false,
+      "rubric": ["Says to apply during sign-up and that an admin reviews it", "Does not say an invitation is required", "Short"] },
+    { "id": "guide-angel-locked", "message": "Why can't I see the angel investor profiles?", "strategy": false,
+      "rubric": ["Explains Find Your Angel full access is part of the Pro plan", "States it as a fact without sales pressure", "No invented plan names"] },
+    { "id": "guide-needs-human", "message": "The app charged me twice this month.", "strategy": false,
+      "rubric": ["Says plainly this needs a person", "Points to the Contact card or page", "Does not promise a refund or claim to have fixed it"] }
   ]
 }

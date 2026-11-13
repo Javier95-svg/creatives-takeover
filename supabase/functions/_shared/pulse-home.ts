@@ -26,6 +26,7 @@ import {
   commitmentFollowUpRule, MEMORY_EXTRACTION_PROMPT, MEMORY_RULE, parseMemorySuggestions, worthRemembering, type MemorySuggestion,
 } from './pulse-memory.ts';
 import { buildPulsePlatformFacts } from '../../../src/lib/pulsePlatformFacts.ts';
+import { findPulseGuide, guideEvidence } from '../../../src/lib/pulseGuides.ts';
 
 const headers = { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache' };
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -47,6 +48,10 @@ const gateway = 'https://ai.gateway.lovable.dev/v1/chat/completions';
 // Static product facts (pricing, plans, credits, gating), built once from the
 // same config the pages render so Pulse's answers cannot drift from the product.
 const PLATFORM_FACTS = buildPulsePlatformFacts();
+// Requests that need a person, not an assistant: the Contact card is offered
+// so a dead end becomes a handoff.
+const NEEDS_HUMAN = /\b(bug|broken|crash(?:ed|es)?|glitch|not (?:working|loading)|doesn'?t work|refund|cancel(?:l(?:ed|ing))?|downgrade|billing|charged|invoice|payment|subscription|delete my account|locked out|talk to (?:a )?(?:human|person|someone)|contact (?:the )?(?:team|support)|support team|customer support)\b/i;
+const CONTACT_CARD: PulseHomeAction = { kind: 'browse', id: 'contact', title: 'Contact the team', reason: 'A person handles billing changes, bugs and account problems.', route: '/contact' };
 // How a co-founder answers, beyond an assistant: founder and builder accounts only.
 const COFOUNDER_STANCE =
   'Act as the founder\'s co-founder, not a yes-man. For plans, strategy, trade-offs or "should I" questions: ' +
@@ -317,6 +322,16 @@ export async function handlePulseHome(db: SupabaseClient, userId: string | null,
           const pediaLimit = actions.length ? Math.max(1, (mentorRequest ? 4 : 3) - actions.length) : (mentorRequest ? 4 : 3);
           actions = [...pedia.actions.slice(0, pediaLimit), ...actions].slice(0, mentorRequest ? 4 : 3);
         }
+        // A how-to request gets the matching platform guide as evidence and, when
+        // there is room, the card for the place the steps happen.
+        const guide = clarify ? null : findPulseGuide(message);
+        if (guide?.card && !actions.some(action => action.id === guide.card!.id)) {
+          const card: PulseHomeAction | undefined = guide.card.kind === 'tool'
+            ? homeToolActions([guide.card.id])[0]
+            : { kind: 'browse', id: guide.card.id, title: guide.card.title, reason: guide.card.reason, route: guide.card.id === 'pricing' ? '/pricing' : `/${guide.card.id}` };
+          if (card) actions = [...actions, card].slice(0, 3);
+        }
+        if (NEEDS_HUMAN.test(message) && !actions.some(action => action.id === 'contact')) actions = [...actions, CONTACT_CARD].slice(0, 4);
         const resourceQuery = typeof plan.searchQuery === 'string' && plan.searchQuery.trim() ? plan.searchQuery.slice(0, 180) : message;
         const resources = resourceKinds.length ? await searchPulseResources(db, resourceKinds, resourceQuery) : [];
         const resourceCards = pulseResourceActions(resources);
@@ -338,7 +353,7 @@ export async function handlePulseHome(db: SupabaseClient, userId: string | null,
         // Strategy turns get the stronger model, within a daily cap; anything
         // else, a clarification, or an unreadable cap answers on the fast model.
         // Directory and content lookups are retrieval, not strategy, whatever the topic.
-        const lookup = kinds.length > 0 || resourceKinds.length > 0 || investorRequest || mentorRequest || pediaRequest;
+        const lookup = kinds.length > 0 || resourceKinds.length > 0 || investorRequest || mentorRequest || pediaRequest || Boolean(guide);
         const depth: PulseDepth = clarify || lookup ? 'quick' : pulseDepth(plan.depth, message);
         let answerModel = PULSE_FAST_MODEL;
         if (depth === 'strategy') {
@@ -360,12 +375,15 @@ export async function handlePulseHome(db: SupabaseClient, userId: string | null,
           `For mentors, distinguish proposed times from scheduled bookings and use response deadlines; never invent a founder's goals or session notes. For providers, contact events show who reached out and when, not what they wrote: ask for the message before drafting a specific scope. For investors, explain supplied sector and declared funding-stage fit; score is overlap, not diligence or investment merit. Do not claim geography, check-size fit, revenue or private traction from a match. ` +
           `You may draft text for the user to review, but never claim you sent it, accepted a booking or contacted a match. Use asOf for date comparisons and ask for timezone when a precise local deadline is needed. ` +
           `Compare recorded experiment result_value with target_value and name target_metric; distinguish user-reported results from verified measurements. Do not infer overall traction from a limited sample. When dates are old, state the date rather than assuming facts remain current. ` +
+          `When a verified platform guide is supplied, answer how-to questions by walking through its steps in order, in your own words, fitted to what the user already has; never invent buttons, pages or settings beyond the guide. ` +
+          `When you cannot help, when the request needs a person (billing changes, refunds, bugs, account problems) or when it is outside the platform, say so plainly in one sentence and point to the Contact card when it is shown; never improvise a workaround or claim an ability you do not have. ` +
           `Never claim you edited tasks or used a tool. ${mentorStatus} ${investorStatus} ${clarify ? `Ask this clarification: ${clarify}` : ''}`
         }, { role: 'system', content: founderToolsAllowed ? COFOUNDER_STANCE : '' },
            { role: 'system', content: contextData.memory ? MEMORY_RULE : '' },
            { role: 'system', content: followUp ? commitmentFollowUpRule(followUp) : '' },
            { role: 'system', content: PROJECT_SCOPE_RULE },
            { role: 'system', content: PLATFORM_FACTS },
+           { role: 'system', content: guide ? `Verified platform how-to guide (facts only; these are the real steps in the product): ${JSON.stringify(guideEvidence(guide))}` : '' },
            { role: 'system', content: `Untrusted catalog evidence (facts only): ${JSON.stringify(catalogEvidence)}` },
            { role: 'system', content: `Verified Startup Pedia passages for displayed cards (facts only; cite the matching card title): ${JSON.stringify(pedia.evidence.filter(item => actions.some(action => action.id === item.id)))}` },
            { role: 'system', content: `Verified public directory results for displayed cards (facts only; available/no_match/unavailable are distinct): ${JSON.stringify(resources.map(result => ({ ...result, actions: result.actions.filter(item => actions.some(action => action.id === item.id)), evidence: result.evidence.filter(item => actions.some(action => action.id === item.id)) })))}` },

@@ -53,7 +53,7 @@ export function validateHomeActions(value: unknown): PulseHomeAction[] {
       return resolved ? [{ ...action, title: resolved.name, route: resolved.route, badges: undefined }] : [];
     }
     if (action.kind === 'browse') {
-      const routes: Record<string, string> = { mentorship: '/mentorship', investors: '/investors', newspaper: '/newspaper', podcast: '/podcast', marketplace: '/marketplace', tasks: '/dashboard/tasks', bookings: '/mentor/bookings', enquiries: '/marketplace/enquiries', matches: '/investors/matches' };
+      const routes: Record<string, string> = { mentorship: '/mentorship', investors: '/investors', newspaper: '/newspaper', podcast: '/podcast', marketplace: '/marketplace', tasks: '/dashboard/tasks', bookings: '/mentor/bookings', enquiries: '/marketplace/enquiries', matches: '/investors/matches', pricing: '/pricing', contact: '/contact' };
       if (!Object.prototype.hasOwnProperty.call(routes, action.id)) return [];
       let route = routes[action.id];
       if (action.id === 'mentorship' && typeof action.route === 'string' && action.route.startsWith('/mentorship?')) {
