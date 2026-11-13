@@ -3,7 +3,7 @@ import { AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { reportAppError, createErrorId } from '@/lib/errorReporting';
-import { reloadForStaleChunk } from '@/lib/staleChunkReload';
+import { clearStaleChunkGuard, isStaleChunkError, reloadForStaleChunk, staleChunkReloadInFlight } from '@/lib/staleChunkReload';
 
 interface Props {
   children: ReactNode;
@@ -17,8 +17,6 @@ interface State {
   errorId: string | null;
 }
 
-const CHUNK_RELOAD_KEY = 'chunk_reload_attempted';
-
 export class ErrorBoundary extends Component<Props, State> {
   public state: State = {
     hasError: false,
@@ -31,8 +29,11 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    // A page file from an older build: reload into the current one instead of showing the error.
+    // A page file from an older build: reload into the current one instead of
+    // showing the error. When the reload is already under way (another file of
+    // the same old build failed first), there is nothing left to report either.
     if (reloadForStaleChunk(error)) return;
+    if (isStaleChunkError(error) && staleChunkReloadInFlight()) return;
     const errorId = this.state.errorId ?? createErrorId();
     reportAppError(
       error,
@@ -52,52 +53,16 @@ export class ErrorBoundary extends Component<Props, State> {
       console.error('Component stack:', errorInfo.componentStack);
     }
 
-    this.attemptChunkRecovery(error);
     this.props.onError?.(error, errorInfo);
   }
 
   private handleReset = () => {
-    try {
-      sessionStorage.removeItem(CHUNK_RELOAD_KEY);
-    } catch {
-      // Ignore storage failures
-    }
+    clearStaleChunkGuard();
     this.setState({ hasError: false, error: null, errorId: null });
   };
 
   private handleReload = () => {
     window.location.reload();
-  };
-
-  private isChunkLoadError = (error: Error) => {
-    const message = error.message || '';
-    return (
-      message.includes('Loading chunk') ||
-      message.includes('ChunkLoadError') ||
-      message.includes('Failed to fetch dynamically imported module') ||
-      message.includes('Importing a module script failed')
-    );
-  };
-
-  private attemptChunkRecovery = (error: Error) => {
-    if (typeof window === 'undefined') return false;
-    if (!this.isChunkLoadError(error)) return false;
-
-    let alreadyReloaded: string | null = null;
-    try {
-      alreadyReloaded = sessionStorage.getItem(CHUNK_RELOAD_KEY);
-    } catch {
-      alreadyReloaded = null;
-    }
-    if (alreadyReloaded) return false;
-
-    try {
-      sessionStorage.setItem(CHUNK_RELOAD_KEY, '1');
-    } catch {
-      // Ignore storage failures
-    }
-    window.location.reload();
-    return true;
   };
 
   public render() {

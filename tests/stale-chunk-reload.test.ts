@@ -6,10 +6,10 @@ import test from 'node:test';
 const store = new Map<string, string>();
 let reloads = 0;
 Object.assign(globalThis, {
-  sessionStorage: { getItem: (key: string) => store.get(key) ?? null, setItem: (key: string, value: string) => { store.set(key, value); } },
+  sessionStorage: { getItem: (key: string) => store.get(key) ?? null, setItem: (key: string, value: string) => { store.set(key, value); }, removeItem: (key: string) => { store.delete(key); } },
   window: { location: { reload: () => { reloads += 1; } } },
 });
-const { isStaleChunkError, reloadForStaleChunk } = await import('../src/lib/staleChunkReload.ts');
+const { clearStaleChunkGuard, isStaleChunkError, reloadForStaleChunk, staleChunkReloadInFlight } = await import('../src/lib/staleChunkReload.ts');
 
 test('recognises stale-build load failures across browsers, and nothing else', () => {
   assert.ok(isStaleChunkError(new TypeError('Failed to fetch dynamically imported module: https://creatives-takeover.com/assets/PlatformTour.CDLvjnJF.js')));
@@ -20,11 +20,25 @@ test('recognises stale-build load failures across browsers, and nothing else', (
 
 test('reloads once, then leaves repeat failures within a minute to the error screen', () => {
   const error = new TypeError('Failed to fetch dynamically imported module: /assets/x.js');
+  assert.equal(staleChunkReloadInFlight(), false);
   assert.equal(reloadForStaleChunk(error, 1_000_000), true);
+  // A second old file failing on the same page is part of the same reload, not a new error.
   assert.equal(reloadForStaleChunk(error, 1_030_000), false);
+  assert.equal(staleChunkReloadInFlight(), true);
   assert.equal(reloadForStaleChunk(error, 1_070_000), true);
   assert.equal(reloadForStaleChunk(new Error('ordinary bug'), 2_000_000), false);
   assert.equal(reloads, 2);
+  clearStaleChunkGuard();
+  assert.equal(staleChunkReloadInFlight(), false);
+  assert.equal(reloadForStaleChunk(error, 2_000_001), true);
+  assert.equal(reloads, 3);
+});
+
+test('the error boundary neither reports nor double-reloads a stale build', () => {
+  const boundary = readFileSync(new URL('../src/components/ErrorBoundary.tsx', import.meta.url), 'utf8');
+  assert.match(boundary, /if \(reloadForStaleChunk\(error\)\) return;/);
+  assert.match(boundary, /if \(isStaleChunkError\(error\) && staleChunkReloadInFlight\(\)\) return;/);
+  assert.doesNotMatch(boundary, /chunk_reload_attempted|attemptChunkRecovery/);
 });
 
 test('a missing /assets file is a 404, not the app shell served as HTML', () => {
