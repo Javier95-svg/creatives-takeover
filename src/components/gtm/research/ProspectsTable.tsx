@@ -53,8 +53,9 @@ export function ProspectsTable({ prospects, onOpen }: { prospects: readonly Pros
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
           <Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search companies" aria-label="Search companies" className="pl-9" />
         </div>
+        <div className="flex w-full flex-wrap gap-2 sm:w-auto">
         <Select value={tier} onValueChange={(value) => setTier(value as typeof tier)}>
-          <SelectTrigger className="w-36" aria-label="Filter by fit"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="min-w-0 flex-1 sm:w-36 sm:flex-none" aria-label="Filter by fit"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All fits</SelectItem>
             <SelectItem value="A">{TIER_TEXT.A}</SelectItem>
@@ -63,9 +64,9 @@ export function ProspectsTable({ prospects, onOpen }: { prospects: readonly Pros
           </SelectContent>
         </Select>
         <Select value={status} onValueChange={(value) => setStatus(value as typeof status)}>
-          <SelectTrigger className="w-36" aria-label="Filter by status"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="min-w-0 flex-1 sm:w-36 sm:flex-none" aria-label="Filter by status"><SelectValue /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="active">Not dismissed</SelectItem>
+            <SelectItem value="active">Active</SelectItem>
             <SelectItem value="shortlisted">Shortlisted</SelectItem>
             <SelectItem value="in_pipeline">In pipeline</SelectItem>
             <SelectItem value="contacted">Contacted</SelectItem>
@@ -73,7 +74,8 @@ export function ProspectsTable({ prospects, onOpen }: { prospects: readonly Pros
             <SelectItem value="all">All</SelectItem>
           </SelectContent>
         </Select>
-        <Button type="button" variant="outline" size="sm" onClick={exportCsv} disabled={!visible.length}><Download className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />Export CSV</Button>
+        <Button type="button" variant="outline" size="sm" className="w-full sm:w-auto" onClick={exportCsv} disabled={!visible.length}><Download className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />Export CSV</Button>
+        </div>
       </div>
 
       {visible.length ? (

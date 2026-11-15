@@ -66,7 +66,7 @@ export function ProspectSheet({ prospect, onClose, canAddToPipeline, onUpdate, o
 
   return (
     <Sheet open onOpenChange={(open) => { if (!open) onClose(); }}>
-      <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-xl">
+      <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-xl" onOpenAutoFocus={(event) => event.preventDefault()}>
         <SheetHeader className="text-left">
           <div className="flex flex-wrap items-center gap-2"><FitBadge tier={prospect.fit_tier} score={prospect.fit_score} />{prospect.blocked ? <Badge variant="outline">Site blocks automated reading</Badge> : null}</div>
           <SheetTitle className="text-xl">{prospect.name}</SheetTitle>

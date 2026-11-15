@@ -22,6 +22,8 @@ interface FindCustomersProps {
   defaultWebsite?: string;
   /** For previews: render from a given research state instead of the database. */
   research?: GtmResearch;
+  /** For previews: open this prospect's detail sheet on first render. */
+  initialOpenId?: string;
 }
 
 type ResearchFailure = { message?: string; creditError?: boolean; errorCode?: string };
@@ -232,11 +234,11 @@ function ResultsHeader({ research, onNewSearch }: { research: GtmResearch; onNew
 
 // ---- Container ------------------------------------------------------------------------------
 
-export default function FindCustomers({ projectId, plan, onUpdatePlan, defaultWebsite, research: given }: FindCustomersProps) {
+export default function FindCustomers({ projectId, plan, onUpdatePlan, defaultWebsite, research: given, initialOpenId }: FindCustomersProps) {
   const live = useGtmResearch(given ? null : projectId);
   const research = given ?? live;
   const { handleCreditError } = useCreditActions();
-  const [openId, setOpenId] = useState<string | null>(null);
+  const [openId, setOpenId] = useState<string | null>(initialOpenId ?? null);
   const run = research.run;
   const open = useMemo(() => research.prospects.find((prospect) => prospect.id === openId) ?? null, [research.prospects, openId]);
 

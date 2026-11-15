@@ -56,6 +56,7 @@ const AppOverlays = lazy(() => import('@/components/AppOverlays'));
 const Index = lazy(() => import("./pages/Index"));
 const AppEntry = lazy(() => import('./pages/AppEntry'));
 const ProductGuidePrototype = lazy(() => import('./pages/prototypes/ProductGuidePrototype'));
+const FindCustomersPreview = lazy(() => import('./pages/prototypes/FindCustomersPreview'));
 const WorkspaceRouteFrame = lazy(() => import('./components/WorkspaceRouteFrame'));
 const About = lazy(() => import("./pages/About"));
 const PricingPage = lazy(() => import("./pages/PricingPage"));
@@ -384,6 +385,7 @@ function App() {
                         <Route path="/prototypes/founder-guide" element={<ProductGuidePrototype concept="founder-guide" />} />
                         <Route path="/prototypes/command-center" element={<ProductGuidePrototype concept="command-center" />} />
                         <Route path="/prototypes/guided-journey" element={<ProductGuidePrototype concept="guided-journey" />} />
+                        <Route path="/prototypes/find-customers" element={<CreditGateRoute><FindCustomersPreview /></CreditGateRoute>} />
                         {/* On a project subdomain ({slug}.creatives-takeover.com) the
                             root is that founder's published launch page, not the CT
                             marketing site. api/published-site.ts serves the shell. */}
