@@ -445,3 +445,26 @@ Phase 0 ≈ 2–3 days; Phase A ≈ 3–4 weeks for one engineer (high: run engi
 5. Edge functions: run locally (`supabase functions serve`) against the dev branch for the preview; **no production deploy** before approval.
 6. **Preview link:** per Javier's standing rule, previews are screenshots published as a claude.ai artifact (not Vercel links): the five screens of the journey (Start, What we understood, Who to target, Research in progress, Prospects + drafts), desktop and mobile, plus a short note of what is real vs mocked and the golden-URL eval results.
 7. After Javier approves: merge to main (push `branch:main` only), apply migrations to production, deploy `gtm-research`, `gtm-research-worker` and the updated `gtm-analyzer`, set `GTM_RESEARCH_MONTHLY_BUDGET_USD`, verify with one live run.
+
+## 12. Status (2026-11-16)
+
+Phase 0 and Phase A shipped on 2026-11-15 (migration `20261115120000_gtm_research_agent.sql`). The rest of the plan is in `20261116120000_gtm_research_complete.sql` and the code around it:
+
+| Item | Status |
+|---|---|
+| A gaps | "Mark as sent" / "They replied" create the founder contact and record `outreach_sent` / `reply_received` evidence; "Add to First Customer Proof" attaches to an open sprint; budget emails at 80% and 100% (`provider_spend_alerts`); public opt-out at `/research-opt-out` (`gtm-research-optout`); Pulse reads a research summary (counts and next companies, never draft text); `scripts/gtm-research-eval.ts`; "+10 more" (`GTM_RESEARCH_MORE`); free re-run after half the matches are rejected with a reason. Journey outcome row: not written on purpose; the evidence events already feed BizMap, the founder cycle and program counts, and a new `journey_outcomes` artifact type could change stage completion. |
+| B1 | Built against Hunter (domain search + verifier), charged 1 credit only on a valid or catch-all address. Off until `HUNTER_API_KEY` is set on the functions and `VITE_GTM_CONTACT_FINDER=on` in the app build. Needs the vendor bake-off, DPA and legal review of privacy policy §1.5 before switching on. |
+| B2 | Drafts use the named contact's first name. |
+| B3 | `find_signals` step: one search per top-5 match, dated sourced news within 12 months; used in drafts. |
+| B4 | "More like my shortlist" (`seed_domains`). |
+| B5 | Rejection reasons go into the query, extraction and qualification prompts of later searches in the project. |
+| B6 | `cohort_dashboard_v1` adds prospects added, outreach prepared/sent and research counts; dashboard and CSV show them. |
+| B7 | Bell notification `customer_research_ready` when a run finishes. |
+| C1 | Weekly check (`auto_refresh`, cron Mondays 08:00 UTC, up to 5 credits, only charged for matches; paused with a notice when credits run out). |
+| C2 | "Target another group" reuses the analysis; two draft versions per company with sent/reply counts per version. |
+| C3 | `launch_cohorts.research_runs_included`, set by admins on /admin/cohorts; covered runs are free and tagged with the cohort. |
+| C4 | Not built: sending from a connected mailbox needs legal review and contradicts the "no automatic sending" rule of the brief. |
+| C5 | Not built: no affordable firmographics source identified. |
+| C6 | Deferred: a public API needs API keys, rate limits and program contracts first; no program has asked for it. |
+
+Still to verify live: run the eval on 5-10 real founder sites and check the launch gates in §10.

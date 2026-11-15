@@ -144,6 +144,11 @@ export const NotificationBell = () => {
       return;
     }
 
+    if (notification.notification_type === 'customer_research_ready') {
+      navigateTo(metadataRoute || '/go-to-market?workspace=find-customers');
+      return;
+    }
+
     if (notification.notification_type === 'listing_enquiry') {
       navigateTo(metadataRoute || '/marketplace/enquiries');
       return;
@@ -291,6 +296,8 @@ export const NotificationBell = () => {
           : 'Your purchased credits were added to your balance');
       case 'subscription_upgrade_completed':
         return metadata?.message || 'Your plan has been upgraded successfully.';
+      case 'customer_research_ready':
+        return metadata?.message || 'Your customer research is ready';
       case 'discovery_call_event':
         return metadata?.message || 'There is an update for your discovery call';
       default:

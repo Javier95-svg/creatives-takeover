@@ -9,7 +9,15 @@
 
 export type ResearchRunStatus = 'analyzing' | 'needs_review' | 'queued' | 'running' | 'partial' | 'completed' | 'failed' | 'cancelled';
 export type ResearchStepKey = 'read_site' | 'understand_business' | 'find_competitors' | 'propose_segments'
-  | 'discover_companies' | 'qualify_companies' | 'draft_outreach' | 'finalize';
+  | 'discover_companies' | 'qualify_companies' | 'find_signals' | 'draft_outreach' | 'finalize';
+/**
+ * initial: a full run after the founder confirms a segment (also a second
+ * segment started from an earlier analysis). The rest add companies to an
+ * initial run: more (+10, same search), similar (seeded from companies the
+ * founder shortlisted), rerun (free, once, after most results were rejected
+ * with a reason), refresh (the weekly check for new companies).
+ */
+export type ResearchRunKind = 'initial' | 'more' | 'similar' | 'rerun' | 'refresh';
 export type ResearchStepStatus = 'queued' | 'running' | 'done' | 'partial' | 'failed' | 'skipped';
 export type FitTier = 'A' | 'B' | 'C';
 export type Verdict = 'met' | 'not_met' | 'unknown';
@@ -60,7 +68,7 @@ export interface ContactRoute { kind: 'contact_page' | 'generic_email' | 'career
 export interface Candidate { name: string; domain: string; foundVia: string }
 
 export const ANALYSIS_STEPS: readonly ResearchStepKey[] = ['read_site', 'understand_business', 'find_competitors', 'propose_segments'];
-export const RESEARCH_STEPS: readonly ResearchStepKey[] = ['discover_companies', 'qualify_companies', 'draft_outreach', 'finalize'];
+export const RESEARCH_STEPS: readonly ResearchStepKey[] = ['discover_companies', 'qualify_companies', 'find_signals', 'draft_outreach', 'finalize'];
 
 /** What each step is called on the timeline. */
 export const STEP_TITLES: Record<ResearchStepKey, string> = {
@@ -70,14 +78,21 @@ export const STEP_TITLES: Record<ResearchStepKey, string> = {
   propose_segments: 'Propose who to target',
   discover_companies: 'Find companies',
   qualify_companies: 'Check each company',
+  find_signals: 'Look for recent news',
   draft_outreach: 'Write outreach drafts',
   finalize: 'Prepare your results',
 };
 
 export const RESEARCH_RUN_CREDITS = 10;
+export const MORE_RUN_CREDITS = 5;
+export const CONTACT_FIND_CREDITS = 1;
 export const QUALIFY_BATCH_SIZE = 5;
 export const MAX_CANDIDATES = 60;
 export const MAX_SEARCHES_PER_RUN = 12;
+/** Recent-news searches per run, one per top company (Phase B signals). */
+export const MAX_SIGNAL_SEARCHES = 5;
+/** Companies a follow-up run (more, similar, refresh) aims to add. */
+export const FOLLOW_UP_TARGET = 10;
 
 /**
  * Credits charged when a run ends: the full price from ten qualified
@@ -89,6 +104,48 @@ export function creditsForRun(qualified: number, listedPrice = RESEARCH_RUN_CRED
   if (count === 0) return 0;
   if (count >= 10) return listedPrice;
   return Math.min(listedPrice, Math.max(2, Math.ceil(count / 2)));
+}
+
+/** What a follow-up run that adds companies charges: half a credit each, at most 5, nothing for none. */
+export function creditsForFollowUp(qualified: number): number {
+  const count = Math.max(0, Math.floor(qualified));
+  return count === 0 ? 0 : Math.min(MORE_RUN_CREDITS, Math.ceil(count / 2));
+}
+
+/** The listed price and the charge rule for each kind of run. */
+export function runPrice(kind: ResearchRunKind): { feature: 'GTM_RESEARCH_RUN' | 'GTM_RESEARCH_MORE' | null; credits: number } {
+  if (kind === 'rerun') return { feature: null, credits: 0 };
+  if (kind === 'initial') return { feature: 'GTM_RESEARCH_RUN', credits: RESEARCH_RUN_CREDITS };
+  return { feature: 'GTM_RESEARCH_MORE', credits: MORE_RUN_CREDITS };
+}
+
+export function chargeForRun(kind: ResearchRunKind, qualified: number): number {
+  if (kind === 'rerun') return 0;
+  return kind === 'initial' ? creditsForRun(qualified) : creditsForFollowUp(qualified);
+}
+
+/**
+ * The free re-run: offered once per search when the founder rejected at least
+ * half of its strong and good fits with a reason ("Looks off").
+ */
+export function rerunEligible(prospects: ReadonlyArray<{ fit_tier: FitTier; status: string; feedback: { reason?: string } | null }>, alreadyUsed: boolean): boolean {
+  if (alreadyUsed) return false;
+  const fits = prospects.filter((prospect) => prospect.fit_tier !== 'C');
+  if (fits.length < 2) return false;
+  const rejected = fits.filter((prospect) => prospect.status === 'dismissed' && prospect.feedback?.reason).length;
+  return rejected * 2 >= fits.length;
+}
+
+/**
+ * What the founder rejected and why, as lines for the next search's prompts
+ * (Phase B feedback learning). Most recent first, capped.
+ */
+export function feedbackLessons(rows: ReadonlyArray<{ domain: string; name?: string | null; feedback: { reason?: string; at?: string } | null }>, limit = 15): string[] {
+  return rows
+    .filter((row) => row.feedback?.reason)
+    .sort((a, b) => String(b.feedback?.at ?? '').localeCompare(String(a.feedback?.at ?? '')))
+    .slice(0, limit)
+    .map((row) => `${clean(row.name ?? row.domain, 80) || row.domain} (${row.domain}): ${clean(row.feedback?.reason, 60)}`);
 }
 
 // ---- Domains ---------------------------------------------------------------
@@ -370,6 +427,138 @@ const LANGUAGE_BY_COUNTRY: Array<[RegExp, string]> = [
 export function languageForLocation(location: string | null | undefined): string {
   const text = location ?? '';
   return LANGUAGE_BY_COUNTRY.find(([pattern]) => pattern.test(text))?.[1] ?? 'en';
+}
+
+// ---- Recent news about a company (Phase B signals) -----------------------------------
+
+export type SignalKind = 'hiring' | 'funding' | 'launch' | 'expansion' | 'partnership' | 'news';
+export interface BuyingSignal { kind: SignalKind; text: string; sourceUrl: string; date: string }
+const SIGNAL_KINDS: readonly SignalKind[] = ['hiring', 'funding', 'launch', 'expansion', 'partnership', 'news'];
+
+/**
+ * Dated, sourced news about one company. A signal is kept only when its link
+ * is one of the search results we were given and its date is within the last
+ * twelve months; undated claims are dropped rather than guessed.
+ */
+export function parseSignals(raw: unknown, allowedUrls: ReadonlySet<string>, now = new Date()): BuyingSignal[] {
+  const list = raw && typeof raw === 'object' && Array.isArray((raw as { signals?: unknown }).signals)
+    ? (raw as { signals: unknown[] }).signals : [];
+  const oldest = now.getTime() - 366 * 86_400_000;
+  const result: BuyingSignal[] = [];
+  for (const item of list) {
+    if (!item || typeof item !== 'object') continue;
+    const value = item as Record<string, unknown>;
+    const sourceUrl = typeof value.sourceUrl === 'string' ? value.sourceUrl : '';
+    const text = clean(value.text, 200);
+    const match = /^(\d{4})-(\d{2})(?:-(\d{2}))?/.exec(clean(value.date, 30));
+    if (!text || !allowedUrls.has(sourceUrl) || !match) continue;
+    const date = `${match[1]}-${match[2]}-${match[3] ?? '01'}`;
+    const time = Date.parse(`${date}T00:00:00Z`);
+    if (!Number.isFinite(time) || time < oldest || time > now.getTime() + 86_400_000) continue;
+    const kind = SIGNAL_KINDS.includes(value.kind as SignalKind) ? value.kind as SignalKind : 'news';
+    result.push({ kind, text, sourceUrl, date });
+    if (result.length >= 3) break;
+  }
+  return result.sort((a, b) => b.date.localeCompare(a.date));
+}
+
+// ---- Named decision-makers (Phase B, contact-data provider) ------------------------
+
+export interface ContactCandidate { firstName: string; lastName: string; position: string; email: string; confidence: number; sources: string[] }
+
+/** People a domain search returned; generic inboxes and nameless rows are left out. */
+export function parseDomainSearchPeople(raw: unknown, domain: string): ContactCandidate[] {
+  const emails = (raw as { data?: { emails?: unknown } } | null)?.data?.emails;
+  if (!Array.isArray(emails)) return [];
+  return emails.flatMap((item): ContactCandidate[] => {
+    if (!item || typeof item !== 'object') return [];
+    const value = item as Record<string, unknown>;
+    const email = clean(value.value, 200).toLowerCase();
+    const firstName = clean(value.first_name, 60);
+    if (value.type === 'generic' || !firstName || !/^[^@\s]+@[^@\s]+$/.test(email) || normalizeDomain(email.split('@')[1]) !== domain) return [];
+    const sources = (Array.isArray(value.sources) ? value.sources : [])
+      .map((source) => (source && typeof source === 'object' ? clean((source as Record<string, unknown>).uri, 300) : ''))
+      .filter(Boolean).slice(0, 3);
+    return [{ firstName, lastName: clean(value.last_name, 60), position: clean(value.position, 120), email, confidence: Number(value.confidence) || 0, sources }];
+  });
+}
+
+const SENIOR = /\b(founder|co-founder|owner|ceo|chief|president|director|head|partner|principal|vp|manager|lead)\b/i;
+const words = (value: string) => value.toLowerCase().split(/[^\p{L}\p{N}]+/u).filter((word) => word.length > 2);
+
+/** The person whose job title best matches the roles to contact; senior titles break ties. */
+export function pickDecisionMaker(people: readonly ContactCandidate[], roles: readonly string[]): ContactCandidate | null {
+  const wanted = new Set(roles.flatMap(words));
+  let best: { person: ContactCandidate; score: number } | null = null;
+  for (const person of people) {
+    if (!person.position) continue;
+    const overlap = words(person.position).filter((word) => wanted.has(word)).length;
+    const score = overlap * 10 + (SENIOR.test(person.position) ? 5 : 0) + person.confidence / 100;
+    if (overlap === 0 && !SENIOR.test(person.position)) continue;
+    if (!best || score > best.score) best = { person, score };
+  }
+  return best?.person ?? null;
+}
+
+/** Only deliverable answers are kept: "valid", or a domain that accepts every address. */
+export function emailStatusFromVerifier(raw: unknown): 'valid' | 'catch_all' | null {
+  const status = (raw as { data?: { status?: unknown } } | null)?.data?.status;
+  return status === 'valid' ? 'valid' : status === 'accept_all' ? 'catch_all' : null;
+}
+
+/** Puts the person's first name into a draft written with {{first_name}}. */
+export function personalizeDraft(text: string, firstName: string | null | undefined): string {
+  const name = (firstName ?? '').trim();
+  return name ? text.replace(/\{\{\s*first_name\s*\}\}/gi, name) : text;
+}
+
+// ---- A/B drafts (Phase C) ------------------------------------------------------------
+
+export type DraftStatus = 'draft' | 'approved' | 'sent_manually' | 'replied';
+
+/** Sent and replied counts per draft version, from the founder's own marks. */
+export function variantStats(drafts: ReadonlyArray<{ status: DraftStatus; chosen_variant: 'a' | 'b' }>): Record<'a' | 'b', { sent: number; replied: number }> {
+  const stats = { a: { sent: 0, replied: 0 }, b: { sent: 0, replied: 0 } };
+  for (const draft of drafts) {
+    if (draft.status !== 'sent_manually' && draft.status !== 'replied') continue;
+    stats[draft.chosen_variant].sent += 1;
+    if (draft.status === 'replied') stats[draft.chosen_variant].replied += 1;
+  }
+  return stats;
+}
+
+// ---- Pulse summary ---------------------------------------------------------------------
+
+export interface ResearchSummary {
+  targetGroup: string | null;
+  status: string;
+  finishedAt: string | null;
+  weeklyCheck: boolean;
+  counts: { matches: number; shortlisted: number; inPipeline: number; contacted: number; replied: number; rejected: number };
+  nextToContact: Array<{ name: string; domain: string; fit: string }>;
+}
+
+/** What Pulse may say about the founder's customer research: counts and the next companies to contact. */
+export function researchSummary(
+  run: { status: string; selected_segment: { name?: string } | null; completed_at: string | null; auto_refresh?: boolean | null },
+  prospects: ReadonlyArray<{ name: string; domain: string; fit_tier: FitTier; status: string; draftStatus?: string | null }>,
+): ResearchSummary {
+  const fits = prospects.filter((prospect) => prospect.fit_tier !== 'C');
+  const active = fits.filter((prospect) => prospect.status !== 'dismissed');
+  const count = (status: string) => fits.filter((prospect) => prospect.status === status).length;
+  const fitText: Record<FitTier, string> = { A: 'strong fit', B: 'good fit', C: 'possible fit' };
+  return {
+    targetGroup: run.selected_segment?.name ?? null,
+    status: run.status,
+    finishedAt: run.completed_at,
+    weeklyCheck: Boolean(run.auto_refresh),
+    counts: {
+      matches: active.length, shortlisted: count('shortlisted'), inPipeline: count('in_pipeline'), contacted: count('contacted'),
+      replied: fits.filter((prospect) => prospect.draftStatus === 'replied').length, rejected: count('dismissed'),
+    },
+    nextToContact: active.filter((prospect) => prospect.status === 'new' || prospect.status === 'shortlisted').slice(0, 3)
+      .map((prospect) => ({ name: clean(prospect.name, 80), domain: prospect.domain, fit: fitText[prospect.fit_tier] })),
+  };
 }
 
 // ---- Export ------------------------------------------------------------------------

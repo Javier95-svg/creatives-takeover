@@ -81,6 +81,7 @@ const LaunchpadPostDetail = lazy(() => import("./pages/launchpad/LaunchpadPostDe
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Careers = lazy(() => import("./pages/Careers"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
+const ResearchOptOut = lazy(() => import("./pages/ResearchOptOut"));
 const DataPrivacy = lazy(() => import("./pages/DataPrivacy"));
 const Terms = lazy(() => import("./pages/Terms"));
 const Unsubscribe = lazy(() => import("./pages/Unsubscribe"));
@@ -488,6 +489,7 @@ function App() {
                         <Route path="/careers" element={<Careers />} />
                         <Route path="/prompt-library" element={<ToolRouteWithCreditGate><PromptLibrary /></ToolRouteWithCreditGate>} />
                         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                        <Route path="/research-opt-out" element={<ResearchOptOut />} />
                         <Route path="/data-privacy" element={<DataPrivacy />} />
                         <Route path="/terms" element={<Terms />} />
                         <Route path="/ip-policy" element={<IPPolicy />} />

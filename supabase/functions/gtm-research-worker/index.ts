@@ -11,7 +11,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { isServiceRoleToken } from "../_shared/service-caller.ts";
-import { FinalStepError, STEP_HANDLERS, type ResearchRun, type ResearchStep } from "../_shared/gtm-research-pipeline.ts";
+import { FinalStepError, notifyRunFinished, STEP_HANDLERS, type ResearchRun, type ResearchStep } from "../_shared/gtm-research-pipeline.ts";
 import { kickResearchWorker } from "../_shared/gtm-research-kick.ts";
 import { ANALYSIS_STEPS } from "../../../src/lib/gtmResearch.ts";
 
@@ -59,6 +59,7 @@ async function processStep(db: SupabaseClient, step: ResearchStep): Promise<void
     if (!isAnalysis && run.status === "queued" && !runPatch.status) runPatch.status = "running";
     await db.from("gtm_research_runs").update(runPatch).eq("id", run.id);
     await enqueue(db, run, outcome.next ?? []);
+    if (step.key === "finalize") await notifyRunFinished(db, run, runPatch);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     const final = error instanceof FinalStepError || step.attempt >= step.max_attempts;

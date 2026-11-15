@@ -29,7 +29,11 @@ type CohortRow = {
   staff_code: string | null;
   weekly_checkin_day: string | null;
   pilot_plan: 'starter' | 'rising' | 'pro' | null;
+  research_runs_included: number;
 };
+
+// Customer research runs (GTM Strategist) each founder gets free during the cohort.
+const RESEARCH_RUN_OPTIONS = [0, 1, 2, 3, 5, 10];
 
 const WEEKDAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
 
@@ -74,7 +78,7 @@ export default function AdminCohortsPage() {
     queryFn: async () => {
       const { data, error } = await (supabase as any)
         .from('launch_cohorts')
-        .select('id,cohort_name,program_name,start_date,end_date,status,member_count,join_code,staff_code,weekly_checkin_day,pilot_plan')
+        .select('id,cohort_name,program_name,start_date,end_date,status,member_count,join_code,staff_code,weekly_checkin_day,pilot_plan,research_runs_included')
         .order('start_date', { ascending: false });
       if (error) throw error;
       return (data ?? []) as unknown as CohortRow[];
@@ -117,6 +121,15 @@ export default function AdminCohortsPage() {
     },
     onSuccess: () => void queryClient.invalidateQueries({ queryKey: ['admin-cohorts'] }),
     onError: () => toast.error('We couldn’t update the cohort.'),
+  });
+
+  const setResearchRuns = useMutation({
+    mutationFn: async ({ id, runs }: { id: string; runs: number }) => {
+      const { error } = await (supabase as any).rpc('set_cohort_research_allowance_v1', { p_cohort_id: id, p_runs: runs });
+      if (error) throw error;
+    },
+    onSuccess: () => void queryClient.invalidateQueries({ queryKey: ['admin-cohorts'] }),
+    onError: () => toast.error('We couldn’t update the research runs.'),
   });
 
   // After a pilot, new links stop old ones from letting anyone else in.
@@ -229,6 +242,17 @@ export default function AdminCohortsPage() {
                   <SelectContent>
                     {PILOT_PLANS.map((plan) => (
                       <SelectItem key={plan.value} value={plan.value}>{plan.value === 'none' ? plan.label : `${plan.label} for the pilot`}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select
+                  value={String(cohort.research_runs_included ?? 0)}
+                  onValueChange={(value) => setResearchRuns.mutate({ id: cohort.id, runs: Number(value) })}
+                >
+                  <SelectTrigger className="h-9 w-44" aria-label={`Customer research runs included for ${cohort.cohort_name}`}><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {RESEARCH_RUN_OPTIONS.map((runs) => (
+                      <SelectItem key={runs} value={String(runs)}>{runs === 0 ? 'No research included' : `${runs} research ${runs === 1 ? 'run' : 'runs'} each`}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>

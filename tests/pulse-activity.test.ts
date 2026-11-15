@@ -44,7 +44,8 @@ test('pending/rejected and founder/builder accounts never query category activit
     for (const approval of role === 'founder' || role === 'builder' ? ['approved'] : ['pending', 'rejected']) {
       const ctx = await context(role, approval);
       await loadPulseActivity(ctx, id, caller as never);
-      assert.deepEqual(ctx.outcomes, {});
+      // Founders may carry their own research summary; no account gets category activity.
+      assert.deepEqual(Object.keys(ctx.outcomes).filter((key) => ['bookings', 'enquiries', 'matches'].includes(key)), []);
       assert.equal(pulseActivityAction(ctx), null);
     }
   }

@@ -36,8 +36,9 @@ export function ProspectsTable({ prospects, onOpen }: { prospects: readonly Pros
     const csv = prospectsToCsv(visible.map((prospect) => ({
       name: prospect.name, domain: prospect.domain, fitTier: prospect.fit_tier, fitScore: prospect.fit_score, location: prospect.location,
       sizeBand: prospect.size_band, status: STATUS_TEXT[prospect.status], whyItFits: topReason(prospect),
-      contactRoutes: prospect.contact_routes.map((route) => route.value).join(' | '),
-      draftSubject: prospect.draft?.subject ?? '', draftBody: prospect.draft?.body ?? '',
+      contactRoutes: [...(prospect.contact ? [`${prospect.contact.full_name} <${prospect.contact.email}>`] : []), ...prospect.contact_routes.map((route) => route.value)].join(' | '),
+      draftSubject: (prospect.draft?.chosen_variant === 'b' ? prospect.draft.variant_b_subject : prospect.draft?.subject) ?? '',
+      draftBody: (prospect.draft?.chosen_variant === 'b' ? prospect.draft.variant_b_body : prospect.draft?.body) ?? '',
     })));
     const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
     const link = document.createElement('a');

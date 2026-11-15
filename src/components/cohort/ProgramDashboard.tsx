@@ -120,6 +120,11 @@ export default function ProgramDashboard({
                   Founders have the {cohort.pilotPlan.charAt(0).toUpperCase() + cohort.pilotPlan.slice(1)} plan for the cohort dates.
                 </p>
               ) : null}
+              {cohort.researchRunsIncluded ? (
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Each founder has {cohort.researchRunsIncluded} customer research {cohort.researchRunsIncluded === 1 ? 'run' : 'runs'} included.
+                </p>
+              ) : null}
               {cohortOptions.length > 1 && onSelectCohort ? (
                 <Select value={cohortId} onValueChange={onSelectCohort}>
                   <SelectTrigger className="mt-3 w-full max-w-xs" aria-label="Choose a cohort">
@@ -192,6 +197,7 @@ export default function ProgramDashboard({
                     <th className="px-4 py-3 font-semibold">Tasks</th>
                     <th className="px-4 py-3 font-semibold">Interviews</th>
                     <th className="px-4 py-3 font-semibold">Evidence</th>
+                    <th className="px-4 py-3 font-semibold">Outreach</th>
                     <th className="px-4 py-3 font-semibold">Experiments</th>
                     <th className="px-4 py-3 font-semibold">Last active</th>
                     <th className="px-4 py-3 font-semibold">{week ? `Week ${week}` : 'Check-in'}</th>
@@ -219,7 +225,7 @@ export default function ProgramDashboard({
 
       <p className="text-xs text-muted-foreground">
         Interviews, evidence and experiments count what each founder did since joining the cohort. Verified / total: verified means the platform observed it,
-        or a customer action or payment backs it; the rest is reported by the founder. Founders’ files, ideas and messages are never shown here.
+        or a customer action or payment backs it; the rest is reported by the founder. Outreach counts messages founders marked as sent. Founders’ files, ideas, messages and the companies they research are never shown here.
       </p>
     </div>
   );
@@ -266,6 +272,13 @@ function MemberRow({
         </td>
         <td className="px-4 py-3 tabular-nums text-foreground">
           {member.evidence.verified} / {member.evidence.total}
+        </td>
+        <td className="px-4 py-3 tabular-nums text-foreground">
+          {member.evidence.outreachSent ?? 0} sent
+          <p className="text-xs text-muted-foreground">
+            {member.evidence.replies} {member.evidence.replies === 1 ? 'reply' : 'replies'}
+            {member.research?.companiesQualified ? ` · ${member.research.companiesQualified} companies found` : ''}
+          </p>
         </td>
         <td className="px-4 py-3 tabular-nums text-foreground">
           {member.experimentsRun}

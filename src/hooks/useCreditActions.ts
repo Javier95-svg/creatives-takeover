@@ -29,6 +29,7 @@ const CREDIT_FEATURE_LABELS: Record<CreditFeature, string> = {
   GTM_ANALYSIS: 'GTM Strategist',
   GTM_RESEARCH_RUN: 'Customer research',
   GTM_RESEARCH_MORE: 'More companies',
+  GTM_CONTACT_FIND: 'Find a contact',
   WAITLIST_GENERATION: 'Demo Studio',
   APP_BUILDER_GENERATE: 'MVP Builder Generation',
   APP_BUILDER_REFINE: 'MVP Builder Refinement',

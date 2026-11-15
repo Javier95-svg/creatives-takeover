@@ -16,10 +16,10 @@ import { searchWeb, type WebSearchResult } from "./web-research.ts";
 import { crawlSite, type CrawledPage } from "./site-crawler.ts";
 import { resolvePulseContext } from "./pulse-context.ts";
 import {
-  creditsForRun, dedupeCandidates, extractContactRoutes, languageForLocation, MAX_CANDIDATES, MAX_SEARCHES_PER_RUN,
-  normalizeDomain, parseBusinessProfile, parseCandidates, parseCompetitors, parseDraft, parseSegments, parseVerdicts,
-  QUALIFY_BATCH_SIZE, scoreFit, verifyVerdicts, type BusinessProfile, type Candidate, type Competitor, type ResearchStepKey,
-  type Segment,
+  chargeForRun, dedupeCandidates, extractContactRoutes, feedbackLessons, languageForLocation, MAX_CANDIDATES, MAX_SEARCHES_PER_RUN,
+  MAX_SIGNAL_SEARCHES, normalizeDomain, parseBusinessProfile, parseCandidates, parseCompetitors, parseDraft, parseSegments, parseSignals,
+  parseVerdicts, QUALIFY_BATCH_SIZE, scoreFit, verifyVerdicts, type BusinessProfile, type BuyingSignal, type Candidate, type Competitor,
+  type ResearchRunKind, type ResearchStepKey, type Segment,
 } from "../../../src/lib/gtmResearch.ts";
 
 export interface ResearchRun {
@@ -27,6 +27,11 @@ export interface ResearchRun {
   user_id: string;
   project_id: string | null;
   status: string;
+  kind: ResearchRunKind;
+  parent_run_id: string | null;
+  seed_domains: string[];
+  cohort_id: string | null;
+  auto_refresh: boolean;
   input: { websiteUrl?: string; description?: string };
   business_profile: BusinessProfile | null;
   competitors: Competitor[];
@@ -74,8 +79,8 @@ async function askJson(db: SupabaseClient, runId: string, label: string, system:
   try { return JSON.parse(result.text); } catch { throw new Error(`${label}: the model did not return JSON`); }
 }
 
-async function search(db: SupabaseClient, runId: string, query: string, maxResults = 8): Promise<WebSearchResult> {
-  const result = await searchWeb({ query, maxResults, recency: "any", timeoutMs: 15_000 });
+async function search(db: SupabaseClient, runId: string, query: string, maxResults = 8, recency: "any" | "year" = "any"): Promise<WebSearchResult> {
+  const result = await searchWeb({ query, maxResults, recency, timeoutMs: 15_000 });
   await ledger(db, runId, `search:${result.provider}`, SEARCH_COST_USD[result.provider] ?? 0.03);
   return result;
 }
@@ -195,14 +200,31 @@ async function exclusions(db: SupabaseClient, run: ResearchRun): Promise<string[
   ].filter(Boolean);
 }
 
+/** Companies the founder rejected in this project, with the reason, for the next prompts. */
+async function lessons(db: SupabaseClient, run: ResearchRun): Promise<string> {
+  const query = db.from("gtm_prospect_companies").select("domain, name, feedback").eq("user_id", run.user_id).eq("status", "dismissed").not("feedback", "is", null);
+  const { data } = await (run.project_id ? query.eq("project_id", run.project_id) : query.is("project_id", null)).limit(60);
+  const lines = feedbackLessons((data ?? []) as Array<{ domain: string; name: string | null; feedback: { reason?: string; at?: string } | null }>);
+  return lines.length ? `\n\nThe founder rejected these companies from earlier results, with the reason. Avoid companies like them:\n${lines.map((line) => `- ${line}`).join("\n")}` : "";
+}
+
+/** For "more like this": the shortlisted companies the new search should resemble. */
+async function seedBlock(db: SupabaseClient, run: ResearchRun): Promise<string> {
+  if (!run.seed_domains?.length) return "";
+  const { data } = await db.from("gtm_prospect_companies").select("domain, name, description, location, industry").eq("user_id", run.user_id).in("domain", run.seed_domains).limit(10);
+  if (!data?.length) return "";
+  return `\n\nFind companies similar to these, which the founder picked as the best fits (do not return these domains):\n${data.map((row) => `- ${row.name} (${row.domain})${row.industry ? `, ${row.industry}` : ""}${row.location ? `, ${row.location}` : ""}: ${row.description ?? ""}`).join("\n")}`;
+}
+
 async function discoverCompanies(db: SupabaseClient, run: ResearchRun, step: ResearchStep): Promise<StepOutcome> {
   const segment = run.selected_segment!;
   const earlier = await previousDetail(db, run.id, "discover_companies");
   let queries = (earlier[0]?.queries as string[] | undefined) ?? [];
+  const rejected = await lessons(db, run);
   if (!queries.length) {
     const raw = await askJson(db, run.id, "gtm-research-queries",
       "Write web search queries that return the websites of companies in a target segment, or lists and directories of them. Prefer concrete, local phrasing a buyer would use. Do not target the startup's competitors.",
-      `Segment: ${JSON.stringify(segment)}\nStartup: ${run.business_profile?.name} — ${run.business_profile?.offering.text}\n\nReturn JSON only: {"queries":["", "..."]} with 8 queries.`,
+      `Segment: ${JSON.stringify(segment)}\nStartup: ${run.business_profile?.name} — ${run.business_profile?.offering.text}${await seedBlock(db, run)}${rejected}\n\nReturn JSON only: {"queries":["", "..."]} with 8 queries.`,
       600);
     queries = ((raw as { queries?: unknown }).queries as unknown[] ?? []).filter((query): query is string => typeof query === "string" && query.trim().length > 3).map((query) => query.slice(0, 200)).slice(0, MAX_SEARCHES_PER_RUN - 2);
     if (!queries.length) throw new Error("No search queries were planned");
@@ -221,7 +243,7 @@ async function discoverCompanies(db: SupabaseClient, run: ResearchRun, step: Res
   if (sources.length) {
     const raw = await askJson(db, run.id, "gtm-research-candidates",
       "From search results and list pages, extract companies that could belong to the target segment. Use only companies whose own website domain appears in the results or in the page links given; never guess a domain. Leave out directories, media, marketplaces, social networks and the excluded domains.",
-      `Segment: ${segment.name} — ${segment.criteria.map((criterion) => criterion.label).join("; ")}\nExcluded domains: ${exclude.slice(0, 80).join(", ")}\n\nSearch results:\n${sources.map((source) => `- ${source.title} — ${source.url}\n  ${source.snippet ?? ""}`).join("\n")}\n\nList pages:\n${lists.map((page) => `URL: ${page.url}\n${page.text.slice(0, 2_500)}\nLinks: ${page.links.slice(0, 120).join(" ")}`).join("\n---\n") || "none"}\n\nReturn JSON only: {"companies":[{"name":"","domain":""}]}`,
+      `Segment: ${segment.name} — ${segment.criteria.map((criterion) => criterion.label).join("; ")}\nExcluded domains: ${exclude.slice(0, 80).join(", ")}${rejected}\n\nSearch results:\n${sources.map((source) => `- ${source.title} — ${source.url}\n  ${source.snippet ?? ""}`).join("\n")}\n\nList pages:\n${lists.map((page) => `URL: ${page.url}\n${page.text.slice(0, 2_500)}\nLinks: ${page.links.slice(0, 120).join(" ")}`).join("\n---\n") || "none"}\n\nReturn JSON only: {"companies":[{"name":"","domain":""}]}`,
       1_800);
     const knownDomains = new Set([...sources.map((source) => normalizeDomain(source.url)), ...lists.flatMap((page) => page.links.map((link) => normalizeDomain(link)))].filter(Boolean));
     found = parseCandidates(raw, batchQueries.join(" | ")).filter((candidate) => knownDomains.has(candidate.domain));
@@ -271,10 +293,10 @@ async function qualifyCompanies(db: SupabaseClient, run: ResearchRun, step: Rese
   const discoverBatches = (await previousDetail(db, run.id, "discover_companies")).length;
 
   const nextAfter = async (qualified: number): Promise<StepOutcome["next"]> => {
-    if (qualified >= run.target_count) return [{ key: "draft_outreach" }];
+    if (qualified >= run.target_count) return [{ key: "find_signals" }];
     if ((step.batch + 1) * QUALIFY_BATCH_SIZE < discovered.length) return [{ key: "qualify_companies", batch: step.batch + 1 }];
     if (discoverBatches * QUERIES_PER_BATCH < queriesPlanned && discovered.length < MAX_CANDIDATES) return [{ key: "discover_companies", batch: discoverBatches }];
-    return [{ key: "draft_outreach" }];
+    return [{ key: "find_signals" }];
   };
 
   if (!batch.length) return { log: "No more companies to check", next: await nextAfter(await qualifiedSoFar(db, run.id)) };
@@ -283,9 +305,10 @@ async function qualifyCompanies(db: SupabaseClient, run: ResearchRun, step: Rese
   const readable = crawled.filter((item) => item.pages.length);
   let judged: Array<Record<string, unknown>> = [];
   if (readable.length) {
+    const rejected = await lessons(db, run);
     const raw = await askJson(db, run.id, "gtm-research-qualify",
-      "You check companies against a founder's target criteria using only each company's own web pages. verdict is \"met\" only when a page states it, with quote copied word for word from that page (at most 25 words) and that page's URL as sourceUrl; \"not_met\" only when a page clearly contradicts it; otherwise \"unknown\". Never infer from the company name alone. Also give the company's name, a one-sentence description, location (city and country if stated), size (only if stated) and industry.",
-      `Criteria:\n${segment.criteria.map((criterion) => `${criterion.id}: ${criterion.label}${criterion.mustHave ? " (must have)" : ""}`).join("\n")}\n\nCompanies:\n${readable.map((item) => `### ${item.candidate.domain}\n${pagesBlock(item.pages, 2_200)}`).join("\n\n")}\n\nReturn JSON only: {"companies":[{"domain":"","name":"","description":"","location":"","sizeBand":"","industry":"","verdicts":[{"criterionId":"c1","verdict":"met","quote":"","sourceUrl":""}]}]}`,
+      "You check companies against a founder's target criteria using only each company's own web pages. verdict is \"met\" only when a page states it, with quote copied word for word from that page (at most 25 words) and that page's URL as sourceUrl; \"not_met\" only when a page clearly contradicts it; otherwise \"unknown\". Never infer from the company name alone. When the founder rejected similar companies for a reason, apply that reason strictly to the matching criterion. Also give the company's name, a one-sentence description, location (city and country if stated), size (only if stated) and industry.",
+      `Criteria:\n${segment.criteria.map((criterion) => `${criterion.id}: ${criterion.label}${criterion.mustHave ? " (must have)" : ""}`).join("\n")}${rejected}\n\nCompanies:\n${readable.map((item) => `### ${item.candidate.domain}\n${pagesBlock(item.pages, 2_200)}`).join("\n\n")}\n\nReturn JSON only: {"companies":[{"domain":"","name":"","description":"","location":"","sizeBand":"","industry":"","verdicts":[{"criterionId":"c1","verdict":"met","quote":"","sourceUrl":""}]}]}`,
       3_500, 55_000);
     judged = ((raw as { companies?: unknown }).companies as Array<Record<string, unknown>> | undefined) ?? [];
   }
@@ -331,27 +354,64 @@ async function qualifyCompanies(db: SupabaseClient, run: ResearchRun, step: Rese
   };
 }
 
-// ---- 7. Outreach drafts (five per invocation) -------------------------------------------------
+// ---- 7. Recent news for the best matches (one search each) -------------------------------------
+
+async function findSignals(db: SupabaseClient, run: ResearchRun): Promise<StepOutcome> {
+  const { data: top } = await db.from("gtm_prospect_companies").select("id, name, domain")
+    .eq("run_id", run.id).in("fit_tier", ["A", "B"]).order("fit_score", { ascending: false }).limit(MAX_SIGNAL_SEARCHES);
+  if (!top?.length) return { log: "No matching companies to look up", status: "partial", next: [{ key: "draft_outreach" }] };
+  const results = await Promise.allSettled(top.map((prospect) =>
+    search(db, run.id, `"${prospect.name}" ${prospect.domain} hiring OR funding OR launch OR expansion OR partnership`, 5, "year")));
+  const found = top.map((prospect, index) => ({ prospect, sources: results[index].status === "fulfilled" ? (results[index] as PromiseFulfilledResult<WebSearchResult>).value.sources : [] }))
+    .filter((item) => item.sources.length);
+  if (!found.length) return { log: "No recent news found", status: "partial", next: [{ key: "draft_outreach" }] };
+  const today = new Date().toISOString().slice(0, 10);
+  const raw = await askJson(db, run.id, "gtm-research-signals",
+    `From search results about specific companies, list recent events about that exact company (same name or website): hiring, funding, a launch, an expansion, a partnership, other news. Each needs the date the result states (YYYY-MM-DD or YYYY-MM) and that result's URL as sourceUrl. Skip anything undated, about another company, or older than 12 months. Today is ${today}.`,
+    `${found.map((item) => `### id: ${item.prospect.id} — ${item.prospect.name} (${item.prospect.domain})\n${item.sources.map((source) => `- ${source.title} — ${source.url}\n  ${source.snippet ?? ""}`).join("\n")}`).join("\n\n")}\n\nReturn JSON only: {"companies":[{"id":"","signals":[{"kind":"hiring","text":"","date":"","sourceUrl":""}]}]}`,
+    1_500);
+  const companies = ((raw as { companies?: unknown }).companies as Array<Record<string, unknown>> | undefined) ?? [];
+  let withNews = 0;
+  for (const item of found) {
+    const entry = companies.find((company) => company.id === item.prospect.id);
+    const signals: BuyingSignal[] = parseSignals({ signals: entry?.signals }, new Set(item.sources.map((source) => source.url)));
+    if (!signals.length) continue;
+    await db.from("gtm_prospect_companies").update({ signals }).eq("id", item.prospect.id);
+    withNews += 1;
+  }
+  return {
+    log: withNews ? `Found recent news for ${withNews} of ${top.length} top companies` : "No dated news in the last 12 months",
+    status: withNews ? "done" : "partial",
+    runPatch: { counts: { ...run.counts, signals: withNews } },
+    next: [{ key: "draft_outreach" }],
+  };
+}
+
+// ---- 8. Outreach drafts, two versions each (five companies per invocation) ---------------------
 
 async function draftOutreach(db: SupabaseClient, run: ResearchRun, step: ResearchStep): Promise<StepOutcome> {
   const { data: prospects } = await db.from("gtm_prospect_companies")
-    .select("id, name, domain, description, location, criteria, fit_tier, gtm_outreach_drafts(id)")
+    .select("id, name, domain, description, location, criteria, signals, fit_tier, gtm_outreach_drafts(id)")
     .eq("run_id", run.id).in("fit_tier", ["A", "B"]).order("fit_score", { ascending: false }).limit(20);
   const pending = (prospects ?? []).filter((prospect) => !(prospect.gtm_outreach_drafts as unknown[] | null)?.length).slice(0, 5);
   if (!pending.length) return { log: "Outreach drafts ready", next: [{ key: "finalize" }] };
   const profile = run.business_profile!;
   const raw = await askJson(db, run.id, "gtm-research-drafts",
-    "Write short first emails from a founder to companies they have researched. Each under 120 words, in the language given for that company. Open with \"Hi {{first_name}},\" in that language. Mention one specific fact from that company's evidence, the problem the founder solves, and one low-commitment ask (a short call or quick feedback). Use only the facts given: no invented results, numbers, customers or familiarity, no flattery, no filler openers. Sign off with the founder's business name.",
-    `Founder's business: ${profile.name} — ${profile.offering.text}. Value: ${profile.valueProposition.text}.\nSegment pain: ${run.selected_segment?.pain ?? ""}\n\nCompanies:\n${pending.map((prospect) => `id: ${prospect.id}\nname: ${prospect.name} (${prospect.domain})\nlanguage: ${languageForLocation(prospect.location as string | null)}\nabout: ${prospect.description ?? ""}\nevidence: ${((prospect.criteria ?? []) as Array<{ verdict: string; quote: string | null }>).filter((item) => item.verdict === "met" && item.quote).map((item) => `"${item.quote}"`).join("; ")}`).join("\n\n")}\n\nReturn JSON only: {"drafts":[{"prospectId":"","subject":"","body":""}]}`,
-    2_500, 50_000);
+    "Write two versions of a short first email from a founder to each company they have researched. Each under 120 words, in the language given for that company. Open with \"Hi {{first_name}},\" in that language. Version a opens with one specific fact from that company's evidence; version b opens with the problem the founder solves, or with the company's recent news when given. Both name the problem the founder solves and end with one low-commitment ask (a short call or quick feedback). Use only the facts given: no invented results, numbers, customers or familiarity, no flattery, no filler openers. Sign off with the founder's business name.",
+    `Founder's business: ${profile.name} — ${profile.offering.text}. Value: ${profile.valueProposition.text}.\nSegment pain: ${run.selected_segment?.pain ?? ""}\n\nCompanies:\n${pending.map((prospect) => `id: ${prospect.id}\nname: ${prospect.name} (${prospect.domain})\nlanguage: ${languageForLocation(prospect.location as string | null)}\nabout: ${prospect.description ?? ""}\nevidence: ${((prospect.criteria ?? []) as Array<{ verdict: string; quote: string | null }>).filter((item) => item.verdict === "met" && item.quote).map((item) => `"${item.quote}"`).join("; ")}\nrecent news: ${((prospect.signals ?? []) as BuyingSignal[]).map((signal) => `${signal.date}: ${signal.text}`).join("; ") || "none"}`).join("\n\n")}\n\nReturn JSON only: {"drafts":[{"prospectId":"","a":{"subject":"","body":""},"b":{"subject":"","body":""}}]}`,
+    4_000, 55_000);
   const drafts = ((raw as { drafts?: unknown }).drafts as Array<Record<string, unknown>> | undefined) ?? [];
   let written = 0;
   for (const prospect of pending) {
-    const draft = parseDraft(drafts.find((entry) => entry.prospectId === prospect.id));
+    const entry = drafts.find((item) => item.prospectId === prospect.id);
+    // Older single-version answers ({subject, body}) still count as version a.
+    const draft = parseDraft(entry?.a ?? entry);
     if (!draft) continue;
+    const variantB = parseDraft(entry?.b);
     await db.from("gtm_outreach_drafts").upsert({
       prospect_id: prospect.id, user_id: run.user_id, language: languageForLocation(prospect.location as string | null),
-      subject: draft.subject, body: draft.body, generated_from: { runId: run.id, tier: prospect.fit_tier },
+      subject: draft.subject, body: draft.body, variant_b_subject: variantB?.subject ?? null, variant_b_body: variantB?.body ?? null,
+      generated_from: { runId: run.id, tier: prospect.fit_tier },
     }, { onConflict: "prospect_id" });
     written += 1;
   }
@@ -365,26 +425,47 @@ async function draftOutreach(db: SupabaseClient, run: ResearchRun, step: Researc
   };
 }
 
-// ---- 8. Finalize: charge for what was delivered -------------------------------------------------
+// ---- 9. Finalize: charge for what was delivered -------------------------------------------------
 
 export async function finalizeRun(db: SupabaseClient, run: ResearchRun): Promise<StepOutcome> {
   const qualified = await qualifiedSoFar(db, run.id);
-  const charge = run.gifted ? 0 : creditsForRun(qualified);
+  const kind = run.kind ?? "initial";
+  const charge = run.gifted ? 0 : chargeForRun(kind, qualified);
   if (run.reservation_id) {
     const { data, error } = await db.rpc("finalize_credit_reservation_v1", {
-      p_reservation_id: run.reservation_id, p_charge: charge, p_metadata: { runId: run.id, qualified },
+      p_reservation_id: run.reservation_id, p_charge: charge, p_metadata: { runId: run.id, qualified, kind },
     });
     if (error || !data?.success) throw new Error(`Credit capture failed: ${error?.message ?? data?.errorCode}`);
   }
-  const status = qualified >= 10 || qualified >= run.target_count ? "completed" : qualified > 0 ? "partial" : "failed";
+  // A weekly check that finds nothing new has still done its job.
+  const quietRefresh = kind === "refresh" && qualified === 0;
+  const status = quietRefresh || qualified >= 10 || qualified >= run.target_count ? "completed" : qualified > 0 ? "partial" : "failed";
   return {
-    log: qualified ? `${qualified} companies ready to contact` : "No company matched every essential criterion",
+    log: qualified ? `${qualified} ${kind === "initial" ? "" : "new "}companies ready to contact` : quietRefresh ? "No new companies this week" : "No company matched every essential criterion",
     runPatch: {
       status, credits_charged: charge, completed_at: new Date().toISOString(),
       counts: { ...run.counts, qualified },
-      ...(qualified === 0 ? { error_code: "NO_MATCHES", error_detail: "Search found no company that matched your essential criteria. Try a wider location or fewer must-haves. You were not charged." } : {}),
+      ...(qualified === 0 && !quietRefresh ? { error_code: "NO_MATCHES", error_detail: "Search found no new company that matched your essential criteria. Try a wider location or fewer must-haves. You were not charged." } : {}),
     },
   };
+}
+
+/** A bell notification when research the founder may have left finishes. Never blocks the run. */
+export async function notifyRunFinished(db: SupabaseClient, run: ResearchRun, patch: Record<string, unknown>): Promise<void> {
+  const qualified = Number((patch.counts as Record<string, unknown> | undefined)?.qualified ?? 0);
+  const kind = run.kind ?? "initial";
+  if (kind === "refresh" && qualified === 0) return;
+  const segment = run.selected_segment?.name ?? "your target group";
+  const message = qualified === 0
+    ? `Customer research for ${segment} found no match. You were not charged.`
+    : kind === "refresh"
+      ? `${qualified} new ${qualified === 1 ? "company matches" : "companies match"} ${segment} this week`
+      : `${qualified} ${qualified === 1 ? "company is" : "companies are"} ready to contact for ${segment}`;
+  const { error } = await db.from("community_notifications").insert({
+    user_id: run.user_id, actor_id: run.user_id, notification_type: "customer_research_ready",
+    metadata: { message, route: "/go-to-market?workspace=find-customers", runId: run.id, qualified, kind },
+  });
+  if (error) console.warn("gtm-research: notification failed", error.message);
 }
 
 export const STEP_HANDLERS: Record<ResearchStepKey, (db: SupabaseClient, run: ResearchRun, step: ResearchStep) => Promise<StepOutcome>> = {
@@ -394,6 +475,7 @@ export const STEP_HANDLERS: Record<ResearchStepKey, (db: SupabaseClient, run: Re
   propose_segments: (db, run) => proposeSegments(db, run),
   discover_companies: discoverCompanies,
   qualify_companies: qualifyCompanies,
+  find_signals: (db, run) => findSignals(db, run),
   draft_outreach: draftOutreach,
   finalize: (db, run) => finalizeRun(db, run),
 };

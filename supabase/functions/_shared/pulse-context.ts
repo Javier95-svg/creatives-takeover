@@ -3,6 +3,9 @@ import { hasCategoryAccess, isUserType, type UserType, type ApprovalStatus } fro
 import { sanitizeRoleProfile } from '../../../src/lib/roleProfileSchema.ts';
 import { pulseScope, type PulseScope } from '../../../src/lib/pulseScope.ts';
 import { stageEvidence } from './pulse-evidence.ts';
+import { researchSummary, type FitTier } from '../../../src/lib/gtmResearch.ts';
+
+const RESEARCH_BASIS = 'Customer research from GTM Strategist (Find customers): companies found by web search and checked against the founder\'s criteria on their own websites. Shortlisted, contacted and replied are the founder\'s own marks, not verified outcomes. Point to /go-to-market?workspace=find-customers for details.';
 
 export class PulseContextError extends Error {
   status: number;
@@ -178,7 +181,34 @@ export async function resolvePulseContext(db: SupabaseClient, userId: string, pr
     try { context.memory = await loadPulseMemory(db, userId, projectId); }
     catch { context.memory = null; context.unavailableSources.push('memory'); }
   };
-  if (!projectId) { await Promise.all([loadTasks(), loadMemory()]); return context; }
+  // The latest customer research for this project (or the account when no
+  // project is selected): counts and the next companies, never draft text.
+  const loadResearch = async () => {
+    if (!founder) return;
+    const table = 'gtm_research_runs';
+    try {
+      // deno-lint-ignore no-explicit-any
+      const scoped = (query: any) => (projectId ? query.eq('project_id', projectId) : query.is('project_id', null));
+      const { data: run, error: runError } = await scoped(db.from(table).select('id,status,selected_segment,completed_at,updated_at,auto_refresh')
+        .eq('user_id', userId).eq('kind', 'initial').not('started_at', 'is', null)).order('created_at', { ascending: false }).limit(1).maybeSingle();
+      if (runError) throw runError;
+      if (!run) { context.outcomes.research = { table, state: 'missing' }; return; }
+      const { data: rows, error: rowsError } = await scoped(db.from('gtm_prospect_companies').select('name,domain,fit_tier,status,fit_score,gtm_outreach_drafts(status)')
+        .eq('user_id', userId)).order('fit_score', { ascending: false }).limit(80);
+      if (rowsError) throw rowsError;
+      const prospects = ((rows ?? []) as Data[]).map((row) => {
+        const drafts = row.gtm_outreach_drafts as Data[] | Data | null;
+        const draft = Array.isArray(drafts) ? drafts[0] : drafts;
+        return { name: String(row.name ?? row.domain), domain: String(row.domain), fit_tier: row.fit_tier as FitTier, status: String(row.status), draftStatus: draft ? String(draft.status) : null };
+      });
+      context.outcomes.research = { table, state: 'available', id: String(run.id), updatedAt: typeof run.updated_at === 'string' ? run.updated_at : null,
+        basis: RESEARCH_BASIS, data: researchSummary(run as Parameters<typeof researchSummary>[0], prospects) };
+    } catch {
+      context.outcomes.research = { table, state: 'unavailable' };
+      context.unavailableSources.push('research');
+    }
+  };
+  if (!projectId) { await Promise.all([loadTasks(), loadMemory(), loadResearch()]); return context; }
   const { data: project, error: projectError } = await db.from('projects')
     .select('id,title,idea_summary,context').eq('id', projectId).eq('user_id', userId).is('archived_at', null).maybeSingle();
   if (projectError) throw new PulseContextError(503, 'The selected project could not be loaded.');
@@ -228,7 +258,7 @@ export async function resolvePulseContext(db: SupabaseClient, userId: string, pr
   }));
   context.outcomes = Object.fromEntries(results);
   context.unavailableSources = results.filter(([, source]) => source.state === 'unavailable').map(([key]) => key);
-  await Promise.all([loadTasks(), loadMemory(), (async () => {
+  await Promise.all([loadTasks(), loadMemory(), loadResearch(), (async () => {
     const traction = context.outcomes.traction;
     if (traction.state !== 'available' || !traction.id) return;
     try {

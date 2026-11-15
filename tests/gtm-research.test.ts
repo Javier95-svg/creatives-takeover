@@ -2,11 +2,13 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
 import {
-  creditsForRun, dedupeCandidates, extractContactRoutes, isExcludedDomain, languageForLocation, normalizeDomain, parseBusinessProfile,
-  parseCompetitors, parseDraft, parseSegments, prospectsToCsv, quoteAppearsIn, sanitizeSegment, scoreFit, verifyVerdicts,
-  type CriterionVerdict, type SegmentCriterion,
+  chargeForRun, creditsForFollowUp, creditsForRun, dedupeCandidates, emailStatusFromVerifier, extractContactRoutes, feedbackLessons, isExcludedDomain,
+  languageForLocation, normalizeDomain, parseBusinessProfile, parseCompetitors, parseDomainSearchPeople, parseDraft, parseSegments, parseSignals,
+  personalizeDraft, pickDecisionMaker, prospectsToCsv, quoteAppearsIn, rerunEligible, runPrice, sanitizeSegment, scoreFit, STEP_TITLES, variantStats,
+  verifyVerdicts, type CriterionVerdict, type SegmentCriterion,
 } from '../src/lib/gtmResearch.ts';
 import { extractLinks, parseRobotsDisallow, pickInternalPages } from '../supabase/functions/_shared/site-crawler.ts';
+import { driveResearchRun, ResearchDb } from './helpers/researchDatabase.ts';
 
 // ---- Pure rules -----------------------------------------------------------------------------
 
@@ -131,62 +133,6 @@ test('the crawler picks useful internal pages and honours robots.txt', () => {
 
 type Row = Record<string, any>;
 
-/** Just enough of the Supabase client for the research pipeline. */
-class ResearchDb {
-  tables: Record<string, Row[]> = {
-    gtm_research_runs: [], gtm_research_steps: [], gtm_prospect_companies: [], gtm_outreach_drafts: [],
-    gtm_domain_cache: [], gtm_suppressions: [], provider_spend_ledger: [],
-  };
-  rpcCalls: Array<{ name: string; args: Row }> = [];
-  private seq = 0;
-  rpc(name: string, args: Row) { this.rpcCalls.push({ name, args }); return Promise.resolve({ data: { success: true }, error: null }); }
-  from(table: string) {
-    if (!(table in this.tables)) throw new Error(`Unexpected table: ${table}`);
-    const rows = this.tables[table];
-    const filters: Array<(row: Row) => boolean> = [];
-    let mode: 'select' | 'insert' | 'update' | 'upsert' = 'select';
-    let payload: Row | Row[] | null = null; let upsertOptions: Row = {};
-    let head = false; let limit = Infinity; let order: { key: string; ascending: boolean } | null = null; let joinDrafts = false;
-    const db = this;
-    const run = () => {
-      if (mode === 'insert' || mode === 'upsert') {
-        const list = (Array.isArray(payload) ? payload : [payload]) as Row[];
-        const keys = String(upsertOptions.onConflict ?? (table === 'gtm_domain_cache' ? 'domain' : '')).split(',').filter(Boolean);
-        const written: Row[] = [];
-        for (const item of list) {
-          const existing = mode === 'upsert' && keys.length ? rows.find((row) => keys.every((key) => row[key] === (item[key] ?? (key === 'batch' ? 0 : undefined)))) : undefined;
-          if (existing) { if (!upsertOptions.ignoreDuplicates) Object.assign(existing, item); written.push(existing); continue; }
-          const row = { id: `id-${++db.seq}`, created_at: new Date(Date.now() + db.seq).toISOString(), status: table === 'gtm_research_steps' ? 'queued' : undefined, batch: 0, ...item };
-          rows.push(row); written.push(row);
-        }
-        return { data: written, error: null, count: written.length };
-      }
-      let found = rows.filter((row) => filters.every((filter) => filter(row)));
-      if (mode === 'update') { found.forEach((row) => Object.assign(row, payload)); return { data: found, error: null, count: found.length }; }
-      if (order) found = [...found].sort((a, b) => (a[order!.key] > b[order!.key] ? 1 : -1) * (order!.ascending ? 1 : -1));
-      found = found.slice(0, limit);
-      if (joinDrafts) found = found.map((row) => ({ ...row, gtm_outreach_drafts: db.tables.gtm_outreach_drafts.filter((draft) => draft.prospect_id === row.id) }));
-      return { data: head ? null : found, error: null, count: found.length };
-    };
-    const query: any = {
-      select: (fields = '*', options: Row = {}) => { head = Boolean(options.head); joinDrafts = String(fields).includes('gtm_outreach_drafts'); return query; },
-      insert: (value: Row | Row[]) => { mode = 'insert'; payload = value; return query; },
-      upsert: (value: Row | Row[], options: Row = {}) => { mode = 'upsert'; payload = value; upsertOptions = options; return query; },
-      update: (value: Row) => { mode = 'update'; payload = value; return query; },
-      eq: (key: string, value: unknown) => { filters.push((row) => row[key] === value); return query; },
-      in: (key: string, values: unknown[]) => { filters.push((row) => values.includes(row[key])); return query; },
-      is: (key: string, value: unknown) => { filters.push((row) => (row[key] ?? null) === value); return query; },
-      gte: (key: string, value: string) => { filters.push((row) => String(row[key]) >= value); return query; },
-      order: (key: string, options: Row = {}) => { order = { key, ascending: options.ascending !== false }; return query; },
-      limit: (value: number) => { limit = value; return query; },
-      maybeSingle: async () => { const result = run(); return { ...result, data: (result.data as Row[] | null)?.[0] ?? null }; },
-      single: async () => { const result = run(); return { ...result, data: (result.data as Row[] | null)?.[0] ?? null }; },
-      then: (resolve: (value: unknown) => unknown, reject?: (error: unknown) => unknown) => Promise.resolve().then(run).then(resolve, reject),
-    };
-    return query;
-  }
-}
-
 const html = (title: string, body: string, links: string[] = []) =>
   `<html><head><title>${title}</title></head><body><p>${body}</p>${links.map((link) => `<a href="${link}">x</a>`).join('')}</body></html>`;
 
@@ -200,7 +146,7 @@ const SITES: Record<string, string> = {
   'https://megadental.com/': html('MegaDental Group', 'MegaDental is a corporate group operating 400 practices across Europe.'),
 };
 
-function mockNetwork() {
+function mockNetwork(prompts: string[] = []) {
   const original = { fetch: globalThis.fetch, Deno: (globalThis as any).Deno };
   (globalThis as any).Deno = { env: { get: (name: string) => ({ GEMINI_API_KEY: 'test', TAVILY_API_KEY: 'test' } as Row)[name] }, resolveDns: async () => ['93.184.216.34'] };
   const llm = (body: string) => {
@@ -222,20 +168,32 @@ function mockNetwork() {
         { criterionId: 'c2', verdict: 'met', quote: 'located in central Manchester, England', sourceUrl: 'https://fakeclaims.co.uk/' }] },
       { domain: 'megadental.com', name: 'MegaDental', verdicts: [{ criterionId: 'c1', verdict: 'not_met', quote: 'a corporate group operating 400 practices', sourceUrl: 'https://megadental.com/' }] },
     ] };
-    if (body.includes('first emails from a founder')) {
+    if (body.includes('first email from a founder')) {
       const ids = [...body.matchAll(/id: (id-\d+)/g)].map((match) => match[1]);
-      return { drafts: ids.map((id) => ({ prospectId: id, subject: 'Fewer no-shows', body: 'Hi {{first_name}}, I saw you take bookings online. BrightSmile helps independent clinics cut no-shows with reminders. Open to a 15-minute call next week?' })) };
+      return { drafts: ids.map((id) => ({ prospectId: id,
+        a: { subject: 'Fewer no-shows', body: 'Hi {{first_name}}, I saw you take bookings online. BrightSmile helps independent clinics cut no-shows with reminders. Open to a 15-minute call next week?' },
+        b: { subject: 'Empty chairs?', body: 'Hi {{first_name}}, most independent clinics lose a few slots a week to no-shows. BrightSmile fills them with reminders. Worth a 15-minute call?' } })) };
+    }
+    if (body.includes('recent events about that exact company')) {
+      const ids = [...body.matchAll(/### id: (id-\d+)/g)].map((match) => match[1]);
+      return { companies: ids.map((id) => ({ id, signals: [
+        { kind: 'hiring', text: 'Hiring a receptionist to manage bookings', date: new Date(Date.now() - 30 * 86_400_000).toISOString().slice(0, 10), sourceUrl: 'https://news.example/hiring' },
+        { kind: 'funding', text: 'Raised money in 2023', date: '2023-03-01', sourceUrl: 'https://news.example/hiring' },
+        { kind: 'launch', text: 'An invented launch', date: '2026-09-01', sourceUrl: 'https://made-up.example/' },
+      ] })) };
     }
     throw new Error(`Unexpected model call: ${body.slice(0, 120)}`);
   };
   globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
     const url = String(input instanceof Request ? input.url : input);
     if (url.includes('generativelanguage.googleapis.com')) {
+      prompts.push(String(init?.body ?? ''));
       const text = JSON.stringify(llm(String(init?.body ?? '')));
       return Response.json({ candidates: [{ content: { parts: [{ text }] }, finishReason: 'STOP' }], usageMetadata: { promptTokenCount: 1000, candidatesTokenCount: 200 } });
     }
     if (url.includes('api.tavily.com')) {
       const query = JSON.parse(String(init?.body)).query as string;
+      if (query.includes('hiring OR funding')) return Response.json({ results: [{ url: 'https://news.example/hiring', title: 'Clinic hiring', content: 'October 2026' }] });
       const results = query.includes('alternatives') || query.includes('companies for')
         ? [{ url: 'https://rivalbook.com/', title: 'RivalBook', content: 'Dental booking' }, { url: 'https://www.linkedin.com/company/x', title: 'x' }]
         : [{ url: 'https://toplist.example/', title: 'Top dental clinics in Leeds', content: 'list' }, { url: 'https://smilesleeds.co.uk/', title: 'Smiles Leeds' },
@@ -250,34 +208,25 @@ function mockNetwork() {
   return () => { globalThis.fetch = original.fetch; (globalThis as any).Deno = original.Deno; };
 }
 
+const drive = (db: ResearchDb, run: Row, first: string, logs: string[]) => driveResearchRun(db, run, first, logs, (current) => {
+  // The founder confirms the first proposed segment.
+  assert.equal(current.segments.length, 1);
+  return current.segments[0];
+});
+
+const baseRun = (extra: Row = {}): Row => ({ id: 'run-1', user_id: 'founder', project_id: 'project-1', status: 'analyzing', input: { websiteUrl: 'brightsmile.app' },
+  business_profile: null, competitors: [], segments: [], selected_segment: null, target_count: 20, counts: {}, reservation_id: 'hold-1', gifted: false,
+  kind: 'initial', parent_run_id: null, seed_domains: [], cohort_id: null, auto_refresh: false, ...extra });
+
 test('a full research run: evidence-backed prospects, honest tiers, drafts, and a charge for what was delivered', async () => {
-  const restore = mockNetwork();
+  const prompts: string[] = [];
+  const restore = mockNetwork(prompts);
   try {
-    const { STEP_HANDLERS } = await import('../supabase/functions/_shared/gtm-research-pipeline.ts');
     const db = new ResearchDb();
-    const run: Row = { id: 'run-1', user_id: 'founder', project_id: 'project-1', status: 'analyzing', input: { websiteUrl: 'brightsmile.app' },
-      business_profile: null, competitors: [], segments: [], selected_segment: null, target_count: 20, counts: {}, reservation_id: 'hold-1', gifted: false };
+    const run = baseRun();
     db.tables.gtm_research_runs.push(run);
-    const queue: Array<{ key: string; batch: number }> = [{ key: 'read_site', batch: 0 }];
     const logs: string[] = [];
-    let guard = 0;
-    while (queue.length && guard++ < 40) {
-      const next = queue.shift()!;
-      const step: Row = { id: `step-${guard}`, run_id: run.id, user_id: run.user_id, key: next.key, batch: next.batch, attempt: 1, max_attempts: 3, detail: {}, status: 'running' };
-      db.tables.gtm_research_steps.push(step);
-      const outcome = await (STEP_HANDLERS as Row)[next.key](db, run, step);
-      Object.assign(step, { status: outcome.status ?? 'done', detail: outcome.detail ?? {}, log: outcome.log });
-      Object.assign(run, outcome.runPatch ?? {});
-      logs.push(`${next.key}: ${outcome.log}`);
-      if (run.status === 'needs_review') {
-        // The founder confirms the first proposed segment.
-        assert.equal(run.segments.length, 1);
-        Object.assign(run, { selected_segment: run.segments[0], status: 'running' });
-        queue.push({ key: 'discover_companies', batch: 0 });
-        continue;
-      }
-      for (const item of outcome.next ?? []) queue.push({ key: item.key, batch: item.batch ?? 0 });
-    }
+    await drive(db, run, 'read_site', logs);
 
     assert.equal(run.business_profile.name, 'BrightSmile');
     assert.deepEqual(run.competitors.map((competitor: Row) => competitor.domain), ['rivalbook.com'], 'invented and platform competitors dropped');
@@ -296,6 +245,13 @@ test('a full research run: evidence-backed prospects, honest tiers, drafts, and 
 
     const drafted = db.tables.gtm_outreach_drafts.map((draft) => prospects.find((prospect) => prospect.id === draft.prospect_id)?.domain).sort();
     assert.deepEqual(drafted, ['gentledental.co.uk', 'smilesleeds.co.uk'], 'drafts only for strong and good fits');
+    assert.ok(db.tables.gtm_outreach_drafts.every((draft) => draft.variant_b_body && draft.variant_b_subject === 'Empty chairs?'), 'each draft has a second version');
+
+    // Recent news: only the dated, in-year item whose link was in the search results.
+    assert.deepEqual(byDomain['smilesleeds.co.uk'].signals.map((signal: Row) => signal.kind), ['hiring']);
+    assert.equal(byDomain['blockedclinic.co.uk'].signals, undefined, 'possible fits are not looked up');
+    const draftPrompt = prompts.find((prompt) => prompt.includes('first email from a founder')) ?? '';
+    assert.match(draftPrompt, /recent news: \d{4}-\d{2}-\d{2}: Hiring a receptionist/, 'drafts can use the news');
 
     const capture = db.rpcCalls.find((call) => call.name === 'finalize_credit_reservation_v1');
     assert.equal(capture?.args.p_charge, 2, 'two qualified companies cost 2 of the 10 held credits');
@@ -303,6 +259,37 @@ test('a full research run: evidence-backed prospects, honest tiers, drafts, and 
     assert.equal(run.credits_charged, 2);
     assert.ok(db.tables.provider_spend_ledger.length > 5, 'every search and model call is in the spend ledger');
     assert.ok(logs.some((line) => /Checked \d+ websites · 2 match your criteria/.test(line)), logs.join('\n'));
+    assert.ok(logs.some((line) => line.startsWith('find_signals: Found recent news for 2 of 2')), logs.join('\n'));
+
+    // ---- A follow-up on the same search learns from the founder's rejections ----
+    const gentle = byDomain['gentledental.co.uk'];
+    Object.assign(gentle, { status: 'dismissed', feedback: { reason: 'Too big', at: new Date().toISOString() } });
+    const more = baseRun({ id: 'run-2', kind: 'more', parent_run_id: 'run-1', status: 'queued', target_count: 10, reservation_id: 'hold-2',
+      business_profile: run.business_profile, competitors: run.competitors, segments: run.segments, selected_segment: run.selected_segment, counts: { ownDomain: 'brightsmile.app' } });
+    db.tables.gtm_research_runs.push(more);
+    prompts.length = 0;
+    const moreLogs: string[] = [];
+    await drive(db, more, 'discover_companies', moreLogs);
+    const planPrompt = prompts.find((prompt) => prompt.includes('Write web search queries')) ?? '';
+    assert.match(planPrompt, /Gentle Dental \(gentledental\.co\.uk\): Too big/, 'rejections with a reason reach the next search');
+    assert.equal(db.tables.gtm_prospect_companies.filter((prospect) => prospect.run_id === 'run-2').length, 0, 'companies already in the list are not found again');
+    const followUpCharge = db.rpcCalls.filter((call) => call.name === 'finalize_credit_reservation_v1').at(-1);
+    assert.equal(followUpCharge?.args.p_reservation_id, 'hold-2');
+    assert.equal(followUpCharge?.args.p_charge, 0, 'nothing new found, nothing charged');
+    assert.equal(more.status, 'failed');
+    assert.equal(more.error_code, 'NO_MATCHES');
+
+    // A weekly check that finds nothing new is a normal week, not a failure, and sends no notification.
+    const { finalizeRun, notifyRunFinished } = await import('../supabase/functions/_shared/gtm-research-pipeline.ts');
+    const refresh = baseRun({ id: 'run-3', kind: 'refresh', parent_run_id: 'run-1', status: 'running', reservation_id: null, selected_segment: run.selected_segment });
+    const quiet = await finalizeRun(db as never, refresh as never);
+    assert.equal(quiet.runPatch?.status, 'completed');
+    assert.equal(quiet.runPatch?.error_code, undefined);
+    await notifyRunFinished(db as never, refresh as never, quiet.runPatch ?? {});
+    assert.equal(db.tables.community_notifications.length, 0);
+    await notifyRunFinished(db as never, run as never, { counts: { qualified: 2 } });
+    assert.equal(db.tables.community_notifications[0].notification_type, 'customer_research_ready');
+    assert.match(db.tables.community_notifications[0].metadata.message, /^2 companies are ready to contact for Independent UK dental clinics$/);
   } finally { restore(); }
 });
 
@@ -317,4 +304,94 @@ test('the migration keeps credits and research safe: holds are service-only and 
   assert.match(sql, /REVOKE ALL ON public\.gtm_domain_cache, public\.gtm_suppressions, public\.provider_spend_ledger FROM authenticated/);
   assert.match(sql, /user_id UUID NOT NULL REFERENCES auth\.users\(id\) ON DELETE CASCADE/, 'account deletion removes research');
   assert.match(sql, /cron\.schedule\('gtm-research-sweeper'/);
+});
+
+// ---- Phases B and C: follow-up runs, feedback, news, contacts, A/B ----------------------------
+
+test('follow-up runs: +10 companies costs half a credit each up to 5, the re-run is free, nothing found costs nothing', () => {
+  assert.deepEqual([0, 1, 3, 9, 10, 25].map(creditsForFollowUp), [0, 1, 2, 5, 5, 5]);
+  assert.deepEqual(runPrice('initial'), { feature: 'GTM_RESEARCH_RUN', credits: 10 });
+  assert.deepEqual(runPrice('more'), { feature: 'GTM_RESEARCH_MORE', credits: 5 });
+  assert.deepEqual(runPrice('refresh'), { feature: 'GTM_RESEARCH_MORE', credits: 5 });
+  assert.deepEqual(runPrice('rerun'), { feature: null, credits: 0 });
+  assert.equal(chargeForRun('initial', 12), 10);
+  assert.equal(chargeForRun('similar', 4), 2);
+  assert.equal(chargeForRun('rerun', 20), 0);
+});
+
+test('the free re-run needs half of the good matches rejected with a reason, once', () => {
+  const fit = (status: string, reason?: string) => ({ fit_tier: 'A' as const, status, feedback: reason ? { reason } : null });
+  assert.equal(rerunEligible([fit('dismissed', 'Too big'), fit('new')], false), true);
+  assert.equal(rerunEligible([fit('dismissed', 'Too big'), fit('new')], true), false, 'only once per search');
+  assert.equal(rerunEligible([fit('dismissed'), fit('new')], false), false, 'a dismissal without a reason is not feedback');
+  assert.equal(rerunEligible([fit('dismissed', 'Too big'), fit('new'), fit('new')], false), false);
+  assert.equal(rerunEligible([fit('dismissed', 'Too big')], false), false, 'one company is too few to judge a search');
+  assert.equal(rerunEligible([{ fit_tier: 'C', status: 'dismissed', feedback: { reason: 'Other' } }, fit('dismissed', 'Too big'), fit('new')], false), true, 'possible fits do not count');
+});
+
+test('feedback lessons are newest first, named, and capped', () => {
+  const lines = feedbackLessons([
+    { domain: 'a.com', name: 'A', feedback: { reason: 'Too big', at: '2026-11-01' } },
+    { domain: 'b.com', name: null, feedback: { reason: 'A competitor', at: '2026-11-10' } },
+    { domain: 'c.com', name: 'C', feedback: null },
+  ], 5);
+  assert.deepEqual(lines, ['b.com (b.com): A competitor', 'A (a.com): Too big']);
+});
+
+test('news needs a date within twelve months and a link from the results', () => {
+  const now = new Date('2026-11-15T00:00:00Z');
+  const allowed = new Set(['https://news.example/a']);
+  const signals = parseSignals({ signals: [
+    { kind: 'funding', text: 'Raised a seed round', date: '2026-06', sourceUrl: 'https://news.example/a' },
+    { kind: 'hiring', text: 'Old news', date: '2025-01-02', sourceUrl: 'https://news.example/a' },
+    { kind: 'launch', text: 'Invented link', date: '2026-10-01', sourceUrl: 'https://elsewhere.example/' },
+    { kind: 'rumour', text: 'Undated', sourceUrl: 'https://news.example/a' },
+    { kind: 'whatever', text: 'Opened a new office', date: '2026-11-01', sourceUrl: 'https://news.example/a' },
+    { kind: 'news', text: 'From the future', date: '2027-01-01', sourceUrl: 'https://news.example/a' },
+  ] }, allowed, now);
+  assert.deepEqual(signals.map((signal) => [signal.kind, signal.date]), [['news', '2026-11-01'], ['funding', '2026-06-01']]);
+});
+
+test('a named contact: real people at that domain, the closest title wins, only deliverable emails count', () => {
+  const people = parseDomainSearchPeople({ data: { emails: [
+    { value: 'info@clinic.co.uk', type: 'generic', confidence: 99 },
+    { value: 'amy@clinic.co.uk', type: 'personal', first_name: 'Amy', last_name: 'Hart', position: 'Practice Manager', confidence: 80, sources: [{ uri: 'https://clinic.co.uk/team' }] },
+    { value: 'raj@clinic.co.uk', type: 'personal', first_name: 'Raj', last_name: 'Patel', position: 'Dental Nurse', confidence: 95 },
+    { value: 'ceo@other.com', type: 'personal', first_name: 'Elsewhere', position: 'CEO', confidence: 99 },
+    { value: 'nameless@clinic.co.uk', type: 'personal', position: 'Owner', confidence: 99 },
+  ] } }, 'clinic.co.uk');
+  assert.deepEqual(people.map((person) => person.email), ['amy@clinic.co.uk', 'raj@clinic.co.uk']);
+  assert.equal(pickDecisionMaker(people, ['Practice manager', 'Principal dentist'])?.email, 'amy@clinic.co.uk');
+  assert.equal(pickDecisionMaker(people.slice(1), ['Marketing lead']), null, 'no title match and not senior: nobody');
+  assert.equal(emailStatusFromVerifier({ data: { status: 'valid' } }), 'valid');
+  assert.equal(emailStatusFromVerifier({ data: { status: 'accept_all' } }), 'catch_all');
+  assert.equal(emailStatusFromVerifier({ data: { status: 'invalid' } }), null);
+  assert.equal(emailStatusFromVerifier({ data: { status: 'unknown' } }), null);
+  assert.equal(personalizeDraft('Hi {{first_name}}, and {{ FIRST_NAME }}', 'Amy'), 'Hi Amy, and Amy');
+  assert.equal(personalizeDraft('Hi {{first_name}},', null), 'Hi {{first_name}},');
+});
+
+test('A/B counts come from the founder\'s own sent and reply marks', () => {
+  const stats = variantStats([
+    { status: 'sent_manually', chosen_variant: 'a' }, { status: 'replied', chosen_variant: 'a' },
+    { status: 'replied', chosen_variant: 'b' }, { status: 'draft', chosen_variant: 'b' }, { status: 'approved', chosen_variant: 'a' },
+  ]);
+  assert.deepEqual(stats, { a: { sent: 2, replied: 1 }, b: { sent: 1, replied: 1 } });
+});
+
+test('the completion migration: every step the app knows is allowed, staff see counts only, allowances are admin-set', () => {
+  const sql = readFileSync(new URL('../supabase/migrations/20261116120000_gtm_research_complete.sql', import.meta.url), 'utf8');
+  const keys = /gtm_research_steps_key_check CHECK \(key IN \(([^)]+)\)\)/.exec(sql)?.[1].match(/'([a-z_]+)'/g)?.map((key) => key.slice(1, -1)).sort();
+  assert.deepEqual(keys, Object.keys(STEP_TITLES).sort(), 'the step key constraint matches the app');
+  assert.match(sql, /CHECK \(kind IN \('initial', 'more', 'similar', 'rerun', 'refresh'\)\)/);
+  assert.match(sql, /CHECK \(status IN \('draft', 'approved', 'sent_manually', 'replied'\)\)/);
+  assert.match(sql, /REVOKE INSERT, UPDATE ON public\.gtm_prospect_contacts FROM authenticated/, 'only the server writes named contacts');
+  assert.match(sql, /REVOKE ALL ON public\.provider_spend_alerts FROM anon, authenticated/);
+  assert.match(sql, /REVOKE ALL ON FUNCTION public\.cohort_research_allowance_v1\(UUID\) FROM PUBLIC, anon, authenticated/);
+  assert.match(sql, /IF NOT public\.has_role\(auth\.uid\(\), 'admin'::app_role\) THEN/, 'only admins set a program allowance');
+  assert.match(sql, /'outreachSent', count\(\*\) FILTER \(WHERE e\.event_type = 'outreach_sent'\)/);
+  assert.match(sql, /'companiesQualified', \(SELECT count\(\*\) FROM public\.gtm_prospect_companies g/);
+  assert.match(sql, /'staffCode', CASE WHEN v_is_admin THEN v_cohort\.staff_code ELSE NULL END/, 'staff invites stay admin-only');
+  assert.doesNotMatch(sql, /'(domain|name)', g\./, 'the dashboard never returns companies');
+  assert.match(sql, /cron\.schedule\('gtm-research-weekly-refresh', '0 8 \* \* 1'/);
 });

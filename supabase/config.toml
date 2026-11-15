@@ -266,6 +266,10 @@ verify_jwt = true
 [functions.contact-form-submission]
 verify_jwt = false
 
+# Public opt-out from customer research on /research-opt-out.
+[functions.gtm-research-optout]
+verify_jwt = false
+
 # Public waitlist endpoints used by published waitlist pages on {slug} domains.
 [functions.waitlist-public-api]
 verify_jwt = false

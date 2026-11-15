@@ -29,7 +29,9 @@ test('context resolves actual current output content for the owned active projec
   assert.doesNotMatch(JSON.stringify(context), /OUTDATED|WRONG PROJECT|PRIVATE/);
   assert.equal(context.outcomes.icp.updatedAt, '2026-09-01');
   assert.equal(context.outcomes.pmf.state, 'missing');
-  assert.equal(Object.keys(context.outcomes).length, 6);
+  // Six tool outcomes plus the customer research summary.
+  assert.equal(Object.keys(context.outcomes).length, 7);
+  assert.equal(context.outcomes.research.state, 'missing');
   assert.match(JSON.stringify(context.onboarding.answers), /Validate demand/);
 });
 
@@ -64,6 +66,28 @@ test('MVP context includes product setup but excludes integration metadata and c
   assert.doesNotMatch(JSON.stringify(context), /PRIVATE_CONNECTION|PRIVATE_PROMPT/);
 });
 
+test('customer research reaches Pulse as counts and next companies, scoped to the project, never draft text', async () => {
+  const db = fixture();
+  db.tables.gtm_research_runs = [
+    { id: 'run-a', user_id: 'owner', project_id: a, kind: 'initial', started_at: '2026-11-10', status: 'completed', completed_at: '2026-11-10', updated_at: '2026-11-10', auto_refresh: true, selected_segment: { name: 'Fruit cooperatives' } },
+    { id: 'run-b', user_id: 'owner', project_id: b, kind: 'initial', started_at: '2026-11-11', status: 'completed', selected_segment: { name: 'WRONG PROJECT' } },
+  ];
+  db.tables.gtm_prospect_companies = [
+    { user_id: 'owner', project_id: a, name: 'Valley Co-op', domain: 'valleycoop.org', fit_tier: 'A', status: 'shortlisted', fit_score: 95, gtm_outreach_drafts: [{ status: 'draft', body: 'PRIVATE DRAFT' }] },
+    { user_id: 'owner', project_id: a, name: 'Hill Growers', domain: 'hillgrowers.org', fit_tier: 'B', status: 'contacted', fit_score: 80, gtm_outreach_drafts: [{ status: 'replied' }] },
+    { user_id: 'owner', project_id: a, name: 'Big Agri', domain: 'bigagri.com', fit_tier: 'A', status: 'dismissed', fit_score: 90 },
+    { user_id: 'owner', project_id: b, name: 'Other venture prospect', domain: 'other.com', fit_tier: 'A', status: 'new', fit_score: 99 },
+  ];
+  const context = await resolvePulseContext(db as never, 'owner', a);
+  const research = context.outcomes.research;
+  assert.equal(research.state, 'available');
+  assert.equal(research.id, 'run-a');
+  assert.deepEqual((research.data as { counts: unknown }).counts, { matches: 2, shortlisted: 1, inPipeline: 0, contacted: 1, replied: 1, rejected: 1 });
+  assert.deepEqual((research.data as { nextToContact: Array<{ name: string }> }).nextToContact.map((item) => item.name), ['Valley Co-op']);
+  assert.equal((research.data as { weeklyCheck: boolean }).weeklyCheck, true);
+  assert.doesNotMatch(JSON.stringify(context), /PRIVATE DRAFT|WRONG PROJECT|Other venture prospect/);
+});
+
 test('source failure is different from no result, and other sources still load', async () => {
   const db = fixture(); db.failures.add('pmf_analysis_results');
   const context = await resolvePulseContext(db as never, 'owner', a);
@@ -79,9 +103,9 @@ test('each account type gets explicit verified context; non-founders never load 
     db.tables.profiles[0] = { id: 'owner', user_type: userType, approval_status: userType === 'mentor' ? 'pending' : 'approved', role_profile: { expertise: ['Pricing'], stages: ['Building'], experience: 'Delivered products', engagement: 'both' } };
     const context = await resolvePulseContext(db as never, 'owner', null);
     assert.equal(context.account.userType, userType);
-    // Founders and builders also read their own Pulse memory; nobody reads a project without one.
+    // Founders and builders also read their own Pulse memory and customer research; nobody reads a project without one.
     const founderLike = userType === 'founder' || userType === 'builder';
-    assert.deepEqual(db.reads, founderLike ? ['profiles', 'pulse_memories', 'journey_assumptions'] : ['profiles']);
+    assert.deepEqual([...db.reads].sort(), founderLike ? ['gtm_research_runs', 'journey_assumptions', 'profiles', 'pulse_memories'] : ['profiles']);
     assert.equal(context.memory === undefined, !founderLike);
     assert.match(pulseRoleGuidance(context), new RegExp(userType === 'marketplace' ? 'service provider' : userType));
     if (userType === 'mentor') {

@@ -26,6 +26,8 @@ export interface CohortSummary {
   checkinDay?: string | null;
   joinedAt?: string | null;
   pilotPlan?: CohortPilotPlan;
+  /** Customer research runs the program includes per founder (0 when none). */
+  researchRunsIncluded?: number;
 }
 
 export interface CohortContext {
@@ -62,9 +64,15 @@ export interface CohortMemberProgress {
     payments: number;
     strangersActed: number;
     strangersIdentified: number;
+    /** Prospecting steps; absent from dashboards created before 2026-11-16. */
+    prospectsAdded?: number;
+    outreachPrepared?: number;
+    outreachSent?: number;
     total: number;
     verified: number;
   };
+  /** Customer research in GTM Strategist: finished searches and companies that matched. Counts only. */
+  research?: { runs: number; companiesQualified: number };
   /** Experiments started in the program period (not drafts). */
   experimentsRun: number;
   experimentDecisions: number;
@@ -249,6 +257,7 @@ export function cohortCsv(data: CohortDashboardData, week: number, now: Date = n
     'Assumptions (tested / total)', 'Interviews (verified / total)', 'Evidence (verified / total)',
     'Experiments run', 'Experiment decisions', 'Check-ins',
     'Last activity', `Check-in week ${week}`, 'Needs attention',
+    'Companies researched (matched)', 'Outreach sent', 'Replies',
   ];
   const rows = data.members.map((member) => {
     const stage = memberStage(member.outcomes);
@@ -270,6 +279,9 @@ export function cohortCsv(data: CohortDashboardData, week: number, now: Date = n
       member.lastActivityAt ? member.lastActivityAt.slice(0, 10) : '',
       checkinForWeek(member, week) ? 'Yes' : 'No',
       attentionReasons(member, week, now).map((reason) => reason.label).join('; '),
+      member.research?.companiesQualified ?? 0,
+      member.evidence.outreachSent ?? 0,
+      member.evidence.replies,
     ].map(csvCell).join(',');
   });
   return [header.map(csvCell).join(','), ...rows].join('\n');

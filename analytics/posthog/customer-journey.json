@@ -285,8 +285,29 @@
       "stage": "retention",
       "owner": "product",
       "source": "client",
-      "sourceFile": "src/components/gtm/research/ProspectSheet.tsx",
-      "requiredProperties": ["tier"]
+      "sourceFile": "src/hooks/useGtmResearch.ts",
+      "requiredProperties": ["tier", "variant"]
+    },
+    "gtm_draft_marked_replied": {
+      "stage": "retention",
+      "owner": "product",
+      "source": "client",
+      "sourceFile": "src/hooks/useGtmResearch.ts",
+      "requiredProperties": ["tier", "variant"]
+    },
+    "gtm_customer_research_follow_up": {
+      "stage": "retention",
+      "owner": "product",
+      "source": "client",
+      "sourceFile": "src/hooks/useGtmResearch.ts",
+      "requiredProperties": ["kind"]
+    },
+    "gtm_contact_lookup": {
+      "stage": "retention",
+      "owner": "product",
+      "source": "client",
+      "sourceFile": "src/hooks/useGtmResearch.ts",
+      "requiredProperties": ["found"]
     },
     "gtm_prospects_exported": {
       "stage": "retention",

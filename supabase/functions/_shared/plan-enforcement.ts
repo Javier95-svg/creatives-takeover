@@ -126,6 +126,18 @@ const FEATURE_RULES: Partial<Record<EnforcedFeature, Record<Plan, FeatureRule>>>
     rising: { mode: 'charge' },
     pro: { mode: 'charge' },
   },
+  GTM_RESEARCH_MORE: {
+    rookie: { mode: 'charge' },
+    starter: { mode: 'charge' },
+    rising: { mode: 'charge' },
+    pro: { mode: 'charge' },
+  },
+  GTM_CONTACT_FIND: {
+    rookie: { mode: 'charge' },
+    starter: { mode: 'charge' },
+    rising: { mode: 'charge' },
+    pro: { mode: 'charge' },
+  },
   TECH_STACK_GENERATION: {
     rookie: { mode: 'charge' },
     starter: { mode: 'charge' },

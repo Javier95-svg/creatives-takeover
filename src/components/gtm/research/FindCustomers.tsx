@@ -1,14 +1,21 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ExternalLink, Loader2, Pencil, Plus, Search, X } from 'lucide-react';
 import { toast } from 'sonner';
+import { captureEvent } from '@/lib/analytics';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { useCreditActions } from '@/hooks/useCreditActions';
 import { useCreditQuote } from '@/hooks/useCreditQuote';
+import { useFirstCustomerSprint } from '@/hooks/useFirstCustomerSprint';
 import { useGtmResearch, type GtmResearch, type ProspectRow } from '@/hooks/useGtmResearch';
-import { RESEARCH_RUN_CREDITS, sanitizeSegment, type BusinessProfile, type Segment, type SourcedClaim } from '@/lib/gtmResearch';
+import {
+  MORE_RUN_CREDITS, RESEARCH_RUN_CREDITS, rerunEligible, runPrice, sanitizeSegment, variantStats,
+  type BusinessProfile, type ResearchRunKind, type Segment, type SourcedClaim,
+} from '@/lib/gtmResearch';
 import type { GTMPipelineEntry, GTMPlanV2 } from '@/lib/gtmV2';
 import { cn } from '@/lib/utils';
 import { ProspectSheet } from './ProspectSheet';
@@ -209,25 +216,85 @@ function ResearchReview({ research, onError }: { research: GtmResearch; onError:
 
 // ---- 5. Results summary -------------------------------------------------------------------
 
-function ResultsHeader({ research, onNewSearch }: { research: GtmResearch; onNewSearch: () => void }) {
+const RUN_LABEL: Record<ResearchRunKind, string> = {
+  initial: 'research run', more: 'search for more companies', similar: 'search for similar companies', rerun: 'free new search', refresh: 'weekly check',
+};
+
+/** What the latest run found and cost, in one sentence. */
+function runSummary(run: GtmResearch['run'] & object): string {
+  const kind = run.kind ?? 'initial';
+  const found = run.counts.qualified ?? 0;
+  const listed = runPrice(kind).credits;
+  const cost = run.gifted ? (run.cohort_id ? 'Included in your program.' : 'This one was free.') : `Charged ${run.credits_charged ?? 0} of ${listed} credits.`;
+  if (run.error_detail) return run.error_detail;
+  if (kind === 'refresh' && found === 0) return `This week's check found no new companies. ${cost}`;
+  return `${kind === 'initial' ? `Checked ${run.counts.checked ?? 0} websites.` : `The ${RUN_LABEL[kind]} added ${found} ${found === 1 ? 'company' : 'companies'}.`} ${cost}`;
+}
+
+function ResultsHeader({ research, onNewSearch, onError }: { research: GtmResearch; onNewSearch: () => void; onError: (failure: ResearchFailure) => void }) {
   const run = research.run!;
-  const qualified = run.counts.qualified ?? 0;
-  const charged = run.credits_charged ?? 0;
+  const root = research.root ?? run;
+  const fits = research.prospects.filter((prospect) => prospect.fit_tier !== 'C' && prospect.status !== 'dismissed');
+  const shortlisted = research.prospects.some((prospect) => prospect.fit_tier !== 'C' && ['shortlisted', 'in_pipeline', 'contacted'].includes(prospect.status));
+  const canRerun = rerunEligible(research.prospects, root.rerun_used);
+  const finished = ['completed', 'partial'].includes(root.status);
+  const stats = variantStats(research.prospects.flatMap((prospect) => (prospect.draft ? [prospect.draft] : [])));
+  const anySent = stats.a.sent + stats.b.sent > 0;
+  const go = (work: () => Promise<unknown>) => () => void work().catch(onError);
+
   return (
     <section className="rounded-2xl border border-border/60 bg-card p-5 sm:p-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
+        <div className="min-w-0">
           <h2 className="text-lg font-semibold text-foreground">
-            {run.status === 'failed' ? 'No company matched every must-have' : `${qualified} ${qualified === 1 ? 'company matches' : 'companies match'} ${run.selected_segment?.name ?? 'your criteria'}`}
+            {root.status === 'failed' && !fits.length ? 'No company matched every must-have' : `${fits.length} ${fits.length === 1 ? 'company matches' : 'companies match'} ${root.selected_segment?.name ?? 'your criteria'}`}
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            {run.error_detail ?? `Checked ${run.counts.checked ?? 0} websites. ${run.gifted ? 'This run was free.' : `Charged ${charged} of ${RESEARCH_RUN_CREDITS} credits.`}`}
-            {run.status === 'partial' ? ' Fewer than expected: try a wider location or fewer must-haves.' : ''}
+            {runSummary(run)}
+            {run.status === 'partial' && run.kind === 'initial' ? ' Fewer than expected: try a wider location or fewer must-haves.' : ''}
             {run.status === 'cancelled' ? ' Stopped early; you kept what was found.' : ''}
           </p>
+          {anySent ? (
+            <p className="mt-1 text-sm text-muted-foreground">
+              Version A: {stats.a.sent} sent, {stats.a.replied} {stats.a.replied === 1 ? 'reply' : 'replies'} · Version B: {stats.b.sent} sent, {stats.b.replied} {stats.b.replied === 1 ? 'reply' : 'replies'}
+            </p>
+          ) : null}
         </div>
-        <Button type="button" variant="outline" size="sm" onClick={onNewSearch}>New search</Button>
+        <div className="flex flex-wrap items-center gap-2">
+          {research.searches.length > 1 ? (
+            <Select value={root.id} onValueChange={(id) => void research.selectSearch(id).catch(onError)}>
+              <SelectTrigger className="h-9 w-48" aria-label="Your searches"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {research.searches.map((search) => (
+                  <SelectItem key={search.id} value={search.id}>{search.selected_segment?.name ?? 'Search'} · {new Date(search.created_at).toLocaleDateString()}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          ) : null}
+          <Button type="button" variant="outline" size="sm" onClick={onNewSearch}>New search</Button>
+        </div>
       </div>
+
+      {finished ? (
+        <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-border/60 pt-4">
+          <Button type="button" size="sm" variant="outline" className="h-auto min-h-9 whitespace-normal text-left" disabled={research.busy} onClick={go(() => research.followUp('more'))}>
+            <Plus className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />10 more companies · up to {MORE_RUN_CREDITS} credits
+          </Button>
+          <Button type="button" size="sm" variant="outline" className="h-auto min-h-9 whitespace-normal text-left" disabled={research.busy || !shortlisted} title={shortlisted ? undefined : 'Shortlist the companies you like best first'} onClick={go(() => research.followUp('similar'))}>
+            More like my shortlist · up to {MORE_RUN_CREDITS} credits
+          </Button>
+          {canRerun ? (
+            <Button type="button" size="sm" disabled={research.busy} onClick={go(() => research.followUp('rerun'))}>Free new search with your feedback</Button>
+          ) : null}
+          {root.segments.length > 1 ? (
+            <Button type="button" size="sm" variant="ghost" disabled={research.busy} onClick={go(() => research.branch())}>Target another group</Button>
+          ) : null}
+          <label className="ml-auto inline-flex items-center gap-2 text-sm text-muted-foreground">
+            <Switch checked={root.auto_refresh} disabled={research.busy} onCheckedChange={(checked) => void research.setAutoRefresh(checked).catch(onError)} aria-label="Check weekly for new companies" />
+            Check weekly for new companies ({MORE_RUN_CREDITS} credits at most, only when found)
+          </label>
+        </div>
+      ) : null}
     </section>
   );
 }
@@ -237,6 +304,7 @@ function ResultsHeader({ research, onNewSearch }: { research: GtmResearch; onNew
 export default function FindCustomers({ projectId, plan, onUpdatePlan, defaultWebsite, research: given, initialOpenId }: FindCustomersProps) {
   const live = useGtmResearch(given ? null : projectId);
   const research = given ?? live;
+  const firstCustomer = useFirstCustomerSprint();
   const { handleCreditError } = useCreditActions();
   const [openId, setOpenId] = useState<string | null>(initialOpenId ?? null);
   const run = research.run;
@@ -246,6 +314,18 @@ export default function FindCustomers({ projectId, plan, onUpdatePlan, defaultWe
     if (failure?.creditError && handleCreditError(null, { creditError: true, errorCode: failure.errorCode, error: failure.message }, 'GTM_RESEARCH_RUN')) return;
     toast.error(failure?.message ?? 'Something went wrong. Nothing was charged.');
   };
+
+  // First Customer Proof takes companies while its sprint is open.
+  const sprint = firstCustomer.snapshot?.sprint ?? null;
+  const proofOpen = Boolean(sprint && (sprint.status === 'active' || sprint.status === 'draft'));
+  const proof = proofOpen && open ? {
+    attached: Boolean(open.contact_id && firstCustomer.snapshot?.contacts.some((contact) => contact.id === open.contact_id)),
+    onAdd: async (prospect: ProspectRow) => {
+      const contactId = await research.ensureContact(prospect);
+      await firstCustomer.attachContact(sprint!.id, contactId, null);
+      captureEvent('gtm_prospect_action', { action: 'first_customer_proof' });
+    },
+  } : null;
 
   const primaryPlay = plan?.plays.find((play) => play.status === 'active') ?? plan?.plays[0] ?? null;
   const addToPipeline = async (prospect: ProspectRow) => {
@@ -280,7 +360,7 @@ export default function FindCustomers({ projectId, plan, onUpdatePlan, defaultWe
     <div className="space-y-6">
       {working
         ? <ResearchTimeline run={run} steps={research.steps} phase="research" onStop={() => void research.cancel().catch(onError)} stopping={research.busy} />
-        : <ResultsHeader research={research} onNewSearch={research.startOver} />}
+        : <ResultsHeader research={research} onNewSearch={research.startOver} onError={onError} />}
       {research.prospects.length ? <ProspectsTable prospects={research.prospects} onOpen={(prospect) => setOpenId(prospect.id)} /> : null}
       <ProspectSheet
         prospect={open}
@@ -289,6 +369,10 @@ export default function FindCustomers({ projectId, plan, onUpdatePlan, defaultWe
         onUpdate={research.updateProspect}
         onUpdateDraft={research.updateDraft}
         onAddToPipeline={addToPipeline}
+        onMarkSent={research.markSent}
+        onMarkReplied={research.markReplied}
+        proof={proof}
+        onFindContact={(prospect) => research.findContact(prospect).catch((failure: ResearchFailure) => { onError(failure); return undefined; })}
       />
     </div>
   );

@@ -13,6 +13,7 @@ export class PulseDatabase {
     pulse_memories: [], journey_assumptions: [], pulse_insights: [],
     pulse_mentor_recommendation_impressions: [],
     subscribers: [], user_credits: [], cohort_members: [], launch_cohorts: [],
+    gtm_research_runs: [], gtm_prospect_companies: [],
   };
   from(table: string) {
     assert.ok(table in this.tables, `Unexpected table/action: ${table}`);
@@ -38,6 +39,7 @@ export class PulseDatabase {
       in: (key: string, values: unknown[]) => { filters.push(row => values.includes(read(row, key))); return query; },
       gte: (key: string, value: string | number) => { filters.push(row => String(read(row, key) ?? '') >= String(value)); return query; },
       is: (key: string, value: unknown) => { filters.push(row => (row[key] ?? null) === value); return query; },
+      not: (key: string, operator: string, value: unknown) => { filters.push(row => (operator === 'is' ? (row[key] ?? null) !== value : read(row, key) !== value)); return query; },
       contains: (key: string, value: Record<string, unknown>) => { filters.push(row => Object.entries(value).every(([k, v]) => JSON.stringify(row[key]?.[k]) === JSON.stringify(v))); return query; },
       order: (_key: string, opts: { ascending: boolean }) => { descending = !opts.ascending; return query; },
       limit: (value: number) => { limit = value; return query; },
