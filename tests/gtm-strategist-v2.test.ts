@@ -180,8 +180,10 @@ test('GTM intake starts blank and exposes MVP import from an in-form CTA', () =>
   assert.doesNotMatch(projectLoadFlow, /\.limit\(1\)/);
   assert.match(hook, /setPrefillV2\(project\.prefill\)/);
   assert.match(hook, /productName: textValue\(row\.title\) \|\| textValue\(setupInput\.productName\)/);
-  assert.match(hook.slice(hook.indexOf('const loadExistingPlan'), projectLoadStart), /\.in\('status', \['saved', 'exported'\]\)/);
-  assert.doesNotMatch(hook.slice(hook.indexOf('const loadExistingPlan'), projectLoadStart), /'draft'/);
+  // A generated plan is saved as a draft and supersedes the project's previous
+  // plan, so the current draft must be restored or a reload shows a blank intake.
+  assert.match(hook.slice(hook.indexOf('const loadExistingPlan'), projectLoadStart), /\.in\('status', \['draft', 'saved', 'exported'\]\)/);
+  assert.match(hook.slice(hook.indexOf('const loadExistingPlan'), projectLoadStart), /\.is\('superseded_at', null\)/);
   assert.match(intake, /productName: ''/);
   assert.match(intake, /lifecycle: ''/);
   assert.match(intake, /businessModel: ''/);
@@ -306,4 +308,24 @@ test('weekly review rewrites the next week from exact Traction evidence without 
   assert.match(hook, /activate_gtm_play_v2/);
   assert.match(hook, /createJourneyHandoff/);
   assert.match(hook, /gtm_directory_actions/);
+});
+
+test('a plan is charged only after it is saved, and a failed build costs nothing', () => {
+  const analyzer = readFileSync(new URL('../supabase/functions/gtm-analyzer/index.ts', import.meta.url), 'utf8');
+  const hook = readFileSync(new URL('../src/hooks/useGTMStrategist.ts', import.meta.url), 'utf8');
+  const v2 = analyzer.slice(analyzer.indexOf('if (isV2 && intakeV2) {'), analyzer.indexOf('// Legacy v1 path'));
+  // The provider check runs before anything is charged.
+  assert.ok(analyzer.indexOf('Plan generation is temporarily unavailable') < analyzer.indexOf('if (isV2 && intakeV2) {'));
+  // Generation, then the charge; no refund path remains for v2.
+  assert.ok(v2.indexOf('generateV2Plan(') > 0 && v2.indexOf('generateV2Plan(') < v2.indexOf('checkAndDeductCredits('));
+  assert.doesNotMatch(v2, /refundCredits\(/);
+  assert.match(v2, /credits_refunded: 0/);
+  // One idempotency key per click, never derived from the intake.
+  assert.match(hook, /createIdempotencyKey\('gtm-v2', crypto\.randomUUID\(\)\)/);
+  assert.doesNotMatch(hook, /crypto\.subtle\.digest/);
+});
+
+test('every generated kill rule meets the ten-prospect sample the outcome contract requires', () => {
+  const analyzer = readFileSync(new URL('../supabase/functions/gtm-analyzer/index.ts', import.meta.url), 'utf8');
+  assert.match(analyzer, /minSampleSize: Math\.max\(10, Math\.ceil\(item\.rule\.target \* 3\)\)/);
 });

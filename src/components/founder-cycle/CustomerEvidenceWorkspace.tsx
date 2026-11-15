@@ -345,7 +345,9 @@ export default function CustomerEvidenceWorkspace({ sprintContext }: { sprintCon
     });
   };
 
-  if (!user || !cycle.showCycle) return null;
+  // Inside First Customer Proof the prospect list is the sprint's core step,
+  // so it shows regardless of the founder-cycle rollout flag.
+  if (!user || (!sprintContext && !cycle.showCycle)) return null;
 
   return (
     <section id="customer-evidence" className="scroll-mt-28 space-y-5 rounded-2xl border border-primary/20 bg-card/80 p-5 sm:p-6">

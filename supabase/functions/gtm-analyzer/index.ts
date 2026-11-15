@@ -1,12 +1,11 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
-import { checkAndDeductCredits, getUserFromAuth, refundCredits } from '../_shared/credit-deduction.ts';
+import { checkAndDeductCredits, getCreditBalanceAndQuota, getUserFromAuth, refundCredits } from '../_shared/credit-deduction.ts';
 import { CREDIT_COSTS } from '../_shared/credit-constants.ts';
 import { resolveCreditIdempotencyKey } from '../_shared/request-idempotency.ts';
 import { inferMotion, rankChannels, type GTMIntakeV2 } from '../_shared/gtm-channel-engine.ts';
 import { emitBusinessEvent, resolveAnalyticsErrorCode } from '../_shared/analytics.ts';
-import { callGemini } from '../_shared/gemini.ts';
 import { searchWeb } from '../_shared/web-research.ts';
 import { FAST_JSON_MODELS, generateJsonText } from '../_shared/json-generation.ts';
 
@@ -106,15 +105,21 @@ async function researchGTM(intake: GTMIntakeV2) {
 
     // Fast models first and a 25s cap: with gemini-3.8-flash first, this step
     // timed out at 40s and left the plan too little time (2026-11-11).
-    const brief = await callGemini({
-      models: FAST_JSON_MODELS,
-      systemInstruction: 'Research current go-to-market evidence for a launch-ready founder. Use only the numbered sources provided and cite them as [n]. Separate evidence from inference, and say plainly when the sources do not cover something.',
-      parts: [{ text: `Product: ${intake.productName}\nURL: ${intake.productUrl || 'not supplied'}\nMarket: ${intake.targetSegment}\nGeography: ${intake.geography}\nProblem: ${intake.problem}\nKnown alternatives: ${intake.knownCompetitors.join(', ') || 'unknown'}\nFounder evidence summary: ${(intake.firstPartyEvidence ?? []).map((item) => `${item.title}: ${item.content.slice(0, 800)}`).join('\n').slice(0, 5000) || 'none supplied'}\n\nSources:\n${sources.map((source, index) => `[${index + 1}] ${source.title} (${source.url})\n${source.snippet ?? ''}`).join('\n\n')}\n\nFrom these sources, report current competitors and alternatives, pricing, positioning, where buyers discover solutions, buying triggers, and channel conditions. Return concise evidence with citations. Do not treat founder-provided claims as independently verified market facts.` }],
+    // Gemini first with an OpenAI fallback, like the plan itself: research used
+    // to call Gemini only, so an OpenAI-only setup never produced a brief.
+    const brief = await generateJsonText({
+      label: 'gtm-research-brief',
+      system: 'Research current go-to-market evidence for a launch-ready founder. Use only the numbered sources provided and cite them as [n]. Separate evidence from inference, and say plainly when the sources do not cover something. Return JSON only: {"brief":"..."}.',
+      prompt: `Product: ${intake.productName}\nURL: ${intake.productUrl || 'not supplied'}\nMarket: ${intake.targetSegment}\nGeography: ${intake.geography}\nProblem: ${intake.problem}\nKnown alternatives: ${intake.knownCompetitors.join(', ') || 'unknown'}\nFounder evidence summary: ${(intake.firstPartyEvidence ?? []).map((item) => `${item.title}: ${item.content.slice(0, 800)}`).join('\n').slice(0, 5000) || 'none supplied'}\n\nSources:\n${sources.map((source, index) => `[${index + 1}] ${source.title} (${source.url})\n${source.snippet ?? ''}`).join('\n\n')}\n\nFrom these sources, report current competitors and alternatives, pricing, positioning, where buyers discover solutions, buying triggers, and channel conditions. Return concise evidence with citations in the "brief" field. Do not treat founder-provided claims as independently verified market facts.`,
       temperature: 0.2,
-      maxOutputTokens: 6000,
+      maxTokens: 6000,
       timeoutMs: 25_000,
+      openaiModel: 'gpt-4o-mini',
+      geminiModels: FAST_JSON_MODELS,
     });
-    return { provider: search.provider, providerStatus: 'healthy' as const, status: sources.length >= 3 ? 'complete' as const : 'limited' as const, answer: brief.text, sources, sourceCount: sources.length, retrievedAt };
+    let answer = '';
+    try { answer = String((JSON.parse(brief.text) as { brief?: unknown }).brief ?? '').trim(); } catch { answer = brief.text.trim(); }
+    return { provider: search.provider, providerStatus: 'healthy' as const, status: sources.length >= 3 ? 'complete' as const : 'limited' as const, answer, sources, sourceCount: sources.length, retrievedAt };
   } catch (error) {
     console.warn('GTM live research unavailable:', error);
     return { provider: searchProvider, providerStatus: 'unhealthy' as const, status: 'unavailable' as const, answer: '', sources: [] as Array<Record<string, unknown>>, sourceCount: 0, retrievedAt };
@@ -360,7 +365,10 @@ Return only JSON with this shape:
         operator: 'lt',
         threshold: item.rule.target,
         observationWindowWeeks: 3,
-        minSampleSize: Math.max(3, Math.ceil(item.rule.target * 3)),
+        // At least ten observations: the outcome contract (tenProspectSample)
+        // will not let a play start below that, so low-target channels such as
+        // partnerships (target 3) were stuck as drafts.
+        minSampleSize: Math.max(10, Math.ceil(item.rule.target * 3)),
       },
       actions: safeStringArray(narrative.actions, [`Launch the first ${item.rule.name} experiment.`, `Log ${item.rule.metric.toLowerCase()} in Traction Engine.`]).slice(0, 6),
       metric: item.rule.metric,
@@ -616,63 +624,83 @@ serve(async (req) => {
     });
 
     const creditCost = CREDIT_COSTS.GTM_ANALYSIS;
-    const creditResult = await checkAndDeductCredits(
-      user.id,
-      creditCost,
-      'GTM Analysis',
-      undefined,
-      { businessType: isV2 ? intakeV2?.businessModel : businessType, schemaVersion: isV2 ? 2 : 1, idempotencyKey, entitlementFeature: 'GTM_ANALYSIS' }
-    );
-    const chargedCredits = (creditResult.usedFromQuota ?? 0) + (creditResult.usedFromBalance ?? 0);
+    const creditErrorResponse = (result: { error?: string; errorCode?: string; requiredTier?: string }) => new Response(JSON.stringify({
+      error: result.error || 'Credit deduction failed',
+      creditError: true,
+      errorCode: result.errorCode,
+      requiredTier: result.requiredTier,
+      requiredCredits: creditCost,
+    }), {
+      status: 402,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
 
-    if (!creditResult.success) {
-      return new Response(JSON.stringify({
-        error: creditResult.error || 'Credit deduction failed',
-        creditError: true,
-        errorCode: creditResult.errorCode,
-        requiredTier: creditResult.requiredTier,
-        requiredCredits: creditCost,
-      }), {
-        status: 402,
+    // Gemini first, OpenAI as fallback; either key is enough. Checked before
+    // any charge, so a misconfigured provider never costs the founder credits.
+    const openaiApiKey = Deno.env.get('OPENAI_API_KEY') ?? '';
+    if (!Deno.env.get('GEMINI_API_KEY')?.trim() && !openaiApiKey.trim()) {
+      return new Response(JSON.stringify({ error: 'Plan generation is temporarily unavailable. You were not charged.' }), {
+        status: 503,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    // Gemini first, OpenAI as fallback; either key is enough.
-    const openaiApiKey = Deno.env.get('OPENAI_API_KEY') ?? '';
-    if (!Deno.env.get('GEMINI_API_KEY')?.trim() && !openaiApiKey.trim()) throw new Error('No AI provider configured');
-
     if (isV2 && intakeV2) {
+      // Charged only after the plan is saved. Charging first left three gaps:
+      // a platform timeout skipped the refund, a refunded failure replayed as
+      // a free "success" under the same idempotency key, and a missing provider
+      // threw outside the refund. Now a failure simply costs nothing.
+      const available = await getCreditBalanceAndQuota(user.id);
+      if (!available || available.balance + available.monthly_quota < creditCost) {
+        return creditErrorResponse({ error: 'Not enough credits to build a plan.', errorCode: 'INSUFFICIENT_CREDITS' });
+      }
+      let result: Awaited<ReturnType<typeof generateV2Plan>>;
       try {
-        const result = await generateV2Plan({ intake: intakeV2, userId: user.id, existingPlanId: body.planId, openaiApiKey });
-        return new Response(JSON.stringify({
-          success: true,
-          analysis: result.plan,
-          planId: result.planId,
-          creditsUsed: chargedCredits,
-          newBalance: creditResult.newBalance,
-        }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        result = await generateV2Plan({ intake: intakeV2, userId: user.id, existingPlanId: body.planId, openaiApiKey });
       } catch (v2Error) {
         const error = v2Error instanceof Error
           ? v2Error
           : new Error(typeof v2Error === 'object' && v2Error !== null
             ? [(v2Error as Record<string, unknown>).code, (v2Error as Record<string, unknown>).message, (v2Error as Record<string, unknown>).details].filter(Boolean).join(' | ') || JSON.stringify(v2Error)
             : String(v2Error));
-        const refundSucceeded = chargedCredits > 0
-          ? await refundCredits(user.id, chargedCredits, 'GTM Analysis', 'Refund: GTM V2 generation failed', { error: error.message })
-          : true;
         await emitBusinessEvent({
           eventName: 'generation_failed',
           userId: user.id,
-          properties: {
-            tool: 'gtm_strategist',
-            error_code: resolveAnalyticsErrorCode(v2Error),
-            credits_refunded: refundSucceeded ? chargedCredits : 0,
-          },
+          properties: { tool: 'gtm_strategist', error_code: resolveAnalyticsErrorCode(v2Error), credits_refunded: 0 },
         });
         throw error;
       }
+      const creditResult = await checkAndDeductCredits(
+        user.id,
+        creditCost,
+        'GTM Analysis',
+        undefined,
+        { businessType: intakeV2.businessModel, schemaVersion: 2, idempotencyKey, entitlementFeature: 'GTM_ANALYSIS', planId: result.planId },
+      );
+      if (!creditResult.success) {
+        // The plan is already saved; a balance spent elsewhere in the meantime
+        // is rare, so the plan is kept and the miss is logged rather than lost.
+        console.warn('GTM plan saved but credit capture failed', { userId: user.id, planId: result.planId, errorCode: creditResult.errorCode });
+      }
+      return new Response(JSON.stringify({
+        success: true,
+        analysis: result.plan,
+        planId: result.planId,
+        creditsUsed: creditResult.success ? (creditResult.usedFromQuota ?? 0) + (creditResult.usedFromBalance ?? 0) : 0,
+        newBalance: creditResult.newBalance,
+      }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
+
+    // Legacy v1 path (no current client sends it): charge first, refund on failure.
+    const creditResult = await checkAndDeductCredits(
+      user.id,
+      creditCost,
+      'GTM Analysis',
+      undefined,
+      { businessType, schemaVersion: 1, idempotencyKey, entitlementFeature: 'GTM_ANALYSIS' }
+    );
+    const chargedCredits = (creditResult.usedFromQuota ?? 0) + (creditResult.usedFromBalance ?? 0);
+    if (!creditResult.success) return creditErrorResponse(creditResult);
 
     const audienceHabits = (body.audienceOnlineHabits || []).join(', ') || 'Not specified';
     const budget = body.budget || '$0 (time only)';

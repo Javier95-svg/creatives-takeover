@@ -311,7 +311,10 @@ export function useGTMStrategist(projectId: string | null = null) {
         .from(GTM_TABLE)
         .select('id, plan_title, plan_content, status, schema_version')
         .eq('user_id', user.id)
-        .in('status', ['saved', 'exported'])
+        // Drafts included: a new plan is saved as a draft and supersedes the
+        // previous one, so restoring only saved plans showed an empty intake
+        // after a reload until the founder clicked Save.
+        .in('status', ['draft', 'saved', 'exported'])
         .eq('schema_version', 2);
       if (inbound?.consumed_artifact_id) savedQuery = savedQuery.eq('id', inbound.consumed_artifact_id);
       else if (projectId) savedQuery = savedQuery.eq('project_id', projectId).is('superseded_at', null);
@@ -500,12 +503,11 @@ export function useGTMStrategist(projectId: string | null = null) {
     setPhase('analyzing');
     trackGTMIntakeCompleted({ schema_version: 2, business_model: intake.businessModel });
     try {
-      // The operation identity includes the actual approved input. Distinct ideas
-      // must not share a user-wide "new" key; retrying identical input must reuse it.
-      const operationBytes = new TextEncoder().encode(JSON.stringify({ user: user.id, plan: regenerate ? planId : null, intake }));
-      const digest = await crypto.subtle.digest('SHA-256', operationBytes);
-      const fingerprint = Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, '0')).join('');
-      const idempotencyKey = createIdempotencyKey('gtm-v2', fingerprint);
+      // One key per click. The server charges only after the plan is saved, so
+      // a key derived from the intake would replay a past charge and make every
+      // later rebuild with the same answers free. The button is disabled while
+      // a build runs, which is what prevents double submits.
+      const idempotencyKey = createIdempotencyKey('gtm-v2', crypto.randomUUID());
       const { data, error } = await supabase.functions.invoke('gtm-analyzer', {
         headers: { 'Idempotency-Key': idempotencyKey },
         body: { schemaVersion: 2, planId: regenerate ? planId : undefined, intake },
