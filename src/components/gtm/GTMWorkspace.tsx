@@ -134,19 +134,24 @@ export default function GTMWorkspace({
       {/* On the Review tab the review panel carries its own button, so the card would only repeat it. */}
       {nextStep && !(view === 'review' && (nextStep.action === 'compare_review' || nextStep.action === 'review_week')) ? <NextStepCard title={nextStep.title} reason={nextStep.reason} cta={nextStep.cta} onAction={runNextStep} /> : null}
 
-      <div role="tablist" aria-label="GTM Strategist views" className="inline-flex rounded-lg border border-border/60 bg-card p-1">
-        {VIEWS.map(([id, label]) => (
-          <button
-            key={id}
-            type="button"
-            role="tab"
-            aria-selected={view === id}
-            onClick={() => setView(id)}
-            className={cn('rounded-md px-4 py-1.5 text-sm font-medium transition-colors', view === id ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground')}
-          >
-            {label}
-          </button>
-        ))}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div role="tablist" aria-label="GTM Strategist views" className="inline-flex rounded-lg border border-border/60 bg-card p-1">
+          {VIEWS.map(([id, label]) => (
+            <button
+              key={id}
+              type="button"
+              role="tab"
+              aria-selected={view === id}
+              onClick={() => setView(id)}
+              className={cn('rounded-md px-4 py-1.5 text-sm font-medium transition-colors', view === id ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground')}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        <Link to="/go-to-market?workspace=find-customers" className="inline-flex items-center rounded-lg border border-primary/40 bg-primary/5 px-4 py-2 text-sm font-medium text-primary hover:bg-primary/10">
+          Find customers for this plan
+        </Link>
       </div>
 
       {view === 'week' ? (

@@ -21,6 +21,7 @@ const GIFT_FEATURES = new Set<CreditFeature>([
   'PITCH_DECK_ANALYZER',
   'TECH_STACK_GENERATION',
   'FUNDRAISING_READINESS_ANALYSIS',
+  'GTM_RESEARCH_RUN',
 ]);
 
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), {

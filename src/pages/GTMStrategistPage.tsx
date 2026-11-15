@@ -15,6 +15,7 @@ import { icpArtifactToGtmIntake } from '@/lib/icpToGtmIntake';
 import GTMWorkspaceIntake from '@/components/gtm/GTMWorkspaceIntake';
 import GTMWorkspace from '@/components/gtm/GTMWorkspace';
 import { FirstCustomerProofWorkspace } from '@/pages/FirstCustomerSprintPage';
+import FindCustomers from '@/components/gtm/research/FindCustomers';
 import GTMAnalysisLoader from '@/components/gtm/GTMAnalysisLoader';
 import GTMRouteWallpaper, { GTMRouteChart } from '@/components/wallpapers/GTMRouteWallpaper';
 import { BizMapShareDialog } from '@/components/bizmap/BizMapShareDialog';
@@ -80,7 +81,9 @@ export default function GTMStrategistPage() {
     resumeWorkspace,
   } = useGTMStrategist(projectContext.projectId);
   const v2Analysis = analysis && isGTMPlanV2(analysis) ? analysis : null;
-  const isFirstCustomerProofWorkspace = searchParams.get('workspace') === 'first-customer-proof';
+  const isFindCustomersWorkspace = searchParams.get('workspace') === 'find-customers';
+  // Both side workspaces replace the plan view while open.
+  const isFirstCustomerProofWorkspace = searchParams.get('workspace') === 'first-customer-proof' || isFindCustomersWorkspace;
   const showWorkspace = Boolean(user && hasAccess && !isRestoringPlan && !isFirstCustomerProofWorkspace && phase === 'results' && v2Analysis && planId);
 
   useEffect(() => {
@@ -152,13 +155,33 @@ export default function GTMStrategistPage() {
           ) : hasAccess ? (
             <>
               {isRestoringPlan ? <GTMAnalysisLoader mode="restoring" /> : null}
-              {!isRestoringPlan && isFirstCustomerProofWorkspace ? (
+              {!isRestoringPlan && isFindCustomersWorkspace ? (
+                <div className="space-y-4">
+                  <Link to="/go-to-market" className="inline-block text-sm font-medium text-primary underline-offset-4 hover:underline">{v2Analysis && planId ? 'Back to your plan' : 'Back to GTM Strategist'}</Link>
+                  <FindCustomers
+                    projectId={projectContext.projectId}
+                    plan={v2Analysis && planId ? v2Analysis : null}
+                    onUpdatePlan={v2Analysis && planId ? updateV2Plan : undefined}
+                    defaultWebsite={v2Analysis?.intake.productUrl || undefined}
+                  />
+                </div>
+              ) : null}
+              {!isRestoringPlan && isFirstCustomerProofWorkspace && !isFindCustomersWorkspace ? (
                 <div className="space-y-4">
                   {v2Analysis && planId ? (
                     <Link to="/go-to-market" className="inline-block text-sm font-medium text-primary underline-offset-4 hover:underline">Back to your plan</Link>
                   ) : null}
                   <FirstCustomerProofWorkspace embedded {...(v2Analysis && planId ? { gtmPlanId: planId } : {})} />
                 </div>
+              ) : null}
+              {!isRestoringPlan && phase === 'intake' && !isFirstCustomerProofWorkspace ? (
+                <Link to="/go-to-market?workspace=find-customers" className="mb-4 flex flex-col gap-1 rounded-2xl border border-primary/30 bg-primary/5 p-4 hover:bg-primary/10 sm:flex-row sm:items-center sm:justify-between">
+                  <span>
+                    <span className="block font-semibold text-foreground">Already know who you sell to?</span>
+                    <span className="block text-sm text-muted-foreground">Find real companies to contact from your website, with the reasons each one fits.</span>
+                  </span>
+                  <span className="text-sm font-medium text-primary">Find customers</span>
+                </Link>
               ) : null}
               {!isRestoringPlan && phase === 'intake' && !isFirstCustomerProofWorkspace ? (
                 <GTMWorkspaceIntake

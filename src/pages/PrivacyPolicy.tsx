@@ -23,7 +23,7 @@ const PrivacyPolicy = () => {
             <h1 className="text-4xl md:text-6xl font-bold gradient-text creatives-font leading-tight pb-2 overflow-visible mb-6">
               Privacy Policy
             </h1>
-            <p className="text-sm text-muted-foreground">Last updated: November 1, 2026</p>
+            <p className="text-sm text-muted-foreground">Last updated: November 15, 2026</p>
           </header>
 
           <div className="max-w-4xl mx-auto space-y-8">
@@ -59,6 +59,11 @@ const PrivacyPolicy = () => {
                     <li><strong>Payment providers:</strong> payment confirmations, subscription status, and fraud-prevention signals.</li>
                     <li><strong>Service providers:</strong> analytics, email delivery, infrastructure, scheduling, and similar vendors that help us operate the platform.</li>
                   </ul>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-medium text-primary mb-3">1.5 Customer research (GTM Strategist)</h3>
+                  <p>When a founder asks GTM Strategist to find potential customers, we search the public web and read a few public pages of the companies found (for example their home, about and contact pages) to check them against the founder's criteria. We keep business information only: company name, website, location and size where published, short quotes from those pages, and contact routes the company publishes for enquiries, such as a contact page or a general address like info@. We do not collect personal contact details of named people in this feature, we never email the companies found, and the founder decides whether to contact them. Results are visible only to the founder who ran the research. A company can ask to be excluded from all future research by writing to <a href="mailto:admin@creatives-takeover.com" className="text-primary hover:underline">admin@creatives-takeover.com</a>; we honour this for every founder on the platform.</p>
                 </div>
 
                 <div>
@@ -223,6 +228,7 @@ const PrivacyPolicy = () => {
                   <li><strong>Security and diagnostic logs:</strong> retained as needed for platform reliability, abuse prevention, and investigations.</li>
                   <li><strong>Discovery Call attendance evidence:</strong> derived timing and count metadata is retained with the booking record only as long as reasonably necessary for support, disputes, financial administration, and legal obligations.</li>
                   <li><strong>Public content:</strong> may remain visible until removed by you, by us, or as part of ordinary platform moderation.</li>
+                  <li><strong>Customer research results:</strong> research runs and the companies found are deleted 12 months after they were last used; cached copies of company web pages after 90 days; all of it when the founder's account is deleted.</li>
                 </ul>
               </div>
             </section>

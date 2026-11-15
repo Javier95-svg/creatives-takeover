@@ -239,6 +239,62 @@
       "sourceFile": "src/lib/analytics.ts",
       "requiredProperties": ["surface", "outcome"]
     },
+    "gtm_customer_research_analyzed": {
+      "stage": "activation",
+      "owner": "product",
+      "source": "client",
+      "sourceFile": "src/hooks/useGtmResearch.ts",
+      "requiredProperties": ["has_website", "from_plan"]
+    },
+    "gtm_customer_research_started": {
+      "stage": "activation",
+      "owner": "product",
+      "source": "client",
+      "sourceFile": "src/hooks/useGtmResearch.ts",
+      "requiredProperties": ["gifted", "must_have_criteria"]
+    },
+    "gtm_customer_research_completed": {
+      "stage": "activation",
+      "owner": "product",
+      "source": "client",
+      "sourceFile": "src/hooks/useGtmResearch.ts",
+      "requiredProperties": ["status", "qualified", "credits_charged", "gifted"]
+    },
+    "gtm_prospect_action": {
+      "stage": "retention",
+      "owner": "product",
+      "source": "client",
+      "sourceFile": "src/hooks/useGtmResearch.ts",
+      "requiredProperties": ["action"]
+    },
+    "gtm_prospect_feedback": {
+      "stage": "retention",
+      "owner": "product",
+      "source": "client",
+      "sourceFile": "src/hooks/useGtmResearch.ts",
+      "requiredProperties": ["reason"]
+    },
+    "gtm_draft_copied": {
+      "stage": "retention",
+      "owner": "product",
+      "source": "client",
+      "sourceFile": "src/components/gtm/research/ProspectSheet.tsx",
+      "requiredProperties": ["tier", "edited"]
+    },
+    "gtm_draft_marked_sent": {
+      "stage": "retention",
+      "owner": "product",
+      "source": "client",
+      "sourceFile": "src/components/gtm/research/ProspectSheet.tsx",
+      "requiredProperties": ["tier"]
+    },
+    "gtm_prospects_exported": {
+      "stage": "retention",
+      "owner": "product",
+      "source": "client",
+      "sourceFile": "src/components/gtm/research/ProspectsTable.tsx",
+      "requiredProperties": ["count"]
+    },
     "pulse_task_added": {
       "stage": "retention",
       "owner": "product",

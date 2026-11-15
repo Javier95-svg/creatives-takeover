@@ -109,6 +109,21 @@ export const PULSE_GUIDES: readonly PulseGuide[] = [
     ],
   },
   {
+    id: 'find-customers',
+    title: 'Find companies to contact with GTM Strategist',
+    aliases: ['find customers', 'find companies', 'find leads', 'prospects', 'prospect list', 'lead list', 'who to contact', 'customer research', 'find clients', 'find buyers', 'outreach list'],
+    steps: [
+      'In GTM Strategist open "Find customers" (from the plan workspace, or from the intake before you have a plan).',
+      'Enter your website and click "Read my business". It is free: the agent reads up to five public pages, combines them with your ICP Builder and PMF Lab work, finds your competitors and proposes two or three groups to target.',
+      'Check what it understood and use "Fix this" on anything that is off. Pick one group and adjust its criteria: must-haves are what a company\'s own website has to show.',
+      'Click "Start research". A run holds 10 credits and charges by what it delivers: the full 10 from ten matching companies, less below that, nothing if none match. Your first run is free.',
+      'Follow the steps as it searches, checks each company\'s website and writes drafts; "Stop and keep results" ends early and charges only for what was found.',
+      'Open a company to see why it fits, with quotes from its own site, its public contact routes and a draft email. Edit, copy or open it in your email, then "Mark as sent". Use "Looks off" on poor matches and "Export CSV" to take the list elsewhere.',
+      'With a GTM plan, "Add to pipeline" puts a company in your plan\'s pipeline, from where you can attach it in First Customer Proof. Nothing is ever sent for you.',
+    ],
+    card: { kind: 'tool', id: 'gtm_strategist', title: 'GTM Strategist', reason: 'Find customers from your website.' },
+  },
+  {
     id: 'icp-builder',
     title: 'Define your ideal customer in ICP Builder',
     aliases: ['icp builder', 'icp', 'ideal customer', 'customer profile', 'target customer', 'who to sell to', 'persona', 'define my customer'],

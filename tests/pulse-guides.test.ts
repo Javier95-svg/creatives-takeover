@@ -78,3 +78,8 @@ test('the contact and pricing cards are allowed destinations and evidence carrie
   assert.equal(pricing.route, '/pricing');
   assert.deepEqual(Object.keys(guideEvidence(PULSE_GUIDES[0])), ['id', 'title', 'steps']);
 });
+
+test('Pulse can explain customer research', () => {
+  assert.equal(findPulseGuide('How do I find companies to contact?')?.id, 'find-customers');
+  assert.equal(findPulseGuide('how do I get a lead list for my startup')?.id, 'find-customers');
+});

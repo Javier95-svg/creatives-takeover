@@ -14,6 +14,10 @@ export const CREDIT_COSTS = {
   PMF_SCORING: 5,
   PMF_DISCOVERY: 5,
   GTM_ANALYSIS: 6,
+  // Customer research run (Find customers): held up front, charged by what it
+  // delivers, first run free per account. More companies on the same run: 5.
+  GTM_RESEARCH_RUN: 10,
+  GTM_RESEARCH_MORE: 5,
   APP_BUILDER_GENERATE: 15,
   APP_BUILDER_REFINE: 4,
   APP_BUILDER_DEBUG: 3,
