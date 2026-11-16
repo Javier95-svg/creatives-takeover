@@ -119,7 +119,7 @@ function makeRun(status: ResearchRunRow['status'], counts: ResearchRunRow['count
 
 const noop = async () => undefined;
 function previewResearch(run: ResearchRunRow | null, steps: ResearchStepRow[], rows: ProspectRow[]): GtmResearch {
-  return { run, root: run, searches: run ? [run] : [], steps, prospects: rows, loading: false, busy: false, analyze: noop, edit: noop, start: noop, cancel: noop,
+  return { run, root: run, searches: run ? [run] : [], steps, prospects: rows, loading: false, busy: false, analyze: noop, retry: noop, edit: noop, start: noop, cancel: noop,
     followUp: noop, branch: noop, setAutoRefresh: noop, selectSearch: noop, startOver: () => undefined, refresh: async () => run,
     updateProspect: noop, updateDraft: noop, ensureContact: async () => 'preview-contact', markSent: noop, markReplied: noop,
     findContact: async () => ({ found: false, message: 'Preview only.' }) } as unknown as GtmResearch;
@@ -130,7 +130,7 @@ export default function FindCustomersPreview() {
   const state = params.get('state') ?? 'start';
   const research = useMemo(() => {
     switch (state) {
-      case 'analyzing': return previewResearch(makeRun('analyzing', {}), analysisSteps, []);
+      case 'analyzing': return previewResearch(makeRun('analyzing', {}, { business_profile: profile }), analysisSteps, []);
       case 'review': return previewResearch(makeRun('needs_review', {}), doneAnalysis, []);
       case 'researching': return previewResearch(makeRun('running', { candidates: 23, checked: 15, qualified: 9 }), researchSteps, prospects.slice(0, 6));
       case 'results':

@@ -312,12 +312,14 @@ export function parseCompetitors(raw: unknown, ownDomain: string | null): Compet
 const slug = (value: string, fallback: string) => value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || fallback;
 
 export function parseSegments(raw: unknown): Segment[] {
-  const list = raw && typeof raw === 'object' && Array.isArray((raw as { segments?: unknown }).segments)
-    ? (raw as { segments: unknown[] }).segments : [];
+  // Models sometimes answer with a bare array or a different top-level key.
+  const container = raw && typeof raw === 'object' ? raw as Record<string, unknown> : {};
+  const list = Array.isArray(raw) ? raw
+    : (['segments', 'groups', 'targetSegments', 'targets'].map((key) => container[key]).find(Array.isArray) as unknown[] | undefined) ?? [];
   return list.flatMap((item, index): Segment[] => {
     if (!item || typeof item !== 'object') return [];
     const value = item as Record<string, unknown>;
-    const name = clean(value.name, 100);
+    const name = clean(value.name ?? value.title ?? value.segment, 100);
     const criteria = (Array.isArray(value.criteria) ? value.criteria : []).flatMap((criterion, criterionIndex): SegmentCriterion[] => {
       const label = typeof criterion === 'string' ? clean(criterion, 160)
         : criterion && typeof criterion === 'object' ? clean((criterion as Record<string, unknown>).label, 160) : '';

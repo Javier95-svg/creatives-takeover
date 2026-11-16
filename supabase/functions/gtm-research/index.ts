@@ -5,6 +5,7 @@
  *
  * Actions (POST JSON, signed-in founder):
  *   analyze      { websiteUrl?, description?, projectId? }  free; reads the site, proposes segments
+ *   retry        { runId }                                   resumes a failed (free) analysis from its failed step
  *   edit         { runId, profile?, removeCompetitors? }     founder corrections before research
  *   start        { runId, segment, targetCount? }            holds credits, starts research (Idempotency-Key)
  *   cancel       { runId }                                   stops; charges only for what was found
@@ -238,6 +239,30 @@ serve(async (req) => {
       }).select("id").single();
       if (error || !run) throw new Error(error?.message ?? "Could not create the research run");
       await db.from("gtm_research_steps").insert({ run_id: run.id, user_id: user.id, key: "read_site" });
+      kickResearchWorker();
+      return json({ runId: run.id });
+    }
+
+    // A free analysis that failed resumes from the step that failed, keeping
+    // the pages read and everything understood so far. Three resumes a run.
+    if (action === "retry") {
+      const run = await loadRun(body.runId);
+      if (!run) return json({ error: "Research not found." }, 404);
+      if (run.status !== "failed" || (run as Run & { started_at?: string | null }).started_at) return json({ error: "Only a reading of your business that failed can be resumed." }, 409);
+      const retries = Number(run.counts.retries) || 0;
+      if (retries >= 3) return json({ error: "This reading failed several times. Start a new search, or add a short description of your product.", errorCode: "RETRY_LIMIT" }, 409);
+      if (!(await withinBudget(db))) return json(PAUSED, 503);
+      const now = new Date().toISOString();
+      const { count: failedSteps } = await db.from("gtm_research_steps").select("id", { count: "exact", head: true }).eq("run_id", run.id).eq("status", "failed");
+      if (!failedSteps) return json({ error: "Nothing to resume. Start a new search." }, 409);
+      // The run is live again before its step is queued, so the worker never
+      // sees a queued step on a failed run and skips it.
+      await db.from("gtm_research_runs").update({
+        status: "analyzing", error_code: null, error_detail: null, completed_at: null, counts: { ...run.counts, retries: retries + 1 }, updated_at: now,
+      }).eq("id", run.id);
+      await db.from("gtm_research_steps").update({
+        status: "queued", attempt: 0, error: null, lease_until: null, finished_at: null, next_attempt_at: now, log: "Trying again",
+      }).eq("run_id", run.id).eq("status", "failed");
       kickResearchWorker();
       return json({ runId: run.id });
     }

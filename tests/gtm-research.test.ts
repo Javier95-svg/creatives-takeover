@@ -413,3 +413,15 @@ test('the completion migration: every step the app knows is allowed, staff see c
   assert.doesNotMatch(sql, /'(domain|name)', g\./, 'the dashboard never returns companies');
   assert.match(sql, /cron\.schedule\('gtm-research-weekly-refresh', '0 8 \* \* 1'/);
 });
+
+
+test('model answers are read when wrapped in fences or text, and segment lists under other keys are accepted', async () => {
+  const { parseModelJson } = await import('../supabase/functions/_shared/gtm-research-pipeline.ts');
+  assert.deepEqual(parseModelJson('{"a":1}'), { a: 1 });
+  assert.deepEqual(parseModelJson('```json\n{"a":1}\n```'), { a: 1 });
+  assert.deepEqual(parseModelJson('Here you go: {"a":{"b":2}} hope it helps'), { a: { b: 2 } });
+  assert.equal(parseModelJson('{"segments":[{"name":"cut off'), undefined, 'an answer cut off by the output limit is not guessed at');
+  const segment = { title: 'University entrepreneurship programs', criteria: [{ label: 'Runs a startup program', mustHave: true }] };
+  assert.equal(parseSegments([segment])[0]?.name, 'University entrepreneurship programs', 'a bare array works');
+  assert.equal(parseSegments({ groups: [segment] }).length, 1, 'another top-level key works');
+});

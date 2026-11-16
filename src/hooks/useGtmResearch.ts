@@ -188,6 +188,14 @@ export function useGtmResearch(projectId: string | null) {
     await refresh(String(data.runId));
   }), [act, projectId, refresh]);
 
+  /** Resumes a failed reading of the business from the step that failed. Free. */
+  const retry = useCallback(() => act(async () => {
+    if (!runId) return;
+    await invoke('retry', { runId });
+    captureEvent('gtm_customer_research_follow_up', { kind: 'retry_analysis' });
+    await refresh(runId);
+  }), [act, runId, refresh]);
+
   const edit = useCallback((changes: { profile?: Partial<Record<'offering' | 'audience' | 'valueProposition' | 'geography', string>>; removeCompetitors?: string[] }) => act(async () => {
     if (!runId) return;
     await invoke('edit', { runId, ...changes });
@@ -314,7 +322,7 @@ export function useGtmResearch(projectId: string | null) {
 
   return {
     run, root, searches, steps, prospects, loading, busy,
-    analyze, edit, start, cancel, followUp, branch, setAutoRefresh, selectSearch, startOver, refresh,
+    analyze, retry, edit, start, cancel, followUp, branch, setAutoRefresh, selectSearch, startOver, refresh,
     updateProspect, updateDraft, ensureContact, markSent, markReplied, findContact,
   };
 }

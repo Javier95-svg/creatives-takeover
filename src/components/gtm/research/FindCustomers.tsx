@@ -72,7 +72,47 @@ function ResearchStart({ defaultWebsite, busy, onAnalyze }: { defaultWebsite?: s
   );
 }
 
-// ---- 2 and 3. What we understood, who to target ---------------------------------------------
+// ---- 2. While the business is read: what the agent has learned so far ------------------------
+
+function AnalysisSoFar({ run }: { run: NonNullable<GtmResearch['run']> }) {
+  const profile = run.business_profile;
+  const claims = profile ? ([['What you sell', profile.offering], ['Who it\'s for', profile.audience], ['Why they buy', profile.valueProposition]] as const) : [];
+  return (
+    <section aria-live="polite" className="rounded-2xl border border-border/60 bg-card p-5 sm:p-6">
+      <h2 className="text-base font-semibold text-foreground">What we've learned so far</h2>
+      {profile ? (
+        <div className="mt-3 grid gap-3 md:grid-cols-3">
+          {claims.map(([label, claim]) => (
+            <div key={label} className="rounded-xl border border-border/60 bg-background/60 p-4 animate-in fade-in duration-500">
+              <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{label}</span>
+              <p className="mt-1.5 text-sm text-foreground">{claim.text}</p>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="mt-2 text-sm text-muted-foreground">Reading {run.input.websiteUrl ? run.input.websiteUrl.replace(/^https?:\/\//, '') : 'your description'}. What we understand about your business appears here as we go.</p>
+      )}
+      {run.competitors.length ? (
+        <div className="mt-4 animate-in fade-in duration-500">
+          <span className="text-sm font-medium text-foreground">Competitors we found</span>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {run.competitors.map((competitor) => <span key={competitor.domain} className="rounded-full border border-border/60 px-3 py-1 text-sm text-muted-foreground" title={competitor.why}>{competitor.name}</span>)}
+          </div>
+        </div>
+      ) : null}
+      <div className="mt-5 border-t border-border/60 pt-4">
+        <span className="text-sm font-medium text-foreground">What happens next</span>
+        <ol className="mt-2 list-decimal space-y-1 pl-5 text-sm text-muted-foreground">
+          <li>You check what we understood and fix anything that's off.</li>
+          <li>We suggest 2 or 3 kinds of organisations to contact; you pick one and adjust its must-haves.</li>
+          <li>We find real organisations, check each one on its own website and write a draft email for each match. Nothing is charged until you start that step.</li>
+        </ol>
+      </div>
+    </section>
+  );
+}
+
+// ---- 3. What we understood, who to target -------------------------------------------------------
 
 function ClaimCard({ label, claim, onSave }: { label: string; claim: SourcedClaim | null; onSave?: (text: string) => void }) {
   const [editing, setEditing] = useState(false);
@@ -345,14 +385,34 @@ export default function FindCustomers({ projectId, plan, onUpdatePlan, defaultWe
   if (research.loading) return <div className="flex justify-center py-16"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" aria-label="Loading" /></div>;
 
   if (!run || (run.status === 'failed' && !run.started_at) || run.status === 'cancelled' && !run.started_at) {
+    // A failed reading can resume from the step that failed: the pages and
+    // what was understood are kept.
+    const canResume = run?.status === 'failed' && (Number((run.counts as { retries?: number }).retries) || 0) < 3
+      && research.steps.some((step) => step.status === 'failed') && run.error_code !== 'NO_INPUT' && run.error_code !== 'SITE_UNREADABLE';
     return (
       <div className="space-y-4">
-        {run?.status === 'failed' ? <p className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm text-foreground">{run.error_detail ?? 'We could not read your business.'}</p> : null}
+        {run?.status === 'failed' ? (
+          <div className="flex flex-col gap-3 rounded-xl border border-destructive/30 bg-destructive/5 p-4 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm text-foreground">{canResume ? 'We couldn\'t finish reading your business. Pick up where it stopped; it\'s still free.' : run.error_detail ?? 'We could not read your business.'}</p>
+            {canResume ? (
+              <Button type="button" size="sm" disabled={research.busy} onClick={() => void research.retry().catch(onError)}>
+                {research.busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" /> : null}Try again
+              </Button>
+            ) : null}
+          </div>
+        ) : null}
         <ResearchStart defaultWebsite={defaultWebsite} busy={research.busy} onAnalyze={(input) => void research.analyze({ ...input, planId: null }).catch(onError)} />
       </div>
     );
   }
-  if (run.status === 'analyzing') return <ResearchTimeline run={run} steps={research.steps} phase="analysis" />;
+  if (run.status === 'analyzing') {
+    return (
+      <div className="space-y-4">
+        <ResearchTimeline run={run} steps={research.steps} phase="analysis" />
+        <AnalysisSoFar run={run} />
+      </div>
+    );
+  }
   if (run.status === 'needs_review') return <ResearchReview research={research} onError={onError} />;
 
   const working = run.status === 'queued' || run.status === 'running';

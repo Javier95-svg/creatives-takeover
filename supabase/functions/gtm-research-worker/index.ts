@@ -66,7 +66,8 @@ async function processStep(db: SupabaseClient, step: ResearchStep): Promise<void
     console.error("gtm-research step failed", { runId: run.id, key: step.key, batch: step.batch, attempt: step.attempt, final, message });
     if (!final) {
       await db.from("gtm_research_steps").update({
-        status: "queued", lease_until: null, error: message.slice(0, 500), log: "Something went wrong · retrying shortly",
+        status: "queued", lease_until: null, error: message.slice(0, 500),
+        log: `Taking longer than expected · trying again (attempt ${step.attempt + 1} of ${step.max_attempts})`,
         next_attempt_at: new Date(Date.now() + BACKOFF_SECONDS[Math.min(step.attempt - 1, BACKOFF_SECONDS.length - 1)] * 1000).toISOString(),
       }).eq("id", step.id);
       return;

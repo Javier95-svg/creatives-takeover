@@ -76,7 +76,27 @@ async function askJson(db: SupabaseClient, runId: string, label: string, system:
   });
   const cost = ((result.inputTokens ?? prompt.length / 4) * LLM_COST_PER_MILLION.input + (result.outputTokens ?? maxTokens / 2) * LLM_COST_PER_MILLION.output) / 1_000_000;
   await ledger(db, runId, `llm:${result.provider}`, cost);
-  try { return JSON.parse(result.text); } catch { throw new Error(`${label}: the model did not return JSON`); }
+  const parsed = parseModelJson(result.text);
+  if (parsed === undefined) {
+    // Kept short in the logs so the next failure can be diagnosed.
+    console.warn(`${label}: unreadable model output`, { model: result.model, length: result.text.length, start: result.text.slice(0, 200), end: result.text.slice(-120) });
+    throw new Error(`${label}: the model did not return JSON`);
+  }
+  return parsed;
+}
+
+/**
+ * Model JSON as sent, inside ```json fences, or with text around it. Undefined
+ * when there is no complete JSON object (for example an answer cut off by the
+ * output limit).
+ */
+export function parseModelJson(text: string): unknown {
+  const trimmed = text.trim().replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
+  try { return JSON.parse(trimmed); } catch { /* try the outermost object below */ }
+  const start = trimmed.indexOf("{");
+  const end = trimmed.lastIndexOf("}");
+  if (start < 0 || end <= start) return undefined;
+  try { return JSON.parse(trimmed.slice(start, end + 1)); } catch { return undefined; }
 }
 
 async function search(db: SupabaseClient, runId: string, query: string, maxResults = 8, recency: "any" | "year" = "any"): Promise<WebSearchResult> {
@@ -174,8 +194,17 @@ async function proposeSegments(db: SupabaseClient, run: ResearchRun): Promise<St
   const raw = await askJson(db, run.id, "gtm-research-segments",
     "You propose who a startup should contact first. Start from the founder's own audience and saved work. Research can only find and check organisations that have their own website, so every segment must be a kind of organisation: companies, programs (accelerators, incubators, university entrepreneurship centres), agencies, studios, associations, communities with their own site. If the startup's users are individuals (founders, freelancers, students, consumers), propose the organisations that serve, gather, train or employ them, and use roles to say who inside to contact; never propose a segment of individual people. Each segment needs 3 to 5 criteria that the organisation's own website would state in plain words: what it does, who it serves, where it is, a program or service it offers, its size. Never use a person's intentions, feelings or private situation as a criterion (\"wants to\", \"seeks\", \"struggles with\", \"without funding\"). Mark at most 3 criteria mustHave, the ones that define the segment. Examples describe kinds of organisations, never names. Roles are job titles to contact.",
     `Business profile:\n${JSON.stringify(profile)}\n\nCompetitors (to avoid targeting): ${run.competitors.map((competitor) => competitor.domain).join(", ") || "none"}\n\nReturn JSON only, 2 or 3 segments, best first: {"segments":[{"name":"","pain":"","criteria":[{"label":"","mustHave":true}],"geography":"","sizeBand":"","roles":[""],"examples":[""]}]}`,
-    1_800);
-  const segments = parseSegments(raw);
+    3_200);
+  let segments = parseSegments(raw);
+  if (!segments.length) {
+    // One shorter, stricter ask before the step counts as failed.
+    console.warn("gtm-research-segments: no usable segment in the first answer", JSON.stringify(raw).slice(0, 300));
+    const retry = await askJson(db, run.id, "gtm-research-segments-retry",
+      "Propose 2 kinds of organisations (each with its own website) that a startup should contact first. Keep every field short.",
+      `Startup: ${profile.name} — ${profile.offering.text}. Serves: ${profile.audience.text}. Geography: ${profile.geography || "global"}.\n\nReturn JSON only: {"segments":[{"name":"short name of the kind of organisation","pain":"one sentence","criteria":[{"label":"what its website states","mustHave":true},{"label":"","mustHave":true},{"label":"","mustHave":false}],"geography":"","sizeBand":"","roles":["job title"],"examples":["kind of organisation"]}]}. Every segment needs at least one criterion with mustHave true.`,
+      1_500);
+    segments = parseSegments(retry);
+  }
   if (!segments.length) throw new Error("No usable segments were proposed");
   return { log: `Proposed ${segments.length} groups to target · waiting for you to choose`, runPatch: { segments, status: "needs_review" } };
 }
