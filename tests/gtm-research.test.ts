@@ -154,7 +154,14 @@ function mockNetwork(prompts: string[] = []) {
     if (body.includes('similar product to the same buyers')) return { competitors: [{ name: 'Rival', domain: 'rivalbook.com', why: 'Same buyers' }, { name: 'Invented', domain: 'invented-rival.com' }, { name: 'LinkedIn', domain: 'linkedin.com' }] };
     if (body.includes('who a startup should contact first')) return { segments: [{ name: 'Independent UK dental clinics', pain: 'Lost revenue from no-shows', criteria: [{ label: 'Independent dental clinic', mustHave: true }, { label: 'Based in the UK', mustHave: true }, { label: 'Offers online booking', mustHave: false }], geography: 'United Kingdom', roles: ['Practice manager'], examples: ['Single-site family practices'] }] };
     if (body.includes('Write web search queries')) return { queries: ['independent dental clinic Leeds', 'dental practice Leeds online booking', 'top dental clinics Leeds', 'family dentist Leeds', 'q5', 'q6'] };
-    if (body.includes('extract companies that could belong')) return { companies: [{ name: 'Smiles Leeds', domain: 'smilesleeds.co.uk' }, { name: 'Gentle Dental', domain: 'gentledental.co.uk' }, { name: 'Fake Claims', domain: 'fakeclaims.co.uk' }, { name: 'MegaDental', domain: 'megadental.com' }, { name: 'Rival', domain: 'rivalbook.com' }, { name: 'Guessed', domain: 'guessed-clinic.co.uk' }, { name: 'Blocked Clinic', domain: 'blockedclinic.co.uk' }] };
+    if (body.includes('found too few matching organisations')) return { queries: ['independent dentist Bradford', 'dental practice association Yorkshire members'] };
+    if (body.includes('extract organisations that are themselves')) {
+      const evidence = 'The best independent clinics in Leeds';
+      return { companies: [{ name: 'Smiles Leeds', domain: 'smilesleeds.co.uk', evidence }, { name: 'Gentle Dental', domain: 'gentledental.co.uk', evidence },
+        { name: 'Fake Claims', domain: 'fakeclaims.co.uk', evidence }, { name: 'MegaDental', domain: 'megadental.com', evidence }, { name: 'Rival', domain: 'rivalbook.com', evidence },
+        { name: 'Guessed', domain: 'guessed-clinic.co.uk', evidence }, { name: 'Blocked Clinic', domain: 'blockedclinic.co.uk', evidence },
+        { name: 'Bank Mentioned In Article', domain: 'toplist.example', evidence: 'a bank that sponsors this list of clinics' }] };
+    }
     if (body.includes('check companies against a founder')) return { companies: [
       { domain: 'smilesleeds.co.uk', name: 'Smiles Leeds', description: 'Independent clinic', location: 'Leeds, United Kingdom', verdicts: [
         { criterionId: 'c1', verdict: 'met', quote: 'Smiles is an independent dental clinic in Leeds', sourceUrl: 'https://smilesleeds.co.uk/' },
@@ -240,6 +247,17 @@ test('a full research run: evidence-backed prospects, honest tiers, drafts, and 
     assert.deepEqual(byDomain['smilesleeds.co.uk'].contact_routes.map((route: Row) => route.value), ['https://smilesleeds.co.uk/contact', 'hello@smilesleeds.co.uk']);
     assert.equal(byDomain['gentledental.co.uk'].fit_tier, 'B');
     assert.ok(!byDomain['fakeclaims.co.uk'], 'quotes that are not on the page prove nothing, so it does not qualify');
+
+    // Discovery: every organisation found is checked (none skipped between
+    // batches), picks without a phrase from the results are dropped, and one
+    // wider round runs when the first plan finds too few, within the cap.
+    const steps = db.tables.gtm_research_steps.filter((step) => step.run_id === run.id);
+    const discovered = steps.filter((step) => step.key === 'discover_companies').flatMap((step) => (step.detail.candidates ?? []).map((candidate: Row) => candidate.domain));
+    const checked = steps.filter((step) => step.key === 'qualify_companies').flatMap((step) => step.detail.checked ?? []);
+    assert.deepEqual([...checked].sort(), [...discovered].sort(), 'each candidate is checked exactly once');
+    assert.ok(!discovered.includes('toplist.example'), 'a pick whose evidence is not in the results is dropped');
+    assert.ok(steps.some((step) => step.detail.replanned === true), 'a wider round was tried');
+    assert.ok(run.counts.searches <= 16, `searches stay within the cap (${run.counts.searches})`);
     assert.equal(byDomain['blockedclinic.co.uk'].fit_tier, 'C');
     assert.equal(byDomain['blockedclinic.co.uk'].blocked, true);
 

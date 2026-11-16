@@ -91,6 +91,9 @@ const isRoot = (run: Pick<ResearchRunRow, 'kind' | 'parent_run_id'>) => run.kind
  */
 export function useGtmResearch(projectId: string | null) {
   const { user } = useAuth();
+  // The account id, not the user object: Supabase hands out a new user object on
+  // token refreshes and tab focus, which must not reload the research.
+  const userId = user?.id ?? null;
   const [run, setRun] = useState<ResearchRunRow | null>(null);
   const [root, setRoot] = useState<ResearchRunRow | null>(null);
   const [searches, setSearches] = useState<ResearchRunRow[]>([]);
@@ -106,20 +109,20 @@ export function useGtmResearch(projectId: string | null) {
 
   /** The run to show: a given one, or the newest in this project (follow-ups included). */
   const loadRun = useCallback(async (id?: string) => {
-    if (!user) return null;
-    let query = db.from('gtm_research_runs').select('*').eq('user_id', user.id);
+    if (!userId) return null;
+    let query = db.from('gtm_research_runs').select('*').eq('user_id', userId);
     query = id ? query.eq('id', id) : scoped(query);
     const { data } = await query.order('created_at', { ascending: false }).limit(1).maybeSingle();
     return (data as ResearchRunRow | null) ?? null;
-  }, [user, scoped]);
+  }, [userId, scoped]);
 
   const loadDetails = useCallback(async (current: ResearchRunRow) => {
-    if (!user) return;
+    if (!userId) return;
     const searchRoot = isRoot(current) ? current : ((await loadRun(current.parent_run_id!)) ?? current);
     const [{ data: family }, { data: stepRows }, { data: roots }] = await Promise.all([
-      db.from('gtm_research_runs').select('id').eq('user_id', user.id).eq('parent_run_id', searchRoot.id).neq('kind', 'initial'),
+      db.from('gtm_research_runs').select('id').eq('user_id', userId).eq('parent_run_id', searchRoot.id).neq('kind', 'initial'),
       db.from('gtm_research_steps').select('id, key, batch, status, log, started_at, finished_at, created_at').eq('run_id', current.id).order('created_at'),
-      scoped(db.from('gtm_research_runs').select('*').eq('user_id', user.id).eq('kind', 'initial').not('started_at', 'is', null))
+      scoped(db.from('gtm_research_runs').select('*').eq('user_id', userId).eq('kind', 'initial').not('started_at', 'is', null))
         .order('created_at', { ascending: false }).limit(10),
     ]);
     const runIds = [searchRoot.id, ...((family ?? []) as Array<{ id: string }>).map((row) => row.id)];
@@ -133,7 +136,7 @@ export function useGtmResearch(projectId: string | null) {
     setProspects(((prospectRows ?? []) as Joined[]).map(({ gtm_outreach_drafts: drafts, gtm_prospect_contacts: contacts, ...row }) => ({
       ...row, signals: row.signals ?? [], draft: Array.isArray(drafts) ? drafts[0] ?? null : drafts ?? null, contact: contacts?.[0] ?? null,
     })));
-  }, [user, loadRun, scoped]);
+  }, [userId, loadRun, scoped]);
 
   const refresh = useCallback(async (id?: string) => {
     const next = await loadRun(id);
@@ -143,12 +146,21 @@ export function useGtmResearch(projectId: string | null) {
     return next;
   }, [loadRun, loadDetails]);
 
+  // The spinner is for a new account or project only; anything else refreshes
+  // in place so the page never blanks out under the founder.
+  const loadedScope = useRef<string | null>(null);
   useEffect(() => {
     let alive = true;
-    setLoading(true);
-    void refresh().finally(() => { if (alive) setLoading(false); });
+    const scope = `${userId ?? ''}:${projectId ?? ''}`;
+    const firstLoad = loadedScope.current !== scope;
+    if (firstLoad) setLoading(true);
+    void refresh().finally(() => {
+      if (!alive) return;
+      loadedScope.current = scope;
+      setLoading(false);
+    });
     return () => { alive = false; };
-  }, [refresh]);
+  }, [refresh, userId, projectId]);
 
   // Poll while the agent works; stop when it pauses for review or finishes.
   useEffect(() => {
@@ -248,9 +260,9 @@ export function useGtmResearch(projectId: string | null) {
    */
   const ensureContact = useCallback(async (prospect: ProspectRow): Promise<string> => {
     if (prospect.contact_id) return prospect.contact_id;
-    if (!user) throw new Error('Sign in first');
+    if (!userId) throw new Error('Sign in first');
     if (prospect.pipeline_entry_id) {
-      const { data: existing } = await db.from('founder_customer_contacts').select('id').eq('user_id', user.id)
+      const { data: existing } = await db.from('founder_customer_contacts').select('id').eq('user_id', userId)
         .eq('source', 'gtm').eq('display_name', `${prospect.name} (${prospect.domain})`).limit(1).maybeSingle();
       if (existing?.id) { await updateProspect(prospect.id, { contact_id: existing.id }); return existing.id as string; }
     }
@@ -264,11 +276,11 @@ export function useGtmResearch(projectId: string | null) {
     if (!contact?.id) throw new Error('The contact could not be created');
     await updateProspect(prospect.id, { contact_id: contact.id });
     return contact.id as string;
-  }, [updateProspect, user]);
+  }, [updateProspect, userId]);
 
   const recordEvidence = useCallback(async (prospect: ProspectRow, contactId: string, eventType: 'outreach_sent' | 'reply_received') => {
-    if (!user) return;
-    const { data: cycle } = await db.from('founder_cycle_state').select('selected_loop, recommended_loop').eq('user_id', user.id).maybeSingle();
+    if (!userId) return;
+    const { data: cycle } = await db.from('founder_cycle_state').select('selected_loop, recommended_loop').eq('user_id', userId).maybeSingle();
     const { error } = await db.rpc('record_customer_evidence_event_v1', {
       p_event_type: eventType, p_active_loop: cycle?.selected_loop ?? cycle?.recommended_loop ?? 'PROVE', p_contact_id: contactId,
       p_source_entity_type: 'gtm_prospect', p_source_entity_id: prospect.id, p_verification_mode: 'founder_reported',
@@ -276,7 +288,7 @@ export function useGtmResearch(projectId: string | null) {
       p_idempotency_key: `gtm-research:${prospect.id}:${eventType}`,
     });
     if (error) throw error;
-  }, [user]);
+  }, [userId]);
 
   const markSent = useCallback(async (prospect: ProspectRow) => {
     const contactId = await ensureContact(prospect);

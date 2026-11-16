@@ -27,6 +27,7 @@ import { isAdminEmail } from '@/lib/admin';
 import { resolveIdentityDisplayName } from '@/lib/identityProfile';
 import { triggerEmailSequenceEvent } from '@/lib/emailSequences';
 import { clearAccountScopedStorage } from '@/lib/accountScopedStorage';
+import { keepUserIfUnchanged } from '@/lib/stableAuthUser';
 import {
   getSignupMetadata,
   persistAttributionAfterAuth,
@@ -432,7 +433,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             .then((refreshedSession) => {
               if (!isMountedRef.current) return;
               setSession(refreshedSession);
-              setUser(refreshedSession?.user ?? null);
+              setUser(keepUserIfUnchanged(refreshedSession?.user ?? null));
               resolveInitialLoading();
               if (refreshedSession?.user) {
                 initAmplitudeWithUser(refreshedSession.user.id);
@@ -452,7 +453,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         // Synchronously update state — no async verification needed,
         // Supabase already verified the session before firing this callback.
         setSession(currentSession);
-        setUser(currentSession?.user ?? null);
+        setUser(keepUserIfUnchanged(currentSession?.user ?? null));
         resolveInitialLoading();
 
         // Data isolation: if the active account changed (A→B, or A→signed-out),
@@ -500,7 +501,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         if (!isMountedRef.current) return;
 
         setSession(existingSession);
-        setUser(existingSession?.user ?? null);
+        setUser(keepUserIfUnchanged(existingSession?.user ?? null));
         resolveInitialLoading();
 
         // If there's already a session, run sign-in logic

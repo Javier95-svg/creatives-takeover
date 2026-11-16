@@ -88,7 +88,8 @@ export const MORE_RUN_CREDITS = 5;
 export const CONTACT_FIND_CREDITS = 1;
 export const QUALIFY_BATCH_SIZE = 5;
 export const MAX_CANDIDATES = 60;
-export const MAX_SEARCHES_PER_RUN = 12;
+/** A 10-query plan plus one wider round of 6 when the first finds too few. */
+export const MAX_SEARCHES_PER_RUN = 16;
 /** Recent-news searches per run, one per top company (Phase B signals). */
 export const MAX_SIGNAL_SEARCHES = 5;
 /** Companies a follow-up run (more, similar, refresh) aims to add. */
@@ -351,7 +352,8 @@ export function parseCandidates(raw: unknown, foundVia: string): Candidate[] {
     const value = item as Record<string, unknown>;
     const domain = normalizeDomain(clean(value.domain ?? value.website ?? value.url, 200));
     if (!domain) return [];
-    return [{ name: clean(value.name, 120) || domain, domain, foundVia }];
+    // The phrase from the results that shows what the organisation is, when given.
+    return [{ name: clean(value.name, 120) || domain, domain, foundVia: clean(value.evidence, 300) || foundVia }];
   });
 }
 

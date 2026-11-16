@@ -18,7 +18,7 @@ import { resolvePulseContext } from "./pulse-context.ts";
 import {
   chargeForRun, dedupeCandidates, extractContactRoutes, feedbackLessons, languageForLocation, MAX_CANDIDATES, MAX_SEARCHES_PER_RUN,
   MAX_SIGNAL_SEARCHES, normalizeDomain, parseBusinessProfile, parseCandidates, parseCompetitors, parseDraft, parseSegments, parseSignals,
-  parseVerdicts, QUALIFY_BATCH_SIZE, scoreFit, verifyVerdicts, type BusinessProfile, type BuyingSignal, type Candidate, type Competitor,
+  parseVerdicts, QUALIFY_BATCH_SIZE, quoteAppearsIn, scoreFit, verifyVerdicts, type BusinessProfile, type BuyingSignal, type Candidate, type Competitor,
   type ResearchRunKind, type ResearchStepKey, type Segment,
 } from "../../../src/lib/gtmResearch.ts";
 
@@ -172,7 +172,7 @@ async function findCompetitors(db: SupabaseClient, run: ResearchRun): Promise<St
 async function proposeSegments(db: SupabaseClient, run: ResearchRun): Promise<StepOutcome> {
   const profile = run.business_profile!;
   const raw = await askJson(db, run.id, "gtm-research-segments",
-    "You propose who a startup should contact first. Start from the founder's own audience and saved work. Each segment needs 3 to 5 criteria that a company's own website could confirm (what it does, who it serves, where it is, a capability it has); mark the essential ones mustHave. Examples describe kinds of companies, never company names. Roles are job titles to contact.",
+    "You propose who a startup should contact first. Start from the founder's own audience and saved work. Research can only find and check organisations that have their own website, so every segment must be a kind of organisation: companies, programs (accelerators, incubators, university entrepreneurship centres), agencies, studios, associations, communities with their own site. If the startup's users are individuals (founders, freelancers, students, consumers), propose the organisations that serve, gather, train or employ them, and use roles to say who inside to contact; never propose a segment of individual people. Each segment needs 3 to 5 criteria that the organisation's own website would state in plain words: what it does, who it serves, where it is, a program or service it offers, its size. Never use a person's intentions, feelings or private situation as a criterion (\"wants to\", \"seeks\", \"struggles with\", \"without funding\"). Mark at most 3 criteria mustHave, the ones that define the segment. Examples describe kinds of organisations, never names. Roles are job titles to contact.",
     `Business profile:\n${JSON.stringify(profile)}\n\nCompetitors (to avoid targeting): ${run.competitors.map((competitor) => competitor.domain).join(", ") || "none"}\n\nReturn JSON only, 2 or 3 segments, best first: {"segments":[{"name":"","pain":"","criteria":[{"label":"","mustHave":true}],"geography":"","sizeBand":"","roles":[""],"examples":[""]}]}`,
     1_800);
   const segments = parseSegments(raw);
@@ -182,7 +182,7 @@ async function proposeSegments(db: SupabaseClient, run: ResearchRun): Promise<St
 
 // ---- 5. Discover companies -----------------------------------------------------------------
 
-const LIST_PAGE = /\b(top|best|list|directory|companies|startups|agencies|clinics|studios|firms|providers)\b/i;
+const LIST_PAGE = /\b(top|best|list|lists|directory|members|network|association|ranking|companies|startups|agencies|clinics|studios|firms|providers|programs|programmes|accelerators|incubators|schools)\b/i;
 const QUERIES_PER_BATCH = 4;
 
 async function exclusions(db: SupabaseClient, run: ResearchRun): Promise<string[]> {
@@ -216,25 +216,81 @@ async function seedBlock(db: SupabaseClient, run: ResearchRun): Promise<string> 
   return `\n\nFind companies similar to these, which the founder picked as the best fits (do not return these domains):\n${data.map((row) => `- ${row.name} (${row.domain})${row.industry ? `, ${row.industry}` : ""}${row.location ? `, ${row.location}` : ""}: ${row.description ?? ""}`).join("\n")}`;
 }
 
+const QUERY_GUIDE = "Each query should return the websites of organisations of this kind, or pages that list many of them: directories, member lists of associations or networks, rankings, \"list of\" pages, maps of local providers. Use the words those organisations use to describe themselves, plus a place when a geography is given (for a global segment, name a specific country or city in each query and spread them). Never write queries for forums, Slack or Discord groups, social media posts, advice articles or software reviews. Do not target the startup's competitors.";
+
+const cleanQueries = (raw: unknown, used: readonly string[], limit: number) => {
+  const seen = new Set(used.map((query) => query.toLowerCase()));
+  return (((raw as { queries?: unknown })?.queries as unknown[]) ?? [])
+    .filter((query): query is string => typeof query === "string" && query.trim().length > 3)
+    .map((query) => query.trim().slice(0, 200))
+    .filter((query) => !seen.has(query.toLowerCase()) && seen.add(query.toLowerCase()))
+    .slice(0, limit);
+};
+
+/** Where discovery stands: the full query plan, whether it was widened, and the candidates found. */
+export function discoveryState(details: ReadonlyArray<Record<string, unknown>>) {
+  const queries = details.reduce<string[]>((longest, detail) => {
+    const list = (detail.queries as string[] | undefined) ?? [];
+    return list.length > longest.length ? list : longest;
+  }, []);
+  return {
+    queries,
+    batches: details.length,
+    replanned: details.some((detail) => detail.replanned === true),
+    candidates: details.flatMap((detail) => (detail.candidates as Candidate[] | undefined) ?? []),
+  };
+}
+
+/** True while discovery may run another batch: planned queries left, or one wider round still allowed. */
+export function canSearchMore(state: ReturnType<typeof discoveryState>, searchesUsed: number): boolean {
+  if (state.candidates.length >= MAX_CANDIDATES || searchesUsed >= MAX_SEARCHES_PER_RUN) return false;
+  return state.batches * QUERIES_PER_BATCH < state.queries.length || !state.replanned;
+}
+
+async function nextBatchNumber(db: SupabaseClient, runId: string, key: ResearchStepKey): Promise<number> {
+  const { data } = await db.from("gtm_research_steps").select("batch").eq("run_id", runId).eq("key", key).order("batch", { ascending: false }).limit(1);
+  return data?.length ? Number(data[0].batch) + 1 : 0;
+}
+
 async function discoverCompanies(db: SupabaseClient, run: ResearchRun, step: ResearchStep): Promise<StepOutcome> {
   const segment = run.selected_segment!;
-  const earlier = await previousDetail(db, run.id, "discover_companies");
-  let queries = (earlier[0]?.queries as string[] | undefined) ?? [];
+  const state = discoveryState(await previousDetail(db, run.id, "discover_companies"));
+  let queries = state.queries;
+  let replanned = false;
   const rejected = await lessons(db, run);
+  const searchesUsed = Number(run.counts.searches) || 0;
   if (!queries.length) {
     const raw = await askJson(db, run.id, "gtm-research-queries",
-      "Write web search queries that return the websites of companies in a target segment, or lists and directories of them. Prefer concrete, local phrasing a buyer would use. Do not target the startup's competitors.",
-      `Segment: ${JSON.stringify(segment)}\nStartup: ${run.business_profile?.name} — ${run.business_profile?.offering.text}${await seedBlock(db, run)}${rejected}\n\nReturn JSON only: {"queries":["", "..."]} with 8 queries.`,
-      600);
-    queries = ((raw as { queries?: unknown }).queries as unknown[] ?? []).filter((query): query is string => typeof query === "string" && query.trim().length > 3).map((query) => query.slice(0, 200)).slice(0, MAX_SEARCHES_PER_RUN - 2);
+      `Write web search queries that find organisations in a target segment. ${QUERY_GUIDE}`,
+      `Segment: ${JSON.stringify(segment)}\nStartup: ${run.business_profile?.name} — ${run.business_profile?.offering.text}${await seedBlock(db, run)}${rejected}\n\nReturn JSON only: {"queries":["", "..."]} with 10 queries.`,
+      800);
+    queries = cleanQueries(raw, [], 10);
     if (!queries.length) throw new Error("No search queries were planned");
+  } else if (state.batches * QUERIES_PER_BATCH >= queries.length) {
+    if (state.replanned || searchesUsed >= MAX_SEARCHES_PER_RUN) {
+      return { log: "No new searches left to try", status: "partial", detail: { queries, candidates: [] }, next: [{ key: "find_signals" }] };
+    }
+    // The plan is used up and too few companies matched: one wider round,
+    // told what the first round found, then discovery ends.
+    const { data: checked } = await db.from("gtm_prospect_companies").select("name, domain, fit_tier").eq("run_id", run.id);
+    const matched = (checked ?? []).filter((row) => row.fit_tier !== "C").map((row) => `${row.name} (${row.domain})`);
+    const raw = await askJson(db, run.id, "gtm-research-queries-wider",
+      `The first web searches for this segment found too few matching organisations. Write new, different queries: other words for the same kind of organisation, nearby or larger places, the directories or associations they belong to. ${QUERY_GUIDE}`,
+      `Segment: ${JSON.stringify(segment)}\nQueries already used: ${queries.join(" | ")}\nOrganisations that matched so far: ${matched.join(", ") || "none"}\nOrganisations found but not matching: ${state.candidates.filter((candidate) => !matched.some((line) => line.includes(candidate.domain))).map((candidate) => candidate.domain).slice(0, 20).join(", ") || "none"}${rejected}\n\nReturn JSON only: {"queries":["", "..."]} with 6 queries.`,
+      600);
+    const wider = cleanQueries(raw, queries, Math.max(0, MAX_SEARCHES_PER_RUN - searchesUsed));
+    replanned = true;
+    if (!wider.length) return { log: "No new searches left to try", status: "partial", detail: { queries, candidates: [], replanned }, next: [{ key: "find_signals" }] };
+    queries = [...queries, ...wider];
   }
-  const batchQueries = queries.slice(step.batch * QUERIES_PER_BATCH, step.batch * QUERIES_PER_BATCH + QUERIES_PER_BATCH);
-  const results = await Promise.allSettled(batchQueries.map((query) => search(db, run.id, query, 8)));
+  // Queries are taken in order by how many discovery batches finished, not by
+  // batch number, so a failed batch never skips part of the plan.
+  const batchQueries = queries.slice(state.batches * QUERIES_PER_BATCH, state.batches * QUERIES_PER_BATCH + QUERIES_PER_BATCH);
+  const results = await Promise.allSettled(batchQueries.map((query) => search(db, run.id, query, 10)));
   const sources = results.flatMap((result) => (result.status === "fulfilled" ? result.value.sources : []));
 
-  // A list page is read once so companies named in it come with their real links.
-  const listPages = sources.filter((source) => LIST_PAGE.test(source.title ?? "")).slice(0, 2);
+  // List pages are read so the organisations they name come with real links.
+  const listPages = sources.filter((source) => LIST_PAGE.test(`${source.title ?? ""} ${source.url}`)).slice(0, 4);
   const lists = (await Promise.all(listPages.map((source) => crawlSite(source.url, { maxPages: 1, timeoutMs: 6_000 }))))
     .flatMap((crawl) => crawl.pages);
 
@@ -242,30 +298,38 @@ async function discoverCompanies(db: SupabaseClient, run: ResearchRun, step: Res
   let found: Candidate[] = [];
   if (sources.length) {
     const raw = await askJson(db, run.id, "gtm-research-candidates",
-      "From search results and list pages, extract companies that could belong to the target segment. Use only companies whose own website domain appears in the results or in the page links given; never guess a domain. Leave out directories, media, marketplaces, social networks and the excluded domains.",
-      `Segment: ${segment.name} — ${segment.criteria.map((criterion) => criterion.label).join("; ")}\nExcluded domains: ${exclude.slice(0, 80).join(", ")}${rejected}\n\nSearch results:\n${sources.map((source) => `- ${source.title} — ${source.url}\n  ${source.snippet ?? ""}`).join("\n")}\n\nList pages:\n${lists.map((page) => `URL: ${page.url}\n${page.text.slice(0, 2_500)}\nLinks: ${page.links.slice(0, 120).join(" ")}`).join("\n---\n") || "none"}\n\nReturn JSON only: {"companies":[{"name":"","domain":""}]}`,
-      1_800);
+      "From search results and list pages, extract organisations that are themselves the kind of organisation in the target segment. A company merely mentioned in an article (a bank, a software tool, a sponsor, the publisher) is not a candidate. Use only organisations whose own website domain appears in the results or in the page links given; never guess a domain. For each, copy into evidence a short phrase (6 to 20 words) word for word from the results or list pages that shows what the organisation is. Leave out directories, media, marketplaces, social networks and the excluded domains.",
+      `Segment: ${segment.name} — ${segment.criteria.map((criterion) => criterion.label).join("; ")}\nExcluded domains: ${exclude.slice(0, 80).join(", ")}${rejected}\n\nSearch results:\n${sources.map((source) => `- ${source.title} — ${source.url}\n  ${source.snippet ?? ""}`).join("\n")}\n\nList pages:\n${lists.map((page) => `URL: ${page.url}\n${page.text.slice(0, 4_000)}\nLinks: ${page.links.slice(0, 200).join(" ")}`).join("\n---\n") || "none"}\n\nReturn JSON only, up to 25: {"companies":[{"name":"","domain":"","evidence":""}]}`,
+      2_500, 50_000);
     const knownDomains = new Set([...sources.map((source) => normalizeDomain(source.url)), ...lists.flatMap((page) => page.links.map((link) => normalizeDomain(link)))].filter(Boolean));
-    found = parseCandidates(raw, batchQueries.join(" | ")).filter((candidate) => knownDomains.has(candidate.domain));
+    const corpus = [...sources.map((source) => `${source.title ?? ""} ${source.snippet ?? ""}`), ...lists.map((page) => page.text)].join("\n");
+    found = parseCandidates(raw, "").filter((candidate) => knownDomains.has(candidate.domain) && quoteAppearsIn(candidate.foundVia, corpus));
   }
-  const already = earlier.flatMap((detail) => (detail.candidates as Candidate[] | undefined) ?? []);
-  const fresh = dedupeCandidates(found, [...exclude, ...already.map((candidate) => candidate.domain)], MAX_CANDIDATES - already.length);
-  const total = already.length + fresh.length;
-  const qualifyFrom = Math.ceil(already.length / QUALIFY_BATCH_SIZE);
-  if (!fresh.length && total === 0) {
-    const more = (step.batch + 1) * QUERIES_PER_BATCH < queries.length;
+  const fresh = dedupeCandidates(found, [...exclude, ...state.candidates.map((candidate) => candidate.domain)], MAX_CANDIDATES - state.candidates.length);
+  const total = state.candidates.length + fresh.length;
+  const searches = searchesUsed + batchQueries.length;
+  const detail = { queries, candidates: fresh, ...(replanned ? { replanned } : {}) };
+  const runPatch = { counts: { ...run.counts, searches, candidates: total } };
+  const after = discoveryState([...(await previousDetail(db, run.id, "discover_companies")), detail]);
+  if (!fresh.length) {
+    const unchecked = await uncheckedCandidates(db, run.id, after.candidates);
     return {
-      log: `Searched ${batchQueries.length} queries · no new companies yet`, status: "partial", detail: { queries, candidates: [] },
-      runPatch: { counts: { ...run.counts, searches: (Number(run.counts.searches) || 0) + batchQueries.length, candidates: total } },
-      next: more ? [{ key: "discover_companies", batch: step.batch + 1 }] : [{ key: "finalize" }],
+      log: `Searched ${batchQueries.length} queries · no new organisations`, status: "partial", detail, runPatch,
+      next: unchecked.length ? [{ key: "qualify_companies", batch: await nextBatchNumber(db, run.id, "qualify_companies") }]
+        : canSearchMore(after, searches) ? [{ key: "discover_companies", batch: await nextBatchNumber(db, run.id, "discover_companies") }] : [{ key: "find_signals" }],
     };
   }
   return {
-    log: `Searched ${batchQueries.length} queries · ${fresh.length} new companies to check (${total} so far)`,
-    detail: { queries, candidates: fresh },
-    runPatch: { counts: { ...run.counts, searches: (Number(run.counts.searches) || 0) + batchQueries.length, candidates: total } },
-    next: [{ key: "qualify_companies", batch: qualifyFrom }],
+    log: `Searched ${batchQueries.length} queries · ${fresh.length} new organisations to check (${total} so far)`,
+    detail, runPatch,
+    next: [{ key: "qualify_companies", batch: await nextBatchNumber(db, run.id, "qualify_companies") }],
   };
+}
+
+/** Candidates no qualify step has checked yet, in the order they were found. */
+async function uncheckedCandidates(db: SupabaseClient, runId: string, candidates: readonly Candidate[]): Promise<Candidate[]> {
+  const checked = new Set((await previousDetail(db, runId, "qualify_companies")).flatMap((detail) => (detail.checked as string[] | undefined) ?? []));
+  return candidates.filter((candidate) => !checked.has(candidate.domain));
 }
 
 // ---- 6. Qualify companies (five per invocation) ---------------------------------------------
@@ -287,15 +351,15 @@ async function qualifiedSoFar(db: SupabaseClient, runId: string): Promise<number
 
 async function qualifyCompanies(db: SupabaseClient, run: ResearchRun, step: ResearchStep): Promise<StepOutcome> {
   const segment = run.selected_segment!;
-  const discovered = (await previousDetail(db, run.id, "discover_companies")).flatMap((detail) => (detail.candidates as Candidate[] | undefined) ?? []);
-  const batch = discovered.slice(step.batch * QUALIFY_BATCH_SIZE, step.batch * QUALIFY_BATCH_SIZE + QUALIFY_BATCH_SIZE);
-  const queriesPlanned = ((await previousDetail(db, run.id, "discover_companies"))[0]?.queries as string[] | undefined)?.length ?? 0;
-  const discoverBatches = (await previousDetail(db, run.id, "discover_companies")).length;
+  const state = discoveryState(await previousDetail(db, run.id, "discover_companies"));
+  // Always the next unchecked candidates, however discovery batches were sized.
+  const unchecked = await uncheckedCandidates(db, run.id, state.candidates);
+  const batch = unchecked.slice(0, QUALIFY_BATCH_SIZE);
 
   const nextAfter = async (qualified: number): Promise<StepOutcome["next"]> => {
     if (qualified >= run.target_count) return [{ key: "find_signals" }];
-    if ((step.batch + 1) * QUALIFY_BATCH_SIZE < discovered.length) return [{ key: "qualify_companies", batch: step.batch + 1 }];
-    if (discoverBatches * QUERIES_PER_BATCH < queriesPlanned && discovered.length < MAX_CANDIDATES) return [{ key: "discover_companies", batch: discoverBatches }];
+    if (unchecked.length > batch.length) return [{ key: "qualify_companies", batch: await nextBatchNumber(db, run.id, "qualify_companies") }];
+    if (canSearchMore(state, Number(run.counts.searches) || 0)) return [{ key: "discover_companies", batch: await nextBatchNumber(db, run.id, "discover_companies") }];
     return [{ key: "find_signals" }];
   };
 
@@ -322,13 +386,14 @@ async function qualifyCompanies(db: SupabaseClient, run: ResearchRun, step: Rese
       ? verifyVerdicts(parseVerdicts({ verdicts: assessment.verdicts }, segment.criteria), item.pages)
       : parseVerdicts({ verdicts: [] }, segment.criteria);
     const fit = scoreFit(verdicts, segment.criteria);
-    // A site that blocks reading cannot prove anything, but the company was
-    // found by search for this segment: kept as C, never counted or charged.
-    if (!fit && !item.blocked) continue;
+    // A site that blocks reading cannot prove anything. It is kept as a
+    // possible fit only when the search results showed what it is (the
+    // evidence phrase), never counted or charged.
+    if (!fit && !(item.blocked && item.candidate.foundVia)) continue;
     const row = {
       run_id: run.id, user_id: run.user_id, project_id: run.project_id, domain: item.candidate.domain,
       name: String(assessment?.name ?? item.candidate.name).slice(0, 120) || item.candidate.domain,
-      description: assessment?.description ? String(assessment.description).slice(0, 300) : null,
+      description: assessment?.description ? String(assessment.description).slice(0, 300) : item.blocked ? `Search results: “${item.candidate.foundVia}”`.slice(0, 300) : null,
       location: assessment?.location ? String(assessment.location).slice(0, 120) : null,
       size_band: assessment?.sizeBand ? String(assessment.sizeBand).slice(0, 60) : null,
       industry: assessment?.industry ? String(assessment.industry).slice(0, 120) : null,
