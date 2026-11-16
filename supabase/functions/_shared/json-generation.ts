@@ -52,22 +52,22 @@ export interface JsonGenerationRequest {
 
 export interface JsonGenerationResult {
   text: string;
-  provider: "gemini" | "openai";
+  provider: "gemini" | "openai" | "lovable" | "groq";
   model: string;
   inputTokens?: number;
   outputTokens?: number;
 }
 
-/** Leave OpenAI enough time to answer when Gemini uses its share and fails. */
-const OPENAI_RESERVE_MS = 12_000;
+/** Leave the fallbacks enough time to answer when Gemini uses its share and fails. */
+const OPENAI_RESERVE_MS = 15_000;
 
 export async function generateJsonText(request: JsonGenerationRequest): Promise<JsonGenerationResult> {
   const deadline = Date.now() + request.timeoutMs;
-  const hasOpenAI = Boolean(Deno.env.get("OPENAI_API_KEY")?.trim());
+  const hasFallback = ["OPENAI_API_KEY", "LOVABLE_API_KEY", "GROQ_API_KEY"].some((name) => Boolean(Deno.env.get(name)?.trim()));
   let geminiError: unknown = null;
 
   if (Deno.env.get("GEMINI_API_KEY")?.trim()) {
-    const geminiDeadline = deadline - (hasOpenAI && request.timeoutMs > OPENAI_RESERVE_MS * 2 ? OPENAI_RESERVE_MS : 0);
+    const geminiDeadline = deadline - (hasFallback && request.timeoutMs > OPENAI_RESERVE_MS * 2 ? OPENAI_RESERVE_MS : 0);
     for (let attempt = 0; attempt <= RETRY_PAUSES_MS.length; attempt++) {
       try {
         const result = await callGemini({
@@ -91,7 +91,7 @@ export async function generateJsonText(request: JsonGenerationRequest): Promise<
         const wait = RETRY_PAUSES_MS[attempt];
         const retry = wait !== undefined && isTransientGeminiError(error)
           && geminiDeadline - Date.now() - wait >= MIN_ATTEMPT_MS;
-        console.error(`${request.label}: Gemini failed (attempt ${attempt + 1})${retry ? `, retrying in ${wait}ms` : hasOpenAI ? ", trying OpenAI" : ""}:`,
+        console.error(`${request.label}: Gemini failed (attempt ${attempt + 1})${retry ? `, retrying in ${wait}ms` : hasFallback ? ", trying the fallbacks" : ""}:`,
           error instanceof Error ? error.message : error);
         if (!retry) break;
         await pause(wait);
@@ -99,23 +99,51 @@ export async function generateJsonText(request: JsonGenerationRequest): Promise<
     }
   }
 
-  const remaining = deadline - Date.now();
-  if (!hasOpenAI || remaining < 2_000) {
-    throw geminiError ?? new Error(`${request.label}: no AI provider is configured`);
+  // OpenAI-compatible fallbacks, in order, each given a share of the time left.
+  // 2026-11-16: OpenAI had no credits while Gemini answered 503 "high demand",
+  // so every customer-research analysis failed three times over several
+  // minutes. The Lovable gateway (Gemini through Lovable's own capacity) and
+  // Groq answered both checks that day.
+  const fallbacks = chatFallbacks(request.openaiModel);
+  let lastError: unknown = geminiError;
+  for (let index = 0; index < fallbacks.length; index++) {
+    const remaining = deadline - Date.now();
+    if (remaining < 2_000) break;
+    const provider = fallbacks[index];
+    const budget = index === fallbacks.length - 1 ? remaining : Math.max(4_000, Math.floor(remaining / (fallbacks.length - index)));
+    try {
+      return await callChatCompletions(provider, request, budget);
+    } catch (error) {
+      lastError = error;
+      console.error(`${request.label}: ${provider.name} failed${index < fallbacks.length - 1 ? `, trying ${fallbacks[index + 1].name}` : ""}:`,
+        error instanceof Error ? error.message.slice(0, 200) : error);
+    }
   }
+  throw lastError ?? new Error(`${request.label}: no AI provider is configured`);
+}
 
+interface ChatProvider { name: "openai" | "lovable" | "groq"; url: string; key: string; model: string }
+
+/** The OpenAI-compatible providers that have a key, in fallback order. */
+function chatFallbacks(openaiModel: string): ChatProvider[] {
+  const key = (name: string) => Deno.env.get(name)?.trim() ?? "";
+  const providers: ChatProvider[] = [];
+  if (key("OPENAI_API_KEY")) providers.push({ name: "openai", url: "https://api.openai.com/v1/chat/completions", key: key("OPENAI_API_KEY"), model: openaiModel });
+  if (key("LOVABLE_API_KEY")) providers.push({ name: "lovable", url: "https://ai.gateway.lovable.dev/v1/chat/completions", key: key("LOVABLE_API_KEY"), model: "google/gemini-2.5-flash" });
+  if (key("GROQ_API_KEY")) providers.push({ name: "groq", url: "https://api.groq.com/openai/v1/chat/completions", key: key("GROQ_API_KEY"), model: "llama-3.3-70b-versatile" });
+  return providers;
+}
+
+async function callChatCompletions(provider: ChatProvider, request: JsonGenerationRequest, timeoutMs: number): Promise<JsonGenerationResult> {
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), remaining);
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    const response = await fetch(provider.url, {
       method: "POST",
       signal: controller.signal,
-      headers: {
-        Authorization: `Bearer ${Deno.env.get("OPENAI_API_KEY")}`,
-        "Content-Type": "application/json",
-      },
+      headers: { Authorization: `Bearer ${provider.key}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: request.openaiModel,
+        model: provider.model,
         response_format: { type: "json_object" },
         temperature: request.temperature,
         max_tokens: request.maxTokens,
@@ -127,17 +155,17 @@ export async function generateJsonText(request: JsonGenerationRequest): Promise<
     });
     if (!response.ok) {
       const body = await response.text().catch(() => "");
-      throw new Error(`OpenAI API Error: ${response.status} ${body.slice(0, 200)}`.trim());
+      throw new Error(`${provider.name} API Error: ${response.status} ${body.slice(0, 200)}`.trim());
     }
     const data = await response.json();
     const choice = data?.choices?.[0];
     const text = choice?.message?.content;
-    if (typeof text !== "string" || !text.trim()) throw new Error("OpenAI returned an empty response");
-    if (choice?.finish_reason === "length") throw new Error("OpenAI response was truncated before completion");
+    if (typeof text !== "string" || !text.trim()) throw new Error(`${provider.name} returned an empty response`);
+    if (choice?.finish_reason === "length") throw new Error(`${provider.name} response was truncated before completion`);
     return {
       text,
-      provider: "openai",
-      model: request.openaiModel,
+      provider: provider.name,
+      model: `${provider.name}/${provider.model}`,
       inputTokens: data?.usage?.prompt_tokens,
       outputTokens: data?.usage?.completion_tokens,
     };
