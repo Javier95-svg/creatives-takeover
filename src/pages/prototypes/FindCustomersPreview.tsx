@@ -68,6 +68,8 @@ const prospect = (id: string, name: string, domain: string, tier: 'A' | 'B' | 'C
   contact_routes: [{ kind: 'contact_page', value: `https://${domain}/contact`, sourceUrl: `https://${domain}/` }, { kind: 'generic_email', value: `hello@${domain}`, sourceUrl: `https://${domain}/contact` }],
   suggested_roles: ['Practice manager', 'Principal dentist'], blocked: false, status: 'new', feedback: null, pipeline_entry_id: null, contact_id: null,
   last_checked_at: at(2), signals: [], contact: null,
+  contact_unlocked: false, contact_available: { emails: 1, phones: 1 },
+  contact_details: null,
   draft: tier === 'C' ? null : {
     id: `draft-${id}`, language: 'en', status: 'draft', edited: false, chosen_variant: 'a', sent_at: null, replied_at: null,
     subject: `Fewer missed appointments at ${name}`,
@@ -101,6 +103,10 @@ prospects[1] = {
   draft: { ...prospects[1].draft!, status: 'replied', sent_at: at(1), replied_at: at(0.5) },
 };
 prospects[3] = { ...prospects[3], status: 'contacted', draft: { ...prospects[3].draft!, chosen_variant: 'b', status: 'sent_manually', sent_at: at(1) } };
+// Rising preview: the best half (4 of 8) show their published email and phone.
+prospects.slice(0, 4).forEach((item, index) => {
+  prospects[index] = { ...item, contact_unlocked: true, contact_details: { emails: [{ value: `hello@${item.domain}`, sourceUrl: `https://${item.domain}/contact` }], phones: index % 2 ? [] : [{ value: '+441132000000', sourceUrl: `https://${item.domain}/contact` }] } };
+});
 
 function makeRun(status: ResearchRunRow['status'], counts: ResearchRunRow['counts'], extra: Partial<ResearchRunRow> = {}): ResearchRunRow {
   return {
@@ -119,7 +125,7 @@ function makeRun(status: ResearchRunRow['status'], counts: ResearchRunRow['count
 
 const noop = async () => undefined;
 function previewResearch(run: ResearchRunRow | null, steps: ResearchStepRow[], rows: ProspectRow[]): GtmResearch {
-  return { run, root: run, searches: run ? [run] : [], steps, prospects: rows, loading: false, busy: false, analyze: noop, retry: noop, edit: noop, start: noop, cancel: noop,
+  return { run, root: run, searches: run ? [run] : [], steps, prospects: rows, loading: false, busy: false, contactPlan: 'rising', analyze: noop, retry: noop, edit: noop, start: noop, cancel: noop,
     followUp: noop, branch: noop, setAutoRefresh: noop, selectSearch: noop, startOver: () => undefined, refresh: async () => run,
     updateProspect: noop, updateDraft: noop, ensureContact: async () => 'preview-contact', markSent: noop, markReplied: noop,
     findContact: async () => ({ found: false, message: 'Preview only.' }), findContacts: async () => ({ found: 0, charged: 0, checked: 0 }) } as unknown as GtmResearch;

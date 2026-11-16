@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ExternalLink, Loader2, Pencil, Plus, Search, UserSearch, X } from 'lucide-react';
+import { ExternalLink, Loader2, Lock, Pencil, Plus, Search, UserSearch, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { captureEvent } from '@/lib/analytics';
 import { Badge } from '@/components/ui/badge';
@@ -322,7 +322,14 @@ function ResultsHeader({ research, onNewSearch, onError }: { research: GtmResear
   const run = research.run!;
   const root = research.root ?? run;
   const fits = research.prospects.filter((prospect) => prospect.fit_tier !== 'C' && prospect.status !== 'dismissed');
-  const withoutPerson = fits.filter((prospect) => !prospect.contact).length;
+  const withoutPerson = fits.filter((prospect) => !prospect.contact && prospect.contact_unlocked).length;
+  // What the plan shows of emails and phone numbers, said once above the list.
+  const unlocked = research.prospects.filter((prospect) => prospect.contact_unlocked).length;
+  const withContact = research.prospects.filter((prospect) => prospect.contact_available.emails + prospect.contact_available.phones > 0).length;
+  const contactNote = research.contactPlan === 'pro' || !research.prospects.length ? null
+    : research.contactPlan === 'rising'
+      ? `You see emails and phone numbers for the best ${unlocked} of ${research.prospects.length} leads on Rising. Pro shows every lead.`
+      : `${withContact} of these ${research.prospects.length} leads publish an email or phone. Rising shows the best half of each search; Pro shows every lead.`;
   const shortlisted = research.prospects.some((prospect) => prospect.fit_tier !== 'C' && ['shortlisted', 'in_pipeline', 'contacted'].includes(prospect.status));
   const canRerun = rerunEligible(research.prospects, root.rerun_used);
   const finished = ['completed', 'partial'].includes(root.status);
@@ -345,6 +352,12 @@ function ResultsHeader({ research, onNewSearch, onError }: { research: GtmResear
           {anySent ? (
             <p className="mt-1 text-sm text-muted-foreground">
               Version A: {stats.a.sent} sent, {stats.a.replied} {stats.a.replied === 1 ? 'reply' : 'replies'} · Version B: {stats.b.sent} sent, {stats.b.replied} {stats.b.replied === 1 ? 'reply' : 'replies'}
+            </p>
+          ) : null}
+          {contactNote ? (
+            <p className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-foreground">
+              <Lock className="h-3.5 w-3.5 text-primary" aria-hidden="true" />{contactNote}
+              <a href="/pricing" className="font-medium text-primary underline-offset-4 hover:underline" onClick={() => captureEvent('gtm_contact_upgrade_clicked', { where: 'header' })}>See plans</a>
             </p>
           ) : null}
         </div>

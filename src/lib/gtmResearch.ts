@@ -484,9 +484,10 @@ export function parseDraft(raw: unknown): { subject: string; body: string } | nu
 const PERSONAL_EMAIL = /^(?!info|hello|contact|sales|support|team|office|admin|enquiries|enquiry|inquiries|hi|press|partners|partnerships|business|bookings|reservations|help|careers|jobs)[a-z]+[._-]?[a-z]*@/i;
 
 /**
- * Company-level contact routes found on the company's own pages: its contact
- * page, a generic enquiries address it publishes, its careers page. Addresses
- * that look like a named person are left out on purpose.
+ * Company-level pages to reach an organisation: its contact page and its
+ * careers page. Email addresses and phone numbers are kept apart
+ * (extractContactDetails) because only some plans receive them. Older rows
+ * may still carry a "generic_email" route.
  */
 export function extractContactRoutes(pages: ReadonlyArray<{ url: string; text: string; links?: readonly string[] }>, domain: string): ContactRoute[] {
   const routes: ContactRoute[] = [];
@@ -498,14 +499,59 @@ export function extractContactRoutes(pages: ReadonlyArray<{ url: string; text: s
       if (/\/(contact|contact-us|get-in-touch|kontakt|contacto|nous-contacter)(\/|$|\?)/i.test(link)) add({ kind: 'contact_page', value: link, sourceUrl: page.url });
       else if (/\/(careers|jobs|join-us|work-with-us)(\/|$|\?)/i.test(link)) add({ kind: 'careers', value: link, sourceUrl: page.url });
     }
-    for (const match of page.text.matchAll(/[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/gi)) {
-      const email = match[0].toLowerCase();
-      if (normalizeDomain(email.split('@')[1]) !== domain || PERSONAL_EMAIL.test(email)) continue;
-      add({ kind: 'generic_email', value: email, sourceUrl: page.url });
-    }
   }
   return routes.slice(0, 4);
 }
+
+// ---- Published email addresses and phone numbers (plan-gated) -----------------------
+
+export interface ContactPoint { value: string; sourceUrl: string }
+/** Kept apart from the rest of a prospect: only plans that include contact data receive it. */
+export interface ContactDetails { emails: ContactPoint[]; phones: ContactPoint[] }
+
+/** A number written for dialling: digits with a leading + kept; null when too short or too long to be a phone. */
+export function cleanPhone(raw: string): string | null {
+  // "+44 (0)113 ...": the bracketed trunk 0 is not dialled from abroad.
+  const value = raw.trim().replace(/\(0\)/g, '').replace(/[^\d+]/g, '').replace(/(?!^)\+/g, '');
+  const digits = value.replace(/\D/g, '');
+  return digits.length >= 7 && digits.length <= 15 ? value : null;
+}
+
+/**
+ * The enquiry addresses and phone numbers an organisation publishes on its
+ * own pages: mailto: and tel: links first, then international numbers (+...)
+ * and addresses in the text. Addresses must be at the organisation's own
+ * domain and look like a shared inbox; named people come only from the
+ * contact lookup.
+ */
+export function extractContactDetails(pages: ReadonlyArray<{ url: string; text: string; mailto?: readonly string[]; tel?: readonly string[] }>, domain: string): ContactDetails {
+  const main = registrableDomain(domain);
+  const emails = new Map<string, ContactPoint>();
+  const phones = new Map<string, ContactPoint>();
+  const addEmail = (raw: string, sourceUrl: string) => {
+    const email = raw.trim().toLowerCase();
+    const host = normalizeDomain(email.split('@')[1]);
+    if (!host || registrableDomain(host) !== main || PERSONAL_EMAIL.test(email) || emails.has(email)) return;
+    emails.set(email, { value: email, sourceUrl });
+  };
+  const addPhone = (raw: string, sourceUrl: string) => {
+    const phone = cleanPhone(raw);
+    if (phone && !phones.has(phone.replace(/\D/g, ''))) phones.set(phone.replace(/\D/g, ''), { value: phone, sourceUrl });
+  };
+  for (const page of pages) {
+    for (const email of page.mailto ?? []) addEmail(email, page.url);
+    for (const phone of page.tel ?? []) addPhone(phone, page.url);
+  }
+  for (const page of pages) {
+    for (const match of page.text.matchAll(/[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/gi)) addEmail(match[0], page.url);
+    // Only numbers written in international form: a bare run of digits is
+    // as likely a postcode, a price or a registration number.
+    for (const match of page.text.matchAll(/\+\d[\d\s().-]{6,18}\d/g)) addPhone(match[0], page.url);
+  }
+  return { emails: [...emails.values()].slice(0, 3), phones: [...phones.values()].slice(0, 2) };
+}
+
+export const EMPTY_CONTACT_DETAILS: ContactDetails = { emails: [], phones: [] };
 
 // ---- Outreach language -----------------------------------------------------------
 

@@ -5,7 +5,7 @@ import {
   chargeForRun, creditsForFollowUp, creditsForRun, dedupeCandidates, emailStatusFromVerifier, extractContactRoutes, feedbackLessons, isExcludedDomain,
   languageForLocation, listFrom, normalizeDomain, parseBusinessProfile, parseCandidates, parseCompetitors, parseDomainSearchPeople, parseDraft, parseSegments, parseSignals,
   registrableDomain,
-  personalizeDraft, pickDecisionMaker, prospectsToCsv, quoteAppearsIn, rerunEligible, runPrice, sanitizeSegment, scoreFit, STEP_TITLES, variantStats,
+  cleanPhone, extractContactDetails, personalizeDraft, pickDecisionMaker, prospectsToCsv, quoteAppearsIn, rerunEligible, runPrice, sanitizeSegment, scoreFit, STEP_TITLES, variantStats,
   verifyVerdicts, type CriterionVerdict, type SegmentCriterion,
 } from '../src/lib/gtmResearch.ts';
 import { extractLinks, parseRobots, parseRobotsDisallow, pickInternalPages, robotsAllows } from '../supabase/functions/_shared/site-crawler.ts';
@@ -99,15 +99,38 @@ test('model output is validated: unknown sources dropped, segments need a must-h
   assert.ok(parseDraft({ subject: 'Fewer no-shows at Smiles', body: 'Hi {{first_name}}, I saw Smiles takes bookings online. We help clinics cut no-shows. Open to a 15-minute call?' }));
 });
 
-test('contact routes are company-level: named-person addresses are left out', () => {
-  const routes = extractContactRoutes([{
+test('contact pages, published inboxes and phone numbers: company-level, named people left out', async () => {
+  const page = {
     url: 'https://smiles.co.uk/',
-    text: 'Write to hello@smiles.co.uk or jane.doe@smiles.co.uk. Partners: ventas@other.com',
+    text: 'Write to hello@smiles.co.uk or jane.doe@smiles.co.uk. Partners: ventas@other.com. Call +44 (0)113 496 0000. Postcode LS1 4AP, ref 2024001234.',
     links: ['https://smiles.co.uk/contact', 'https://smiles.co.uk/careers/', 'https://other.com/contact'],
-  }], 'smiles.co.uk');
-  assert.deepEqual(routes.map((route) => [route.kind, route.value]), [
-    ['contact_page', 'https://smiles.co.uk/contact'], ['careers', 'https://smiles.co.uk/careers/'], ['generic_email', 'hello@smiles.co.uk'],
-  ]);
+    mailto: ['info@smiles.co.uk', 'jane@smiles.co.uk'], tel: ['01134960000'],
+  };
+  const routes = extractContactRoutes([page], 'smiles.co.uk');
+  assert.deepEqual(routes.map((route) => [route.kind, route.value]), [['contact_page', 'https://smiles.co.uk/contact'], ['careers', 'https://smiles.co.uk/careers/']], 'pages only: addresses are plan-gated');
+  const details = extractContactDetails([page], 'smiles.co.uk');
+  assert.deepEqual(details.emails.map((item) => item.value), ['info@smiles.co.uk', 'hello@smiles.co.uk'], 'mailto first, shared inboxes only, own domain only');
+  assert.deepEqual(details.phones.map((item) => item.value), ['01134960000', '+441134960000'], 'tel links, then international numbers; postcodes and references ignored');
+  assert.equal(extractContactDetails([{ url: 'https://innovate.umd.edu/', text: 'Contact: info@umd.edu' }], 'innovate.umd.edu').emails.length, 1, 'the main domain counts');
+  assert.equal(cleanPhone('+1 (555) 010-0100'), '+15550100100');
+  assert.equal(cleanPhone('12-34'), null);
+
+  const { extractContactLinks } = await import('../supabase/functions/_shared/site-crawler.ts');
+  assert.deepEqual(extractContactLinks('<a href="mailto:Info@Acme.com?subject=Hi">Email us</a> <a href=\'tel:+34 911 222 333\'>Call</a> <a href="tel:12">x</a>'),
+    { mailto: ['info@acme.com'], tel: ['+34911222333'] });
+});
+
+test('contact data by plan: its own column, readable only through the access function (Pro all, Rising the best half)', () => {
+  const sql = readFileSync(new URL('../supabase/migrations/20261116180000_gtm_research_contact_access.sql', import.meta.url), 'utf8');
+  assert.match(sql, /REVOKE SELECT ON public\.gtm_prospect_companies FROM authenticated;/);
+  const granted = /GRANT SELECT \(([^)]+)\) ON public\.gtm_prospect_companies TO authenticated/.exec(sql)?.[1] ?? '';
+  assert.ok(granted.includes('contact_routes') && !granted.includes('contact_details'), 'every column but contact_details');
+  assert.match(sql, /v_plan = 'pro' OR \(v_plan = 'rising' AND ranked\.rank_in_search <= ceil\(ranked\.total \/ 2\.0\)\)/);
+  assert.match(sql, /CASE WHEN access\.ok THEN ranked\.details ELSE NULL END/, 'locked rows never return the data');
+  assert.match(sql, /public\.get_user_normalized_subscription_tier\(v_user\)/, 'the same plan as everywhere else, cohort plans included');
+  assert.match(sql, /REVOKE ALL ON FUNCTION public\.gtm_prospect_contact_access_v1\(UUID\[\]\) FROM PUBLIC, anon;/);
+  const hook = readFileSync(new URL('../src/hooks/useGtmResearch.ts', import.meta.url), 'utf8');
+  assert.doesNotMatch(hook, /from\('gtm_prospect_companies'\)\s*\.select\('\*/, 'the app lists its columns: a select * would fail on the protected one');
 });
 
 test('drafts are written in the prospect\'s language and exports cannot run spreadsheet formulas', () => {
@@ -286,7 +309,8 @@ test('a full research run: evidence-backed prospects, honest tiers, drafts, and 
     assert.ok(!run.selected_segment.criteria.some((criterion: Row) => /based in/i.test(criterion.label)), 'location is not a criterion');
     const where = byDomain['smilesleeds.co.uk'].criteria.find((item: Row) => item.criterionId === 'where');
     assert.equal(where?.verdict, 'met');
-    assert.deepEqual(byDomain['smilesleeds.co.uk'].contact_routes.map((route: Row) => route.value), ['https://smilesleeds.co.uk/contact', 'hello@smilesleeds.co.uk']);
+    assert.deepEqual(byDomain['smilesleeds.co.uk'].contact_routes.map((route: Row) => route.value), ['https://smilesleeds.co.uk/contact']);
+    assert.deepEqual(byDomain['smilesleeds.co.uk'].contact_details.emails.map((item: Row) => item.value), ['hello@smilesleeds.co.uk'], 'the published inbox is kept apart, for plans that include it');
     assert.equal(byDomain['gentledental.co.uk'].fit_tier, 'B');
     assert.ok(!byDomain['fakeclaims.co.uk'], 'quotes that are not on the page prove nothing, so it does not qualify');
 

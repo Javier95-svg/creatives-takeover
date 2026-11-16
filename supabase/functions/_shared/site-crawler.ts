@@ -19,7 +19,11 @@ const MAX_PAGE_BYTES = 600_000;
 const MAX_REDIRECTS = 3;
 const MAX_TEXT_CHARS = 9_000;
 
-export interface CrawledPage { url: string; title: string; description: string; text: string; links: string[] }
+export interface CrawledPage {
+  url: string; title: string; description: string; text: string; links: string[];
+  /** Addresses and numbers from mailto: and tel: links, which page text usually hides behind "Email us". */
+  mailto?: string[]; tel?: string[];
+}
 export interface CrawlResult {
   domain: string;
   pages: CrawledPage[];
@@ -89,6 +93,20 @@ export function extractLinks(html: string, baseUrl: string): string[] {
     if (links.size >= 300) break;
   }
   return [...links];
+}
+
+/** Email addresses and phone numbers from mailto: and tel: links, deduplicated. */
+export function extractContactLinks(html: string): { mailto: string[]; tel: string[] } {
+  const mailto = new Set<string>();
+  const tel = new Set<string>();
+  for (const match of html.matchAll(/href\s*=\s*["'](mailto|tel):([^"'?#]+)/gi)) {
+    let value = match[2].trim();
+    try { value = decodeURIComponent(value); } catch { /* keep as written */ }
+    if (match[1].toLowerCase() === "mailto") { if (/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i.test(value)) mailto.add(value.toLowerCase()); }
+    else if (value.replace(/\D/g, "").length >= 7) tel.add(value.replace(/[^\d+]/g, ""));
+    if (mailto.size + tel.size >= 20) break;
+  }
+  return { mailto: [...mailto], tel: [...tel] };
 }
 
 /** Up to `limit` internal pages worth reading, best first. */
@@ -227,7 +245,7 @@ const looksLikeBotWall = (html: string) =>
 
 function toPage(fetched: FetchedPage): CrawledPage {
   const { title, description, text } = htmlToText(fetched.html);
-  return { url: fetched.url, title, description, text: text.slice(0, MAX_TEXT_CHARS), links: extractLinks(fetched.html, fetched.url) };
+  return { url: fetched.url, title, description, text: text.slice(0, MAX_TEXT_CHARS), links: extractLinks(fetched.html, fetched.url), ...extractContactLinks(fetched.html) };
 }
 
 /** Reads the homepage and up to `maxPages - 1` internal pages. Never throws. */

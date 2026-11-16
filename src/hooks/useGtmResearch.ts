@@ -4,9 +4,10 @@ import { useAuth } from '@/contexts/AuthContext';
 import { createIdempotencyKey } from '@/lib/idempotency';
 import { captureEvent } from '@/lib/analytics';
 import type {
-  BusinessProfile, BuyingSignal, Competitor, ContactRoute, CriterionVerdict, DraftStatus, FitTier, ResearchRunKind, ResearchRunStatus,
+  BusinessProfile, BuyingSignal, Competitor, ContactDetails, ContactRoute, CriterionVerdict, DraftStatus, FitTier, ResearchRunKind, ResearchRunStatus,
   ResearchStepKey, ResearchStepStatus, Segment,
 } from '@/lib/gtmResearch';
+import { EMPTY_CONTACT_DETAILS } from '@/lib/gtmResearch';
 
 export interface ResearchRunRow {
   id: string;
@@ -54,7 +55,17 @@ export interface ProspectRow {
   pipeline_entry_id: string | null; contact_id: string | null; last_checked_at: string;
   draft: ProspectDraft | null;
   contact: ProspectContact | null;
+  /** Published emails and phones, present only when the plan includes this lead's contact data. */
+  contact_details: ContactDetails | null;
+  /** False when the plan doesn't include this lead's contact data; the counts say what's waiting. */
+  contact_unlocked: boolean;
+  contact_available: { emails: number; phones: number };
 }
+
+/** Every column the app may read: contact_details is handed out only by gtm_prospect_contact_access_v1. */
+const PROSPECT_COLUMNS = 'id, run_id, user_id, project_id, domain, name, description, location, size_band, industry, fit_score, fit_tier, criteria, contact_routes, suggested_roles, blocked, status, feedback, pipeline_entry_id, last_checked_at, created_at, updated_at, contact_id, signals';
+
+type ContactAccessRow = { prospect_id: string; contact_details: ContactDetails | null; unlocked: boolean; emails_available: number; phones_available: number; plan: string };
 
 const ACTIVE: ResearchRunStatus[] = ['analyzing', 'queued', 'running'];
 const POLL_MS = 3_000;
@@ -97,6 +108,8 @@ export function useGtmResearch(projectId: string | null) {
   const [run, setRun] = useState<ResearchRunRow | null>(null);
   const [root, setRoot] = useState<ResearchRunRow | null>(null);
   const [searches, setSearches] = useState<ResearchRunRow[]>([]);
+  // The plan the server used for contact data (rookie, starter, rising, pro).
+  const [contactPlan, setContactPlan] = useState<string | null>(null);
   const [steps, setSteps] = useState<ResearchStepRow[]>([]);
   const [prospects, setProspects] = useState<ProspectRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -127,15 +140,26 @@ export function useGtmResearch(projectId: string | null) {
     ]);
     const runIds = [searchRoot.id, ...((family ?? []) as Array<{ id: string }>).map((row) => row.id)];
     const { data: prospectRows } = await db.from('gtm_prospect_companies')
-      .select('*, gtm_outreach_drafts(id, subject, body, language, status, edited, variant_b_subject, variant_b_body, chosen_variant, sent_at, replied_at), gtm_prospect_contacts(id, full_name, role, email, email_status, provider, sources, found_at)')
+      .select(`${PROSPECT_COLUMNS}, gtm_outreach_drafts(id, subject, body, language, status, edited, variant_b_subject, variant_b_body, chosen_variant, sent_at, replied_at), gtm_prospect_contacts(id, full_name, role, email, email_status, provider, sources, found_at)`)
       .in('run_id', runIds).order('fit_score', { ascending: false });
+    // Contact data comes from the server by plan; on failure everything stays locked.
+    const ids = ((prospectRows ?? []) as Array<{ id: string }>).map((row) => row.id);
+    const { data: accessRows } = ids.length ? await db.rpc('gtm_prospect_contact_access_v1', { p_prospect_ids: ids }) : { data: [] };
+    const access = new Map(((accessRows ?? []) as ContactAccessRow[]).map((row) => [row.prospect_id, row]));
+    setContactPlan(((accessRows ?? []) as ContactAccessRow[])[0]?.plan ?? null);
     setRoot(searchRoot);
     setSearches((roots ?? []) as ResearchRunRow[]);
     setSteps((stepRows ?? []) as ResearchStepRow[]);
-    type Joined = ProspectRow & { gtm_outreach_drafts?: ProspectDraft[] | ProspectDraft | null; gtm_prospect_contacts?: ProspectContact[] | null };
-    setProspects(((prospectRows ?? []) as Joined[]).map(({ gtm_outreach_drafts: drafts, gtm_prospect_contacts: contacts, ...row }) => ({
-      ...row, signals: row.signals ?? [], draft: Array.isArray(drafts) ? drafts[0] ?? null : drafts ?? null, contact: contacts?.[0] ?? null,
-    })));
+    type Joined = Omit<ProspectRow, 'contact_details' | 'contact_unlocked' | 'contact_available'> & { gtm_outreach_drafts?: ProspectDraft[] | ProspectDraft | null; gtm_prospect_contacts?: ProspectContact[] | null };
+    setProspects(((prospectRows ?? []) as Joined[]).map(({ gtm_outreach_drafts: drafts, gtm_prospect_contacts: contacts, ...row }) => {
+      const granted = access.get(row.id);
+      return {
+        ...row, signals: row.signals ?? [], draft: Array.isArray(drafts) ? drafts[0] ?? null : drafts ?? null, contact: contacts?.[0] ?? null,
+        contact_details: granted?.unlocked ? granted.contact_details ?? EMPTY_CONTACT_DETAILS : null,
+        contact_unlocked: Boolean(granted?.unlocked),
+        contact_available: { emails: granted?.emails_available ?? 0, phones: granted?.phones_available ?? 0 },
+      };
+    }));
   }, [userId, loadRun, scoped]);
 
   const refresh = useCallback(async (id?: string) => {
@@ -330,7 +354,7 @@ export function useGtmResearch(projectId: string | null) {
   }), [act, loadDetails, rootId, run]);
 
   return {
-    findContacts,
+    findContacts, contactPlan,
     run, root, searches, steps, prospects, loading, busy,
     analyze, retry, edit, start, cancel, followUp, branch, setAutoRefresh, selectSearch, startOver, refresh,
     updateProspect, updateDraft, ensureContact, markSent, markReplied, findContact,

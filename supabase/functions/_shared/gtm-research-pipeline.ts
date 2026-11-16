@@ -18,10 +18,10 @@ import { hasCompanySearch, searchCompanies } from "./company-search.ts";
 import { countryNames, describeCountries } from "../../../src/lib/researchCountries.ts";
 import { resolvePulseContext } from "./pulse-context.ts";
 import {
-  chargeForRun, checkLocation, dedupeCandidates, extractContactRoutes, feedbackLessons, languageForLocation, listFrom, MAX_CANDIDATES, MAX_SEARCHES_PER_RUN,
+  chargeForRun, checkLocation, dedupeCandidates, extractContactDetails, extractContactRoutes, feedbackLessons, languageForLocation, listFrom, MAX_CANDIDATES, MAX_SEARCHES_PER_RUN,
   MAX_SIGNAL_SEARCHES, normalizeDomain, parseBusinessProfile, parseCandidates, parseCompetitors, parseDraft, parseSegments, parseSignals,
   parseVerdicts, QUALIFY_BATCH_SIZE, quoteAppearsIn, scoreFit, verifyVerdicts, type BusinessProfile, type BuyingSignal, type Candidate, type Competitor,
-  type ResearchRunKind, type ResearchStepKey, type Segment,
+  type ContactDetails, type ContactRoute, type ResearchRunKind, type ResearchStepKey, type Segment,
 } from "../../../src/lib/gtmResearch.ts";
 
 export interface ResearchRun {
@@ -423,6 +423,32 @@ async function companyPages(db: SupabaseClient, candidate: Candidate): Promise<{
   return { pages: crawl.pages, blocked: crawl.blocked };
 }
 
+/**
+ * Contact pages, published emails and phone numbers. When the pages read for
+ * the check show no email or phone but link to a contact page, that page is
+ * read too (one extra request, cached with the rest).
+ */
+async function contactFor(db: SupabaseClient, candidate: Candidate, pages: CrawledPage[]): Promise<{ routes: ContactRoute[]; details: ContactDetails }> {
+  let routes = extractContactRoutes(pages, candidate.domain);
+  let details = extractContactDetails(pages, candidate.domain);
+  const contactPage = routes.find((route) => route.kind === "contact_page")?.value;
+  if (!details.emails.length && !details.phones.length && contactPage && !pages.some((page) => urlKey(page.url) === urlKey(contactPage))) {
+    const cacheKey = urlKey(contactPage);
+    const { data: cached } = await db.from("gtm_domain_cache").select("pages, fetched_at").eq("domain", cacheKey).maybeSingle();
+    let extra = cached && Date.now() - Date.parse(cached.fetched_at as string) < 30 * 86_400_000 ? (cached.pages ?? []) as CrawledPage[] : null;
+    if (!extra) {
+      const crawl = await crawlSite(contactPage, { maxPages: 1, timeoutMs: 6_000 });
+      extra = crawl.pages;
+      await db.from("gtm_domain_cache").upsert({ domain: cacheKey, pages: crawl.pages, blocked: crawl.blocked, http_status: crawl.status, fetched_at: new Date().toISOString() });
+    }
+    if (extra.length) {
+      routes = extractContactRoutes([...pages, ...extra], candidate.domain);
+      details = extractContactDetails([...pages, ...extra], candidate.domain);
+    }
+  }
+  return { routes, details };
+}
+
 async function qualifiedSoFar(db: SupabaseClient, runId: string): Promise<number> {
   const { count } = await db.from("gtm_prospect_companies").select("id", { count: "exact", head: true }).eq("run_id", runId).in("fit_tier", ["A", "B"]);
   return count ?? 0;
@@ -476,6 +502,7 @@ async function qualifyCompanies(db: SupabaseClient, run: ResearchRun, step: Rese
     // evidence phrase), never counted or charged.
     if (!fit && !(item.blocked && item.candidate.foundVia)) continue;
     const place = assessment?.location ? String(assessment.location).slice(0, 120) : location.country ? countryNames([location.country])[0] : null;
+    const contact = await contactFor(db, item.candidate, item.pages);
     const row = {
       run_id: run.id, user_id: run.user_id, project_id: run.project_id, domain: item.candidate.domain,
       name: String(assessment?.name ?? item.candidate.name).slice(0, 120) || item.candidate.domain,
@@ -485,7 +512,8 @@ async function qualifyCompanies(db: SupabaseClient, run: ResearchRun, step: Rese
       industry: assessment?.industry ? String(assessment.industry).slice(0, 120) : null,
       fit_score: fit?.score ?? 0, fit_tier: fit?.tier ?? "C",
       criteria: [...verdicts, ...(location.verdict ? [location.verdict] : [])].map((verdict) => ({ ...verdict, checkedAt: now })),
-      contact_routes: extractContactRoutes(item.pages, item.candidate.domain),
+      contact_routes: contact.routes,
+      contact_details: contact.details,
       suggested_roles: roles, blocked: item.blocked, last_checked_at: now, updated_at: now,
     };
     const existing = await (run.project_id

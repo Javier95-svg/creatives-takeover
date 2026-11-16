@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Check, Copy, ExternalLink, Loader2, Mail, MessageCircle, ThumbsDown, UserSearch } from 'lucide-react';
+import { Check, Copy, ExternalLink, Loader2, Lock, Mail, MessageCircle, Phone, ThumbsDown, UserSearch } from 'lucide-react';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -24,6 +24,53 @@ export function FitBadge({ tier, score }: { tier: ProspectRow['fit_tier']; score
     <Badge variant="outline" className={cn('whitespace-nowrap', tier === 'A' && 'border-primary/50 bg-primary/10 text-primary', tier === 'C' && 'text-muted-foreground')}>
       {TIER_TEXT[tier]}{typeof score === 'number' ? ` · ${score}` : ''}
     </Badge>
+  );
+}
+
+/** "1 email · 1 phone" for what a lead has, or null when it has neither. */
+export function availableText(available: ProspectRow['contact_available']): string | null {
+  const parts = [
+    available.emails ? `${available.emails} ${available.emails === 1 ? 'email' : 'emails'}` : '',
+    available.phones ? `${available.phones} ${available.phones === 1 ? 'phone' : 'phones'}` : '',
+  ].filter(Boolean);
+  return parts.length ? parts.join(' · ') : null;
+}
+
+/** Published emails and phones when the plan includes this lead; otherwise what's waiting and how to get it. */
+function ContactDetailsBlock({ prospect }: { prospect: ProspectRow }) {
+  if (prospect.contact_unlocked) {
+    const details = prospect.contact_details;
+    if (!details?.emails.length && !details?.phones.length) return <p className="mt-2 text-sm text-muted-foreground">No email or phone published on their site.</p>;
+    return (
+      <ul className="mt-2 space-y-1.5 text-sm">
+        {details.emails.map((item) => (
+          <li key={item.value} className="flex flex-wrap items-center gap-2">
+            <Mail className="h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
+            <a href={`mailto:${item.value}`} className="font-medium text-foreground underline-offset-4 hover:underline">{item.value}</a>
+            <a href={item.sourceUrl} target="_blank" rel="noreferrer" className="text-xs text-muted-foreground underline-offset-4 hover:underline">source</a>
+          </li>
+        ))}
+        {details.phones.map((item) => (
+          <li key={item.value} className="flex flex-wrap items-center gap-2">
+            <Phone className="h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
+            <a href={`tel:${item.value}`} className="font-medium text-foreground underline-offset-4 hover:underline">{item.value}</a>
+            <a href={item.sourceUrl} target="_blank" rel="noreferrer" className="text-xs text-muted-foreground underline-offset-4 hover:underline">source</a>
+          </li>
+        ))}
+      </ul>
+    );
+  }
+  const waiting = availableText(prospect.contact_available);
+  return (
+    <div className="mt-2 flex flex-col gap-2 rounded-lg border border-dashed border-primary/40 bg-primary/5 p-3 text-sm sm:flex-row sm:items-center sm:justify-between">
+      <span className="flex items-start gap-2 text-foreground">
+        <Lock className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" aria-hidden="true" />
+        <span>
+          {waiting ? `${waiting} published on their site. ` : ''}Emails and phone numbers are on Rising (the best half of each search) and Pro (every lead).
+        </span>
+      </span>
+      <Button asChild size="sm" className="shrink-0"><a href="/pricing" onClick={() => captureEvent('gtm_contact_upgrade_clicked', { where: 'sheet' })}>See plans</a></Button>
+    </div>
   );
 }
 
@@ -66,7 +113,7 @@ export function ProspectSheet({ prospect, onClose, canAddToPipeline, onUpdate, o
   const stored = draft ? { subject: variant === 'b' ? draft.variant_b_subject ?? '' : draft.subject, body: personalizeDraft((variant === 'b' ? draft.variant_b_body : draft.body) ?? '', firstName) } : null;
   const dirty = Boolean(stored && (subject !== stored.subject || body !== stored.body));
   const sent = draft?.status === 'sent_manually' || draft?.status === 'replied';
-  const email = prospect.contact?.email ?? prospect.contact_routes.find((route) => route.kind === 'generic_email')?.value ?? '';
+  const email = prospect.contact?.email ?? prospect.contact_details?.emails[0]?.value ?? '';
   const textPatch = (): DraftPatch => (variant === 'b' ? { variant_b_subject: subject, variant_b_body: body } : { subject, body });
 
   const busy = async (key: string, work: () => Promise<void>, failure: string) => {
@@ -133,6 +180,7 @@ export function ProspectSheet({ prospect, onClose, canAddToPipeline, onUpdate, o
 
         <section className="mt-6">
           <h3 className="text-sm font-semibold text-foreground">How to reach them</h3>
+          <ContactDetailsBlock prospect={prospect} />
           {prospect.contact ? (
             <div className="mt-2 rounded-lg border border-border/60 p-3 text-sm">
               <p className="font-medium text-foreground">{prospect.contact.full_name}{prospect.contact.role ? <span className="font-normal text-muted-foreground"> · {prospect.contact.role}</span> : null}</p>
@@ -140,19 +188,18 @@ export function ProspectSheet({ prospect, onClose, canAddToPipeline, onUpdate, o
               {prospect.contact.sources.length ? <p className="mt-1 text-xs text-muted-foreground">Found on: {prospect.contact.sources.map((source) => source.replace(/^https?:\/\//, '')).join(', ')}</p> : null}
             </div>
           ) : null}
-          {prospect.contact_routes.length ? (
+          {prospect.contact_routes.some((route) => route.kind !== 'generic_email') ? (
             <ul className="mt-2 space-y-1 text-sm">
-              {prospect.contact_routes.map((route) => (
+              {prospect.contact_routes.filter((route) => route.kind !== 'generic_email').map((route) => (
                 <li key={route.value}>
                   <span className="text-muted-foreground">{ROUTE_TEXT[route.kind]}: </span>
-                  {route.kind === 'generic_email' ? <span className="text-foreground">{route.value}</span>
-                    : <a href={route.value} target="_blank" rel="noreferrer" className="text-foreground underline-offset-4 hover:underline">{route.value.replace(/^https?:\/\//, '')}</a>}
+                  <a href={route.value} target="_blank" rel="noreferrer" className="text-foreground underline-offset-4 hover:underline">{route.value.replace(/^https?:\/\//, '')}</a>
                 </li>
               ))}
             </ul>
-          ) : !prospect.contact ? <p className="mt-2 text-sm text-muted-foreground">No public contact route on their site. Try their website's contact form or LinkedIn.</p> : null}
+          ) : null}
           {prospect.suggested_roles.length ? <p className="mt-2 text-sm text-muted-foreground">Who to look for: {prospect.suggested_roles.join(', ')}</p> : null}
-          {CONTACT_FINDER_ON && onFindContact && !prospect.contact && prospect.fit_tier !== 'C' ? (
+          {CONTACT_FINDER_ON && onFindContact && prospect.contact_unlocked && !prospect.contact && prospect.fit_tier !== 'C' ? (
             <Button type="button" size="sm" variant="outline" className="mt-3" disabled={working === 'contact'} onClick={() => void busy('contact', async () => {
               const result = await onFindContact(prospect);
               if (result && !result.found) toast.message(result.message ?? 'No one was found. You were not charged.');

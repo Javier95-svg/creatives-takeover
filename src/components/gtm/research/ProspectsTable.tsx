@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Download, Search } from 'lucide-react';
+import { Download, Lock, Mail, Phone, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -7,7 +7,7 @@ import { captureEvent } from '@/lib/analytics';
 import { prospectsToCsv } from '@/lib/gtmResearch';
 import type { ProspectRow } from '@/hooks/useGtmResearch';
 import { cn } from '@/lib/utils';
-import { FitBadge, TIER_TEXT } from './ProspectSheet';
+import { availableText, FitBadge, TIER_TEXT } from './ProspectSheet';
 
 const STATUS_TEXT: Record<ProspectRow['status'], string> = { new: 'New', shortlisted: 'Shortlisted', dismissed: 'Dismissed', in_pipeline: 'In pipeline', contacted: 'Contacted' };
 
@@ -16,6 +16,29 @@ export function topReason(prospect: ProspectRow): string {
   const met = prospect.criteria.filter((item) => item.verdict === 'met');
   if (!met.length) return prospect.blocked ? 'Their site blocks automated reading' : 'Not confirmed on their site';
   return `${met[0].criterion}${met.length > 1 ? ` · +${met.length - 1} more` : ''}`;
+}
+
+/** The best email and phone when the plan includes this lead; otherwise a lock with what's waiting. */
+function ContactCell({ prospect }: { prospect: ProspectRow }) {
+  const stop = (event: React.MouseEvent) => event.stopPropagation();
+  if (!prospect.contact_unlocked) {
+    const waiting = availableText(prospect.contact_available);
+    return (
+      <a href="/pricing" onClick={(event) => { stop(event); captureEvent('gtm_contact_upgrade_clicked', { where: 'table' }); }}
+        className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground" title="Emails and phone numbers are on Rising and Pro">
+        <Lock className="h-3 w-3 text-primary" aria-hidden="true" />{waiting ?? 'Contact'} · Rising
+      </a>
+    );
+  }
+  const email = prospect.contact?.email ?? prospect.contact_details?.emails[0]?.value ?? null;
+  const phone = prospect.contact_details?.phones[0]?.value ?? null;
+  if (!email && !phone) return <span className="text-xs text-muted-foreground">Not published</span>;
+  return (
+    <span className="block space-y-0.5 text-xs">
+      {email ? <a href={`mailto:${email}`} onClick={stop} className="flex items-center gap-1.5 truncate text-foreground underline-offset-4 hover:underline"><Mail className="h-3 w-3 shrink-0 text-muted-foreground" aria-hidden="true" /><span className="truncate">{email}</span></a> : null}
+      {phone ? <a href={`tel:${phone}`} onClick={stop} className="flex items-center gap-1.5 text-foreground underline-offset-4 hover:underline"><Phone className="h-3 w-3 shrink-0 text-muted-foreground" aria-hidden="true" />{phone}</a> : null}
+    </span>
+  );
 }
 
 export function ProspectsTable({ prospects, onOpen }: { prospects: readonly ProspectRow[]; onOpen: (prospect: ProspectRow) => void }) {
@@ -36,7 +59,12 @@ export function ProspectsTable({ prospects, onOpen }: { prospects: readonly Pros
     const csv = prospectsToCsv(visible.map((prospect) => ({
       name: prospect.name, domain: prospect.domain, fitTier: prospect.fit_tier, fitScore: prospect.fit_score, location: prospect.location,
       sizeBand: prospect.size_band, status: STATUS_TEXT[prospect.status], whyItFits: topReason(prospect),
-      contactRoutes: [...(prospect.contact ? [`${prospect.contact.full_name} <${prospect.contact.email}>`] : []), ...prospect.contact_routes.map((route) => route.value)].join(' | '),
+      contactRoutes: [
+        ...(prospect.contact ? [`${prospect.contact.full_name} <${prospect.contact.email}>`] : []),
+        ...(prospect.contact_details?.emails ?? []).map((item) => item.value),
+        ...(prospect.contact_details?.phones ?? []).map((item) => item.value),
+        ...prospect.contact_routes.filter((route) => route.kind !== 'generic_email').map((route) => route.value),
+      ].join(' | '),
       draftSubject: (prospect.draft?.chosen_variant === 'b' ? prospect.draft.variant_b_subject : prospect.draft?.subject) ?? '',
       draftBody: (prospect.draft?.chosen_variant === 'b' ? prospect.draft.variant_b_body : prospect.draft?.body) ?? '',
     })));
@@ -87,8 +115,9 @@ export function ProspectsTable({ prospects, onOpen }: { prospects: readonly Pros
                 <th scope="col" className="px-4 py-3 font-medium">Company</th>
                 <th scope="col" className="hidden px-4 py-3 font-medium md:table-cell">Why it fits</th>
                 <th scope="col" className="px-4 py-3 font-medium">Fit</th>
+                <th scope="col" className="hidden px-4 py-3 font-medium sm:table-cell">Contact</th>
                 <th scope="col" className="hidden px-4 py-3 font-medium lg:table-cell">Location</th>
-                <th scope="col" className="hidden px-4 py-3 font-medium sm:table-cell">Status</th>
+                <th scope="col" className="hidden px-4 py-3 font-medium xl:table-cell">Status</th>
               </tr>
             </thead>
             <tbody>
@@ -100,11 +129,13 @@ export function ProspectsTable({ prospects, onOpen }: { prospects: readonly Pros
                       <span className="block text-xs text-muted-foreground">{prospect.domain}</span>
                       {prospect.contact ? <span className="block text-xs text-foreground">{prospect.contact.full_name}{prospect.contact.role ? ` · ${prospect.contact.role}` : ''}</span> : null}
                     </button>
+                    <div className="mt-1 sm:hidden"><ContactCell prospect={prospect} /></div>
                   </td>
                   <td className="hidden max-w-xs px-4 py-3 text-muted-foreground md:table-cell">{topReason(prospect)}</td>
                   <td className="px-4 py-3"><FitBadge tier={prospect.fit_tier} /></td>
+                  <td className="hidden max-w-[16rem] px-4 py-3 sm:table-cell"><ContactCell prospect={prospect} /></td>
                   <td className="hidden px-4 py-3 text-muted-foreground lg:table-cell">{prospect.location ?? '—'}</td>
-                  <td className={cn('hidden px-4 py-3 sm:table-cell', prospect.status === 'new' ? 'text-muted-foreground' : 'text-foreground')}>{STATUS_TEXT[prospect.status]}</td>
+                  <td className={cn('hidden px-4 py-3 xl:table-cell', prospect.status === 'new' ? 'text-muted-foreground' : 'text-foreground')}>{STATUS_TEXT[prospect.status]}</td>
                 </tr>
               ))}
             </tbody>

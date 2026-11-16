@@ -302,6 +302,13 @@
       "sourceFile": "src/hooks/useGtmResearch.ts",
       "requiredProperties": ["kind"]
     },
+    "gtm_contact_upgrade_clicked": {
+      "stage": "monetization",
+      "owner": "product",
+      "source": "client",
+      "sourceFile": "src/components/gtm/research/ProspectSheet.tsx",
+      "requiredProperties": ["where"]
+    },
     "gtm_contact_lookup": {
       "stage": "retention",
       "owner": "product",

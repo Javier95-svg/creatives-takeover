@@ -51,6 +51,10 @@ const REFRESHES_PER_SWEEP = 25;
 // the spend ledger; refine from the provider's invoices.
 const CONTACT_LOOKUP_COST_USD = 0.06;
 const monthlyBudgetUsd = () => Number(Deno.env.get("GTM_RESEARCH_MONTHLY_BUDGET_USD") ?? "80") || 80;
+const PLAN_REQUIRED = {
+  error: "Contact details are on the Rising plan (the best half of each search) and the Pro plan (every lead).",
+  errorCode: "PLAN_UPGRADE_REQUIRED",
+};
 const PAUSED = { error: "Customer research is paused for the rest of the month while we add capacity. Nothing was charged.", errorCode: "BUDGET_PAUSED" };
 
 type Run = ResearchRun & { gtm_plan_id: string | null; play_id: string | null; rerun_used: boolean; last_refreshed_at: string | null };
@@ -242,6 +246,13 @@ serve(async (req) => {
     const run = await loadRun(runId);
     if (!run) return null;
     return run.kind === "initial" || !run.parent_run_id ? run : await loadRun(run.parent_run_id);
+  };
+  /** The leads whose contact data this founder's plan includes (gtm_prospect_contact_access_v1). */
+  const unlockedIds = async (ids: string[]): Promise<Set<string>> => {
+    if (!ids.length) return new Set();
+    const { data, error } = await asUser.rpc("gtm_prospect_contact_access_v1", { p_prospect_ids: ids });
+    if (error) { console.error("gtm-research contact access failed", error.message); return new Set(); }
+    return new Set(((data ?? []) as Array<{ prospect_id: string; unlocked: boolean }>).filter((row) => row.unlocked).map((row) => row.prospect_id));
   };
   const familyProspects = async (root: Run) => {
     const { data: runs } = await db.from("gtm_research_runs").select("id").eq("user_id", user.id).or(`id.eq.${root.id},and(parent_run_id.eq.${root.id},kind.neq.initial)`);
@@ -470,6 +481,7 @@ serve(async (req) => {
         ? await db.from("gtm_prospect_companies").select("id, run_id, domain, suggested_roles, fit_tier").eq("id", prospectId).eq("user_id", user.id).maybeSingle()
         : { data: null };
       if (!prospect) return json({ error: "Company not found." }, 404);
+      if (!(await unlockedIds([prospect.id as string])).has(prospect.id as string)) return json(PLAN_REQUIRED, 403);
       if (!(await withinBudget(db))) return json(PAUSED, 503);
       const outcome = await findContactFor(db, user.id, prospect as ProspectForContact, idempotencyHeader, apiKey);
       if (outcome.status === "credits") return creditFailure(outcome.errorCode, CONTACT_FIND_CREDITS);
@@ -490,7 +502,11 @@ serve(async (req) => {
       const { data: candidates } = await db.from("gtm_prospect_companies").select("id, run_id, domain, suggested_roles, fit_tier, gtm_prospect_contacts(id)")
         .eq("user_id", user.id).in("run_id", (runs ?? []).map((row) => row.id as string)).in("fit_tier", ["A", "B"]).neq("status", "dismissed")
         .order("fit_score", { ascending: false }).limit(40);
-      const pending = (candidates ?? []).filter((row) => !(row.gtm_prospect_contacts as unknown[] | null)?.length).slice(0, 10);
+      const withoutPerson = (candidates ?? []).filter((row) => !(row.gtm_prospect_contacts as unknown[] | null)?.length);
+      // Contact data follows the plan: Pro every lead, Rising the best half of the search.
+      const allowed = await unlockedIds(withoutPerson.map((row) => row.id as string));
+      if (withoutPerson.length && !allowed.size) return json(PLAN_REQUIRED, 403);
+      const pending = withoutPerson.filter((row) => allowed.has(row.id as string)).slice(0, 10);
       let found = 0;
       let charged = 0;
       for (const prospect of pending) {
