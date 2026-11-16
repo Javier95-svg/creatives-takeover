@@ -19,6 +19,8 @@ import { useEffect, useState, useTransition } from 'react';
 import { cn } from '@/lib/utils';
 import { trackActivity } from '@/lib/activity';
 import charlotteJosephProfile from '@/assets/charlotte-joseph.webp';
+import { notificationTool, toolNotificationText } from '@/lib/toolNotifications';
+import { ToolNotificationIcon } from './ToolNotificationIcon';
 
 export const NotificationBell = () => {
   const { user } = useAuth();
@@ -374,6 +376,8 @@ export const NotificationBell = () => {
           ) : (
             systemNotifications.map((notification) => {
               const isPending = pendingNotificationId === notification.id;
+              // Tool notifications show the tool, not the founder's own photo.
+              const tool = notificationTool(notification);
 
               return (
                 <DropdownMenuItem
@@ -384,17 +388,19 @@ export const NotificationBell = () => {
                     !notification.read ? 'bg-primary/5' : ''
                   } ${pendingNotificationId ? 'pointer-events-none opacity-70' : ''}`}
                 >
-                <Avatar className="h-8 w-8 flex-shrink-0">
-                  <AvatarImage
-                    src={getNotificationImage(notification)}
-                    alt={notification.actor.name}
-                  />
-                  <AvatarFallback>
-                    {(notification.actor.name || '?').charAt(0).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
+                {tool ? <ToolNotificationIcon tool={tool} /> : (
+                  <Avatar className="h-8 w-8 flex-shrink-0">
+                    <AvatarImage
+                      src={getNotificationImage(notification)}
+                      alt={notification.actor.name}
+                    />
+                    <AvatarFallback>
+                      {(notification.actor.name || '?').charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                )}
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm">{getNotificationText(notification)}</p>
+                  <p className="text-sm">{tool ? toolNotificationText(tool, getNotificationText(notification)) : getNotificationText(notification)}</p>
                   <p className="text-xs text-muted-foreground mt-1">
                     {isPending ? 'Opening...' : formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
                   </p>

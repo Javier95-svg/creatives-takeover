@@ -198,7 +198,7 @@ async function refreshDue(db: SupabaseClient): Promise<Response> {
       await db.from("gtm_research_runs").update({ auto_refresh: false }).eq("id", root.id);
       await db.from("community_notifications").insert({
         user_id: root.user_id, actor_id: root.user_id, notification_type: "customer_research_ready",
-        metadata: { message: "Your weekly check for new companies is paused: not enough credits.", route: "/go-to-market?workspace=find-customers", runId: root.id },
+        metadata: { message: "Your weekly check for new companies is paused: not enough credits.", route: "/go-to-market?workspace=find-customers", runId: root.id, tool: "gtm_strategist" },
       });
       continue;
     }

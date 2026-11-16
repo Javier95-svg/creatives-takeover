@@ -650,7 +650,7 @@ export async function notifyRunFinished(db: SupabaseClient, run: ResearchRun, pa
       : `${qualified} ${qualified === 1 ? "company is" : "companies are"} ready to contact for ${segment}`;
   const { error } = await db.from("community_notifications").insert({
     user_id: run.user_id, actor_id: run.user_id, notification_type: "customer_research_ready",
-    metadata: { message, route: "/go-to-market?workspace=find-customers", runId: run.id, qualified, kind },
+    metadata: { message, route: "/go-to-market?workspace=find-customers", runId: run.id, qualified, kind, tool: "gtm_strategist" },
   });
   if (error) console.warn("gtm-research: notification failed", error.message);
 }
