@@ -25,11 +25,11 @@ const profile: BusinessProfile = {
 };
 
 const segments: Segment[] = [
-  { id: 'independent-uk-clinics', name: 'Independent UK dental clinics', pain: 'Missed appointments cost the clinic revenue every week.', geography: 'United Kingdom', sizeBand: '1–20 staff', roles: ['Practice manager', 'Principal dentist'], examples: ['Single-site family practices'],
+  { id: 'independent-uk-clinics', name: 'Independent UK dental clinics', pain: 'Missed appointments cost the clinic revenue every week.', geography: 'United Kingdom', countries: ['GB'], sizeBand: '1–20 staff', roles: ['Practice manager', 'Principal dentist'], examples: ['Single-site family practices'],
     criteria: [{ id: 'c1', label: 'Independent dental clinic (not part of a corporate group)', mustHave: true }, { id: 'c2', label: 'Based in the United Kingdom', mustHave: true }, { id: 'c3', label: 'Takes appointments online', mustHave: false }] },
-  { id: 'small-dental-groups', name: 'Small dental groups', pain: 'Booking rules differ between sites and staff juggle several calendars.', geography: 'United Kingdom', sizeBand: '2–5 sites', roles: ['Operations manager'], examples: ['Regional groups with two to five practices'],
+  { id: 'small-dental-groups', name: 'Small dental groups', pain: 'Booking rules differ between sites and staff juggle several calendars.', geography: 'United Kingdom', countries: ['GB'], sizeBand: '2–5 sites', roles: ['Operations manager'], examples: ['Regional groups with two to five practices'],
     criteria: [{ id: 'c1', label: 'Runs two to five dental practices', mustHave: true }, { id: 'c2', label: 'Based in the United Kingdom', mustHave: true }] },
-  { id: 'private-cosmetic', name: 'Private cosmetic dentistry', pain: 'High-value consultations lost to no-shows.', geography: 'United Kingdom', sizeBand: '', roles: ['Clinic owner'], examples: ['Whitening and aligner studios'],
+  { id: 'private-cosmetic', name: 'Private cosmetic dentistry', pain: 'High-value consultations lost to no-shows.', geography: 'United Kingdom', countries: ['GB'], sizeBand: '', roles: ['Clinic owner'], examples: ['Whitening and aligner studios'],
     criteria: [{ id: 'c1', label: 'Offers cosmetic or aligner treatments', mustHave: true }, { id: 'c2', label: 'Private patients only', mustHave: true }] },
 ];
 

@@ -189,7 +189,7 @@ function mockNetwork(prompts: string[] = []) {
   const llm = (body: string) => {
     if (body.includes('describe a startup')) return { name: 'BrightSmile', offering: { text: 'Online booking software for dental clinics', sourceUrl: 'https://brightsmile.app/' }, audience: { text: 'Independent dental clinics', sourceUrl: 'https://brightsmile.app/' }, valueProposition: { text: 'Fewer no-shows', sourceUrl: 'https://brightsmile.app/' }, industry: 'Dental software', geography: 'United Kingdom', languages: ['en'], proof: [], contextNotes: [] };
     if (body.includes('similar product to the same buyers')) return { competitors: [{ name: 'Rival', domain: 'rivalbook.com', why: 'Same buyers' }, { name: 'Invented', domain: 'invented-rival.com' }, { name: 'LinkedIn', domain: 'linkedin.com' }] };
-    if (body.includes('who a startup should contact first')) return { segments: [{ name: 'Independent UK dental clinics', pain: 'Lost revenue from no-shows', criteria: [{ label: 'Independent dental clinic', mustHave: true }, { label: 'Based in the UK', mustHave: true }, { label: 'Offers online booking', mustHave: false }], geography: 'United Kingdom', roles: ['Practice manager'], examples: ['Single-site family practices'] }] };
+    if (body.includes('who a startup should contact first')) return { segments: [{ name: 'Independent UK dental clinics', pain: 'Lost revenue from no-shows', criteria: [{ label: 'Independent dental clinic', mustHave: true }, { label: 'Based in the UK', mustHave: true }, { label: 'Treats patients in person', mustHave: true }, { label: 'Offers online booking', mustHave: false }], geography: 'United Kingdom', roles: ['Practice manager'], examples: ['Single-site family practices'] }] };
     if (body.includes('Write web search queries')) return { queries: ['independent dental clinic Leeds', 'dental practice Leeds online booking', 'top dental clinics Leeds', 'family dentist Leeds', 'q5', 'q6'] };
     if (body.includes('found too few matching organisations')) return { queries: ['independent dentist Bradford', 'dental practice association Yorkshire members'] };
     if (body.includes('extract organisations that are themselves')) {
@@ -281,6 +281,11 @@ test('a full research run: evidence-backed prospects, honest tiers, drafts, and 
     assert.ok(!byDomain['guessed-clinic.co.uk'], 'a domain not seen in results or links is never used');
     assert.ok(!byDomain['megadental.com'], 'a company that contradicts a must-have is excluded');
     assert.equal(byDomain['smilesleeds.co.uk'].fit_tier, 'A');
+    // "Based in the UK" became the Where filter: GB, confirmed by the .co.uk address.
+    assert.deepEqual(run.selected_segment.countries, ['GB']);
+    assert.ok(!run.selected_segment.criteria.some((criterion: Row) => /based in/i.test(criterion.label)), 'location is not a criterion');
+    const where = byDomain['smilesleeds.co.uk'].criteria.find((item: Row) => item.criterionId === 'where');
+    assert.equal(where?.verdict, 'met');
     assert.deepEqual(byDomain['smilesleeds.co.uk'].contact_routes.map((route: Row) => route.value), ['https://smilesleeds.co.uk/contact', 'hello@smilesleeds.co.uk']);
     assert.equal(byDomain['gentledental.co.uk'].fit_tier, 'B');
     assert.ok(!byDomain['fakeclaims.co.uk'], 'quotes that are not on the page prove nothing, so it does not qualify');
@@ -503,4 +508,45 @@ test('with a company index: organisations come from it, are checked on the page 
     assert.equal(db.tables.gtm_outreach_drafts.length, 1, 'a draft without an id still lands on the only company');
     assert.equal(run.status, 'partial');
   } finally { globalThis.fetch = original.fetch; (globalThis as any).Deno = original.Deno; }
+});
+
+test('Where: countries come from the place text, the founder pick wins, and location is confirmed by page or country domain', async () => {
+  const { checkLocation, sanitizeSegment: sanitize } = await import('../src/lib/gtmResearch.ts');
+  const { countriesInText, countryFromDomain, describeCountries } = await import('../src/lib/researchCountries.ts');
+  assert.deepEqual(countriesInText('Spain and Perú').sort(), ['ES', 'PE'], 'accents are read');
+  assert.deepEqual(countriesInText('Leeds, UK').sort(), ['GB']);
+  assert.deepEqual(countriesInText('Nigeria'), ['NG'], 'Niger is not inside Nigeria');
+  assert.equal(countryFromDomain('clinic.es'), 'ES');
+  assert.equal(countryFromDomain('smiles.co.uk'), 'GB');
+  assert.equal(countryFromDomain('startup.io'), null, 'generic country endings say nothing');
+  assert.equal(countryFromDomain('acme.com'), null);
+  assert.equal(describeCountries([]), 'Any country');
+  assert.equal(describeCountries(['ES', 'PE']), 'Spain and Peru');
+
+  const segment = { name: 'Programs', criteria: [{ label: 'Runs an incubator', mustHave: true }], geography: 'Spain', countries: ['ES'] };
+  assert.deepEqual(sanitize({ ...segment, countries: [] })?.countries, [], 'clearing the countries means any country, not the old text');
+  assert.deepEqual(sanitize({ ...segment, countries: ['ES', 'PE', 'XX'] })?.countries, ['ES', 'PE'], 'unknown codes are dropped');
+
+  const pages = [{ url: 'https://acme.com/contact', text: 'Visit us at Calle Mayor 5, Madrid, Spain.' }];
+  const inSpain = checkLocation({ country: 'ES', quote: 'Calle Mayor 5, Madrid, Spain', sourceUrl: 'https://acme.com/contact' }, 'acme.com', pages, ['ES', 'PE']);
+  assert.equal(inSpain.inScope, true);
+  assert.equal(inSpain.verdict?.verdict, 'met');
+  assert.equal(inSpain.verdict?.sourceUrl, 'https://acme.com/contact');
+  const invented = checkLocation({ country: 'ES', quote: 'Gran Via 1, Madrid', sourceUrl: '' }, 'acme.com', pages, ['ES']);
+  assert.equal(invented.inScope, false, 'a quote not on the page proves nothing');
+  assert.equal(invented.verdict?.verdict, 'unknown');
+  assert.equal(checkLocation({}, 'clinica.pe', [], ['PE']).inScope, true, 'a country domain confirms');
+  const elsewhere = checkLocation({ country: 'US', quote: 'Austin, Texas, United States', sourceUrl: '' }, 'acme.com', [{ url: 'https://acme.com/', text: 'Based in Austin, Texas, United States' }], ['ES']);
+  assert.equal(elsewhere.inScope, false);
+  assert.equal(elsewhere.verdict?.verdict, 'not_met');
+  assert.equal(checkLocation({}, 'acme.com', [], []).inScope, true, 'no countries chosen: anywhere');
+  assert.equal(checkLocation({}, 'acme.com', [], []).verdict, null);
+});
+
+test('the review starts research by itself after 30 seconds unless the founder interacts', () => {
+  const source = readFileSync(new URL('../src/components/gtm/research/FindCustomers.tsx', import.meta.url), 'utf8');
+  assert.match(source, /const AUTO_START_SECONDS = 30;/);
+  assert.match(source, /onPointerDownCapture=\{pause\} onKeyDownCapture=\{pause\}/, 'any click or key press pauses it');
+  assert.match(source, /Starting research in \$\{secondsLeft\}s/, 'the countdown is visible');
+  assert.match(source, /charged only for matches/, 'the cost is shown before it starts');
 });

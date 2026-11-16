@@ -7,6 +7,8 @@
  * (a contact page or an address the company publishes for enquiries).
  */
 
+import { cleanCountryCodes, countriesInText, countryByCode, countryFromDomain, describeCountries } from './researchCountries.ts';
+
 export type ResearchRunStatus = 'analyzing' | 'needs_review' | 'queued' | 'running' | 'partial' | 'completed' | 'failed' | 'cancelled';
 export type ResearchStepKey = 'read_site' | 'understand_business' | 'find_competitors' | 'propose_segments'
   | 'discover_companies' | 'qualify_companies' | 'find_signals' | 'draft_outreach' | 'finalize';
@@ -47,7 +49,14 @@ export interface Segment {
   name: string;
   pain: string;
   criteria: SegmentCriterion[];
+  /** Free-text place from the model; the countries below are what research enforces. */
   geography: string;
+  /**
+   * ISO country codes the founder chose. Empty means any country. Research
+   * searches across them and keeps only organisations whose location is
+   * confirmed in one of them.
+   */
+  countries: string[];
   sizeBand: string;
   roles: string[];
   examples: string[];
@@ -282,6 +291,51 @@ export function scoreFit(verdicts: readonly CriterionVerdict[], criteria: readon
   return { score, tier };
 }
 
+// ---- Where: the founder's countries -------------------------------------------------
+
+export interface LocationCheck {
+  /** The country we could confirm, or null. */
+  country: string | null;
+  /** True when no countries were chosen, or the confirmed country is one of them. */
+  inScope: boolean;
+  /** Shown with the other criteria when countries were chosen. */
+  verdict: CriterionVerdict | null;
+}
+
+/**
+ * Where an organisation is based, confirmed the same way as every criterion:
+ * the model's country counts only when its quote (an address, "City,
+ * Country") is on the organisation's own page; otherwise a country web
+ * ending (.es, .co.uk) decides. Nothing else is guessed. With countries
+ * chosen, an organisation whose country can't be confirmed is out of scope.
+ */
+export function checkLocation(
+  claim: { country?: unknown; quote?: unknown; sourceUrl?: unknown },
+  domain: string,
+  pages: ReadonlyArray<{ url: string; text: string }>,
+  wanted: readonly string[],
+): LocationCheck {
+  const claimed = cleanCountryCodes([claim.country])[0] ?? null;
+  const quote = clean(claim.quote, 200) || null;
+  const quotePage = quote ? pages.find((page) => quoteAppearsIn(quote, page.text)) ?? null : null;
+  const fromQuote = quotePage ? (countriesInText(quote)[0] ?? claimed) : null;
+  const fromDomain = countryFromDomain(domain);
+  const country = fromQuote ?? fromDomain;
+  const inScope = !wanted.length || (country !== null && wanted.includes(country));
+  if (!wanted.length) return { country, inScope, verdict: null };
+  const evidence = fromQuote
+    ? { quote, sourceUrl: typeof claim.sourceUrl === 'string' && pages.some((page) => page.url === claim.sourceUrl) ? claim.sourceUrl : quotePage!.url }
+    : fromDomain ? { quote: `Website address ends in .${domain.split('.').pop()} (${countryByCode(fromDomain)?.name})`, sourceUrl: `https://${domain}` } : { quote: null, sourceUrl: null };
+  return {
+    country,
+    inScope,
+    verdict: {
+      criterionId: 'where', criterion: `Based in ${describeCountries(wanted)}`,
+      verdict: inScope ? 'met' : country ? 'not_met' : 'unknown', ...evidence,
+    },
+  };
+}
+
 // ---- Model output validation ---------------------------------------------------
 
 function clean(value: unknown, max: number): string {
@@ -317,7 +371,8 @@ export function parseBusinessProfile(raw: unknown, allowedUrls: ReadonlySet<stri
     proof: (Array.isArray(value.proof) ? value.proof : []).map((item) => claim(item, allowedUrls, 240)).filter((item): item is SourcedClaim => Boolean(item)).slice(0, 5),
     geography: clean(value.geography, 120),
     languages: cleanList(value.languages, 5, 20),
-    contextNotes: cleanList(value.contextNotes, 5, 240),
+    // Internal ids (a project's UUID) mean nothing to the founder.
+    contextNotes: cleanList(value.contextNotes, 5, 240).filter((note) => !/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}|\bproject id\b/i.test(note)),
   };
 }
 
@@ -338,6 +393,8 @@ export function parseCompetitors(raw: unknown, ownDomain: string | null): Compet
 
 const slug = (value: string, fallback: string) => value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || fallback;
 
+const LOCATION_CRITERION = /^(located|based|headquartered|operates|operating|situated)\b.*\b(in|globally|worldwide|internationally)\b/i;
+
 export function parseSegments(raw: unknown): Segment[] {
   // Models sometimes answer with a bare array or a different top-level key.
   const container = raw && typeof raw === 'object' ? raw as Record<string, unknown> : {};
@@ -347,20 +404,31 @@ export function parseSegments(raw: unknown): Segment[] {
     if (!item || typeof item !== 'object') return [];
     const value = item as Record<string, unknown>;
     const name = clean(value.name ?? value.title ?? value.segment, 100);
-    const criteria = (Array.isArray(value.criteria) ? value.criteria : []).flatMap((criterion, criterionIndex): SegmentCriterion[] => {
+    // Location is the "Where" filter, not a criterion: a criterion such as
+    // "Located in Spain" moves its countries to the filter and is dropped.
+    const placesFromCriteria: string[] = [];
+    const criteria = (Array.isArray(value.criteria) ? value.criteria : []).flatMap((criterion): SegmentCriterion[] => {
       const label = typeof criterion === 'string' ? clean(criterion, 160)
         : criterion && typeof criterion === 'object' ? clean((criterion as Record<string, unknown>).label, 160) : '';
       if (!label) return [];
+      if (LOCATION_CRITERION.test(label)) { placesFromCriteria.push(...countriesInText(label)); return []; }
       const mustHave = criterion && typeof criterion === 'object' ? (criterion as Record<string, unknown>).mustHave !== false : true;
-      return [{ id: `c${criterionIndex + 1}`, label, mustHave }];
-    }).slice(0, 6);
+      return [{ id: '', label, mustHave }];
+    }).slice(0, 6).map((criterion, criterionIndex) => ({ ...criterion, id: `c${criterionIndex + 1}` }));
     if (!name || criteria.filter((criterion) => criterion.mustHave).length === 0) return [];
+    // A countries list given explicitly (the founder's pick, even an empty
+    // "any country") wins; otherwise countries are read from the place text.
+    const explicit = Array.isArray(value.countries) && (value.countries.length > 0 || value.countriesChosen === true);
+    const countries = explicit
+      ? cleanCountryCodes(value.countries)
+      : cleanCountryCodes([...countriesInText(clean(value.geography, 120)), ...placesFromCriteria]);
     return [{
       id: slug(name, `segment-${index + 1}`),
       name,
       pain: clean(value.pain, 300),
       criteria,
-      geography: clean(value.geography, 120),
+      geography: describeCountries(countries),
+      countries,
       sizeBand: clean(value.sizeBand, 60),
       roles: cleanList(value.roles, 4, 60),
       examples: cleanList(value.examples, 3, 120),
@@ -368,9 +436,10 @@ export function parseSegments(raw: unknown): Segment[] {
   }).slice(0, 3);
 }
 
-/** A segment as edited by the founder: same validation, ids renumbered. */
+/** A segment as edited by the founder: same validation, ids renumbered, their country pick kept as is (empty = any country). */
 export function sanitizeSegment(raw: unknown): Segment | null {
-  return parseSegments({ segments: [raw] })[0] ?? null;
+  const value = raw && typeof raw === 'object' ? { ...(raw as Record<string, unknown>), countriesChosen: true } : raw;
+  return parseSegments({ segments: [value] })[0] ?? null;
 }
 
 export function parseCandidates(raw: unknown, foundVia: string): Candidate[] {

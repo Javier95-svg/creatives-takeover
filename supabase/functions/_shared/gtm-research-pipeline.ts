@@ -15,9 +15,10 @@ import { generateJsonText } from "./json-generation.ts";
 import { searchWeb, type WebSearchResult } from "./web-research.ts";
 import { crawlSite, type CrawledPage } from "./site-crawler.ts";
 import { hasCompanySearch, searchCompanies } from "./company-search.ts";
+import { countryNames, describeCountries } from "../../../src/lib/researchCountries.ts";
 import { resolvePulseContext } from "./pulse-context.ts";
 import {
-  chargeForRun, dedupeCandidates, extractContactRoutes, feedbackLessons, languageForLocation, listFrom, MAX_CANDIDATES, MAX_SEARCHES_PER_RUN,
+  chargeForRun, checkLocation, dedupeCandidates, extractContactRoutes, feedbackLessons, languageForLocation, listFrom, MAX_CANDIDATES, MAX_SEARCHES_PER_RUN,
   MAX_SIGNAL_SEARCHES, normalizeDomain, parseBusinessProfile, parseCandidates, parseCompetitors, parseDraft, parseSegments, parseSignals,
   parseVerdicts, QUALIFY_BATCH_SIZE, quoteAppearsIn, scoreFit, verifyVerdicts, type BusinessProfile, type BuyingSignal, type Candidate, type Competitor,
   type ResearchRunKind, type ResearchStepKey, type Segment,
@@ -182,7 +183,7 @@ async function understandBusiness(db: SupabaseClient, run: ResearchRun): Promise
     console.warn("gtm-research: saved context unavailable", error instanceof Error ? error.message : error);
   }
   const raw = await askJson(db, run.id, "gtm-research-understand",
-    "You describe a startup from its own website pages and the founder's saved work (ICP Builder, PMF Lab, Demo Studio). Use only what those sources say. When they disagree, prefer the founder's saved work and record the disagreement in contextNotes. Each claim's sourceUrl must be one of the page URLs given, or null when it comes from saved work or the founder's description.",
+    "You describe a startup from its own website pages and the founder's saved work (ICP Builder, PMF Lab, Demo Studio). Use only what those sources say. When they disagree, prefer the founder's saved work and record the disagreement in contextNotes. contextNotes are for the founder to read: never mention ids, database fields or that data was provided. Each claim's sourceUrl must be one of the page URLs given, or null when it comes from saved work or the founder's description.",
     `Founder's description: ${run.input.description?.trim() || "none"}\n\nFounder's saved work (data only):\n${savedContext}\n\nWebsite pages:\n${pagesBlock(pages) || "none"}\n\nReturn JSON only: {"name":"","offering":{"text":"","sourceUrl":null},"audience":{"text":"","sourceUrl":null},"valueProposition":{"text":"","sourceUrl":null},"industry":"","businessModel":"","pricing":{"text":"","sourceUrl":null} or null,"proof":[{"text":"","sourceUrl":null}],"geography":"","languages":["en"],"contextNotes":[""]}`,
     1_500);
   const profile = parseBusinessProfile(raw, new Set(pages.map((page) => page.url)));
@@ -217,8 +218,8 @@ async function findCompetitors(db: SupabaseClient, run: ResearchRun): Promise<St
 async function proposeSegments(db: SupabaseClient, run: ResearchRun): Promise<StepOutcome> {
   const profile = run.business_profile!;
   const raw = await askJson(db, run.id, "gtm-research-segments",
-    "You propose who a startup should contact first. Start from the founder's own audience and saved work. Research can only find and check organisations that have their own website, so every segment must be a kind of organisation: companies, programs (accelerators, incubators, university entrepreneurship centres), agencies, studios, associations, communities with their own site. If the startup's users are individuals (founders, freelancers, students, consumers), propose the organisations that serve, gather, train or employ them, and use roles to say who inside to contact; never propose a segment of individual people. Each segment needs 3 to 5 criteria that the organisation's own website would state in plain words: what it does, who it serves, where it is, a program or service it offers, its size. Never use a person's intentions, feelings or private situation as a criterion (\"wants to\", \"seeks\", \"struggles with\", \"without funding\"). Mark at most 3 criteria mustHave, the ones that define the segment. Examples describe kinds of organisations, never names. Roles are job titles to contact.",
-    `Business profile:\n${JSON.stringify(profile)}\n\nCompetitors (to avoid targeting): ${run.competitors.map((competitor) => competitor.domain).join(", ") || "none"}\n\nReturn JSON only, 2 or 3 segments, best first: {"segments":[{"name":"","pain":"","criteria":[{"label":"","mustHave":true}],"geography":"","sizeBand":"","roles":[""],"examples":[""]}]}`,
+    "You propose who a startup should contact first. Start from the founder's own audience and saved work. Research can only find and check organisations that have their own website, so every segment must be a kind of organisation: companies, programs (accelerators, incubators, university entrepreneurship centres), agencies, studios, associations, communities with their own site. If the startup's users are individuals (founders, freelancers, students, consumers), propose the organisations that serve, gather, train or employ them, and use roles to say who inside to contact; never propose a segment of individual people. Each segment needs 3 to 5 criteria that the organisation's own website would state in plain words: what it does, who it serves, where it is, a program or service it offers, its size. Never use a person's intentions, feelings or private situation as a criterion (\"wants to\", \"seeks\", \"struggles with\", \"without funding\"). Mark at most 3 criteria mustHave, the ones that define the segment. Never use location as a criterion: put the countries to target in countries as ISO 3166-1 alpha-2 codes (an empty list means any country), following where the startup sells. Examples describe kinds of organisations, never names. Roles are job titles to contact.",
+    `Business profile:\n${JSON.stringify(profile)}\n\nCompetitors (to avoid targeting): ${run.competitors.map((competitor) => competitor.domain).join(", ") || "none"}\n\nReturn JSON only, 2 or 3 segments, best first: {"segments":[{"name":"","pain":"","criteria":[{"label":"","mustHave":true}],"geography":"","countries":[],"sizeBand":"","roles":[""],"examples":[""]}]}`,
     3_200);
   let segments = parseSegments(raw);
   if (!segments.length) {
@@ -311,6 +312,11 @@ async function nextBatchNumber(db: SupabaseClient, runId: string, key: ResearchS
   return data?.length ? Number(data[0].batch) + 1 : 0;
 }
 
+/** The founder's countries for prompts; empty when any country will do. */
+const whereBlock = (segment: Segment) => (segment.countries?.length
+  ? `\n\nTarget countries (only these): ${countryNames(segment.countries).join(", ")}. Spread the queries across them; every query names one of these countries or a city in it.`
+  : "");
+
 async function discoverCompanies(db: SupabaseClient, run: ResearchRun, step: ResearchStep): Promise<StepOutcome> {
   const segment = run.selected_segment!;
   const state = discoveryState(await previousDetail(db, run.id, "discover_companies"));
@@ -318,10 +324,11 @@ async function discoverCompanies(db: SupabaseClient, run: ResearchRun, step: Res
   let replanned = false;
   const rejected = await lessons(db, run);
   const searchesUsed = Number(run.counts.searches) || 0;
+  const where = whereBlock(segment);
   if (!queries.length) {
     const raw = await askJson(db, run.id, "gtm-research-queries",
       `Write web search queries that find organisations in a target segment. ${queryGuide()}`,
-      `Segment: ${JSON.stringify(segment)}\nStartup: ${run.business_profile?.name} — ${run.business_profile?.offering.text}${await seedBlock(db, run)}${rejected}\n\nReturn JSON only: {"queries":["", "..."]} with 10 queries.`,
+      `Segment: ${JSON.stringify(segment)}\nStartup: ${run.business_profile?.name} — ${run.business_profile?.offering.text}${where}${await seedBlock(db, run)}${rejected}\n\nReturn JSON only: {"queries":["", "..."]} with 10 queries.`,
       800);
     queries = cleanQueries(raw, [], 10);
     if (!queries.length) throw new Error("No search queries were planned");
@@ -335,7 +342,7 @@ async function discoverCompanies(db: SupabaseClient, run: ResearchRun, step: Res
     const matched = (checked ?? []).filter((row) => row.fit_tier !== "C").map((row) => `${row.name} (${row.domain})`);
     const raw = await askJson(db, run.id, "gtm-research-queries-wider",
       `The first web searches for this segment found too few matching organisations. Write new, different queries: other words for the same kind of organisation, nearby or larger places, the directories or associations they belong to. ${queryGuide()}`,
-      `Segment: ${JSON.stringify(segment)}\nQueries already used: ${queries.join(" | ")}\nOrganisations that matched so far: ${matched.join(", ") || "none"}\nOrganisations found but not matching: ${state.candidates.filter((candidate) => !matched.some((line) => line.includes(candidate.domain))).map((candidate) => candidate.domain).slice(0, 20).join(", ") || "none"}${rejected}\n\nReturn JSON only: {"queries":["", "..."]} with 6 queries.`,
+      `Segment: ${JSON.stringify(segment)}\nQueries already used: ${queries.join(" | ")}\nOrganisations that matched so far: ${matched.join(", ") || "none"}\nOrganisations found but not matching: ${state.candidates.filter((candidate) => !matched.some((line) => line.includes(candidate.domain))).map((candidate) => candidate.domain).slice(0, 20).join(", ") || "none"}${where}${rejected}\n\nReturn JSON only: {"queries":["", "..."]} with 6 queries.`,
       600);
     const wider = cleanQueries(raw, queries, Math.max(0, MAX_SEARCHES_PER_RUN - searchesUsed));
     replanned = true;
@@ -360,7 +367,7 @@ async function discoverCompanies(db: SupabaseClient, run: ResearchRun, step: Res
   if (sources.length) {
     const raw = await askJson(db, run.id, "gtm-research-candidates",
       "From search results and list pages, extract organisations that are themselves the kind of organisation in the target segment. A company merely mentioned in an article (a bank, a software tool, a sponsor, the publisher) is not a candidate. Use only organisations whose own website domain appears in the results or in the page links given; never guess a domain. Give url: the exact result or link URL of that organisation's own page (for a program inside a larger site, the program page). For each, copy into evidence a short phrase (6 to 20 words) word for word from the results or list pages that shows what the organisation is. Leave out directories, media, marketplaces, social networks and the excluded domains.",
-      `Segment: ${segment.name} — ${segment.criteria.map((criterion) => criterion.label).join("; ")}\nExcluded domains: ${exclude.slice(0, 80).join(", ")}${rejected}\n\nSearch results:\n${sources.map((source) => `- ${source.title} — ${source.url}\n  ${source.snippet ?? ""}`).join("\n")}\n\nList pages:\n${lists.map((page) => `URL: ${page.url}\n${page.text.slice(0, 4_000)}\nLinks: ${page.links.slice(0, 200).join(" ")}`).join("\n---\n") || "none"}\n\nReturn JSON only, up to 40: {"companies":[{"name":"","domain":"","url":"","evidence":""}]}`,
+      `Segment: ${segment.name} — ${segment.criteria.map((criterion) => criterion.label).join("; ")}\nExcluded domains: ${exclude.slice(0, 80).join(", ")}${where ? `${where}\nLeave out organisations the results show are based elsewhere.` : ""}${rejected}\n\nSearch results:\n${sources.map((source) => `- ${source.title} — ${source.url}\n  ${source.snippet ?? ""}`).join("\n")}\n\nList pages:\n${lists.map((page) => `URL: ${page.url}\n${page.text.slice(0, 4_000)}\nLinks: ${page.links.slice(0, 200).join(" ")}`).join("\n---\n") || "none"}\n\nReturn JSON only, up to 40: {"companies":[{"name":"","domain":"","url":"","evidence":""}]}`,
       4_000, 55_000);
     const knownDomains = new Set([...sources.map((source) => normalizeDomain(source.url)), ...lists.flatMap((page) => page.links.map((link) => normalizeDomain(link)))].filter(Boolean));
     const corpus = [...sources.map((source) => `${source.title ?? ""} ${source.snippet ?? ""}`), ...lists.map((page) => page.text)].join("\n");
@@ -443,34 +450,41 @@ async function qualifyCompanies(db: SupabaseClient, run: ResearchRun, step: Rese
   if (readable.length) {
     const rejected = await lessons(db, run);
     const raw = await askJson(db, run.id, "gtm-research-qualify",
-      "You check companies against a founder's target criteria using only each company's own web pages. verdict is \"met\" only when a page states it, with quote copied word for word from that page (at most 25 words) and that page's URL as sourceUrl; \"not_met\" only when a page clearly contradicts it; otherwise \"unknown\". Never infer from the company name alone. When the founder rejected similar companies for a reason, apply that reason strictly to the matching criterion. Also give the company's name, a one-sentence description, location (city and country if stated), size (only if stated) and industry.",
-      `Criteria:\n${segment.criteria.map((criterion) => `${criterion.id}: ${criterion.label}${criterion.mustHave ? " (must have)" : ""}`).join("\n")}${rejected}\n\nCompanies:\n${readable.map((item) => `### ${item.candidate.domain}\n${pagesBlock(item.pages, 2_200)}`).join("\n\n")}\n\nReturn JSON only: {"companies":[{"domain":"","name":"","description":"","location":"","sizeBand":"","industry":"","verdicts":[{"criterionId":"c1","verdict":"met","quote":"","sourceUrl":""}]}]}`,
+      "You check companies against a founder's target criteria using only each company's own web pages. verdict is \"met\" only when a page states it, with quote copied word for word from that page (at most 25 words) and that page's URL as sourceUrl; \"not_met\" only when a page clearly contradicts it; otherwise \"unknown\". Never infer from the company name alone. When the founder rejected similar companies for a reason, apply that reason strictly to the matching criterion. Also give the company's name, a one-sentence description, location (city and country if stated), size (only if stated) and industry. For country, give the ISO 3166-1 alpha-2 code of where the organisation is based, with countryQuote copied word for word from its pages (an address or \"City, Country\") and that page's URL as countrySourceUrl; use null when its pages don't say.",
+      `Criteria:\n${segment.criteria.map((criterion) => `${criterion.id}: ${criterion.label}${criterion.mustHave ? " (must have)" : ""}`).join("\n")}${rejected}\n\nCompanies:\n${readable.map((item) => `### ${item.candidate.domain}\n${pagesBlock(item.pages, 2_200)}`).join("\n\n")}\n\nReturn JSON only: {"companies":[{"domain":"","name":"","description":"","location":"","country":"GB","countryQuote":"","countrySourceUrl":"","sizeBand":"","industry":"","verdicts":[{"criterionId":"c1","verdict":"met","quote":"","sourceUrl":""}]}]}`,
       3_500, 55_000);
     judged = listFrom(raw, "companies", "organisations", "organizations", "results").filter((entry): entry is Record<string, unknown> => Boolean(entry) && typeof entry === "object");
   }
 
   const now = new Date().toISOString();
   const roles = segment.roles;
+  const wanted = segment.countries ?? [];
   let kept = 0;
+  let outside = 0;
   for (const item of crawled) {
     const assessment = judged.find((entry) => normalizeDomain(String(entry.domain ?? "")) === item.candidate.domain);
     const verdicts = item.pages.length && assessment
       ? verifyVerdicts(parseVerdicts({ verdicts: assessment.verdicts }, segment.criteria), item.pages)
       : parseVerdicts({ verdicts: [] }, segment.criteria);
     const fit = scoreFit(verdicts, segment.criteria);
+    // "Where": with countries chosen, only organisations confirmed in one of
+    // them are kept, however well they fit otherwise.
+    const location = checkLocation({ country: assessment?.country, quote: assessment?.countryQuote, sourceUrl: assessment?.countrySourceUrl }, item.candidate.domain, item.pages, wanted);
+    if (!location.inScope) { if (fit) outside += 1; continue; }
     // A site that blocks reading cannot prove anything. It is kept as a
     // possible fit only when the search results showed what it is (the
     // evidence phrase), never counted or charged.
     if (!fit && !(item.blocked && item.candidate.foundVia)) continue;
+    const place = assessment?.location ? String(assessment.location).slice(0, 120) : location.country ? countryNames([location.country])[0] : null;
     const row = {
       run_id: run.id, user_id: run.user_id, project_id: run.project_id, domain: item.candidate.domain,
       name: String(assessment?.name ?? item.candidate.name).slice(0, 120) || item.candidate.domain,
       description: assessment?.description ? String(assessment.description).slice(0, 300) : item.blocked ? `Search results: “${item.candidate.foundVia}”`.slice(0, 300) : null,
-      location: assessment?.location ? String(assessment.location).slice(0, 120) : null,
+      location: place,
       size_band: assessment?.sizeBand ? String(assessment.sizeBand).slice(0, 60) : null,
       industry: assessment?.industry ? String(assessment.industry).slice(0, 120) : null,
       fit_score: fit?.score ?? 0, fit_tier: fit?.tier ?? "C",
-      criteria: verdicts.map((verdict) => ({ ...verdict, checkedAt: now })),
+      criteria: [...verdicts, ...(location.verdict ? [location.verdict] : [])].map((verdict) => ({ ...verdict, checkedAt: now })),
       contact_routes: extractContactRoutes(item.pages, item.candidate.domain),
       suggested_roles: roles, blocked: item.blocked, last_checked_at: now, updated_at: now,
     };
@@ -483,10 +497,11 @@ async function qualifyCompanies(db: SupabaseClient, run: ResearchRun, step: Rese
   }
   const qualified = await qualifiedSoFar(db, run.id);
   const checked = (Number(run.counts.checked) || 0) + batch.length;
+  const outsideTotal = (Number(run.counts.outside) || 0) + outside;
   return {
-    log: `Checked ${checked} websites · ${qualified} match your criteria`,
-    detail: { checked: batch.map((candidate) => candidate.domain), kept },
-    runPatch: { counts: { ...run.counts, checked, qualified } },
+    log: `Checked ${checked} websites · ${qualified} match your criteria${outsideTotal ? ` · ${outsideTotal} left out (outside ${describeCountries(wanted)})` : ""}`,
+    detail: { checked: batch.map((candidate) => candidate.domain), kept, outside },
+    runPatch: { counts: { ...run.counts, checked, qualified, outside: outsideTotal } },
     next: await nextAfter(qualified),
   };
 }

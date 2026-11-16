@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ExternalLink, Loader2, Pencil, Plus, Search, UserSearch, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { captureEvent } from '@/lib/analytics';
@@ -18,6 +18,8 @@ import {
 } from '@/lib/gtmResearch';
 import type { GTMPipelineEntry, GTMPlanV2 } from '@/lib/gtmV2';
 import { cn } from '@/lib/utils';
+import { describeCountries } from '@/lib/researchCountries';
+import { CountryPicker } from './CountryPicker';
 import { CONTACT_FINDER_ON, ProspectSheet } from './ProspectSheet';
 import { ProspectsTable } from './ProspectsTable';
 import { ResearchTimeline } from './ResearchTimeline';
@@ -34,6 +36,11 @@ interface FindCustomersProps {
 }
 
 type ResearchFailure = { message?: string; creditError?: boolean; errorCode?: string };
+
+/** Seconds the review waits before research starts by itself (paused by any interaction). */
+const AUTO_START_SECONDS = 30;
+
+const mustHaveCount = (segment: Segment) => segment.criteria.filter((criterion) => criterion.mustHave).length;
 
 // ---- 1. Start ---------------------------------------------------------------------------
 
@@ -162,10 +169,10 @@ function SegmentEditor({ segment, onChange }: { segment: Segment; onChange: (seg
           </form>
         ) : null}
       </div>
-      <label className="block max-w-sm">
-        <span className="text-sm font-medium text-foreground">Where</span>
-        <Input className="mt-1.5" value={segment.geography} onChange={(event) => update({ geography: event.target.value.slice(0, 120) })} placeholder="e.g. United Kingdom" />
-      </label>
+      <div>
+        <span className="mb-1.5 block text-sm font-medium text-foreground">Where</span>
+        <CountryPicker value={segment.countries ?? []} onChange={(countries) => update({ countries, geography: describeCountries(countries) })} />
+      </div>
     </div>
   );
 }
@@ -173,16 +180,53 @@ function SegmentEditor({ segment, onChange }: { segment: Segment; onChange: (seg
 function ResearchReview({ research, onError }: { research: GtmResearch; onError: (failure: ResearchFailure) => void }) {
   const run = research.run!;
   const profile = run.business_profile;
-  const [selectedId, setSelectedId] = useState(run.segments[0]?.id ?? '');
+  // Groups saved before countries existed get them from their place text, as on the server.
+  const segments = useMemo(() => run.segments.map((item) => sanitizeSegment(item) ?? item), [run.segments]);
+  const [selectedId, setSelectedId] = useState(segments[0]?.id ?? '');
   const [edited, setEdited] = useState<Record<string, Segment>>({});
   const quote = useCreditQuote('GTM_RESEARCH_RUN', { source: 'gtm_find_customers' });
-  const segment = edited[selectedId] ?? run.segments.find((item) => item.id === selectedId) ?? null;
+  const segment = edited[selectedId] ?? segments.find((item) => item.id === selectedId) ?? null;
   const valid = segment ? sanitizeSegment(segment) : null;
   const free = Boolean(quote.data?.giftEligible || quote.data?.giftApplied);
   const saveClaim = (field: 'offering' | 'audience' | 'valueProposition') => (text: string) => void research.edit({ profile: { [field]: text } }).catch((error) => onError(error));
+  const startNow = () => { if (valid && !research.busy) void research.start(valid).catch(onError); };
+
+  // Research starts by itself after a short review so founders aren't left
+  // waiting on a button below the fold. Any interaction pauses it for good.
+  const [secondsLeft, setSecondsLeft] = useState(AUTO_START_SECONDS);
+  const [paused, setPaused] = useState(false);
+  const autoStarted = useRef(false);
+  useEffect(() => {
+    if (paused || !valid || research.busy || autoStarted.current) return;
+    if (secondsLeft <= 0) {
+      autoStarted.current = true;
+      captureEvent('gtm_customer_research_follow_up', { kind: 'auto_start' });
+      startNow();
+      return;
+    }
+    const timer = window.setTimeout(() => setSecondsLeft((seconds) => seconds - 1), 1_000);
+    return () => window.clearTimeout(timer);
+  }, [secondsLeft, paused, valid, research.busy]); // eslint-disable-line react-hooks/exhaustive-deps -- startNow reads the current segment
+  const pause = () => { if (!paused && !autoStarted.current) setPaused(true); };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" onPointerDownCapture={pause} onKeyDownCapture={pause}>
+      {valid ? (
+        <section aria-live="polite" className="flex flex-col gap-3 rounded-2xl border border-primary/40 bg-card p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
+            <p className="font-semibold text-foreground">
+              {paused ? 'Review paused. Start when you\'re ready.' : `Starting research in ${secondsLeft}s`}
+            </p>
+            <p className="mt-0.5 text-sm text-muted-foreground">
+              {valid.name} · {describeCountries(valid.countries)} · {free ? 'your first run is free' : `${RESEARCH_RUN_CREDITS} credits held, charged only for matches`}
+              {paused ? '' : '. Click anywhere to review first.'}
+            </p>
+          </div>
+          <Button type="button" disabled={research.busy} onClick={startNow}>
+            {research.busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" /> : null}Start research now
+          </Button>
+        </section>
+      ) : null}
       {profile ? (
         <section className="rounded-2xl border border-border/60 bg-card p-5 sm:p-6">
           <h2 className="text-lg font-semibold text-foreground">What we understood about {profile.name}</h2>
@@ -217,7 +261,7 @@ function ResearchReview({ research, onError }: { research: GtmResearch; onError:
         <h2 className="text-lg font-semibold text-foreground">Who should we look for?</h2>
         <p className="mt-1 text-sm text-muted-foreground">Pick one group. Every company we find is checked against its must-haves.</p>
         <div className="mt-4 grid gap-3 lg:grid-cols-3" role="radiogroup" aria-label="Groups to target">
-          {run.segments.map((item) => {
+          {segments.map((item) => {
             const current = edited[item.id] ?? item;
             const active = item.id === selectedId;
             return (
@@ -225,7 +269,7 @@ function ResearchReview({ research, onError }: { research: GtmResearch; onError:
                 className={cn('rounded-xl border p-4 text-left transition-colors', active ? 'border-primary bg-primary/5' : 'border-border/60 hover:border-primary/40')}>
                 <span className="block font-semibold text-foreground">{current.name}</span>
                 {current.pain ? <span className="mt-1 block text-sm text-muted-foreground">{current.pain}</span> : null}
-                <span className="mt-3 block text-xs text-muted-foreground">{current.criteria.filter((criterion) => criterion.mustHave).length} must-haves{current.geography ? ` · ${current.geography}` : ''}</span>
+                <span className="mt-3 block text-xs text-muted-foreground">{mustHaveCount(current)} must-have{mustHaveCount(current) === 1 ? '' : 's'} · {describeCountries(current.countries ?? [])}</span>
                 {current.roles.length ? <span className="mt-1 block text-xs text-muted-foreground">Contact: {current.roles.join(', ')}</span> : null}
               </button>
             );
@@ -236,7 +280,10 @@ function ResearchReview({ research, onError }: { research: GtmResearch; onError:
 
       <section className="flex flex-col gap-4 rounded-2xl border border-primary/30 bg-primary/5 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
         <div>
-          <p className="font-semibold text-foreground">{free ? 'Your first research run is free' : `Research run · ${RESEARCH_RUN_CREDITS} credits`}</p>
+          <p className="font-semibold text-foreground">
+            {free ? 'Your first research run is free' : `Research run · ${RESEARCH_RUN_CREDITS} credits`}
+            {valid && !paused ? <span className="ml-2 font-normal text-primary">· starts in {secondsLeft}s</span> : null}
+          </p>
           <p className="mt-1 text-sm text-muted-foreground">
             Up to 20 matching companies with evidence and a draft email for each.
             {free ? '' : ` Credits are held while it runs; you're charged in full only from 10 matches, less below that, nothing if none match.`}
