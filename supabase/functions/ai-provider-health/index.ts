@@ -215,6 +215,37 @@ const CHECKS: ProviderCheck[] = [
     },
   },
   {
+    // One result, no page text: the cheapest real search Exa offers.
+    provider: "exa",
+    affects: "GTM Strategist Find customers: finding organisations (falls back to web search)",
+    run: async () => {
+      const response = await withTimeout("https://api.exa.ai/search", {
+        method: "POST",
+        headers: { "x-api-key": env("EXA_API_KEY"), "Content-Type": "application/json" },
+        body: JSON.stringify({ query: "a university startup incubator in Leeds", type: "auto", category: "company", numResults: 1 }),
+      });
+      if (!response.ok) throw new Error(await describeFailure(response));
+      const body = await response.json();
+      if (!Array.isArray(body?.results) || !body.results.length) throw new Error("Key works but the search returned no results");
+    },
+  },
+  {
+    // The account endpoint is free and shows what the plan has left.
+    provider: "hunter",
+    affects: "GTM Strategist Find customers: finding the right person (named contacts)",
+    run: async () => {
+      const response = await withTimeout(`https://api.hunter.io/v2/account?api_key=${encodeURIComponent(env("HUNTER_API_KEY"))}`, {});
+      if (!response.ok) throw new Error(await describeFailure(response));
+      const data = (await response.json())?.data ?? {};
+      const searches = data?.requests?.searches;
+      const verifications = data?.requests?.verifications;
+      const left = (usage: { used?: number; available?: number } | undefined) => usage && typeof usage.available === "number" ? usage.available - (usage.used ?? 0) : null;
+      if (left(searches) === 0 || left(verifications) === 0) {
+        throw new Error(`No ${left(searches) === 0 ? "searches" : "verifications"} left this period on the ${data?.plan_name ?? "current"} plan`);
+      }
+    },
+  },
+  {
     provider: "perplexity",
     affects: "BizMap research, trends analyzer, market provider health",
     run: async () => {
@@ -240,6 +271,8 @@ const KEY_FOR: Record<string, string> = {
   youtube: "YOUTUBE_API_KEY",
   lovable_gateway: "LOVABLE_API_KEY",
   perplexity: "PERPLEXITY_API_KEY",
+  exa: "EXA_API_KEY",
+  hunter: "HUNTER_API_KEY",
 };
 
 async function runCheck(check: ProviderCheck): Promise<CheckResult> {
