@@ -311,7 +311,69 @@ function adminRecipients(): string[] {
   return Array.from(new Set([...REQUIRED_ADMIN_RECIPIENTS, ...valid]));
 }
 
-function alertEmail(changes: Array<CheckResult & { recovered: boolean }>, all: CheckResult[]) {
+interface MonthSpend {
+  month: string;
+  byProvider: Array<{ provider: string; usd: number; calls: number }>;
+  aiUsd: number;
+  aiBudgetUsd: number;
+}
+
+/**
+ * Month-to-date spend from provider_spend_ledger (estimates, not invoices).
+ * "llm:*" rows count against AI_MONTHLY_BUDGET_USD; over it, the shared AI
+ * chain (_shared/json-generation.ts) skips the paid providers.
+ */
+async function monthSpend(admin: ReturnType<typeof createClient>): Promise<MonthSpend | null> {
+  const now = new Date();
+  const month = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).toISOString().slice(0, 10);
+  const { data, error } = await admin.from("provider_spend_ledger").select("provider, est_cost_usd").gte("created_at", month);
+  if (error) {
+    console.error("ai-provider-health could not read provider_spend_ledger:", error.message);
+    return null;
+  }
+  const totals = new Map<string, { usd: number; calls: number }>();
+  for (const row of (data ?? []) as Array<{ provider: string; est_cost_usd: number | string }>) {
+    const entry = totals.get(row.provider) ?? { usd: 0, calls: 0 };
+    entry.usd += Number(row.est_cost_usd) || 0;
+    entry.calls += 1;
+    totals.set(row.provider, entry);
+  }
+  const byProvider = [...totals.entries()].map(([provider, entry]) => ({ provider, ...entry })).sort((a, b) => b.usd - a.usd);
+  return {
+    month,
+    byProvider,
+    aiUsd: byProvider.filter((entry) => entry.provider.startsWith("llm:")).reduce((sum, entry) => sum + entry.usd, 0),
+    aiBudgetUsd: Number(Deno.env.get("AI_MONTHLY_BUDGET_USD") ?? "25") || 25,
+  };
+}
+
+function spendTable(spend: MonthSpend | null) {
+  if (!spend) return "";
+  const total = spend.byProvider.reduce((sum, entry) => sum + entry.usd, 0);
+  const rows = spend.byProvider.map((entry) => `
+    <tr>
+      <td style="padding:6px 10px;border-bottom:1px solid #eee">${escapeHtml(entry.provider)}</td>
+      <td style="padding:6px 10px;border-bottom:1px solid #eee">${entry.calls}</td>
+      <td style="padding:6px 10px;border-bottom:1px solid #eee">$${entry.usd.toFixed(2)}</td>
+    </tr>`).join("");
+  return `
+      <p style="margin:20px 0 8px;color:#444">Estimated spend since ${escapeHtml(spend.month)}: <strong>$${total.toFixed(2)}</strong>. AI text: $${spend.aiUsd.toFixed(2)} of the $${spend.aiBudgetUsd.toFixed(2)} cap (AI_MONTHLY_BUDGET_USD).</p>
+      <table style="border-collapse:collapse;width:100%;font-size:13px">${rows || '<tr><td style="padding:6px 10px;color:#666">Nothing recorded yet.</td></tr>'}</table>`;
+}
+
+function budgetEmail(kind: "warning" | "paused", spend: MonthSpend) {
+  return `
+    <div style="font-family:Arial,sans-serif;max-width:720px">
+      <h2 style="margin:0 0 8px">${kind === "paused" ? "AI spend cap reached" : "AI spend at 80% of the monthly cap"}</h2>
+      <p style="margin:0 0 8px;color:#444">${kind === "paused"
+        ? "Paid AI providers (Gemini, OpenAI) are now skipped until the 1st. The tools keep working on the free providers (Lovable gateway, Groq), which can be slower or weaker. Raise AI_MONTHLY_BUDGET_USD to lift the cap."
+        : "Nothing changes yet. At 100% the paid providers are skipped and the tools run on the free ones until the 1st."}</p>
+      ${spendTable(spend)}
+      <p style="margin-top:16px;color:#666;font-size:12px">Sent once per month and level by the daily ai-provider-health check. Source: provider_spend_ledger (estimates, not invoices).</p>
+    </div>`;
+}
+
+function alertEmail(changes: Array<CheckResult & { recovered: boolean }>, all: CheckResult[], spend: MonthSpend | null = null) {
   const row = (r: CheckResult & { recovered?: boolean }) => `
     <tr>
       <td style="padding:6px 10px;border-bottom:1px solid #eee"><strong>${escapeHtml(r.provider)}</strong></td>
@@ -326,6 +388,7 @@ function alertEmail(changes: Array<CheckResult & { recovered: boolean }>, all: C
       <table style="border-collapse:collapse;width:100%;font-size:14px">${changes.map(row).join("")}</table>
       <p style="margin:20px 0 8px;color:#444">All providers now:</p>
       <table style="border-collapse:collapse;width:100%;font-size:13px">${all.map(row).join("")}</table>
+      ${spendTable(spend)}
       <p style="margin-top:16px;color:#666;font-size:12px">Sent by the daily ai-provider-health check. Full status: /admin/adoption.</p>
     </div>`;
 }
@@ -383,8 +446,13 @@ serve(async (req) => {
       changes.push(...results.filter((result) => !result.ok).map((result) => ({ ...result, recovered: false })));
     }
 
+    const spend = await monthSpend(admin);
+
     let emailed = false;
+    let budgetAlert: "warning" | "paused" | null = null;
     const resendKey = Deno.env.get("RESEND_API_KEY");
+    const fromEmail = Deno.env.get("FROM_EMAIL") || "onboarding@resend.dev";
+    const fromName = Deno.env.get("FROM_NAME") || "Creatives Takeover";
     if (changes.length > 0 && resendKey) {
       const recipients = adminRecipients();
       const failing = changes.filter((change) => !change.ok).map((change) => change.provider);
@@ -392,16 +460,35 @@ serve(async (req) => {
       const subject = failing.length
         ? `AI provider failing: ${failing.join(", ")}`
         : `AI provider recovered: ${recovered.join(", ")}`;
-      const fromEmail = Deno.env.get("FROM_EMAIL") || "onboarding@resend.dev";
-      const fromName = Deno.env.get("FROM_NAME") || "Creatives Takeover";
       const sent = await new Resend(resendKey).emails.send({
         from: `${fromName} <${fromEmail}>`,
         to: recipients,
         subject,
-        html: alertEmail(changes, results),
+        html: alertEmail(changes, results, spend),
       });
       emailed = !sent.error;
       if (sent.error) console.error("ai-provider-health email failed:", sent.error);
+    }
+
+    // One email per month and level when AI text spend reaches 80% and 100%
+    // of AI_MONTHLY_BUDGET_USD (provider_spend_alerts dedupes).
+    if (spend && resendKey) {
+      const kind = spend.aiUsd >= spend.aiBudgetUsd ? "paused" : spend.aiUsd >= spend.aiBudgetUsd * 0.8 ? "warning" : null;
+      if (kind) {
+        const { data: fresh } = await admin.from("provider_spend_alerts")
+          .upsert({ feature: "AI_TEXT", month: spend.month, kind }, { onConflict: "feature,month,kind", ignoreDuplicates: true })
+          .select("kind");
+        if (fresh?.length) {
+          budgetAlert = kind;
+          const sent = await new Resend(resendKey).emails.send({
+            from: `${fromName} <${fromEmail}>`,
+            to: adminRecipients(),
+            subject: kind === "paused" ? "AI spend cap reached: paid providers paused" : "AI spend at 80% of the monthly cap",
+            html: budgetEmail(kind, spend),
+          });
+          if (sent.error) console.error("ai-provider-health budget email failed:", sent.error);
+        }
+      }
     }
 
     return new Response(JSON.stringify({
@@ -410,6 +497,8 @@ serve(async (req) => {
       results: results.map(({ provider, ok, configured, message, latencyMs }) => ({ provider, ok, configured, message, latencyMs })),
       changes: changes.map((change) => change.provider),
       emailed,
+      spend: spend ? { month: spend.month, aiUsd: Number(spend.aiUsd.toFixed(2)), aiBudgetUsd: spend.aiBudgetUsd, byProvider: spend.byProvider.map((entry) => ({ ...entry, usd: Number(entry.usd.toFixed(2)) })) } : null,
+      budgetAlert,
     }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (error) {
     console.error("ai-provider-health error:", error);

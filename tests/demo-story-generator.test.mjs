@@ -16,19 +16,21 @@ function fixture({ rateError = null, missingKey = false, invalidOutput = false }
   let prompt;
   const context = vm.createContext({
     Request, Response, AbortController, setTimeout, clearTimeout, console,
-    Deno: { env: { get: key => key === 'OPENAI_API_KEY' && missingKey ? undefined : 'test-only' } },
+    Deno: { env: { get: () => 'test-only' } },
     serve: value => { handler = value; },
     createClient: () => ({ rpc: async name => { assert.equal(name, 'assert_rate_limit'); return { error: rateError }; } }),
     getUserFromAuth: async () => null,
     checkAndDeductCredits: async () => { credits++; throw new Error('Unexpected credit deduction'); },
     refundCredits: async () => {}, CREDIT_COSTS: {}, resolveCreditIdempotencyKey: () => 'test',
-    fetch: async (_url, request) => {
+    // The shared provider chain (_shared/json-generation.ts), stubbed.
+    hasTextProvider: () => !missingKey,
+    generateJsonText: async (request) => {
       fetches++;
-      prompt = JSON.parse(request.body).messages[1].content;
+      prompt = request.prompt;
       const result = invalidOutput ? { steps: [] } : { productName: 'Hairdresser scheduling', pitch: 'Organize your appointments.',
         brief: { audience: 'Hairdressers', problem: 'Missed appointments', product_promise: 'Easier scheduling', aha_moment: 'See the next booking' },
         steps: ['Problem', 'Product action', 'Outcome'].map(title => ({ title, caption: title, speaker_notes: title, hotspot_label: 'Next', suggested_action: 'next' })) };
-      return Response.json({ choices: [{ message: { content: JSON.stringify(result) } }] });
+      return { text: JSON.stringify(result), provider: 'gemini', model: 'test' };
     },
   });
   vm.runInContext(js, context);

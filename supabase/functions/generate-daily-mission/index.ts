@@ -1,6 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { generateJsonText, hasTextProvider } from "../_shared/json-generation.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -204,14 +205,14 @@ function buildPersonalizedFallback(stage: BizMapStage, onboarding: any, stageInt
 }
 
 async function generateMissionText({
-  openaiApiKey,
+  aiAvailable,
   stage,
   profile,
   activity,
   onboarding,
   stageIntelligence,
 }: {
-  openaiApiKey: string | null;
+  aiAvailable: boolean;
   stage: BizMapStage;
   profile: any;
   activity: any;
@@ -219,7 +220,7 @@ async function generateMissionText({
   stageIntelligence: any;
 }): Promise<string> {
   const fallbackMission = buildPersonalizedFallback(stage, onboarding, stageIntelligence);
-  if (!openaiApiKey) {
+  if (!aiAvailable) {
     return fallbackMission;
   }
 
@@ -256,43 +257,31 @@ async function generateMissionText({
     .filter(Boolean)
     .join("\n");
 
-  const response = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${openaiApiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "gpt-4o",
+  // Shared provider chain since 2026-11-16 (OpenAI alone had no credit).
+  let content: string | undefined;
+  try {
+    const result = await generateJsonText({
+      label: "generate-daily-mission",
+      feature: "DAILY_MISSION",
+      openaiModel: "gpt-4o",
       temperature: 0.5,
-      max_tokens: 160,
-      response_format: { type: "json_object" },
-      messages: [
-        {
-          role: "system",
-          content:
-            "You are a startup execution coach. Return only valid JSON with one key: mission_text. The mission must be exactly one concrete task for today, specific, finishable in under 90 minutes, and aligned to the founder's stage and last activity. Start with a strong verb. Avoid lists, fluff, or multiple steps. If financial pressure is critical or high, choose a task that moves money or a customer commitment closer today, and never one that spends the remaining runway on building or polish. Do not mention their runway back to them; just let it decide the task.",
-        },
-        {
-          role: "user",
-          content: `BizMap stage: ${stageConfig.label}
+      maxTokens: 160,
+      timeoutMs: 25_000,
+      system:
+        "You are a startup execution coach. Return only valid JSON with one key: mission_text. The mission must be exactly one concrete task for today, specific, finishable in under 90 minutes, and aligned to the founder's stage and last activity. Start with a strong verb. Avoid lists, fluff, or multiple steps. If financial pressure is critical or high, choose a task that moves money or a customer commitment closer today, and never one that spends the remaining runway on building or polish. Do not mention their runway back to them; just let it decide the task.",
+      prompt: `BizMap stage: ${stageConfig.label}
 Stage focus: ${stageConfig.focus}
 Last activity: ${buildLastActivitySummary(activity, profile)}
 Founder context:
 ${startupContext || "No extra founder profile context available."}
 
 Return JSON like {"mission_text":"..."} and make the task feel like the most useful next action for today.`,
-        },
-      ],
-    }),
-  });
-
-  if (!response.ok) {
+    });
+    content = result.text;
+  } catch (error) {
+    console.error("generate-daily-mission: every AI provider failed:", error instanceof Error ? error.message : error);
     return fallbackMission;
   }
-
-  const completion = await response.json();
-  const content = completion?.choices?.[0]?.message?.content;
 
   if (!content) {
     return fallbackMission;
@@ -437,7 +426,7 @@ serve(async (req) => {
     const stage = stageFromIntelligence(stageIntelligence?.current_stage)
       ?? normalizeStage(progress?.current_stage);
     const missionText = await generateMissionText({
-      openaiApiKey: Deno.env.get("OPENAI_API_KEY"),
+      aiAvailable: hasTextProvider(),
       stage,
       profile,
       activity,

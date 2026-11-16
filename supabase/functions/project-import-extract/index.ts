@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { getUserFromAuth } from "../_shared/credit-deduction.ts";
 import { checkPublicUrl, htmlToText, isPrivateAddress } from "../_shared/public-url-guard.ts";
+import { generateJsonText } from "../_shared/json-generation.ts";
 
 // Project setup for founders: drafts the project's fields from files the
 // founder uploaded (their own dashboard_files rows, already parsed by
@@ -204,30 +205,17 @@ serve(async (req) => {
     const perSource = Math.floor(MAX_INPUT_CHARS / sources.length);
     const input = sources.map((source) => `SOURCE: ${source.label}\n${source.text.slice(0, perSource)}`).join("\n\n---\n\n");
 
-    const openaiApiKey = Deno.env.get("OPENAI_API_KEY");
-    if (!openaiApiKey) throw new Error("OpenAI API key not configured");
-
-    const completion = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${openaiApiKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "gpt-4o-mini",
-        response_format: { type: "json_object" },
-        temperature: 0.1,
-        max_tokens: 2000,
-        messages: [
-          { role: "system", content: SYSTEM_PROMPT },
-          { role: "user", content: input },
-        ],
-      }),
+    // Shared provider chain since 2026-11-16 (OpenAI alone had no credit from Nov 12).
+    const { text: content } = await generateJsonText({
+      label: "project-import-extract",
+      feature: "PROJECT_IMPORT",
+      openaiModel: "gpt-4o-mini",
+      system: SYSTEM_PROMPT,
+      prompt: input,
+      temperature: 0.1,
+      maxTokens: 2000,
+      timeoutMs: 45_000,
     });
-    if (!completion.ok) {
-      const errBody = await completion.text().catch(() => "");
-      throw new Error(`OpenAI API Error: ${completion.status} ${errBody.slice(0, 200)}`.trim());
-    }
-
-    const aiData = await completion.json();
-    const content = aiData?.choices?.[0]?.message?.content;
     let parsed: { fields?: Record<string, unknown>; sources?: Record<string, unknown> } = {};
     try {
       parsed = JSON.parse(typeof content === "string" ? content : "{}");

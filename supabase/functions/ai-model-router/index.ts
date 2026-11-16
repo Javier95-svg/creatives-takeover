@@ -3,6 +3,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.55.0';
 import { emitAiGenerationCost } from "../_shared/ai-cost.ts";
 import { requireMemberOrWorker } from '../_shared/guards.ts';
+import { generateText, hasTextProvider } from '../_shared/json-generation.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -50,7 +51,9 @@ class ModelRouter {
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
-    this.openaiKey = Deno.env.get('OPENAI_API_KEY') ?? '';
+    // The "openai" route is the shared provider chain, available when any
+    // text provider has a key (see callOpenAI).
+    this.openaiKey = hasTextProvider() ? 'shared-chain' : '';
     this.anthropicKey = Deno.env.get('ANTHROPIC_API_KEY') ?? '';
   }
 
@@ -239,55 +242,47 @@ class ModelRouter {
     return { provider, model, reason };
   }
 
+  /**
+   * Since 2026-11-16 the "openai" route goes through the shared provider chain
+   * (Gemini, Lovable gateway, Groq, then OpenAI): OpenAI alone had no credit
+   * from Nov 12 and every BizMap asset and refinement failed. The chain sends
+   * max_tokens and temperature, which the reasoning models reject, so those
+   * fall back to gpt-4o-mini at the end of the chain.
+   */
   private async callOpenAI(request: ModelRequest): Promise<ModelResponse> {
     const modelName = request.model || 'gpt-4o-mini';
-    const isNewerModel = modelName.includes('gpt-5') || 
-                        modelName.includes('gpt-4.1') || 
-                        modelName.includes('o3') || 
+    const isNewerModel = modelName.includes('gpt-5') ||
+                        modelName.includes('gpt-4.1') ||
+                        modelName.includes('o3') ||
                         modelName.includes('o4');
+    const messages = request.messages || [];
+    const system = messages.filter((m) => m.role === 'system').map((m) => m.content).join('\n\n');
+    const turns = messages.filter((m) => m.role !== 'system');
+    const prompt = turns.length === 1
+      ? turns[0].content
+      : turns.map((m) => `${m.role === 'assistant' ? 'Assistant' : 'User'}: ${m.content}`).join('\n\n');
 
-    const body: any = {
-      model: modelName,
-      messages: request.messages,
-    };
-
-    // Handle parameter differences between model generations
-    if (isNewerModel) {
-      if (request.max_tokens) {
-        body.max_completion_tokens = request.max_tokens;
-      }
-      // Don't include temperature for newer models
-    } else {
-      if (request.max_tokens) {
-        body.max_tokens = request.max_tokens;
-      }
-      if (request.temperature !== undefined) {
-        body.temperature = request.temperature;
-      }
-    }
-
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${this.openaiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(body),
+    const result = await generateText({
+      label: `ai-model-router:${request.function_name || 'direct'}`,
+      feature: 'AI_MODEL_ROUTER',
+      openaiModel: isNewerModel ? 'gpt-4o-mini' : modelName,
+      system: system || 'You are a helpful assistant.',
+      prompt,
+      temperature: request.temperature ?? 0.7,
+      maxTokens: request.max_tokens || 2000,
+      timeoutMs: 60_000,
     });
 
-    if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`OpenAI API error: ${response.status} - ${error}`);
-    }
-
-    const data = await response.json();
-    
     return {
-      content: data.choices[0].message.content,
-      usage: data.usage,
+      content: result.text,
+      usage: {
+        prompt_tokens: result.inputTokens ?? 0,
+        completion_tokens: result.outputTokens ?? 0,
+        total_tokens: (result.inputTokens ?? 0) + (result.outputTokens ?? 0),
+      },
       cached: false,
       provider: 'openai',
-      model: request.model
+      model: result.model,
     };
   }
 

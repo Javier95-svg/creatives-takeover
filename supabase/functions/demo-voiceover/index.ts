@@ -51,8 +51,16 @@ serve(async (req) => {
       });
     }
 
+    // Voiceover stays on OpenAI's tts-1 (same voices). When that account has
+    // no access or credit, say so plainly instead of a generic failure.
+    const unavailable = () => new Response(JSON.stringify({
+      success: false,
+      error: "Voiceover is temporarily unavailable. Your demo is saved; try the voiceover again later.",
+      errorCode: "VOICEOVER_UNAVAILABLE",
+    }), { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
     const openaiApiKey = Deno.env.get("OPENAI_API_KEY");
-    if (!openaiApiKey) throw new Error("OpenAI API key not configured");
+    if (!openaiApiKey) return unavailable();
 
     const clips: (string | null)[] = [];
     for (const text of texts) {
@@ -70,6 +78,12 @@ serve(async (req) => {
       });
       if (!resp.ok) {
         const errBody = await resp.text().catch(() => "");
+        const outOfCredit = resp.status === 401 || resp.status === 402 || resp.status === 403
+          || (resp.status === 429 && /insufficient_quota|exceeded your current quota|billing/i.test(errBody));
+        if (outOfCredit) {
+          console.error("demo-voiceover: OpenAI has no access or credit:", resp.status, errBody.slice(0, 160));
+          return unavailable();
+        }
         throw new Error(`TTS failed: ${resp.status} ${errBody.slice(0, 160)}`.trim());
       }
       clips.push(base64Encode(await resp.arrayBuffer()));

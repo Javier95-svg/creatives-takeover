@@ -1,8 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { requireMemberOrWorker } from '../_shared/guards.ts';
-
-const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+import { generateJsonText, hasTextProvider } from '../_shared/json-generation.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -26,8 +25,8 @@ serve(async (req) => {
   if (caller.error) return caller.error;
 
   try {
-    if (!openAIApiKey) {
-      return new Response(JSON.stringify({ error: 'Missing OPENAI_API_KEY' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    if (!hasTextProvider()) {
+      return new Response(JSON.stringify({ error: 'No AI provider is configured' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
     const body = (await req.json()) as RequestBody;
@@ -59,31 +58,23 @@ Rules:
 
     const userContent = `Title: ${title}\n\nContent: ${content}\n\nTags: ${tags.join(', ')}`;
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userContent },
-        ],
-        response_format: { type: 'json_object' },
-        max_tokens: 600,
-      }),
-    });
-
-    if (!response.ok) {
-      const errText = await response.text();
-      console.error('OpenAI error:', errText);
-      return new Response(JSON.stringify({ error: 'OpenAI request failed', detail: errText }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    // Shared provider chain since 2026-11-16 (OpenAI alone had no credit from Nov 12).
+    let contentText: string;
+    try {
+      contentText = (await generateJsonText({
+        label: 'community-ai-moderator',
+        feature: 'COMMUNITY_MODERATOR',
+        openaiModel: 'gpt-4o-mini',
+        system: systemPrompt,
+        prompt: userContent,
+        temperature: 0.4,
+        maxTokens: 600,
+        timeoutMs: 30_000,
+      })).text;
+    } catch (error) {
+      console.error('community-ai-moderator: every AI provider failed:', error instanceof Error ? error.message : error);
+      return new Response(JSON.stringify({ error: 'AI request failed' }), { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
-
-    const data = await response.json();
-    const contentText = data?.choices?.[0]?.message?.content;
 
     let parsed;
     try {

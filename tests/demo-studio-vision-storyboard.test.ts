@@ -136,8 +136,10 @@ test('the try page renders a gap instead of the filler text', () => {
 /* -------------------------------------------------------------------------- */
 
 test('screenshots are sent to the model, bounded and validated', () => {
-  assert.match(generator, /image_url/, 'the draft path must attach the screens');
-  assert.match(generator, /detail: "high"/, 'UI labels are unreadable at low detail');
+  assert.match(generator, /images: mode === "storyboard" \? usableScreenshots\(body\) : \[\]/, 'the draft path must attach the screens');
+  const chain = readFileSync(new URL('../supabase/functions/_shared/json-generation.ts', import.meta.url), 'utf8');
+  assert.match(chain, /image_url: \{ url, detail: "high" \}/, 'UI labels are unreadable at low detail');
+  assert.match(chain, /inlineData: \{ mimeType/, 'Gemini gets the screens too');
   assert.match(generator, /MAX_VISION_SCREENSHOTS/);
   assert.match(generator, /MAX_SCREENSHOT_BYTES/);
   // Only the anonymous draft path, and only for storyboards.

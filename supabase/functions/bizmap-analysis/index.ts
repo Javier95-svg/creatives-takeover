@@ -4,6 +4,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 import { checkAndDeductCredits, refundCredits } from '../_shared/credit-deduction.ts';
 import { CREDIT_COSTS } from '../_shared/credit-constants.ts';
 import { resolveCreditIdempotencyKey } from '../_shared/request-idempotency.ts';
+import { generateText, hasTextProvider, streamChatWithFallbacks } from '../_shared/json-generation.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -117,9 +118,8 @@ serve(async (req) => {
     console.log(`✅ Credits deducted: ${creditCost} credit(s), new balance: ${creditCheck.newBalance}`);
 
     try {
-    const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
-    if (!openaiApiKey) {
-      throw new Error('OpenAI API key not configured');
+    if (!hasTextProvider()) {
+      throw new Error('No AI provider is configured');
     }
 
     const { quality, reasons } = getInputQuality(answers);
@@ -416,64 +416,63 @@ IMPORTANT GUIDELINES:
 
     const wantsStream = req.headers.get('Accept')?.includes('text/event-stream');
 
-    const payload = {
-      model: 'gpt-5-2025-08-07',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a global startup co-founder in chatbot form. You guide entrepreneurs through creating clear, actionable Launch Reports. You are practical, globally relevant, use plain language, and focus on execution over theory. Always use the exact formatting requested.'
-        },
-        { role: 'user', content: prompt }
-      ],
-      max_completion_tokens: 2000,
-      ...(wantsStream ? { stream: true } as const : {})
-    };
+    // Shared provider chain since 2026-11-16: OpenAI alone (gpt-5) had no
+    // credit from Nov 12. Streams come from the first OpenAI-compatible
+    // provider that answers (Lovable gateway, Groq, then OpenAI); the JSON
+    // answer goes through the full chain, Gemini first.
+    const systemPrompt = 'You are a global startup co-founder in chatbot form. You guide entrepreneurs through creating clear, actionable Launch Reports. You are practical, globally relevant, use plain language, and focus on execution over theory. Always use the exact formatting requested.';
 
-    const oaRes = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openaiApiKey}`,
-        'Content-Type': 'application/json',
+    if (!wantsStream) {
+      const result = await generateText({
+        label: 'bizmap-analysis',
+        feature: 'LAUNCH_REPORT',
+        openaiModel: 'gpt-4o',
+        system: systemPrompt,
+        prompt,
+        temperature: 0.6,
+        maxTokens: 3000,
+        timeoutMs: 90_000,
+      });
+      return new Response(JSON.stringify({ launchReport: result.text }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const { response: oaRes } = await streamChatWithFallbacks({
+      label: 'bizmap-analysis',
+      openaiModel: 'gpt-4o',
+      body: {
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: prompt },
+        ],
+        temperature: 0.6,
+        max_tokens: 3000,
       },
-      body: JSON.stringify(payload),
     });
 
-    if (!oaRes.ok) {
-      const errorData = await oaRes.json().catch(() => ({}));
-      throw new Error(`OpenAI API error: ${errorData.error?.message || 'Unknown error'}`);
-    }
-
-    if (wantsStream) {
-      const stream = new ReadableStream({
-        async start(controller) {
-          try {
-            const reader = oaRes.body!.getReader();
-            while (true) {
-              const { done, value } = await reader.read();
-              if (done) break;
-              controller.enqueue(value);
-            }
-            controller.close();
-          } catch (err) {
-            controller.error(err);
+    const stream = new ReadableStream({
+      async start(controller) {
+        try {
+          const reader = oaRes.body!.getReader();
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            controller.enqueue(value);
           }
-        },
-      });
-      return new Response(stream, {
-        headers: {
-          ...corsHeaders,
-          'Content-Type': 'text/event-stream',
-          'Cache-Control': 'no-cache',
-          'Connection': 'keep-alive',
-        },
-      });
-    }
-
-    const data = await oaRes.json();
-    const launchReport = data.choices?.[0]?.message?.content || '';
-
-    return new Response(JSON.stringify({ launchReport }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          controller.close();
+        } catch (err) {
+          controller.error(err);
+        }
+      },
+    });
+    return new Response(stream, {
+      headers: {
+        ...corsHeaders,
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+      },
     });
 
     } catch (err) {

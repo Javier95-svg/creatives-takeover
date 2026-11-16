@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { emitBusinessEvent } from "../_shared/analytics.ts";
 import { fixedFollowUp } from "../_shared/pmf-follow-up.ts";
+import { generateText, hasTextProvider } from "../_shared/json-generation.ts";
 
 // Public endpoint: a logged-out visitor submits a PMF survey response.
 // verify_jwt stays true — supabase-js attaches the anon JWT for anonymous callers,
@@ -70,29 +71,25 @@ const clean = (value: string | undefined, max: number): string | null => {
 const FOLLOW_UP_AI_CAP = 100;
 
 async function writeFollowUp(answer: string, productName: string, audience: string | null): Promise<string | null> {
-  const apiKey = Deno.env.get("OPENAI_API_KEY");
-  if (!apiKey) return null;
+  if (!hasTextProvider()) return null;
   const meaning = answer === "very" ? "would be very disappointed without it"
     : answer === "somewhat" ? "would be somewhat disappointed without it"
       : answer === "not" ? "would not be disappointed without it"
         : "has not used it yet";
   try {
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "gpt-4o-mini",
-        temperature: 0.4,
-        max_tokens: 60,
-        messages: [
-          { role: "system", content: "You write one short follow-up question for a product survey. Plain words, under 18 words, no leading or yes/no questions, no emoji, no quotes. Return only the question." },
-          { role: "user", content: `Product: ${productName}. Audience: ${audience || "unknown"}. The respondent ${meaning}. Ask why, in a way that gets a concrete answer in their own words.` },
-        ],
-      }),
+    // Shared provider chain since 2026-11-16 (OpenAI alone had no credit from Nov 12).
+    // A short budget: the fixed question is a fine answer when the AI is slow.
+    const result = await generateText({
+      label: "pmf-survey-follow-up",
+      feature: "PMF_SURVEY_FOLLOW_UP",
+      openaiModel: "gpt-4o-mini",
+      temperature: 0.4,
+      maxTokens: 60,
+      timeoutMs: 12_000,
+      system: "You write one short follow-up question for a product survey. Plain words, under 18 words, no leading or yes/no questions, no emoji, no quotes. Return only the question.",
+      prompt: `Product: ${productName}. Audience: ${audience || "unknown"}. The respondent ${meaning}. Ask why, in a way that gets a concrete answer in their own words.`,
     });
-    if (!response.ok) return null;
-    const data = await response.json();
-    const text = String(data?.choices?.[0]?.message?.content ?? "").trim().replace(/^["']|["']$/g, "");
+    const text = result.text.trim().replace(/^["']|["']$/g, "");
     return text && text.length <= 200 && text.endsWith("?") ? text : null;
   } catch {
     return null;

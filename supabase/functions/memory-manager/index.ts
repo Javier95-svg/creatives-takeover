@@ -2,6 +2,7 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { denied, requireUser, requireWorker } from '../_shared/guards.ts';
+import { generateText } from '../_shared/json-generation.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -10,7 +11,6 @@ const corsHeaders = {
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY')!;
 const MEMORY_TOP_K = 8;
 const SUMMARIZATION_DAYS = 7;
 
@@ -241,26 +241,23 @@ async function handleSummarize(supabase: any, request: SummarizeRequest) {
 
     const summaryPrompt = `Summarize the following business planning conversation into key insights, decisions, and action items. Focus on what matters for future context retrieval:\n\n${conversationText}`;
 
-    const summaryResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${OPENAI_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          { role: 'system', content: 'You are a business planning assistant. Summarize conversations into concise, actionable insights.' },
-          { role: 'user', content: summaryPrompt }
-        ],
-        max_tokens: 500,
-      }),
-    });
-
-    if (!summaryResponse.ok) continue;
-
-    const summaryData = await summaryResponse.json();
-    const summary = summaryData.choices[0].message.content;
+    // Shared provider chain since 2026-11-16 (OpenAI alone had no credit from Nov 12).
+    let summary: string;
+    try {
+      summary = (await generateText({
+        label: 'memory-manager',
+        feature: 'MEMORY_SUMMARY',
+        openaiModel: 'gpt-4o-mini',
+        temperature: 0.3,
+        maxTokens: 500,
+        timeoutMs: 30_000,
+        system: 'You are a business planning assistant. Summarize conversations into concise, actionable insights.',
+        prompt: summaryPrompt,
+      })).text;
+    } catch (error) {
+      console.error('[MEMORY-MANAGER] summary failed:', error instanceof Error ? error.message : error);
+      continue;
+    }
 
     // Store as long-term memory
     const storeResponse = await handleStoreMemory(supabase, {

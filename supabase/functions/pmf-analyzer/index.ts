@@ -4,6 +4,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 import { checkAndDeductCredits, getUserFromAuth, refundCredits } from '../_shared/credit-deduction.ts';
 import { CREDIT_COSTS } from '../_shared/credit-constants.ts';
 import { resolveCreditIdempotencyKey } from '../_shared/request-idempotency.ts';
+import { generateJsonText, hasTextProvider } from '../_shared/json-generation.ts';
 
 // Legacy PMF analysis endpoint.
 // The production /pmf-lab route uses pmf-evidence-scorer because it is grounded in
@@ -92,9 +93,8 @@ serve(async (req) => {
       });
     }
 
-    const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
-    if (!openaiApiKey) {
-      throw new Error('OpenAI API key not configured');
+    if (!hasTextProvider()) {
+      throw new Error('No AI provider is configured');
     }
 
     // Initialize Supabase client for market validation
@@ -445,20 +445,17 @@ Return your analysis as a JSON object with this exact structure:
   ]
 }`;
 
-    // Call OpenAI API
+    // Shared provider chain since 2026-11-16 (OpenAI alone had no credit from Nov 12).
     try {
-      const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${openaiApiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'gpt-4o',
-          messages: [
-            {
-              role: 'system',
-              content: `You are a Product-Market Fit expert focused on providing accurate, realistic assessments of success odds.
+      const { text: content } = await generateJsonText({
+        label: 'pmf-analyzer',
+        feature: 'PMF_ANALYSIS',
+        openaiModel: 'gpt-4o',
+        temperature: 0.6,
+        maxTokens: 6000,
+        timeoutMs: 90_000,
+        prompt,
+        system: `You are a Product-Market Fit expert focused on providing accurate, realistic assessments of success odds.
 
 CRITICAL REQUIREMENTS:
 1. Always return valid JSON in the exact structure specified
@@ -470,35 +467,15 @@ CRITICAL REQUIREMENTS:
 7. Use the few-shot examples as guidance for reasoning depth and structure
 8. When real market data (Reddit, competitors) is provided, prioritize it over assumptions
 
-Your analysis should help founders make informed decisions, not just validate their ideas.`
-            },
-            {
-              role: 'user',
-              content: prompt
-            }
-          ],
-          response_format: { type: 'json_object' },
-          temperature: 0.6,
-          max_tokens: 6000,
-        }),
+Your analysis should help founders make informed decisions, not just validate their ideas.`,
       });
-
-      if (!openaiResponse.ok) {
-        const errorText = await openaiResponse.text();
-        console.error('OpenAI API Error:', errorText);
-        throw new Error(`OpenAI API Error: ${openaiResponse.status}`);
-      }
-
-      const aiData = await openaiResponse.json();
       let analysisResult;
 
       try {
-        const content = aiData.choices[0].message.content;
         analysisResult = JSON.parse(content);
       } catch (parseError) {
         console.error('Error parsing AI response:', parseError);
         // Fallback: try to extract JSON from markdown code blocks
-        const content = aiData.choices[0].message.content;
         const jsonMatch = content.match(/```json\s*([\s\S]*?)\s*```/) || content.match(/```\s*([\s\S]*?)\s*```/);
         if (jsonMatch) {
           analysisResult = JSON.parse(jsonMatch[1]);

@@ -5,6 +5,7 @@ import { checkAndDeductCredits, getUserFromAuth, refundCredits } from "../_share
 import { CREDIT_COSTS } from "../_shared/credit-constants.ts";
 import { resolveCreditIdempotencyKey } from "../_shared/request-idempotency.ts";
 import { isDemoStoryDraft } from "../_shared/demo-story.ts";
+import { generateJsonText, hasTextProvider } from "../_shared/json-generation.ts";
 
 // Anonymous "/demo-studio/try" draft previews are uncharged, so cap them per IP.
 const DRAFT_RATE_LIMIT_PER_MIN = 5;
@@ -204,24 +205,10 @@ function usableScreenshots(body: DemoStudioGeneratorRequest): string[] {
     .slice(0, MAX_VISION_SCREENSHOTS);
 }
 
-/**
- * The user turn, multimodal when the visitor gave us screens to look at.
- *
- * `detail: "high"` is deliberate and costs roughly 765 tokens per image: the
- * model has to read button and column labels to describe a screen or place a
- * pointer on it, and "low" downsamples to 512px where UI text stops being
- * legible. Bounded by MAX_VISION_SCREENSHOTS and the draft rate limit.
- */
-function buildUserContent(body: DemoStudioGeneratorRequest, mode: Mode) {
-  const text = buildUserPrompt(body, mode);
-  const screenshots = mode === "storyboard" ? usableScreenshots(body) : [];
-  if (screenshots.length === 0) return text;
-
-  return [
-    { type: "text", text },
-    ...screenshots.map((url) => ({ type: "image_url", image_url: { url, detail: "high" } })),
-  ];
-}
+// Screens go to the model as images when the visitor gave us any (storyboard
+// mode only). The chat providers get `detail: "high"`: the model has to read
+// button and column labels to describe a screen or place a pointer on it.
+// Bounded by MAX_VISION_SCREENSHOTS and the draft rate limit.
 
 function buildUserPrompt(body: DemoStudioGeneratorRequest, mode: Mode): string {
   if (mode === "story") {
@@ -311,48 +298,34 @@ For launch_copy mode return only launch_copy.
 For full_kit mode return all three keys.`;
 }
 
+/**
+ * 2026-11-16: moved from OpenAI only to the shared provider chain (Gemini,
+ * Lovable gateway, Groq, then OpenAI) after OpenAI ran out of credit on Nov 12.
+ * Screenshots go to the providers that can see images.
+ */
 async function generateKit(
-  openaiApiKey: string,
   body: DemoStudioGeneratorRequest,
   mode: Mode,
   options: KitValidationOptions & { timeoutMs?: number; skipValidation?: boolean } = {},
 ) {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), options.timeoutMs ?? 30000);
-  let response: Response;
+  let content: string;
   try {
-    response = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      signal: controller.signal,
-      headers: {
-        Authorization: `Bearer ${openaiApiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "gpt-4o",
-        messages: [
-          { role: "system", content: buildSystemPrompt(mode) },
-          { role: "user", content: buildUserContent(body, mode) },
-        ],
-        response_format: { type: "json_object" },
-        temperature: 0.65,
-        max_tokens: mode === "full_kit" ? 5000 : 2400,
-      }),
+    const result = await generateJsonText({
+      label: "demo-studio-generator",
+      feature: "DEMO_STUDIO",
+      system: buildSystemPrompt(mode),
+      prompt: buildUserPrompt(body, mode),
+      images: mode === "storyboard" ? usableScreenshots(body) : [],
+      temperature: 0.65,
+      maxTokens: mode === "full_kit" ? 5000 : 2400,
+      timeoutMs: options.timeoutMs ?? 45_000,
+      openaiModel: "gpt-4o",
     });
-  } finally {
-    clearTimeout(timeout);
+    content = result.text;
+  } catch (error) {
+    console.error("Demo Studio generator: every AI provider failed:", error instanceof Error ? error.message : error);
+    throw Object.assign(new Error("AI providers unavailable"), { status: 502 });
   }
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error("Demo Studio generator OpenAI error:", errorText);
-    const status = response.status === 429 ? 429 : 502;
-    throw Object.assign(new Error(`OpenAI API error: ${response.status}`), { status });
-  }
-
-  const data = await response.json();
-  const content = data?.choices?.[0]?.message?.content;
-  if (!content) throw Object.assign(new Error("No content returned from model"), { status: 502 });
   const parsed = JSON.parse(content);
   if (!options.skipValidation) {
     const validationErrors = validateKitOutput(parsed, mode, options);
@@ -499,7 +472,7 @@ async function handleDraft(req: Request, body: DemoStudioGeneratorRequest): Prom
     });
   }
 
-  const openaiApiKey = Deno.env.get("OPENAI_API_KEY");
+  const aiAvailable = hasTextProvider();
   if (body.mode === "story") {
     const description = typeof body.description === "string" ? body.description.trim() : "";
     if (description.length < 3 || description.length > 5000) {
@@ -507,13 +480,13 @@ async function handleDraft(req: Request, body: DemoStudioGeneratorRequest): Prom
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    if (!openaiApiKey) {
+    if (!aiAvailable) {
       return new Response(JSON.stringify({ success: false, error: "Demo stories are temporarily unavailable. Your description is kept; please retry shortly.", errorCode: "SERVICE_UNAVAILABLE" }), {
         status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
     try {
-      const generated = await generateKit(openaiApiKey, { ...body, description }, "story", { skipValidation: true });
+      const generated = await generateKit({ ...body, description }, "story", { skipValidation: true });
       const draft = { ...generated, kind: "demo_story", v: 1, description };
       if (!isDemoStoryDraft(draft)) throw new Error("Invalid demo story output");
       return new Response(JSON.stringify({ success: true, draft }), {
@@ -526,8 +499,8 @@ async function handleDraft(req: Request, body: DemoStudioGeneratorRequest): Prom
       });
     }
   }
-  if (!openaiApiKey) {
-    console.warn("demo-studio draft: OPENAI_API_KEY missing; returning fallback storyboard");
+  if (!aiAvailable) {
+    console.warn("demo-studio draft: no AI provider key; returning fallback storyboard");
     return draftSuccessResponse(body, stepCount, "openai_missing");
   }
 
@@ -535,7 +508,7 @@ async function handleDraft(req: Request, body: DemoStudioGeneratorRequest): Prom
     // Draft path skips the strict 422 validation and sanitizes per-field
     // instead — a single forbidden word must not cost the visitor the whole
     // AI generation. 30s budget matches the working icp-draft generator.
-    const kit = await generateKit(openaiApiKey, body, mode, {
+    const kit = await generateKit(body, mode, {
       exactStoryboardSteps: stepCount,
       timeoutMs: 30000,
       skipValidation: true,
@@ -621,11 +594,8 @@ serve(async (req) => {
       });
     }
 
-    const openaiApiKey = Deno.env.get("OPENAI_API_KEY");
-    if (!openaiApiKey) throw new Error("OpenAI API key not configured");
-
     try {
-      const kit = await generateKit(openaiApiKey, body, validation.mode);
+      const kit = await generateKit(body, validation.mode);
       return new Response(JSON.stringify({
         success: true,
         mode: validation.mode,

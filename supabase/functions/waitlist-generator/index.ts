@@ -3,6 +3,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { checkAndDeductCredits, getUserFromAuth, refundCredits } from "../_shared/credit-deduction.ts";
 import { CREDIT_COSTS } from "../_shared/credit-constants.ts";
 import { resolveCreditIdempotencyKey } from "../_shared/request-idempotency.ts";
+import { generateJsonText } from "../_shared/json-generation.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -268,38 +269,24 @@ OUTPUT SCHEMA
 }`;
 }
 
-async function generateLaunchKit(openaiApiKey: string, inputs: WaitlistLaunchKitInputs, maxTokens: number) {
-  const response = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${openaiApiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "gpt-4o",
-      messages: [
-        {
-          role: "system",
-          content: buildLaunchKitSystemPrompt(inputs.product_category),
-        },
-        { role: "user", content: buildLaunchKitUserPrompt(inputs) },
-      ],
-      response_format: { type: "json_object" },
+/** Shared provider chain since 2026-11-16 (OpenAI alone had no credit from Nov 12). */
+async function generateLaunchKit(inputs: WaitlistLaunchKitInputs, maxTokens: number) {
+  let content: string;
+  try {
+    content = (await generateJsonText({
+      label: "waitlist-launch-kit",
+      feature: "WAITLIST_GENERATION",
+      openaiModel: "gpt-4o",
+      system: buildLaunchKitSystemPrompt(inputs.product_category),
+      prompt: buildLaunchKitUserPrompt(inputs),
       temperature: 0.7,
-      max_tokens: maxTokens,
-    }),
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error("OpenAI launch kit error:", errorText);
-    const status = response.status === 429 ? 429 : 502;
-    throw Object.assign(new Error(`OpenAI API error: ${response.status}`), { status });
+      maxTokens,
+      timeoutMs: 55_000,
+    })).text;
+  } catch (error) {
+    console.error("Launch kit: every AI provider failed:", error instanceof Error ? error.message : error);
+    throw Object.assign(new Error("AI providers unavailable"), { status: 502 });
   }
-
-  const aiData = await response.json();
-  const content = aiData?.choices?.[0]?.message?.content;
-  if (!content) throw Object.assign(new Error("No content returned from model"), { status: 502 });
   const parsed = JSON.parse(content);
   const validationErrors = validateLaunchKitOutput(parsed);
   if (validationErrors.length) {
@@ -372,16 +359,13 @@ serve(async (req) => {
         });
       }
 
-      const openaiApiKey = Deno.env.get("OPENAI_API_KEY");
-      if (!openaiApiKey) throw new Error("OpenAI API key not configured");
-
       try {
         let kit: unknown;
         try {
-          kit = await generateLaunchKit(openaiApiKey, validation.inputs, 4000);
+          kit = await generateLaunchKit(validation.inputs, 4000);
         } catch (firstError) {
           console.warn("Retrying launch kit generation with larger token budget", firstError);
-          kit = await generateLaunchKit(openaiApiKey, validation.inputs, 6000);
+          kit = await generateLaunchKit(validation.inputs, 6000);
         }
 
         return new Response(JSON.stringify({
@@ -456,9 +440,6 @@ serve(async (req) => {
       });
     }
 
-    const openaiApiKey = Deno.env.get("OPENAI_API_KEY");
-    if (!openaiApiKey) throw new Error("OpenAI API key not configured");
-
     try {
       const prompt = `You are a conversion copywriter specialized in startup waitlist pages.
 
@@ -506,38 +487,16 @@ Return only valid JSON using this exact shape:
   "emailPlaceholder": "string"
 }`;
 
-      const openaiResponse = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${openaiApiKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "gpt-4o",
-          messages: [
-            {
-              role: "system",
-              content: "You are a world-class conversion copywriter for startup waitlist pages. Return only valid JSON.",
-            },
-            { role: "user", content: prompt },
-          ],
-          response_format: { type: "json_object" },
-          temperature: 0.75,
-          max_tokens: 1000,
-        }),
+      const { text: content } = await generateJsonText({
+        label: "waitlist-page",
+        feature: "WAITLIST_GENERATION",
+        openaiModel: "gpt-4o",
+        system: "You are a world-class conversion copywriter for startup waitlist pages. Return only valid JSON.",
+        prompt,
+        temperature: 0.75,
+        maxTokens: 1000,
+        timeoutMs: 45_000,
       });
-
-      if (!openaiResponse.ok) {
-        const errorText = await openaiResponse.text();
-        console.error("OpenAI error:", errorText);
-        throw new Error(`OpenAI API error: ${openaiResponse.status}`);
-      }
-
-      const aiData = await openaiResponse.json();
-      const content = aiData?.choices?.[0]?.message?.content;
-      if (!content) {
-        throw new Error("No content returned from model");
-      }
 
       const result = JSON.parse(content);
 

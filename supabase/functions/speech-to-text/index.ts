@@ -58,36 +58,52 @@ serve(async (req) => {
 
     // Process audio in chunks
     const binaryAudio = processBase64Chunks(audio);
-    
-    // Prepare form data with enhanced settings
-    const formData = new FormData();
     const blob = new Blob([binaryAudio], { type: 'audio/webm' });
-    formData.append('file', blob, 'audio.webm');
-    formData.append('model', 'whisper-1');
-    formData.append('language', 'en');
-    formData.append('prompt', 'This is a business-related conversation about startup ideas, market analysis, and entrepreneurship.');
-    formData.append('response_format', 'json');
 
-    // Send to OpenAI
-    const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
-      },
-      body: formData,
-    });
+    // OpenAI Whisper first, Groq's Whisper as the free backup (2026-11-16:
+    // OpenAI had no credit from Nov 12 and voice notes failed). Same form.
+    const providers = [
+      { name: 'openai', url: 'https://api.openai.com/v1/audio/transcriptions', key: Deno.env.get('OPENAI_API_KEY')?.trim(), model: 'whisper-1' },
+      { name: 'groq', url: 'https://api.groq.com/openai/v1/audio/transcriptions', key: Deno.env.get('GROQ_API_KEY')?.trim(), model: 'whisper-large-v3' },
+    ].filter((provider) => provider.key);
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('OpenAI API error:', errorText);
-      throw new Error(`OpenAI API error: ${errorText}`);
+    let text: string | null = null;
+    let lastError = 'No transcription provider is configured';
+    for (const provider of providers) {
+      const formData = new FormData();
+      formData.append('file', blob, 'audio.webm');
+      formData.append('model', provider.model);
+      formData.append('language', 'en');
+      formData.append('prompt', 'This is a business-related conversation about startup ideas, market analysis, and entrepreneurship.');
+      formData.append('response_format', 'json');
+      try {
+        const response = await fetch(provider.url, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${provider.key}` },
+          body: formData,
+          signal: AbortSignal.timeout(45_000),
+        });
+        if (!response.ok) {
+          lastError = `${provider.name} ${response.status}: ${(await response.text()).slice(0, 200)}`;
+          console.error('Transcription failed:', lastError);
+          continue;
+        }
+        const result = await response.json();
+        if (typeof result?.text === 'string') {
+          text = result.text as string;
+          console.log(`Transcription successful via ${provider.name} (${result.text.length} characters)`);
+          break;
+        }
+        lastError = `${provider.name} returned no text`;
+      } catch (error) {
+        lastError = `${provider.name}: ${error instanceof Error ? error.message : String(error)}`;
+        console.error('Transcription failed:', lastError);
+      }
     }
-
-    const result = await response.json();
-    console.log('Transcription successful:', result.text);
+    if (text === null) throw new Error(`Transcription unavailable (${lastError})`);
 
     return new Response(
-      JSON.stringify({ text: result.text }),
+      JSON.stringify({ text }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
       }

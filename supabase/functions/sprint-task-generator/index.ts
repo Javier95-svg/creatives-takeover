@@ -3,8 +3,7 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { checkAndDeductCredits, getUserFromAuth, refundCredits } from '../_shared/credit-deduction.ts';
 import { CREDIT_COSTS } from '../_shared/credit-constants.ts';
 import { resolveCreditIdempotencyKey } from '../_shared/request-idempotency.ts';
-
-const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+import { generateJsonText } from '../_shared/json-generation.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -76,64 +75,26 @@ serve(async (req) => {
       );
     }
 
-    if (!openAIApiKey) {
-      console.error('OpenAI API key not configured');
-      return new Response(JSON.stringify({ error: 'OpenAI API key not configured' }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    console.log('Making OpenAI API call...');
+    // Shared provider chain since 2026-11-16 (OpenAI alone had no credit from Nov 12).
+    // A failure here refunds the credits below.
     try {
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${openAIApiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'gpt-4o-mini',
-          messages: [
-            {
-              role: 'system',
-              content: `You are a sprint planning expert. Convert fuzzy ideas into actionable, time-boxed tasks for a ${sprintDuration}-day sprint. Each task should be 2-4 hours max. Return JSON with "tasks" array containing objects with: title (specific action), description (brief details), estimated_hours (0.5-4.0), priority (urgent/high/medium/low), tags (array of relevant keywords).`
-            },
-            {
-              role: 'user',
-              content: `Sprint: "${sprintTitle}"\n\nIdea: ${fuzzyIdea}\n\nBreak this into ${Math.max(6, Math.min(20, sprintDuration))} specific, actionable tasks that can be completed in ${sprintDuration} days.`
-            }
-          ],
-          temperature: 0.7,
-          max_tokens: 2000,
-        }),
+      const { text: content } = await generateJsonText({
+        label: 'sprint-task-generator',
+        feature: 'SPRINT_TASK_GENERATION',
+        openaiModel: 'gpt-4o-mini',
+        temperature: 0.7,
+        maxTokens: 2000,
+        timeoutMs: 45_000,
+        system: `You are a sprint planning expert. Convert fuzzy ideas into actionable, time-boxed tasks for a ${sprintDuration}-day sprint. Each task should be 2-4 hours max. Return JSON with "tasks" array containing objects with: title (specific action), description (brief details), estimated_hours (0.5-4.0), priority (urgent/high/medium/low), tags (array of relevant keywords).`,
+        prompt: `Sprint: "${sprintTitle}"\n\nIdea: ${fuzzyIdea}\n\nBreak this into ${Math.max(6, Math.min(20, sprintDuration))} specific, actionable tasks that can be completed in ${sprintDuration} days.`,
       });
-
-      console.log('OpenAI response status:', response.status);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('OpenAI API error:', errorText);
-        throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
-      }
-
-      const data = await response.json();
-      console.log('OpenAI response data:', data);
-
-      const content = data.choices?.[0]?.message?.content;
-      if (!content) {
-        console.error('No content in OpenAI response');
-        throw new Error('No content received from OpenAI');
-      }
 
       let tasks;
       try {
-        console.log('Parsing OpenAI response:', content);
         const parsed = JSON.parse(content);
         tasks = parsed.tasks || [];
-        console.log('Parsed tasks:', tasks);
       } catch (parseError) {
-        console.error('Failed to parse OpenAI response:', parseError);
+        console.error('Failed to parse the AI response:', parseError);
         console.log('Using fallback tasks');
         // Fallback parsing if JSON is malformed
         tasks = [
