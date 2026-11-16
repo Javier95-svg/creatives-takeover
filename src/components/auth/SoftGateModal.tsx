@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { getSessionSafely } from "@/integrations/supabase/auth";
 import { supabase } from "@/integrations/supabase/client";
-import { mapSignUpError } from "@/lib/authErrors";
+import { confirmationSentMessage, mapSignUpError } from "@/lib/authErrors";
 import {
   trackLandingViewed,
   trackSoftGateShown,
@@ -259,7 +259,12 @@ const SoftGateModal = ({
         });
 
         if (autoSignInError) {
-          toast.error("Account created, but automatic sign in failed. Please sign in manually.");
+          // With "Confirm email" on, the account waits for the link we just sent.
+          if (/not confirmed|not verified/i.test(autoSignInError.message ?? "")) {
+            toast.success(confirmationSentMessage(email), { duration: 10000 });
+          } else {
+            toast.error("Account created, but automatic sign in failed. Please sign in manually.");
+          }
           navigate(
             `/login?source=soft-gate-email&return=${encodeURIComponent(returnPath)}`,
             { replace: true },

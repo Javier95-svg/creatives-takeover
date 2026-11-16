@@ -13,6 +13,20 @@ function normalizeMessage(message?: string): string {
 export const EMAIL_DELIVERY_FAILED =
   "We couldn't send your confirmation email, so your account wasn't created. Continue with Google, LinkedIn or X instead, or try again in a few minutes. If it keeps happening, contact us.";
 
+/** After an email signup that needs confirmation (the email is queued, not sent inline). */
+export function confirmationSentMessage(email: string): string {
+  const address = email.trim();
+  return `We sent a confirmation link to ${address || "your email"}. It can take a minute, and it may land in spam.`;
+}
+
+/** Auth's project-wide email limit (Authentication > Rate Limits), not this person's fault. */
+export const EMAIL_RATE_LIMITED =
+  "A lot of people are signing up right now. Try again in a few minutes, or continue with Google, LinkedIn or X.";
+
+export function isEmailRateLimitError(error: Pick<AuthError, "message"> & { code?: string } | null): boolean {
+  return error?.code === "over_email_send_rate_limit" || normalizeMessage(error?.message).includes("email rate limit");
+}
+
 export function isEmailDeliveryError(error: Pick<AuthError, "message"> | null): boolean {
   const message = normalizeMessage(error?.message);
   return message.includes("confirm email") || message.includes("confirmation email") || message.includes("sending email");
@@ -29,6 +43,10 @@ export function mapSignUpError(error: AuthError | null): string {
 
   if (message.includes("username") && message.includes("taken")) {
     return "That username is already taken. Please choose another one.";
+  }
+
+  if (isEmailRateLimitError(error)) {
+    return EMAIL_RATE_LIMITED;
   }
 
   if (message.includes("too many") || message.includes("rate limit")) {

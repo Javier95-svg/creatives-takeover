@@ -18,7 +18,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { AuthSocialButtons } from "@/components/auth/AuthSocialButtons";
 import { AuthShowcaseLine } from "@/components/auth/AuthDesign";
 import SignupUrgency from "@/components/auth/SignupUrgency";
-import { EMAIL_DELIVERY_FAILED, isEmailDeliveryError, mapSignUpError } from "@/lib/authErrors";
+import { confirmationSentMessage, EMAIL_DELIVERY_FAILED, isEmailDeliveryError, mapSignUpError } from "@/lib/authErrors";
 import { getPasswordValidationError, MIN_PASSWORD_LENGTH, PASSWORD_REQUIREMENTS } from "@/lib/passwordPolicy";
 import { captureEvent, persistSignupIntent, trackSignupCompletedAttributed } from "@/lib/analytics";
 import { useCTAAttribution } from "@/hooks/useCTAAttribution";
@@ -447,7 +447,7 @@ const Signup = () => {
         clearPendingReferralCode();
         const session = await getSessionSafely();
         if (!session) {
-          toast.success('Check your email to confirm your account before signing in.');
+          toast.success(confirmationSentMessage(formData.email), { duration: 10000 });
           navigate('/login');
           return;
         }

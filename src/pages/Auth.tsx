@@ -17,7 +17,7 @@ import MobileFormOptimizer from '@/components/MobileFormOptimizer';
 import { useFeedbackCredits } from '@/hooks/useFeedbackCredits';
 import { useAuth } from '@/contexts/AuthContext';
 import { signUpWithFallback } from '@/lib/authSignup';
-import { mapSignInError, mapSignUpError } from '@/lib/authErrors';
+import { confirmationSentMessage, mapSignInError, mapSignUpError } from '@/lib/authErrors';
 import { getPasswordValidationError, MIN_PASSWORD_LENGTH } from '@/lib/passwordPolicy';
 import { persistOnboardingReturn, sanitizeReturnPath } from '@/lib/authRedirect';
 import { persistAuthMethod } from '@/lib/analytics';
@@ -161,7 +161,7 @@ const Auth: React.FC = () => {
       clearPendingReferralCode();
       const session = await getSessionSafely();
       if (!session) {
-        toast.success('Check your email to confirm your account before signing in.');
+        toast.success(confirmationSentMessage(email), { duration: 10000 });
         setActiveTab('login');
         setLoading(false);
         return;

@@ -16,7 +16,6 @@ import { requireAdminOrWorker } from "../_shared/guards.ts";
 import { escapeHtml } from "../_shared/email-voice.ts";
 import { callGemini, GEMINI_SEARCH_MODELS, GEMINI_TEXT_MODELS } from "../_shared/gemini.ts";
 import { FAST_JSON_MODELS } from "../_shared/json-generation.ts";
-import { probeSmtpLogin } from "../_shared/smtp-probe.ts";
 
 /** Gemini models mvp-builder-generate calls (FREE_DEFAULT_MODEL, GEMINI_FALLBACK_MODEL there). */
 const MVP_BUILDER_GEMINI_MODELS = ["gemini-3.5-flash", "gemini-3.1-flash-lite"];
@@ -80,17 +79,35 @@ const REQUIRED_GEMINI_MODELS = Array.from(new Set([
 
 const CHECKS: ProviderCheck[] = [
   {
-    // Runs hourly on its own (ai-provider-health-auth-email-hourly) as well as daily.
+    // Every 10 minutes on its own (job ai-provider-health-auth-email-hourly)
+    // as well as daily. Since 2026-11-16 Supabase Auth emails go through
+    // auth_email_outbox and auth-email-worker (Resend API), not SMTP.
     provider: "auth_email",
-    affects: "Password reset and email-change emails (and email signups if \"Confirm email\" is turned back on)",
+    affects: "Signup confirmation, password reset and email-change emails",
     run: async () => {
-      await probeSmtpLogin({
-        host: env("AUTH_SMTP_HOST") || "smtp.resend.com",
-        port: Number(env("AUTH_SMTP_PORT") || "465"),
-        user: env("AUTH_SMTP_USER") || "resend",
-        password: env("AUTH_SMTP_PASSWORD"),
-        timeoutMs: TIMEOUT_MS,
+      // 1. The key: an invalid key is rejected; a sending-only key answers
+      //    restricted_api_key, which still sends.
+      const response = await withTimeout("https://api.resend.com/domains", {
+        headers: { Authorization: `Bearer ${env("RESEND_API_KEY")}` },
       });
+      if (!response.ok) {
+        const failure = await describeFailure(response);
+        if (!/restricted_api_key/i.test(failure)) throw new Error(`Resend key rejected: ${failure}`);
+      }
+      // 2. The queue: nothing failed lately, nothing stuck.
+      const admin = createClient(env("SUPABASE_URL"), env("SUPABASE_SERVICE_ROLE_KEY"), { auth: { persistSession: false } });
+      const since = new Date(Date.now() - 2 * 3600_000).toISOString();
+      const stuckBefore = new Date(Date.now() - 10 * 60_000).toISOString();
+      const [failed, stuck] = await Promise.all([
+        admin.from("auth_email_outbox").select("id", { count: "exact", head: true }).eq("status", "failed").gte("created_at", since),
+        admin.from("auth_email_outbox").select("id", { count: "exact", head: true }).in("status", ["pending", "sending"]).lt("created_at", stuckBefore),
+      ]);
+      if (failed.error || stuck.error) throw new Error(`Could not read auth_email_outbox: ${(failed.error ?? stuck.error)?.message}`);
+      const problems = [
+        failed.count ? `${failed.count} auth email${failed.count === 1 ? "" : "s"} failed in the last 2 hours` : null,
+        stuck.count ? `${stuck.count} auth email${stuck.count === 1 ? "" : "s"} waiting more than 10 minutes` : null,
+      ].filter(Boolean);
+      if (problems.length) throw new Error(problems.join("; "));
     },
   },
   {
@@ -275,7 +292,7 @@ const CHECKS: ProviderCheck[] = [
 ];
 
 const KEY_FOR: Record<string, string> = {
-  auth_email: "AUTH_SMTP_PASSWORD",
+  auth_email: "RESEND_API_KEY",
   gemini_text: "GEMINI_API_KEY",
   gemini_models: "GEMINI_API_KEY",
   gemini_search: "GEMINI_API_KEY",
@@ -477,9 +494,9 @@ serve(async (req) => {
       const recipients = adminRecipients();
       const failing = changes.filter((change) => !change.ok).map((change) => change.provider);
       const recovered = changes.filter((change) => change.recovered).map((change) => change.provider);
-      const smtpRejected = changes.some((change) => change.provider === "auth_email" && !change.ok && change.configured);
-      const subject = smtpRejected
-        ? "URGENT: Supabase Auth can't send email (SMTP login rejected)"
+      const authEmailFailing = changes.some((change) => change.provider === "auth_email" && !change.ok);
+      const subject = authEmailFailing
+        ? "URGENT: Signup and password emails are not going out"
         : failing.length
           ? `AI provider failing: ${failing.join(", ")}`
           : `AI provider recovered: ${recovered.join(", ")}`;

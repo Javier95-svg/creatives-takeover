@@ -1,26 +1,28 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import test from 'node:test';
 
 const read = (path: string) => readFileSync(new URL(`../${path}`, import.meta.url), 'utf8');
 
-// 2026-11-16: Supabase Auth's SMTP login (Resend) was rejected and every email
-// signup failed until an outside tester noticed. The login is now checked every
-// hour without sending an email, and a rejection emails the admins.
-test('the SMTP login Supabase Auth uses is checked hourly, without sending email', () => {
+// 2026-11-16: Supabase Auth's SMTP key was rejected and every email signup
+// failed until an outside tester noticed. Auth emails now go through
+// auth_email_outbox and Resend's API; this check alerts within 10 minutes when
+// the key is rejected or emails fail or get stuck.
+test('auth emails are checked every 10 minutes: Resend key, failed and stuck queue rows', () => {
   const health = read('supabase/functions/ai-provider-health/index.ts');
   assert.match(health, /provider: "auth_email"/);
-  assert.match(health, /auth_email: "AUTH_SMTP_PASSWORD"/);
-  assert.match(health, /host: env\("AUTH_SMTP_HOST"\) \|\| "smtp\.resend\.com"/);
+  assert.match(health, /auth_email: "RESEND_API_KEY"/);
+  assert.match(health, /https:\/\/api\.resend\.com\/domains/);
+  assert.match(health, /restricted_api_key/, 'a sending-only key is a working key');
+  assert.match(health, /from\("auth_email_outbox"\)[\s\S]{0,120}\.eq\("status", "failed"\)/);
+  assert.match(health, /\.in\("status", \["pending", "sending"\]\)/);
   assert.match(health, /const selected = only \? CHECKS\.filter/);
-  assert.match(health, /URGENT: Supabase Auth can't send email/);
+  assert.match(health, /URGENT: Signup and password emails are not going out/);
+  assert.equal(existsSync(new URL('../supabase/functions/_shared/smtp-probe.ts', import.meta.url)), false, 'SMTP is no longer used');
 
-  const probe = read('supabase/functions/_shared/smtp-probe.ts');
-  assert.match(probe, /await expect\(235, "login rejected"\)/);
-  assert.doesNotMatch(probe, /MAIL FROM|RCPT TO|DATA/, 'the probe must never send a message');
-
-  const migration = read('supabase/migrations/20261116210000_auth_email_health_hourly.sql');
-  assert.match(migration, /cron\.schedule\('ai-provider-health-auth-email-hourly', '17 \* \* \* \*'/);
-  assert.match(migration, /'\{"only":\["auth_email"\]\}'::jsonb/);
-  assert.match(migration, /REVOKE ALL ON FUNCTION public\.dispatch_auth_email_health_check\(\) FROM PUBLIC, anon, authenticated/);
+  const hourly = read('supabase/migrations/20261116210000_auth_email_health_hourly.sql');
+  assert.match(hourly, /'\{"only":\["auth_email"\]\}'::jsonb/);
+  assert.match(hourly, /REVOKE ALL ON FUNCTION public\.dispatch_auth_email_health_check\(\) FROM PUBLIC, anon, authenticated/);
+  const outbox = read('supabase/migrations/20261116220000_auth_email_outbox.sql');
+  assert.match(outbox, /cron\.schedule\('ai-provider-health-auth-email-hourly', '\*\/10 \* \* \* \*'/);
 });
