@@ -16,6 +16,7 @@ import { requireAdminOrWorker } from "../_shared/guards.ts";
 import { escapeHtml } from "../_shared/email-voice.ts";
 import { callGemini, GEMINI_SEARCH_MODELS, GEMINI_TEXT_MODELS } from "../_shared/gemini.ts";
 import { FAST_JSON_MODELS } from "../_shared/json-generation.ts";
+import { probeSmtpLogin } from "../_shared/smtp-probe.ts";
 
 /** Gemini models mvp-builder-generate calls (FREE_DEFAULT_MODEL, GEMINI_FALLBACK_MODEL there). */
 const MVP_BUILDER_GEMINI_MODELS = ["gemini-3.5-flash", "gemini-3.1-flash-lite"];
@@ -78,6 +79,20 @@ const REQUIRED_GEMINI_MODELS = Array.from(new Set([
 ]));
 
 const CHECKS: ProviderCheck[] = [
+  {
+    // Runs hourly on its own (ai-provider-health-auth-email-hourly) as well as daily.
+    provider: "auth_email",
+    affects: "Password reset and email-change emails (and email signups if \"Confirm email\" is turned back on)",
+    run: async () => {
+      await probeSmtpLogin({
+        host: env("AUTH_SMTP_HOST") || "smtp.resend.com",
+        port: Number(env("AUTH_SMTP_PORT") || "465"),
+        user: env("AUTH_SMTP_USER") || "resend",
+        password: env("AUTH_SMTP_PASSWORD"),
+        timeoutMs: TIMEOUT_MS,
+      });
+    },
+  },
   {
     provider: "gemini_text",
     affects: "ICP Builder, PMF Lab, GTM Strategist, Insighta Test, Pitch Deck Analyzer",
@@ -260,6 +275,7 @@ const CHECKS: ProviderCheck[] = [
 ];
 
 const KEY_FOR: Record<string, string> = {
+  auth_email: "AUTH_SMTP_PASSWORD",
   gemini_text: "GEMINI_API_KEY",
   gemini_models: "GEMINI_API_KEY",
   gemini_search: "GEMINI_API_KEY",
@@ -403,7 +419,11 @@ serve(async (req) => {
       auth: { persistSession: false },
     });
 
-    const results = await Promise.all(CHECKS.map(runCheck));
+    // { "only": ["auth_email"] } runs just those checks (the hourly job).
+    const body = await req.json().catch(() => ({}));
+    const only: string[] | null = Array.isArray(body?.only) ? body.only.filter((name: unknown) => typeof name === "string") : null;
+    const selected = only ? CHECKS.filter((check) => only.includes(check.provider)) : CHECKS;
+    const results = await Promise.all(selected.map(runCheck));
     const now = new Date().toISOString();
 
     // Without the previous state every run would look like a first run and
@@ -441,12 +461,12 @@ serve(async (req) => {
 
     // forceEmail re-sends the current failures, e.g. after an email that did
     // not go out (the state is already saved, so it would not count as a change).
-    const body = await req.json().catch(() => ({}));
     if (body?.forceEmail === true && changes.length === 0) {
       changes.push(...results.filter((result) => !result.ok).map((result) => ({ ...result, recovered: false })));
     }
 
-    const spend = await monthSpend(admin);
+    // Spend is reported by the full daily run only.
+    const spend = only ? null : await monthSpend(admin);
 
     let emailed = false;
     let budgetAlert: "warning" | "paused" | null = null;
@@ -457,9 +477,12 @@ serve(async (req) => {
       const recipients = adminRecipients();
       const failing = changes.filter((change) => !change.ok).map((change) => change.provider);
       const recovered = changes.filter((change) => change.recovered).map((change) => change.provider);
-      const subject = failing.length
-        ? `AI provider failing: ${failing.join(", ")}`
-        : `AI provider recovered: ${recovered.join(", ")}`;
+      const smtpRejected = changes.some((change) => change.provider === "auth_email" && !change.ok && change.configured);
+      const subject = smtpRejected
+        ? "URGENT: Supabase Auth can't send email (SMTP login rejected)"
+        : failing.length
+          ? `AI provider failing: ${failing.join(", ")}`
+          : `AI provider recovered: ${recovered.join(", ")}`;
       const sent = await new Resend(resendKey).emails.send({
         from: `${fromName} <${fromEmail}>`,
         to: recipients,
