@@ -98,6 +98,7 @@ export function ProspectsTable({ prospects, onOpen }: { prospects: readonly Pros
                     <button type="button" className="text-left" onClick={(event) => { event.stopPropagation(); onOpen(prospect); }}>
                       <span className="block font-medium text-foreground">{prospect.name}</span>
                       <span className="block text-xs text-muted-foreground">{prospect.domain}</span>
+                      {prospect.contact ? <span className="block text-xs text-foreground">{prospect.contact.full_name}{prospect.contact.role ? ` · ${prospect.contact.role}` : ''}</span> : null}
                     </button>
                   </td>
                   <td className="hidden max-w-xs px-4 py-3 text-muted-foreground md:table-cell">{topReason(prospect)}</td>

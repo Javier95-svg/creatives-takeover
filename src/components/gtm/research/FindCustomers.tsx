@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ExternalLink, Loader2, Pencil, Plus, Search, X } from 'lucide-react';
+import { ExternalLink, Loader2, Pencil, Plus, Search, UserSearch, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { captureEvent } from '@/lib/analytics';
 import { Badge } from '@/components/ui/badge';
@@ -18,7 +18,7 @@ import {
 } from '@/lib/gtmResearch';
 import type { GTMPipelineEntry, GTMPlanV2 } from '@/lib/gtmV2';
 import { cn } from '@/lib/utils';
-import { ProspectSheet } from './ProspectSheet';
+import { CONTACT_FINDER_ON, ProspectSheet } from './ProspectSheet';
 import { ProspectsTable } from './ProspectsTable';
 import { ResearchTimeline } from './ResearchTimeline';
 
@@ -275,6 +275,7 @@ function ResultsHeader({ research, onNewSearch, onError }: { research: GtmResear
   const run = research.run!;
   const root = research.root ?? run;
   const fits = research.prospects.filter((prospect) => prospect.fit_tier !== 'C' && prospect.status !== 'dismissed');
+  const withoutPerson = fits.filter((prospect) => !prospect.contact).length;
   const shortlisted = research.prospects.some((prospect) => prospect.fit_tier !== 'C' && ['shortlisted', 'in_pipeline', 'contacted'].includes(prospect.status));
   const canRerun = rerunEligible(research.prospects, root.rerun_used);
   const finished = ['completed', 'partial'].includes(root.status);
@@ -328,6 +329,16 @@ function ResultsHeader({ research, onNewSearch, onError }: { research: GtmResear
           ) : null}
           {root.segments.length > 1 ? (
             <Button type="button" size="sm" variant="ghost" disabled={research.busy} onClick={go(() => research.branch())}>Target another group</Button>
+          ) : null}
+          {CONTACT_FINDER_ON && withoutPerson > 0 ? (
+            <Button type="button" size="sm" variant="outline" className="h-auto min-h-9 whitespace-normal text-left" disabled={research.busy} onClick={go(async () => {
+              const result = await research.findContacts();
+              toast.success(result.found
+                ? `Found ${result.found} ${result.found === 1 ? 'person' : 'people'} with a deliverable email · ${result.charged} credit${result.charged === 1 ? '' : 's'}.${result.stoppedForCredits ? ' Stopped: out of credits.' : ''}`
+                : `No one with a deliverable email at the ${result.checked} companies checked. You were not charged.`);
+            })}>
+              <UserSearch className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />Find the right person at {Math.min(withoutPerson, 10)} {Math.min(withoutPerson, 10) === 1 ? 'company' : 'companies'} · 1 credit each, only if found
+            </Button>
           ) : null}
           <label className="ml-auto inline-flex items-center gap-2 text-sm text-muted-foreground">
             <Switch checked={root.auto_refresh} disabled={research.busy} onCheckedChange={(checked) => void research.setAutoRefresh(checked).catch(onError)} aria-label="Check weekly for new companies" />

@@ -320,7 +320,17 @@ export function useGtmResearch(projectId: string | null) {
     return { found: Boolean(data.contact), message: typeof data.message === 'string' ? data.message : null };
   }), [act, loadDetails, run]);
 
+  /** Named people for up to 10 strong and good fits without one. 1 credit each, only when found. */
+  const findContacts = useCallback(() => act(async () => {
+    if (!rootId) return { found: 0, charged: 0, checked: 0 };
+    const data = await invoke('find_contacts', { runId: rootId }, createIdempotencyKey('gtm-contacts', crypto.randomUUID()));
+    captureEvent('gtm_contact_lookup', { found: Number(data.found) > 0, bulk: true, count: Number(data.found) || 0 });
+    if (run) await loadDetails(run);
+    return { found: Number(data.found) || 0, charged: Number(data.creditsCharged) || 0, checked: Number(data.checked) || 0, stoppedForCredits: Boolean(data.stoppedForCredits) };
+  }), [act, loadDetails, rootId, run]);
+
   return {
+    findContacts,
     run, root, searches, steps, prospects, loading, busy,
     analyze, retry, edit, start, cancel, followUp, branch, setAutoRefresh, selectSearch, startOver, refresh,
     updateProspect, updateDraft, ensureContact, markSent, markReplied, findContact,

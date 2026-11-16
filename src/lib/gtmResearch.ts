@@ -65,7 +65,24 @@ export interface CriterionVerdict {
 
 export interface ContactRoute { kind: 'contact_page' | 'generic_email' | 'careers'; value: string; sourceUrl: string }
 
-export interface Candidate { name: string; domain: string; foundVia: string }
+/**
+ * An organisation to check. `url` is the page where it was found when that is
+ * more specific than its homepage (a program inside a university site); the
+ * check starts there.
+ */
+export interface Candidate { name: string; domain: string; foundVia: string; url?: string }
+
+/**
+ * The list in a model answer: the answer itself when it is a bare array,
+ * otherwise the first of `keys` that holds an array.
+ */
+export function listFrom(raw: unknown, ...keys: string[]): unknown[] {
+  if (Array.isArray(raw)) return raw;
+  if (!raw || typeof raw !== 'object') return [];
+  const value = raw as Record<string, unknown>;
+  for (const key of keys) if (Array.isArray(value[key])) return value[key] as unknown[];
+  return [];
+}
 
 export const ANALYSIS_STEPS: readonly ResearchStepKey[] = ['read_site', 'understand_business', 'find_competitors', 'propose_segments'];
 export const RESEARCH_STEPS: readonly ResearchStepKey[] = ['discover_companies', 'qualify_companies', 'find_signals', 'draft_outreach', 'finalize'];
@@ -179,6 +196,16 @@ const NOT_A_PROSPECT = [
   'yellowpages.com', 'bbb.org', 'zoominfo.com', 'apollo.io', 'owler.com', 'similarweb.com', 'statista.com',
 ];
 
+// Two-label endings under which organisations register their own name.
+const SECOND_LEVEL = /\.(co|ac|org|gov|net|com|edu|ltd|plc|sch|nhs|or|ne|go)\.[a-z]{2}$/;
+
+/** The organisation's main domain: "innovate.umd.edu" -> "umd.edu", "cs.ox.ac.uk" -> "ox.ac.uk". Staff email addresses use it. */
+export function registrableDomain(domain: string): string {
+  const labels = domain.toLowerCase().split('.').filter(Boolean);
+  const keep = SECOND_LEVEL.test(`.${labels.slice(-2).join('.')}`) ? 3 : 2;
+  return labels.slice(-keep).join('.');
+}
+
 export function isExcludedDomain(domain: string, alsoExclude: readonly string[] = []): boolean {
   const matches = (blocked: string) => domain === blocked || domain.endsWith(`.${blocked}`);
   return NOT_A_PROSPECT.some(matches) || alsoExclude.some((blocked) => blocked && matches(blocked));
@@ -192,7 +219,8 @@ export function dedupeCandidates(candidates: readonly Candidate[], exclude: read
     const domain = normalizeDomain(candidate.domain);
     if (!domain || seen.has(domain) || isExcludedDomain(domain, exclude)) continue;
     seen.add(domain);
-    result.push({ name: clean(candidate.name, 120) || domain, domain, foundVia: clean(candidate.foundVia, 300) });
+    const url = candidate.url && normalizeDomain(candidate.url) === domain ? candidate.url.slice(0, 500) : undefined;
+    result.push({ name: clean(candidate.name, 120) || domain, domain, foundVia: clean(candidate.foundVia, 300), ...(url ? { url } : {}) });
     if (result.length >= limit) break;
   }
   return result;
@@ -294,8 +322,7 @@ export function parseBusinessProfile(raw: unknown, allowedUrls: ReadonlySet<stri
 }
 
 export function parseCompetitors(raw: unknown, ownDomain: string | null): Competitor[] {
-  const list = raw && typeof raw === 'object' && Array.isArray((raw as { competitors?: unknown }).competitors)
-    ? (raw as { competitors: unknown[] }).competitors : Array.isArray(raw) ? raw : [];
+  const list = listFrom(raw, 'competitors', 'companies');
   const seen = new Set<string>();
   const result: Competitor[] = [];
   for (const item of list) {
@@ -347,21 +374,20 @@ export function sanitizeSegment(raw: unknown): Segment | null {
 }
 
 export function parseCandidates(raw: unknown, foundVia: string): Candidate[] {
-  const list = raw && typeof raw === 'object' && Array.isArray((raw as { companies?: unknown }).companies)
-    ? (raw as { companies: unknown[] }).companies : [];
-  return list.flatMap((item): Candidate[] => {
+  return listFrom(raw, 'companies', 'organisations', 'organizations', 'results').flatMap((item): Candidate[] => {
     if (!item || typeof item !== 'object') return [];
     const value = item as Record<string, unknown>;
     const domain = normalizeDomain(clean(value.domain ?? value.website ?? value.url, 200));
     if (!domain) return [];
+    const page = clean(value.url ?? value.page, 500);
     // The phrase from the results that shows what the organisation is, when given.
-    return [{ name: clean(value.name, 120) || domain, domain, foundVia: clean(value.evidence, 300) || foundVia }];
+    return [{ name: clean(value.name, 120) || domain, domain, foundVia: clean(value.evidence, 300) || foundVia,
+      ...(page && /^https?:\/\//i.test(page) ? { url: page } : {}) }];
   });
 }
 
 export function parseVerdicts(raw: unknown, criteria: readonly SegmentCriterion[]): CriterionVerdict[] {
-  const list = raw && typeof raw === 'object' && Array.isArray((raw as { verdicts?: unknown }).verdicts)
-    ? (raw as { verdicts: unknown[] }).verdicts : [];
+  const list = listFrom(raw, 'verdicts', 'criteria');
   return criteria.map((criterion) => {
     const found = list.find((item) => item && typeof item === 'object' && (item as Record<string, unknown>).criterionId === criterion.id) as Record<string, unknown> | undefined;
     const verdict: Verdict = found && ['met', 'not_met', 'unknown'].includes(String(found.verdict)) ? found.verdict as Verdict : 'unknown';
@@ -445,8 +471,7 @@ const SIGNAL_KINDS: readonly SignalKind[] = ['hiring', 'funding', 'launch', 'exp
  * twelve months; undated claims are dropped rather than guessed.
  */
 export function parseSignals(raw: unknown, allowedUrls: ReadonlySet<string>, now = new Date()): BuyingSignal[] {
-  const list = raw && typeof raw === 'object' && Array.isArray((raw as { signals?: unknown }).signals)
-    ? (raw as { signals: unknown[] }).signals : [];
+  const list = listFrom(raw, 'signals', 'events', 'news');
   const oldest = now.getTime() - 366 * 86_400_000;
   const result: BuyingSignal[] = [];
   for (const item of list) {
@@ -479,7 +504,8 @@ export function parseDomainSearchPeople(raw: unknown, domain: string): ContactCa
     const value = item as Record<string, unknown>;
     const email = clean(value.value, 200).toLowerCase();
     const firstName = clean(value.first_name, 60);
-    if (value.type === 'generic' || !firstName || !/^[^@\s]+@[^@\s]+$/.test(email) || normalizeDomain(email.split('@')[1]) !== domain) return [];
+    const emailDomain = normalizeDomain(email.split('@')[1]);
+    if (value.type === 'generic' || !firstName || !/^[^@\s]+@[^@\s]+$/.test(email) || !emailDomain || registrableDomain(emailDomain) !== registrableDomain(domain)) return [];
     const sources = (Array.isArray(value.sources) ? value.sources : [])
       .map((source) => (source && typeof source === 'object' ? clean((source as Record<string, unknown>).uri, 300) : ''))
       .filter(Boolean).slice(0, 3);

@@ -15,6 +15,7 @@
  *   branch       { runId }                                   another target group from the same analysis
  *   auto_refresh { runId, enabled }                          weekly check for new companies
  *   find_contact { prospectId }                              a named decision-maker (contact-data provider; Idempotency-Key)
+ *   find_contacts { runId }                                  named people for up to 10 strong and good fits (Idempotency-Key)
  *
  * Service only (cron): refresh_due — starts the weekly checks that are due.
  *
@@ -32,7 +33,7 @@ import { kickResearchWorker } from "../_shared/gtm-research-kick.ts";
 import { finalizeRun, type ResearchRun } from "../_shared/gtm-research-pipeline.ts";
 import {
   CONTACT_FIND_CREDITS, emailStatusFromVerifier, FOLLOW_UP_TARGET, parseDomainSearchPeople, pickDecisionMaker, RESEARCH_RUN_CREDITS,
-  rerunEligible, runPrice, sanitizeSegment, type BusinessProfile, type FitTier, type ResearchRunKind,
+  registrableDomain, rerunEligible, runPrice, sanitizeSegment, type BusinessProfile, type FitTier, type ResearchRunKind,
 } from "../../../src/lib/gtmResearch.ts";
 
 const corsHeaders = {
@@ -122,6 +123,55 @@ async function createFollowUp(db: SupabaseClient, root: Run, kind: ResearchRunKi
   }
   await db.from("gtm_research_steps").insert({ run_id: data.id, user_id: root.user_id, key: "discover_companies", batch: 0 });
   return data.id as string;
+}
+
+interface ProspectForContact { id: string; run_id: string | null; domain: string; suggested_roles: string[] | null }
+type ContactOutcome = { status: "found"; contact: Record<string, unknown>; charged: number } | { status: "none" } | { status: "credits"; errorCode?: string };
+
+/**
+ * One named decision-maker at a company from the contact-data provider:
+ * people at the organisation's main domain (staff of innovate.umd.edu write
+ * from umd.edu), the closest job title, then a deliverability check. One
+ * credit is held and charged only when a deliverable address is found.
+ */
+async function findContactFor(db: SupabaseClient, userId: string, prospect: ProspectForContact, idempotencyKey: string, apiKey: string): Promise<ContactOutcome> {
+  const { data: existing } = await db.from("gtm_prospect_contacts").select("*").eq("prospect_id", prospect.id).limit(1);
+  if (existing?.length) return { status: "found", contact: existing[0], charged: 0 };
+  const reserved = await hold(db, userId, "GTM_CONTACT_FIND", CONTACT_FIND_CREDITS, `gtm-contact:${prospect.id}:${idempotencyKey}`, { prospectId: prospect.id });
+  if (!reserved?.success) return { status: "credits", errorCode: reserved?.errorCode };
+  const reservationId = reserved.reservationId!;
+  try {
+    const lookup = async (path: string) => {
+      const response = await fetch(`https://api.hunter.io/v2/${path}&api_key=${encodeURIComponent(apiKey)}`, { signal: AbortSignal.timeout(15_000) });
+      if (!response.ok) throw new Error(`contact provider ${response.status}`);
+      return response.json();
+    };
+    await ledger(db, prospect.run_id, "contacts:hunter", CONTACT_LOOKUP_COST_USD);
+    const mainDomain = registrableDomain(prospect.domain);
+    const people = parseDomainSearchPeople(await lookup(`domain-search?domain=${encodeURIComponent(mainDomain)}&type=personal&limit=20`), prospect.domain);
+    const { data: suppressed } = people.length
+      ? await db.from("gtm_suppressions").select("email").not("email", "is", null).in("email", people.map((person) => person.email))
+      : { data: [] };
+    const blockedEmails = new Set((suppressed ?? []).map((row) => String(row.email).toLowerCase()));
+    const person = pickDecisionMaker(people.filter((candidate) => !blockedEmails.has(candidate.email)), prospect.suggested_roles ?? []);
+    const emailStatus = person ? emailStatusFromVerifier(await lookup(`email-verifier?email=${encodeURIComponent(person.email)}`)) : null;
+    if (!person || !emailStatus) {
+      await release(db, reservationId, "no_contact_found");
+      return { status: "none" };
+    }
+    const { data: contact, error } = await db.from("gtm_prospect_contacts").insert({
+      prospect_id: prospect.id, user_id: userId, full_name: `${person.firstName} ${person.lastName}`.trim(), role: person.position || null,
+      email: person.email, email_status: emailStatus, provider: "hunter", sources: person.sources,
+    }).select("*").single();
+    if (error) throw new Error(error.message);
+    const { data: charged } = await db.rpc("finalize_credit_reservation_v1", { p_reservation_id: reservationId, p_charge: CONTACT_FIND_CREDITS, p_metadata: { prospectId: prospect.id } });
+    if (!charged?.success) console.error("gtm-research contact charge failed", charged);
+    return { status: "found", contact, charged: CONTACT_FIND_CREDITS };
+  } catch (error) {
+    await release(db, reservationId, "contact_lookup_failed");
+    console.error("gtm-research contact lookup failed", { prospectId: prospect.id, message: error instanceof Error ? error.message : error });
+    return { status: "none" };
+  }
 }
 
 /** Starts the weekly checks that are due. Called by pg_cron with the service key. */
@@ -420,41 +470,37 @@ serve(async (req) => {
         ? await db.from("gtm_prospect_companies").select("id, run_id, domain, suggested_roles, fit_tier").eq("id", prospectId).eq("user_id", user.id).maybeSingle()
         : { data: null };
       if (!prospect) return json({ error: "Company not found." }, 404);
-      const { data: existing } = await db.from("gtm_prospect_contacts").select("*").eq("prospect_id", prospect.id).limit(1);
-      if (existing?.length) return json({ contact: existing[0], replayed: true });
       if (!(await withinBudget(db))) return json(PAUSED, 503);
+      const outcome = await findContactFor(db, user.id, prospect as ProspectForContact, idempotencyHeader, apiKey);
+      if (outcome.status === "credits") return creditFailure(outcome.errorCode, CONTACT_FIND_CREDITS);
+      if (outcome.status === "none") return json({ contact: null, message: "No one matching the roles to contact was found with a deliverable email. You were not charged." });
+      return json({ contact: outcome.contact, creditsCharged: outcome.charged, ...(outcome.charged ? {} : { replayed: true }) });
+    }
 
-      const reserved = await hold(db, user.id, "GTM_CONTACT_FIND", CONTACT_FIND_CREDITS, `gtm-contact:${prospect.id}:${idempotencyHeader}`, { prospectId: prospect.id });
-      if (!reserved?.success) return creditFailure(reserved?.errorCode, CONTACT_FIND_CREDITS);
-      const reservationId = reserved.reservationId!;
-      try {
-        const lookup = async (path: string) => {
-          const response = await fetch(`https://api.hunter.io/v2/${path}&api_key=${encodeURIComponent(apiKey)}`, { signal: AbortSignal.timeout(15_000) });
-          if (!response.ok) throw new Error(`contact provider ${response.status}`);
-          return response.json();
-        };
-        await ledger(db, prospect.run_id as string | null, "contacts:hunter", CONTACT_LOOKUP_COST_USD);
-        const people = parseDomainSearchPeople(await lookup(`domain-search?domain=${encodeURIComponent(prospect.domain as string)}&type=personal&limit=10`), prospect.domain as string);
-        const { data: suppressed } = await db.from("gtm_suppressions").select("email").not("email", "is", null).in("email", people.map((person) => person.email));
-        const blockedEmails = new Set((suppressed ?? []).map((row) => String(row.email).toLowerCase()));
-        const person = pickDecisionMaker(people.filter((candidate) => !blockedEmails.has(candidate.email)), (prospect.suggested_roles ?? []) as string[]);
-        const emailStatus = person ? emailStatusFromVerifier(await lookup(`email-verifier?email=${encodeURIComponent(person.email)}`)) : null;
-        if (!person || !emailStatus) {
-          await release(db, reservationId, "no_contact_found");
-          return json({ contact: null, message: "No one matching the roles to contact was found with a deliverable email. You were not charged." });
+    // Named people for every strong and good fit in a search that has none yet,
+    // best first, at most 10 per click. 1 credit each, only when found.
+    if (action === "find_contacts") {
+      const apiKey = Deno.env.get("HUNTER_API_KEY");
+      if (!apiKey) return json({ error: "Finding named contacts isn't switched on yet.", errorCode: "NOT_AVAILABLE" }, 503);
+      if (!idempotencyHeader) return json({ error: "Missing Idempotency-Key." }, 400);
+      const root = await loadRoot(body.runId);
+      if (!root) return json({ error: "Research not found." }, 404);
+      if (!(await withinBudget(db))) return json(PAUSED, 503);
+      const { data: runs } = await db.from("gtm_research_runs").select("id").eq("user_id", user.id).or(`id.eq.${root.id},and(parent_run_id.eq.${root.id},kind.neq.initial)`);
+      const { data: candidates } = await db.from("gtm_prospect_companies").select("id, run_id, domain, suggested_roles, fit_tier, gtm_prospect_contacts(id)")
+        .eq("user_id", user.id).in("run_id", (runs ?? []).map((row) => row.id as string)).in("fit_tier", ["A", "B"]).neq("status", "dismissed")
+        .order("fit_score", { ascending: false }).limit(40);
+      const pending = (candidates ?? []).filter((row) => !(row.gtm_prospect_contacts as unknown[] | null)?.length).slice(0, 10);
+      let found = 0;
+      let charged = 0;
+      for (const prospect of pending) {
+        const outcome = await findContactFor(db, user.id, prospect as ProspectForContact, `${idempotencyHeader}:${prospect.id}`, apiKey);
+        if (outcome.status === "credits") {
+          return json({ found, checked: pending.indexOf(prospect), creditsCharged: charged, stoppedForCredits: true, error: `Out of credits after ${found} ${found === 1 ? "person" : "people"}.` });
         }
-        const { data: contact, error } = await db.from("gtm_prospect_contacts").insert({
-          prospect_id: prospect.id, user_id: user.id, full_name: `${person.firstName} ${person.lastName}`.trim(), role: person.position || null,
-          email: person.email, email_status: emailStatus, provider: "hunter", sources: person.sources,
-        }).select("*").single();
-        if (error) throw new Error(error.message);
-        const { data: charged } = await db.rpc("finalize_credit_reservation_v1", { p_reservation_id: reservationId, p_charge: CONTACT_FIND_CREDITS, p_metadata: { prospectId: prospect.id } });
-        if (!charged?.success) console.error("gtm-research contact charge failed", charged);
-        return json({ contact, creditsCharged: CONTACT_FIND_CREDITS });
-      } catch (error) {
-        await release(db, reservationId, "contact_lookup_failed");
-        throw error;
+        if (outcome.status === "found") { found += 1; charged += outcome.charged; }
       }
+      return json({ found, checked: pending.length, creditsCharged: charged });
     }
 
     return json({ error: "Unknown action." }, 400);

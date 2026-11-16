@@ -122,7 +122,7 @@ function previewResearch(run: ResearchRunRow | null, steps: ResearchStepRow[], r
   return { run, root: run, searches: run ? [run] : [], steps, prospects: rows, loading: false, busy: false, analyze: noop, retry: noop, edit: noop, start: noop, cancel: noop,
     followUp: noop, branch: noop, setAutoRefresh: noop, selectSearch: noop, startOver: () => undefined, refresh: async () => run,
     updateProspect: noop, updateDraft: noop, ensureContact: async () => 'preview-contact', markSent: noop, markReplied: noop,
-    findContact: async () => ({ found: false, message: 'Preview only.' }) } as unknown as GtmResearch;
+    findContact: async () => ({ found: false, message: 'Preview only.' }), findContacts: async () => ({ found: 0, charged: 0, checked: 0 }) } as unknown as GtmResearch;
 }
 
 export default function FindCustomersPreview() {

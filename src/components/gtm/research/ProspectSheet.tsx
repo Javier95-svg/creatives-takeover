@@ -30,7 +30,7 @@ export function FitBadge({ tier, score }: { tier: ProspectRow['fit_tier']; score
 type DraftPatch = Partial<Pick<ProspectDraft, 'subject' | 'body' | 'variant_b_subject' | 'variant_b_body' | 'chosen_variant'>>;
 
 /** Whether the "Find the right person" lookup is switched on in this build. */
-const CONTACT_FINDER_ON = import.meta.env.VITE_GTM_CONTACT_FINDER === 'on';
+export const CONTACT_FINDER_ON = import.meta.env.VITE_GTM_CONTACT_FINDER === 'on';
 
 export function ProspectSheet({ prospect, onClose, canAddToPipeline, onUpdate, onUpdateDraft, onAddToPipeline, onMarkSent, onMarkReplied, proof, onFindContact }: {
   prospect: ProspectRow | null;

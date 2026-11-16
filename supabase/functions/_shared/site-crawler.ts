@@ -95,14 +95,22 @@ export function extractLinks(html: string, baseUrl: string): string[] {
 export function pickInternalPages(links: readonly string[], homeUrl: string, limit: number): string[] {
   const home = new URL(homeUrl);
   const host = home.hostname.replace(/^www\./, "");
+  // Started deep inside a large site (a university's entrepreneurship centre):
+  // stay within that section, whose pages describe the program, rather than
+  // the institution's general pages.
+  const section = home.pathname.replace(/\/+$/, "");
+  const sectionDepth = section.split("/").filter(Boolean).length;
   const scored = links.flatMap((link) => {
     let url: URL;
     try { url = new URL(link); } catch { return []; }
     if (url.hostname.replace(/^www\./, "") !== host) return [];
-    if (url.pathname === home.pathname || /\.(pdf|jpg|jpeg|png|gif|svg|zip|mp4|webp)$/i.test(url.pathname)) return [];
+    if (url.pathname.replace(/\/+$/, "") === section || /\.(pdf|jpg|jpeg|png|gif|svg|zip|mp4|webp)$/i.test(url.pathname)) return [];
     const depth = url.pathname.split("/").filter(Boolean).length;
-    if (depth > 2) return [];
-    const score = INTERNAL_PAGE_HINTS.find(([pattern]) => pattern.test(url.pathname))?.[1] ?? 0;
+    const inSection = sectionDepth > 0 && url.pathname.startsWith(`${section}/`);
+    if (depth > sectionDepth + 2) return [];
+    if (sectionDepth > 0 && !inSection) return [];
+    const hint = INTERNAL_PAGE_HINTS.find(([pattern]) => pattern.test(url.pathname))?.[1] ?? 0;
+    const score = hint + (inSection ? 1 : 0);
     return score > 0 ? [{ url: `${url.origin}${url.pathname}`, score }] : [];
   });
   const seen = new Set<string>();
@@ -112,22 +120,65 @@ export function pickInternalPages(links: readonly string[], homeUrl: string, lim
     .map((item) => item.url);
 }
 
-/** Paths robots.txt disallows for `*` or our agent (prefix rules only). */
-export function parseRobotsDisallow(robots: string): string[] {
-  const disallow: string[] = [];
-  let applies = false;
+export interface RobotsRule { allow: boolean; pattern: string }
+
+/**
+ * The robots.txt rules that apply to us (RFC 9309): the group naming our
+ * agent if there is one, otherwise every `*` group. Consecutive user-agent
+ * lines share the rules that follow them.
+ *
+ * 2026-11-16: the old reader cut every rule at its first `*`, so the common
+ * `Disallow: /*?` (pages with a query string) became `Disallow: /` and whole
+ * university sites (Oxford, TU Delft, Maryland) were reported as blocked.
+ */
+export function parseRobots(robots: string): RobotsRule[] {
+  const groups: Array<{ agents: string[]; rules: RobotsRule[] }> = [];
+  let current: { agents: string[]; rules: RobotsRule[] } | null = null;
+  let readingAgents = false;
   for (const rawLine of robots.split(/\r?\n/)) {
     const line = rawLine.replace(/#.*/, "").trim();
     if (!line) continue;
-    const [field, ...rest] = line.split(":");
-    const value = rest.join(":").trim();
-    if (/^user-agent$/i.test(field)) applies = value === "*" || /creativestakeover/i.test(value);
-    else if (applies && /^disallow$/i.test(field) && value) disallow.push(value);
+    const separator = line.indexOf(":");
+    if (separator < 0) continue;
+    const field = line.slice(0, separator).trim().toLowerCase();
+    const value = line.slice(separator + 1).trim();
+    if (field === "user-agent") {
+      if (!readingAgents || !current) { current = { agents: [], rules: [] }; groups.push(current); }
+      current.agents.push(value.toLowerCase());
+      readingAgents = true;
+    } else if ((field === "allow" || field === "disallow") && current) {
+      readingAgents = false;
+      if (value) current.rules.push({ allow: field === "allow", pattern: value });
+    } else {
+      readingAgents = false;
+    }
   }
-  return disallow;
+  const ours = groups.filter((group) => group.agents.some((agent) => agent !== "*" && "creativestakeoverresearch".startsWith(agent.replace(/\/.*$/, ""))));
+  return (ours.length ? ours : groups.filter((group) => group.agents.includes("*"))).flatMap((group) => group.rules);
 }
 
-const isDisallowed = (path: string, rules: readonly string[]) => rules.some((rule) => rule === "/" || path.startsWith(rule.replace(/\*.*$/, "")));
+/** Kept for callers that only need the disallowed patterns. */
+export function parseRobotsDisallow(robots: string): string[] {
+  return parseRobots(robots).filter((rule) => !rule.allow).map((rule) => rule.pattern);
+}
+
+const patternMatches = (pattern: string, path: string) => {
+  const anchored = pattern.endsWith("$");
+  const body = (anchored ? pattern.slice(0, -1) : pattern).split("*").map((part) => part.replace(/[.+?^${}()|[\]\\]/g, "\\$&")).join(".*");
+  return new RegExp(`^${body}${anchored ? "$" : ""}`).test(path);
+};
+
+/** The most specific matching rule decides; on a tie, allow wins; no match means allowed. */
+export function robotsAllows(pathWithQuery: string, rules: readonly RobotsRule[]): boolean {
+  let best: RobotsRule | null = null;
+  for (const rule of rules) {
+    if (!patternMatches(rule.pattern, pathWithQuery)) continue;
+    if (!best || rule.pattern.length > best.pattern.length || (rule.pattern.length === best.pattern.length && rule.allow)) best = rule;
+  }
+  return !best || best.allow;
+}
+
+const isDisallowed = (url: URL, rules: readonly RobotsRule[]) => !robotsAllows(`${url.pathname || "/"}${url.search}`, rules);
 
 interface FetchedPage { url: string; html: string; status: number }
 
@@ -187,10 +238,10 @@ export async function crawlSite(input: string, options: { maxPages?: number; tim
   if (!check.ok) return { domain: "", pages: [], blocked: false, status: null, error: check.reason };
   const domain = check.url.hostname.toLowerCase().replace(/^www\d?\./, "");
 
-  let disallow: string[] = [];
+  let robotsRules: RobotsRule[] = [];
   const robots = await fetchPage(`${check.url.origin}/robots.txt`, 4_000);
-  if ("html" in robots) disallow = parseRobotsDisallow(robots.html);
-  if (isDisallowed(check.url.pathname || "/", disallow)) {
+  if ("html" in robots) robotsRules = parseRobots(robots.html);
+  if (isDisallowed(check.url, robotsRules)) {
     return { domain, pages: [], blocked: true, status: null, error: "The website asks automated readers not to visit." };
   }
 
@@ -204,7 +255,7 @@ export async function crawlSite(input: string, options: { maxPages?: number; tim
   const homePage = toPage(home);
   const pages: CrawledPage[] = [homePage];
   const extra = pickInternalPages(homePage.links, home.url, maxPages - 1)
-    .filter((url) => !isDisallowed(new URL(url).pathname, disallow));
+    .filter((url) => !isDisallowed(new URL(url), robotsRules));
   const results = await Promise.all(extra.map((url) => fetchPage(url, timeoutMs)));
   for (const result of results) {
     if ("html" in result && !looksLikeBotWall(result.html)) pages.push(toPage(result));

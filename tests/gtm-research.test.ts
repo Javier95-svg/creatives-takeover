@@ -3,11 +3,12 @@ import { readFileSync } from 'node:fs';
 import test from 'node:test';
 import {
   chargeForRun, creditsForFollowUp, creditsForRun, dedupeCandidates, emailStatusFromVerifier, extractContactRoutes, feedbackLessons, isExcludedDomain,
-  languageForLocation, normalizeDomain, parseBusinessProfile, parseCompetitors, parseDomainSearchPeople, parseDraft, parseSegments, parseSignals,
+  languageForLocation, listFrom, normalizeDomain, parseBusinessProfile, parseCandidates, parseCompetitors, parseDomainSearchPeople, parseDraft, parseSegments, parseSignals,
+  registrableDomain,
   personalizeDraft, pickDecisionMaker, prospectsToCsv, quoteAppearsIn, rerunEligible, runPrice, sanitizeSegment, scoreFit, STEP_TITLES, variantStats,
   verifyVerdicts, type CriterionVerdict, type SegmentCriterion,
 } from '../src/lib/gtmResearch.ts';
-import { extractLinks, parseRobotsDisallow, pickInternalPages } from '../supabase/functions/_shared/site-crawler.ts';
+import { extractLinks, parseRobots, parseRobotsDisallow, pickInternalPages, robotsAllows } from '../supabase/functions/_shared/site-crawler.ts';
 import { driveResearchRun, ResearchDb } from './helpers/researchDatabase.ts';
 
 // ---- Pure rules -----------------------------------------------------------------------------
@@ -126,7 +127,43 @@ test('the crawler picks useful internal pages and honours robots.txt', () => {
   const links = extractLinks('<a href="/about">About</a><a href="/pricing#plans">Pricing</a><a href="https://other.com/about">x</a><a href="/blog/2026/01/post">post</a><a href="/logo.png">x</a><a href="mailto:a@b.com">mail</a>', 'https://www.smiles.co.uk/');
   assert.deepEqual(links, ['https://www.smiles.co.uk/about', 'https://www.smiles.co.uk/pricing', 'https://other.com/about', 'https://www.smiles.co.uk/blog/2026/01/post', 'https://www.smiles.co.uk/logo.png']);
   assert.deepEqual(pickInternalPages(links, 'https://www.smiles.co.uk/', 4), ['https://www.smiles.co.uk/about', 'https://www.smiles.co.uk/pricing']);
-  assert.deepEqual(parseRobotsDisallow('User-agent: Googlebot\nDisallow: /g\n\nUser-agent: *\nDisallow: /private\nDisallow:\n# x\nUser-agent: CreativesTakeoverResearch\nDisallow: /'), ['/private', '/']);
+  // A group naming our agent replaces the `*` group (RFC 9309).
+  assert.deepEqual(parseRobotsDisallow('User-agent: Googlebot\nDisallow: /g\n\nUser-agent: *\nDisallow: /private\nDisallow:\n# x\nUser-agent: CreativesTakeoverResearch\nDisallow: /'), ['/']);
+  assert.deepEqual(parseRobotsDisallow('User-agent: Googlebot\nDisallow: /g\n\nUser-agent: *\nDisallow: /private\nDisallow:'), ['/private']);
+});
+
+test('robots.txt wildcards are honoured as patterns, not as "block everything" (2026-11-16: Oxford, TU Delft read as blocked)', () => {
+  const rules = parseRobots('User-agent: *\nDisallow: /*?\nDisallow: /*.pdf$\nDisallow: /admin/\nAllow: /admin/public\n\nUser-agent: AhrefsBot\nUser-agent: SemrushBot\nDisallow: /');
+  assert.equal(robotsAllows('/', rules), true, 'the homepage is readable');
+  assert.equal(robotsAllows('/entrepreneurship/programs', rules), true);
+  assert.equal(robotsAllows('/search?q=x', rules), false, 'query strings are disallowed');
+  assert.equal(robotsAllows('/files/brochure.pdf', rules), false);
+  assert.equal(robotsAllows('/files/brochure.pdf.html', rules), true, '$ anchors the end');
+  assert.equal(robotsAllows('/admin/settings', rules), false);
+  assert.equal(robotsAllows('/admin/public/page', rules), true, 'the longer Allow wins');
+  assert.equal(robotsAllows('/anything', parseRobots('User-agent: *\nDisallow: /')), false);
+  assert.equal(robotsAllows('/anything', parseRobots('')), true);
+});
+
+test('a start page deep inside a large site keeps the reading within that section', () => {
+  const links = ['https://www.uni.edu/about', 'https://www.uni.edu/entrepreneurship/about', 'https://www.uni.edu/entrepreneurship/programs', 'https://www.uni.edu/admissions', 'https://www.uni.edu/entrepreneurship/contact'];
+  const picked = pickInternalPages(links, 'https://www.uni.edu/entrepreneurship/', 3);
+  assert.deepEqual(picked.sort(), ['https://www.uni.edu/entrepreneurship/about', 'https://www.uni.edu/entrepreneurship/contact', 'https://www.uni.edu/entrepreneurship/programs']);
+});
+
+test('main domains for contact lookups, and model lists in any shape', () => {
+  assert.equal(registrableDomain('innovate.umd.edu'), 'umd.edu');
+  assert.equal(registrableDomain('cs.ox.ac.uk'), 'ox.ac.uk');
+  assert.equal(registrableDomain('www.smiles.co.uk'), 'smiles.co.uk');
+  assert.equal(registrableDomain('acme.com'), 'acme.com');
+  assert.deepEqual(listFrom([1, 2], 'companies'), [1, 2]);
+  assert.deepEqual(listFrom({ organisations: [1] }, 'companies', 'organisations'), [1]);
+  assert.deepEqual(listFrom({ other: 1 }, 'companies'), []);
+  const candidates = parseCandidates([{ name: 'Startup Centre', domain: 'uni.edu', url: 'https://www.uni.edu/startups', evidence: 'the startup centre of the university' }], '');
+  assert.equal(candidates[0].url, 'https://www.uni.edu/startups');
+  assert.deepEqual(dedupeCandidates([{ ...candidates[0] }, { name: 'Other', domain: 'other-co.com', foundVia: '', url: 'https://elsewhere.com/x' }], []).map((candidate) => candidate.url), ['https://www.uni.edu/startups', undefined], 'a page on another site is not kept');
+  const people = parseDomainSearchPeople({ data: { emails: [{ value: 'ana@umd.edu', type: 'personal', first_name: 'Ana', position: 'Director' }] } }, 'innovate.umd.edu');
+  assert.equal(people.length, 1, 'staff of a subdomain write from the main domain');
 });
 
 // ---- A whole run through the real step handlers (network mocked) ------------------------------
@@ -424,4 +461,46 @@ test('model answers are read when wrapped in fences or text, and segment lists u
   const segment = { title: 'University entrepreneurship programs', criteria: [{ label: 'Runs a startup program', mustHave: true }] };
   assert.equal(parseSegments([segment])[0]?.name, 'University entrepreneurship programs', 'a bare array works');
   assert.equal(parseSegments({ groups: [segment] }).length, 1, 'another top-level key works');
+});
+
+test('with a company index: organisations come from it, are checked on the page where they were found, and list-shaped answers still count', async () => {
+  const original = { fetch: globalThis.fetch, Deno: (globalThis as any).Deno };
+  const calls: string[] = [];
+  (globalThis as any).Deno = { env: { get: (name: string) => ({ GEMINI_API_KEY: 'test', EXA_API_KEY: 'test' } as Row)[name] }, resolveDns: async () => ['93.184.216.34'] };
+  const page = '<html><head><title>Leeds Startup Centre</title></head><body><p>The University of Leeds startup centre runs a free incubator for student founders.</p><a href="/startups/contact">Contact</a><a href="/admissions">Admissions</a></body></html>';
+  const answer = (body: string): unknown => {
+    if (body.includes('Write web search queries')) return { queries: ['A university startup centre in Leeds that runs a student incubator'] };
+    if (body.includes('found too few matching organisations')) return { queries: [] };
+    if (body.includes('extract organisations that are themselves')) return [{ name: 'Leeds Startup Centre', domain: 'uni.example', url: 'https://uni.example/startups', evidence: 'The startup centre of the University of Leeds' }];
+    if (body.includes('check companies against a founder')) return [{ domain: 'uni.example', name: 'Leeds Startup Centre', location: 'Leeds, United Kingdom',
+      verdicts: [{ criterionId: 'c1', verdict: 'met', quote: 'runs a free incubator for student founders', sourceUrl: 'https://uni.example/startups' }] }];
+    if (body.includes('recent events about that exact company')) return { companies: [] };
+    if (body.includes('first email from a founder')) return [{ a: { subject: 'Your incubator', body: 'Hi {{first_name}}, I saw your centre runs a free incubator for student founders. We help founders test ideas. Open to a short call?' } }];
+    throw new Error(`Unexpected model call: ${body.slice(0, 80)}`);
+  };
+  globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
+    const url = String(input instanceof Request ? input.url : input);
+    calls.push(url);
+    if (url.includes('generativelanguage.googleapis.com')) return Response.json({ candidates: [{ content: { parts: [{ text: JSON.stringify(answer(String(init?.body ?? ''))) }] }, finishReason: 'STOP' }] });
+    if (url.includes('api.exa.ai')) return Response.json({ results: [{ url: 'https://uni.example/startups', title: 'Leeds Startup Centre', text: 'The startup centre of the University of Leeds runs a free incubator.' }], costDollars: { total: 0.007 } });
+    if (url.endsWith('/robots.txt')) return new Response('User-agent: *\nDisallow: /*?', { status: 200, headers: { 'content-type': 'text/plain' } });
+    if (url.startsWith('https://uni.example/startups')) return new Response(page, { headers: { 'content-type': 'text/html' } });
+    return new Response('Not found', { status: 404 });
+  }) as typeof fetch;
+  try {
+    const db = new ResearchDb();
+    const segment = { id: 's', name: 'University startup centres', pain: '', criteria: [{ id: 'c1', label: 'Runs an incubator for student founders', mustHave: true }], geography: 'United Kingdom', sizeBand: '', roles: ['Director'], examples: [] };
+    const run = baseRun({ id: 'run-exa', status: 'running', selected_segment: segment, segments: [segment],
+      business_profile: { name: 'Creatives Takeover', offering: { text: 'A workspace for founders', sourceUrl: null }, audience: { text: 'Founders', sourceUrl: null }, valueProposition: { text: 'Test ideas fast', sourceUrl: null } } });
+    db.tables.gtm_research_runs.push(run);
+    await drive(db, run, 'discover_companies', []);
+    const prospect = db.tables.gtm_prospect_companies.find((row) => row.domain === 'uni.example');
+    assert.equal(prospect?.fit_tier, 'A', 'a bare-array check still counts');
+    assert.equal(prospect?.criteria[0].sourceUrl, 'https://uni.example/startups', 'checked on the program page, not the homepage');
+    assert.ok(!calls.some((url) => url === 'https://uni.example/' || url === 'https://uni.example'), 'the homepage was not needed');
+    assert.ok(!calls.some((url) => url.includes('api.tavily.com')), 'the company index replaced web search');
+    assert.ok(db.tables.provider_spend_ledger.some((row) => row.provider === 'search:exa' && row.est_cost_usd === 0.007), 'the index reports its own cost');
+    assert.equal(db.tables.gtm_outreach_drafts.length, 1, 'a draft without an id still lands on the only company');
+    assert.equal(run.status, 'partial');
+  } finally { globalThis.fetch = original.fetch; (globalThis as any).Deno = original.Deno; }
 });

@@ -14,9 +14,10 @@ import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0
 import { generateJsonText } from "./json-generation.ts";
 import { searchWeb, type WebSearchResult } from "./web-research.ts";
 import { crawlSite, type CrawledPage } from "./site-crawler.ts";
+import { hasCompanySearch, searchCompanies } from "./company-search.ts";
 import { resolvePulseContext } from "./pulse-context.ts";
 import {
-  chargeForRun, dedupeCandidates, extractContactRoutes, feedbackLessons, languageForLocation, MAX_CANDIDATES, MAX_SEARCHES_PER_RUN,
+  chargeForRun, dedupeCandidates, extractContactRoutes, feedbackLessons, languageForLocation, listFrom, MAX_CANDIDATES, MAX_SEARCHES_PER_RUN,
   MAX_SIGNAL_SEARCHES, normalizeDomain, parseBusinessProfile, parseCandidates, parseCompetitors, parseDraft, parseSegments, parseSignals,
   parseVerdicts, QUALIFY_BATCH_SIZE, quoteAppearsIn, scoreFit, verifyVerdicts, type BusinessProfile, type BuyingSignal, type Candidate, type Competitor,
   type ResearchRunKind, type ResearchStepKey, type Segment,
@@ -104,6 +105,30 @@ async function search(db: SupabaseClient, runId: string, query: string, maxResul
   await ledger(db, runId, `search:${result.provider}`, SEARCH_COST_USD[result.provider] ?? 0.03);
   return result;
 }
+
+interface DiscoverySource { url: string; title: string; snippet?: string; fromIndex?: boolean }
+
+/** Organisations from the company index when it is configured, otherwise (or on its failure) web results. */
+async function findSources(db: SupabaseClient, runId: string, query: string): Promise<DiscoverySource[]> {
+  if (hasCompanySearch()) {
+    try {
+      const result = await searchCompanies(query, 25);
+      await ledger(db, runId, `search:${result.provider}`, result.costUsd);
+      if (result.sources.length) return result.sources.map((source) => ({ ...source, fromIndex: true }));
+    } catch (error) {
+      console.warn("gtm-research: company search failed, using web search", error instanceof Error ? error.message : error);
+    }
+  }
+  return (await search(db, runId, query, 10)).sources;
+}
+
+/** A URL compared without scheme, "www.", query or trailing slash. */
+const urlKey = (value: string) => {
+  try {
+    const url = new URL(value);
+    return `${url.hostname.replace(/^www\./, "").toLowerCase()}${url.pathname.replace(/\/+$/, "")}`;
+  } catch { return value; }
+};
 
 const pagesBlock = (pages: readonly CrawledPage[], perPage = 3_500) => pages
   .map((page) => `URL: ${page.url}\nTitle: ${page.title}\n${page.description ? `Description: ${page.description}\n` : ""}${page.text.slice(0, perPage)}`)
@@ -245,11 +270,16 @@ async function seedBlock(db: SupabaseClient, run: ResearchRun): Promise<string> 
   return `\n\nFind companies similar to these, which the founder picked as the best fits (do not return these domains):\n${data.map((row) => `- ${row.name} (${row.domain})${row.industry ? `, ${row.industry}` : ""}${row.location ? `, ${row.location}` : ""}: ${row.description ?? ""}`).join("\n")}`;
 }
 
-const QUERY_GUIDE = "Each query should return the websites of organisations of this kind, or pages that list many of them: directories, member lists of associations or networks, rankings, \"list of\" pages, maps of local providers. Use the words those organisations use to describe themselves, plus a place when a geography is given (for a global segment, name a specific country or city in each query and spread them). Never write queries for forums, Slack or Discord groups, social media posts, advice articles or software reviews. Do not target the startup's competitors.";
+const WEB_QUERY_GUIDE = "Each query should return the websites of organisations of this kind, or pages that list many of them: directories, member lists of associations or networks, rankings, \"list of\" pages, maps of local providers. Use the words those organisations use to describe themselves, plus a place when a geography is given (for a global segment, name a specific country or city in each query and spread them). Never write queries for forums, Slack or Discord groups, social media posts, advice articles or software reviews. Do not target the startup's competitors.";
+
+// A company index matches meaning, not keywords: a query reads best as the
+// way one such organisation would describe itself on its homepage.
+const INDEX_QUERY_GUIDE = "Each query is one sentence describing a single organisation of this kind the way it would describe itself on its own homepage: what it is, who it serves, where it is (for a global segment, name a specific country or city in each query and spread them). Vary the wording and places across queries. Never describe forums, communities of individuals, articles or software tools. Do not target the startup's competitors.";
+const queryGuide = () => (hasCompanySearch() ? INDEX_QUERY_GUIDE : WEB_QUERY_GUIDE);
 
 const cleanQueries = (raw: unknown, used: readonly string[], limit: number) => {
   const seen = new Set(used.map((query) => query.toLowerCase()));
-  return (((raw as { queries?: unknown })?.queries as unknown[]) ?? [])
+  return listFrom(raw, "queries", "searches")
     .filter((query): query is string => typeof query === "string" && query.trim().length > 3)
     .map((query) => query.trim().slice(0, 200))
     .filter((query) => !seen.has(query.toLowerCase()) && seen.add(query.toLowerCase()))
@@ -290,7 +320,7 @@ async function discoverCompanies(db: SupabaseClient, run: ResearchRun, step: Res
   const searchesUsed = Number(run.counts.searches) || 0;
   if (!queries.length) {
     const raw = await askJson(db, run.id, "gtm-research-queries",
-      `Write web search queries that find organisations in a target segment. ${QUERY_GUIDE}`,
+      `Write web search queries that find organisations in a target segment. ${queryGuide()}`,
       `Segment: ${JSON.stringify(segment)}\nStartup: ${run.business_profile?.name} — ${run.business_profile?.offering.text}${await seedBlock(db, run)}${rejected}\n\nReturn JSON only: {"queries":["", "..."]} with 10 queries.`,
       800);
     queries = cleanQueries(raw, [], 10);
@@ -304,7 +334,7 @@ async function discoverCompanies(db: SupabaseClient, run: ResearchRun, step: Res
     const { data: checked } = await db.from("gtm_prospect_companies").select("name, domain, fit_tier").eq("run_id", run.id);
     const matched = (checked ?? []).filter((row) => row.fit_tier !== "C").map((row) => `${row.name} (${row.domain})`);
     const raw = await askJson(db, run.id, "gtm-research-queries-wider",
-      `The first web searches for this segment found too few matching organisations. Write new, different queries: other words for the same kind of organisation, nearby or larger places, the directories or associations they belong to. ${QUERY_GUIDE}`,
+      `The first web searches for this segment found too few matching organisations. Write new, different queries: other words for the same kind of organisation, nearby or larger places, the directories or associations they belong to. ${queryGuide()}`,
       `Segment: ${JSON.stringify(segment)}\nQueries already used: ${queries.join(" | ")}\nOrganisations that matched so far: ${matched.join(", ") || "none"}\nOrganisations found but not matching: ${state.candidates.filter((candidate) => !matched.some((line) => line.includes(candidate.domain))).map((candidate) => candidate.domain).slice(0, 20).join(", ") || "none"}${rejected}\n\nReturn JSON only: {"queries":["", "..."]} with 6 queries.`,
       600);
     const wider = cleanQueries(raw, queries, Math.max(0, MAX_SEARCHES_PER_RUN - searchesUsed));
@@ -315,11 +345,13 @@ async function discoverCompanies(db: SupabaseClient, run: ResearchRun, step: Res
   // Queries are taken in order by how many discovery batches finished, not by
   // batch number, so a failed batch never skips part of the plan.
   const batchQueries = queries.slice(state.batches * QUERIES_PER_BATCH, state.batches * QUERIES_PER_BATCH + QUERIES_PER_BATCH);
-  const results = await Promise.allSettled(batchQueries.map((query) => search(db, run.id, query, 10)));
-  const sources = results.flatMap((result) => (result.status === "fulfilled" ? result.value.sources : []));
+  // A company index returns organisations' own pages; web search returns
+  // articles and lists. Each query falls back to web search on its own.
+  const results = await Promise.allSettled(batchQueries.map((query) => findSources(db, run.id, query)));
+  const sources = results.flatMap((result) => (result.status === "fulfilled" ? result.value : []));
 
   // List pages are read so the organisations they name come with real links.
-  const listPages = sources.filter((source) => LIST_PAGE.test(`${source.title ?? ""} ${source.url}`)).slice(0, 4);
+  const listPages = sources.filter((source) => !source.fromIndex && LIST_PAGE.test(`${source.title ?? ""} ${source.url}`)).slice(0, 4);
   const lists = (await Promise.all(listPages.map((source) => crawlSite(source.url, { maxPages: 1, timeoutMs: 6_000 }))))
     .flatMap((crawl) => crawl.pages);
 
@@ -327,12 +359,16 @@ async function discoverCompanies(db: SupabaseClient, run: ResearchRun, step: Res
   let found: Candidate[] = [];
   if (sources.length) {
     const raw = await askJson(db, run.id, "gtm-research-candidates",
-      "From search results and list pages, extract organisations that are themselves the kind of organisation in the target segment. A company merely mentioned in an article (a bank, a software tool, a sponsor, the publisher) is not a candidate. Use only organisations whose own website domain appears in the results or in the page links given; never guess a domain. For each, copy into evidence a short phrase (6 to 20 words) word for word from the results or list pages that shows what the organisation is. Leave out directories, media, marketplaces, social networks and the excluded domains.",
-      `Segment: ${segment.name} — ${segment.criteria.map((criterion) => criterion.label).join("; ")}\nExcluded domains: ${exclude.slice(0, 80).join(", ")}${rejected}\n\nSearch results:\n${sources.map((source) => `- ${source.title} — ${source.url}\n  ${source.snippet ?? ""}`).join("\n")}\n\nList pages:\n${lists.map((page) => `URL: ${page.url}\n${page.text.slice(0, 4_000)}\nLinks: ${page.links.slice(0, 200).join(" ")}`).join("\n---\n") || "none"}\n\nReturn JSON only, up to 25: {"companies":[{"name":"","domain":"","evidence":""}]}`,
-      2_500, 50_000);
+      "From search results and list pages, extract organisations that are themselves the kind of organisation in the target segment. A company merely mentioned in an article (a bank, a software tool, a sponsor, the publisher) is not a candidate. Use only organisations whose own website domain appears in the results or in the page links given; never guess a domain. Give url: the exact result or link URL of that organisation's own page (for a program inside a larger site, the program page). For each, copy into evidence a short phrase (6 to 20 words) word for word from the results or list pages that shows what the organisation is. Leave out directories, media, marketplaces, social networks and the excluded domains.",
+      `Segment: ${segment.name} — ${segment.criteria.map((criterion) => criterion.label).join("; ")}\nExcluded domains: ${exclude.slice(0, 80).join(", ")}${rejected}\n\nSearch results:\n${sources.map((source) => `- ${source.title} — ${source.url}\n  ${source.snippet ?? ""}`).join("\n")}\n\nList pages:\n${lists.map((page) => `URL: ${page.url}\n${page.text.slice(0, 4_000)}\nLinks: ${page.links.slice(0, 200).join(" ")}`).join("\n---\n") || "none"}\n\nReturn JSON only, up to 40: {"companies":[{"name":"","domain":"","url":"","evidence":""}]}`,
+      4_000, 55_000);
     const knownDomains = new Set([...sources.map((source) => normalizeDomain(source.url)), ...lists.flatMap((page) => page.links.map((link) => normalizeDomain(link)))].filter(Boolean));
     const corpus = [...sources.map((source) => `${source.title ?? ""} ${source.snippet ?? ""}`), ...lists.map((page) => page.text)].join("\n");
-    found = parseCandidates(raw, "").filter((candidate) => knownDomains.has(candidate.domain) && quoteAppearsIn(candidate.foundVia, corpus));
+    const knownUrls = new Set([...sources.map((source) => source.url), ...lists.flatMap((page) => page.links)].map(urlKey));
+    found = parseCandidates(raw, "")
+      .filter((candidate) => knownDomains.has(candidate.domain) && quoteAppearsIn(candidate.foundVia, corpus))
+      // A page the results never showed is not guessed at: the check starts from the homepage.
+      .map((candidate) => (candidate.url && !knownUrls.has(urlKey(candidate.url)) ? { ...candidate, url: undefined } : candidate));
   }
   const fresh = dedupeCandidates(found, [...exclude, ...state.candidates.map((candidate) => candidate.domain)], MAX_CANDIDATES - state.candidates.length);
   const total = state.candidates.length + fresh.length;
@@ -363,13 +399,20 @@ async function uncheckedCandidates(db: SupabaseClient, runId: string, candidates
 
 // ---- 6. Qualify companies (five per invocation) ---------------------------------------------
 
-async function companyPages(db: SupabaseClient, domain: string): Promise<{ pages: CrawledPage[]; blocked: boolean }> {
-  const { data: cached } = await db.from("gtm_domain_cache").select("pages, blocked, fetched_at").eq("domain", domain).maybeSingle();
+/**
+ * The organisation's pages, starting where it was found: a program page
+ * inside a university site rather than the university's homepage. Cached for
+ * 30 days per starting page (the key is the domain for homepages).
+ */
+async function companyPages(db: SupabaseClient, candidate: Candidate): Promise<{ pages: CrawledPage[]; blocked: boolean }> {
+  const start = candidate.url && new URL(candidate.url).pathname.replace(/\/+$/, "") ? candidate.url : `https://${candidate.domain}`;
+  const cacheKey = start === `https://${candidate.domain}` ? candidate.domain : urlKey(start);
+  const { data: cached } = await db.from("gtm_domain_cache").select("pages, blocked, fetched_at").eq("domain", cacheKey).maybeSingle();
   if (cached && Date.now() - Date.parse(cached.fetched_at as string) < 30 * 86_400_000) {
     return { pages: (cached.pages ?? []) as CrawledPage[], blocked: Boolean(cached.blocked) };
   }
-  const crawl = await crawlSite(`https://${domain}`, { maxPages: 3, timeoutMs: 6_000 });
-  await db.from("gtm_domain_cache").upsert({ domain, pages: crawl.pages, blocked: crawl.blocked, http_status: crawl.status, fetched_at: new Date().toISOString() });
+  const crawl = await crawlSite(start, { maxPages: 3, timeoutMs: 8_000 });
+  await db.from("gtm_domain_cache").upsert({ domain: cacheKey, pages: crawl.pages, blocked: crawl.blocked, http_status: crawl.status, fetched_at: new Date().toISOString() });
   return { pages: crawl.pages, blocked: crawl.blocked };
 }
 
@@ -394,7 +437,7 @@ async function qualifyCompanies(db: SupabaseClient, run: ResearchRun, step: Rese
 
   if (!batch.length) return { log: "No more companies to check", next: await nextAfter(await qualifiedSoFar(db, run.id)) };
 
-  const crawled = await Promise.all(batch.map(async (candidate) => ({ candidate, ...(await companyPages(db, candidate.domain)) })));
+  const crawled = await Promise.all(batch.map(async (candidate) => ({ candidate, ...(await companyPages(db, candidate)) })));
   const readable = crawled.filter((item) => item.pages.length);
   let judged: Array<Record<string, unknown>> = [];
   if (readable.length) {
@@ -403,7 +446,7 @@ async function qualifyCompanies(db: SupabaseClient, run: ResearchRun, step: Rese
       "You check companies against a founder's target criteria using only each company's own web pages. verdict is \"met\" only when a page states it, with quote copied word for word from that page (at most 25 words) and that page's URL as sourceUrl; \"not_met\" only when a page clearly contradicts it; otherwise \"unknown\". Never infer from the company name alone. When the founder rejected similar companies for a reason, apply that reason strictly to the matching criterion. Also give the company's name, a one-sentence description, location (city and country if stated), size (only if stated) and industry.",
       `Criteria:\n${segment.criteria.map((criterion) => `${criterion.id}: ${criterion.label}${criterion.mustHave ? " (must have)" : ""}`).join("\n")}${rejected}\n\nCompanies:\n${readable.map((item) => `### ${item.candidate.domain}\n${pagesBlock(item.pages, 2_200)}`).join("\n\n")}\n\nReturn JSON only: {"companies":[{"domain":"","name":"","description":"","location":"","sizeBand":"","industry":"","verdicts":[{"criterionId":"c1","verdict":"met","quote":"","sourceUrl":""}]}]}`,
       3_500, 55_000);
-    judged = ((raw as { companies?: unknown }).companies as Array<Record<string, unknown>> | undefined) ?? [];
+    judged = listFrom(raw, "companies", "organisations", "organizations", "results").filter((entry): entry is Record<string, unknown> => Boolean(entry) && typeof entry === "object");
   }
 
   const now = new Date().toISOString();
@@ -464,7 +507,7 @@ async function findSignals(db: SupabaseClient, run: ResearchRun): Promise<StepOu
     `From search results about specific companies, list recent events about that exact company (same name or website): hiring, funding, a launch, an expansion, a partnership, other news. Each needs the date the result states (YYYY-MM-DD or YYYY-MM) and that result's URL as sourceUrl. Skip anything undated, about another company, or older than 12 months. Today is ${today}.`,
     `${found.map((item) => `### id: ${item.prospect.id} — ${item.prospect.name} (${item.prospect.domain})\n${item.sources.map((source) => `- ${source.title} — ${source.url}\n  ${source.snippet ?? ""}`).join("\n")}`).join("\n\n")}\n\nReturn JSON only: {"companies":[{"id":"","signals":[{"kind":"hiring","text":"","date":"","sourceUrl":""}]}]}`,
     1_500);
-  const companies = ((raw as { companies?: unknown }).companies as Array<Record<string, unknown>> | undefined) ?? [];
+  const companies = listFrom(raw, "companies", "organisations", "results").filter((entry): entry is Record<string, unknown> => Boolean(entry) && typeof entry === "object");
   let withNews = 0;
   for (const item of found) {
     const entry = companies.find((company) => company.id === item.prospect.id);
@@ -494,21 +537,28 @@ async function draftOutreach(db: SupabaseClient, run: ResearchRun, step: Researc
     "Write two versions of a short first email from a founder to each company they have researched. Each under 120 words, in the language given for that company. Open with \"Hi {{first_name}},\" in that language. Version a opens with one specific fact from that company's evidence; version b opens with the problem the founder solves, or with the company's recent news when given. Both name the problem the founder solves and end with one low-commitment ask (a short call or quick feedback). Use only the facts given: no invented results, numbers, customers or familiarity, no flattery, no filler openers. Sign off with the founder's business name.",
     `Founder's business: ${profile.name} — ${profile.offering.text}. Value: ${profile.valueProposition.text}.\nSegment pain: ${run.selected_segment?.pain ?? ""}\n\nCompanies:\n${pending.map((prospect) => `id: ${prospect.id}\nname: ${prospect.name} (${prospect.domain})\nlanguage: ${languageForLocation(prospect.location as string | null)}\nabout: ${prospect.description ?? ""}\nevidence: ${((prospect.criteria ?? []) as Array<{ verdict: string; quote: string | null }>).filter((item) => item.verdict === "met" && item.quote).map((item) => `"${item.quote}"`).join("; ")}\nrecent news: ${((prospect.signals ?? []) as BuyingSignal[]).map((signal) => `${signal.date}: ${signal.text}`).join("; ") || "none"}`).join("\n\n")}\n\nReturn JSON only: {"drafts":[{"prospectId":"","a":{"subject":"","body":""},"b":{"subject":"","body":""}}]}`,
     4_000, 55_000);
-  const drafts = ((raw as { drafts?: unknown }).drafts as Array<Record<string, unknown>> | undefined) ?? [];
+  const drafts = listFrom(raw, "drafts", "emails", "companies").filter((entry): entry is Record<string, unknown> => Boolean(entry) && typeof entry === "object");
   let written = 0;
   for (const prospect of pending) {
-    const entry = drafts.find((item) => item.prospectId === prospect.id);
+    // Matched by id, then by domain or name (models sometimes drop or alter the id),
+    // then by position when the count matches.
+    const index = pending.indexOf(prospect);
+    const entry = drafts.find((item) => (item.prospectId ?? item.id ?? item.prospect_id) === prospect.id)
+      ?? drafts.find((item) => normalizeDomain(String(item.domain ?? "")) === prospect.domain || String(item.name ?? item.company ?? "").trim().toLowerCase() === String(prospect.name).trim().toLowerCase())
+      ?? (drafts.length === pending.length ? drafts[index] : undefined);
     // Older single-version answers ({subject, body}) still count as version a.
-    const draft = parseDraft(entry?.a ?? entry);
+    const draft = parseDraft(entry?.a ?? entry?.A ?? entry?.versionA ?? entry?.variantA ?? entry);
     if (!draft) continue;
-    const variantB = parseDraft(entry?.b);
-    await db.from("gtm_outreach_drafts").upsert({
+    const variantB = parseDraft(entry?.b ?? entry?.B ?? entry?.versionB ?? entry?.variantB);
+    const { error } = await db.from("gtm_outreach_drafts").upsert({
       prospect_id: prospect.id, user_id: run.user_id, language: languageForLocation(prospect.location as string | null),
       subject: draft.subject, body: draft.body, variant_b_subject: variantB?.subject ?? null, variant_b_body: variantB?.body ?? null,
       generated_from: { runId: run.id, tier: prospect.fit_tier },
     }, { onConflict: "prospect_id" });
+    if (error) { console.error("gtm-research-drafts: save failed", error.message); continue; }
     written += 1;
   }
+  if (!written) console.warn("gtm-research-drafts: no draft matched", { pending: pending.length, returned: drafts.length, sample: JSON.stringify(raw).slice(0, 300) });
   const total = (Number(run.counts.drafts) || 0) + written;
   const remaining = (prospects ?? []).length - total;
   return {
