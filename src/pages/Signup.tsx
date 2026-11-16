@@ -18,7 +18,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { AuthSocialButtons } from "@/components/auth/AuthSocialButtons";
 import { AuthShowcaseLine } from "@/components/auth/AuthDesign";
 import SignupUrgency from "@/components/auth/SignupUrgency";
-import { mapSignUpError } from "@/lib/authErrors";
+import { EMAIL_DELIVERY_FAILED, isEmailDeliveryError, mapSignUpError } from "@/lib/authErrors";
 import { getPasswordValidationError, MIN_PASSWORD_LENGTH, PASSWORD_REQUIREMENTS } from "@/lib/passwordPolicy";
 import { captureEvent, persistSignupIntent, trackSignupCompletedAttributed } from "@/lib/analytics";
 import { useCTAAttribution } from "@/hooks/useCTAAttribution";
@@ -433,7 +433,16 @@ const Signup = () => {
 
       if (error) {
         console.error('Signup error:', error);
-        toast.error(mapSignUpError(error));
+        if (isEmailDeliveryError(error)) {
+          // No account exists yet; the social buttons below still work.
+          captureEvent('signup_email_delivery_failed', { where: 'signup_page' });
+          toast.error(EMAIL_DELIVERY_FAILED, {
+            duration: 15000,
+            action: { label: 'Contact us', onClick: () => navigate('/contact') },
+          });
+        } else {
+          toast.error(mapSignUpError(error));
+        }
       } else {
         clearPendingReferralCode();
         const session = await getSessionSafely();

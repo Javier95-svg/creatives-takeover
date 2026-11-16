@@ -1,8 +1,21 @@
 import type { AuthError } from "@supabase/supabase-js";
-import { PASSWORD_REQUIREMENTS } from "@/lib/passwordPolicy";
+import { PASSWORD_REQUIREMENTS } from "./passwordPolicy.ts";
 
 function normalizeMessage(message?: string): string {
   return (message || "").toLowerCase();
+}
+
+/**
+ * Shown when Supabase Auth could not send the confirmation email (on
+ * 2026-11-16 the SMTP login was rejected and every email signup failed).
+ * No account is created, so say that, and point to the paths that still work.
+ */
+export const EMAIL_DELIVERY_FAILED =
+  "We couldn't send your confirmation email, so your account wasn't created. Continue with Google, LinkedIn or X instead, or try again in a few minutes. If it keeps happening, contact us.";
+
+export function isEmailDeliveryError(error: Pick<AuthError, "message"> | null): boolean {
+  const message = normalizeMessage(error?.message);
+  return message.includes("confirm email") || message.includes("confirmation email") || message.includes("sending email");
 }
 
 export function mapSignUpError(error: AuthError | null): string {
@@ -34,8 +47,8 @@ export function mapSignUpError(error: AuthError | null): string {
     return "There was an issue creating your profile. Your account may have been created - please try signing in.";
   }
 
-  if (message.includes("confirm email") || message.includes("confirmation email")) {
-    return "There was an issue with email delivery. Please try again.";
+  if (isEmailDeliveryError(error)) {
+    return EMAIL_DELIVERY_FAILED;
   }
 
   return error.message || "Failed to create account. Please try again.";

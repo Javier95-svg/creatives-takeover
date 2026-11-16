@@ -113,6 +113,13 @@
       "sourceFile": "src/lib/analytics.ts",
       "requiredProperties": ["method"]
     },
+    "signup_email_delivery_failed": {
+      "stage": "acquisition",
+      "owner": "growth",
+      "source": "client",
+      "sourceFile": "src/pages/Signup.tsx",
+      "requiredProperties": ["where"]
+    },
     "signup_completed": {
       "stage": "acquisition",
       "owner": "growth",
