@@ -47,6 +47,21 @@
 }
 
 
+/* ---- The living brain (PulseBrain.tsx) ----
+   A canvas with no frame of its own: it sits on the page wallpaper. */
+
+.hm-brain {
+  display: block;
+  width: 100%;
+  max-width: 1240px;
+  height: 360px;
+  margin: -16px auto 24px;
+}
+
+@media (min-width: 700px) {
+  .hm-brain { height: 440px; margin-bottom: 32px; }
+}
+
 /* ---- Private to your account ----
    Sits between the header and the design, so it is read before any example. */
 

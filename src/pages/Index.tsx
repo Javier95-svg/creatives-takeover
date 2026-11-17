@@ -27,7 +27,7 @@ const HomePediaBand = lazy(() => import("@/components/home/HomePediaBand"));
 // lazy() alone still fetched every chunk on first render, before the visitor
 // scrolled. LoadWhenNear defers each until it is 800px from the viewport; the
 // placeholders keep the space so nothing shifts.
-const memoryPlaceholder = <div className="min-h-[2490px] lg:min-h-[1380px] animate-pulse bg-muted/20" />;
+const memoryPlaceholder = <div className="min-h-[2890px] lg:min-h-[1810px] animate-pulse bg-muted/20" />;
 const founderIdPlaceholder = <div className="min-h-[899px] lg:min-h-[1092px] animate-pulse bg-muted/20" />;
 const teaserPlaceholder = <div className="min-h-[1546px] lg:min-h-[922px] animate-pulse bg-muted/20" />;
 const faqPlaceholder = <div className="h-96 animate-pulse bg-muted/20" />;

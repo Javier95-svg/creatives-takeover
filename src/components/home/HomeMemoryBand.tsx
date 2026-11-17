@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
+import PulseBrain from "@/components/home/PulseBrain";
 import TitleFx from "@/components/home/TitleFx";
 import { captureEvent } from "@/lib/analytics";
 import "./home-memory.css";
@@ -30,6 +31,8 @@ import "./home-memory.css";
 //   (PulseCommitmentCheck); next steps become tasks in one tap (PulseTaskChips)
 // - one context per project; switching project switches it (pulse-home.ts)
 // The examples use the sample project from the /demo tour (Throughline).
+// Under the title, a living neural brain (PulseBrain) shows the tools feeding
+// Pulse and the four memory lobes lighting up.
 
 const track = (placement: string) => () => captureEvent("home_memory_band_clicked", { placement });
 
@@ -169,6 +172,7 @@ export default function HomeMemoryBand() {
             /signup, as the programs band did with /enterprise. The text stays
             outside the link, so screen readers read it as normal content. */}
         <div className="hm-click">
+          <PulseBrain />
           <PrivacyNote />
           <Memory />
           <Link to="/signup" className="hm-click__link" onClick={track("panel")}>

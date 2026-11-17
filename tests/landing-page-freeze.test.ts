@@ -105,7 +105,9 @@ const frozenFiles = {
   // to right after the journey (scroll data: ~37% of desktop visitors reached
   // it in the old slot, ~44% reach this one) and drops the muted band tint.
   // Order: Hero, Journey, Memory, Cycle, Founder ID, Nutshell, Pedia, FAQ.
-  '../src/pages/Index.tsx': 'cef0016e70093e8184a7b67d7138de241c132f910e735517b68278494c61e742',
+  // Rehashed 2026-11-17 (approved by Javier, "Neural brain"): the memory band
+  // gains the PulseBrain canvas, so only its placeholder grows to match.
+  '../src/pages/Index.tsx': '6ee1ca7f92cbb8fffc0b3982fcf017342511953b67dfc1884978f62470ba0e0e',
 } as const;
 
 test('the approved unauthenticated landing page remains frozen during core-tool work', () => {
