@@ -65,7 +65,8 @@ function useEntrance<T extends HTMLElement>() {
 //   own choice, with consent.
 // - Secure: Supabase encrypts all customer data at rest (AES-256) and in
 //   transit (TLS) and is ISO 27001 certified (supabase.com/security, checked
-//   2026-11-17). Javier asked to name only ISO 27001 and not the location.
+//   2026-11-17). Javier asked to name only ISO 27001, not the location, and
+//   to say it in plain words rather than "in transit / at rest (AES-256)".
 // - Never sold: Privacy Policy 4; AI providers are listed as processors
 //   (Privacy Policy 5.1), so say plainly that Pulse sends them the context.
 // Never shorten this to "we have no access": the team runs the database and
@@ -73,7 +74,7 @@ function useEntrance<T extends HTMLElement>() {
 const PRIVACY: Array<{ title: string; body: string; icon: LucideIcon }> = [
   { title: "Yours", body: "You own what you create here. Delete any memory, any conversation or your whole account whenever you want.", icon: KeyRound },
   { title: "Private", body: "Other members can’t see your workspace, our admin tools don’t show it, and nothing in it is shared unless you choose to share it.", icon: EyeOff },
-  { title: "Secure", body: "Encrypted in transit and at rest (AES‑256), and stored on ISO 27001 certified infrastructure.", icon: ShieldCheck },
+  { title: "Secure", body: "Your data is encrypted while it travels and while it’s stored, on ISO 27001 certified infrastructure.", icon: ShieldCheck },
   { title: "Never sold", body: "We never sell your work. When you ask Pulse something, your project context goes to the AI model that writes the answer.", icon: Sparkles },
 ];
 
