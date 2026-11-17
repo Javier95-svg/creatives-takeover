@@ -131,6 +131,28 @@
 .hm-privacy__list p { color: var(--hm-muted); font-size: 0.9rem; line-height: 1.55; }
 .hm-privacy__list strong { color: var(--hm-ink); font-weight: 600; }
 
+/* The one link out of the band: above the sign-up overlay (z-index 5). */
+.hm-privacy__more {
+  position: relative;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  margin: -26px auto 40px;
+  color: var(--hm-teal);
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.hm-privacy__more svg { width: 15px; height: 15px; transition: transform 0.2s ease; }
+.hm-privacy__more:hover { text-decoration: underline; text-underline-offset: 3px; }
+.hm-privacy__more:hover svg { transform: translateX(3px); }
+.hm-privacy__more:focus-visible { outline: 2px solid var(--hm-blue); outline-offset: 4px; border-radius: 6px; }
+
+@media (min-width: 640px) { .hm-privacy__more { margin: -30px auto 48px; } }
+
 /* ---- The whole band opens /signup ----
    One transparent link lies over everything under the title (privacy block
    and design). Under the pointer it all lifts and the frames' edges glow;

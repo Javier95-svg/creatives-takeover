@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import {
+  ArrowRight,
   Bookmark,
-  CalendarCheck,
   EyeOff,
   KeyRound,
   ListPlus,
@@ -56,19 +56,26 @@ function useEntrance<T extends HTMLElement>() {
   return { ref, state };
 }
 
-// Who the memory belongs to, said before anything else. Each line is checked:
-// Terms 5.1 (ownership); owner-only RLS on every project table and no admin
-// screen that reads them; cohort consent lists what a program receives (idea
-// details, files and messages never); Privacy Policy 4 (never sold); delete
-// controls in PulseMemoryPanel, Pulse Home and /settings/delete-account; and
-// AI providers listed as processors in Privacy Policy 5.1. Do not shorten this
-// to "we have no access": the team runs the database and the AI provider
-// writing an answer receives the context.
+// Who the memory belongs to and how it is protected, said before anything
+// else. Each line is checked:
+// - Yours: Terms 5.1 (ownership); delete controls in PulseMemoryPanel, Pulse
+//   Home and /settings/delete-account.
+// - Private: owner-only RLS on every project table; no admin screen reads
+//   them; anything shared (Founder ID, a program's cohort) is the founder's
+//   own choice, with consent.
+// - Secure: Supabase encrypts all customer data at rest (AES-256) and in
+//   transit (TLS) and is SOC 2 Type 2 and ISO 27001 certified
+//   (supabase.com/security, checked 2026-11-17); the project's database is in
+//   eu-west-2 (London).
+// - Never sold: Privacy Policy 4; AI providers are listed as processors
+//   (Privacy Policy 5.1), so say plainly that Pulse sends them the context.
+// Never shorten this to "we have no access": the team runs the database and
+// the AI provider writing an answer receives the context.
 const PRIVACY: Array<{ title: string; body: string; icon: LucideIcon }> = [
   { title: "Yours", body: "You own what you create here. Delete any memory, any conversation or your whole account whenever you want.", icon: KeyRound },
-  { title: "Not shared", body: "Other members can’t see it. If you join a program’s cohort, you see what it receives before you agree, and your idea details stay private.", icon: EyeOff },
-  { title: "Not for sale", body: "Our team’s admin tools don’t show your workspace, and we never sell your work.", icon: ShieldCheck },
-  { title: "Used for your answers", body: "When you ask Pulse something, your project context goes to the AI model that writes the answer.", icon: Sparkles },
+  { title: "Private", body: "Other members can’t see your workspace, our admin tools don’t show it, and nothing in it is shared unless you choose to share it.", icon: EyeOff },
+  { title: "Secure", body: "Encrypted in transit and at rest (AES‑256), and stored in London on SOC 2 Type 2 and ISO 27001 certified infrastructure.", icon: ShieldCheck },
+  { title: "Never sold", body: "We never sell your work. When you ask Pulse something, your project context goes to the AI model that writes the answer.", icon: Sparkles },
 ];
 
 const PrivacyNote = () => (
@@ -96,7 +103,7 @@ const PrivacyNote = () => (
 const KINDS: Array<{ kind: string; tone: string; text: string; meta?: string; does: string }> = [
   { kind: "Decision", tone: "blue", text: "Sell to creators first, not agencies.", does: "Pulse’s advice builds on it, and it asks you about it when new evidence points the other way." },
   { kind: "Hypothesis", tone: "violet", text: "Creators will pay $19 a month for one growth view.", does: "Treated as unproven until your evidence backs it." },
-  { kind: "Commitment", tone: "coral", text: "Recruit four creators from outside my audience.", meta: "Due Friday", does: "When it’s due, Pulse asks whether it happened: Done, Not yet or Drop." },
+  { kind: "Commitment", tone: "coral", text: "Recruit four creators from outside my audience.", meta: "Due Friday", does: "Once it’s due, Pulse asks the next time you talk whether it happened: Done, Not yet or Drop." },
   { kind: "Fact", tone: "green", text: "Two founders, both part-time until March.", does: "Stays in context, so you never explain it twice." },
 ];
 
@@ -141,7 +148,6 @@ const Memory = () => (
         <p>When an answer ends with something to do, add it to your tasks in one tap.</p>
         <div className="hm-c__demo" aria-hidden="true">
           <span className="hm-c__chip"><ListPlus /> Add as task</span>
-          <span className="hm-c__chip hm-c__chip--soft"><CalendarCheck /> Done · Not yet · Drop</span>
         </div>
       </article>
       <article className="hm-c__card" style={{ "--i": 3 } as CSSProperties}>
@@ -174,6 +180,10 @@ export default function HomeMemoryBand() {
         <div className="hm-click">
           <PulseBrain />
           <PrivacyNote />
+          {/* Sits above the sign-up overlay so it opens the full data guide. */}
+          <Link to="/data-privacy" className="hm-privacy__more" onClick={track("data_privacy")}>
+            How we protect your data <ArrowRight aria-hidden="true" />
+          </Link>
           <Memory />
           <Link to="/signup" className="hm-click__link" onClick={track("panel")}>
             <span className="sr-only">Start your project, free account</span>
