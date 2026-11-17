@@ -4867,3 +4867,30 @@ img {
   --primary-foreground: var(--tool-launches-foreground);
   --ring: var(--tool-launches);
 }
+
+/* Navbar "Join Today": a tiny breathing glow (Javier, 2026-11-17). Only the
+   pseudo-element's opacity animates, so it stays cheap to draw; reduced motion
+   keeps a still, faint glow. */
+.nav-join-glow {
+  position: relative;
+}
+
+.nav-join-glow::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: 0 0 14px 1px hsl(var(--primary) / 0.55);
+  opacity: 0.35;
+  pointer-events: none;
+  animation: nav-join-glow 3.2s ease-in-out infinite;
+}
+
+@keyframes nav-join-glow {
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 0.85; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-join-glow::after { animation: none; opacity: 0.5; }
+}

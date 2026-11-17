@@ -257,7 +257,7 @@ const LegacyVisitorNavbar = () => {
                   Sign In
                 </Link>
               </Button>
-              <Button asChild size="sm" className="gap-2">
+              <Button asChild size="sm" className={onEnterprise ? "gap-2" : "gap-2 nav-join-glow"}>
                 {onEnterprise ? (
                   <Link to="/enterprise#talk" onClick={() => trackNavClick("Book a pilot call")}>
                     <CalendarDays className="h-4 w-4" aria-hidden="true" />
