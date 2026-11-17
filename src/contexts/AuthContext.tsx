@@ -370,15 +370,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         // name the same way everywhere instead of reading one provider's key.
         const signupDisplayName = resolveIdentityDisplayName(signedInUser.user_metadata);
 
+        // The admins' new-signup notice is sent by the server since 2026-11-17
+        // (trigger on auth.users, migration 20261117050000), not from here.
         parallelTasks.push(
           Promise.all([
-            supabase.functions.invoke('notify-admin', {
-              body: {
-                email,
-                fullName: signupDisplayName,
-                timestamp: new Date().toISOString()
-              }
-            }),
             supabase.functions.invoke('send-welcome-email', {
               body: {
                 email,

@@ -64,7 +64,8 @@ test('the hook only stores the email; only Auth may call it and nobody else can 
 
 test('the worker sends through Resend once per email and never logs tokens or addresses', () => {
   const worker = read('supabase/functions/auth-email-worker/index.ts');
-  assert.match(worker, /"Idempotency-Key": `auth-email-\$\{row\.id\}-\$\{index\}`/);
+  assert.match(worker, /"Idempotency-Key": `auth-email-\$\{rowId\}-\$\{index\}`/);
+  assert.match(worker, /postToResend\(row\.id, index, \[message\.to\]/);
   assert.match(worker, /isWorkerRequest\(req\)/);
   assert.match(worker, /response\.status === 422/);
   for (const line of worker.split('\n').filter((l) => /console\.(log|error)/.test(l))) {

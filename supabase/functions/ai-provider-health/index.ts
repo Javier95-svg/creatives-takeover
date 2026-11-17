@@ -14,6 +14,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { Resend } from "npm:resend@2.0.0";
 import { requireAdminOrWorker } from "../_shared/guards.ts";
 import { escapeHtml } from "../_shared/email-voice.ts";
+import { adminRecipients } from "../_shared/admin-recipients.ts";
 import { callGemini, GEMINI_SEARCH_MODELS, GEMINI_TEXT_MODELS } from "../_shared/gemini.ts";
 import { FAST_JSON_MODELS } from "../_shared/json-generation.ts";
 
@@ -94,13 +95,15 @@ const CHECKS: ProviderCheck[] = [
         const failure = await describeFailure(response);
         if (!/restricted_api_key/i.test(failure)) throw new Error(`Resend key rejected: ${failure}`);
       }
-      // 2. The queue: nothing failed lately, nothing stuck.
+      // 2. The queue: nothing failed lately, nothing stuck. The admins' own
+      // new-signup notices share the queue but are not auth emails, so a bad
+      // admin address cannot raise this alert.
       const admin = createClient(env("SUPABASE_URL"), env("SUPABASE_SERVICE_ROLE_KEY"), { auth: { persistSession: false } });
       const since = new Date(Date.now() - 2 * 3600_000).toISOString();
       const stuckBefore = new Date(Date.now() - 10 * 60_000).toISOString();
       const [failed, stuck] = await Promise.all([
-        admin.from("auth_email_outbox").select("id", { count: "exact", head: true }).eq("status", "failed").gte("created_at", since),
-        admin.from("auth_email_outbox").select("id", { count: "exact", head: true }).in("status", ["pending", "sending"]).lt("created_at", stuckBefore),
+        admin.from("auth_email_outbox").select("id", { count: "exact", head: true }).eq("status", "failed").neq("email_action_type", "admin_new_signup").gte("created_at", since),
+        admin.from("auth_email_outbox").select("id", { count: "exact", head: true }).in("status", ["pending", "sending"]).neq("email_action_type", "admin_new_signup").lt("created_at", stuckBefore),
       ]);
       if (failed.error || stuck.error) throw new Error(`Could not read auth_email_outbox: ${(failed.error ?? stuck.error)?.message}`);
       const problems = [
@@ -322,27 +325,6 @@ async function runCheck(check: ProviderCheck): Promise<CheckResult> {
   }
 }
 
-// Same two inboxes contact-form-submission always notifies.
-const REQUIRED_ADMIN_RECIPIENTS = ["admin@creatives-takeover.com", "javier@creatives-takeover.com"];
-const EMAIL_PATTERN = /^[^\s@<>"',;]+@[^\s@<>"',;]+\.[a-z]{2,}$/i;
-
-/**
- * The required inboxes plus every valid address in ADMIN_NOTIFICATION_EMAILS.
- * On 2026-11-12 Resend rejected that secret's value as a `to` list, so it is
- * read loosely (commas, semicolons, spaces, quotes, "Name <a@b.c>") and
- * entries that are not addresses are dropped instead of failing the send.
- */
-function adminRecipients(): string[] {
-  const configured = (Deno.env.get("ADMIN_NOTIFICATION_EMAILS") || "")
-    .split(/[,;\s]+/)
-    .map((entry) => entry.replace(/^[\s"'<[(]+|[\s"'>\])]+$/g, "").trim().toLowerCase())
-    .filter(Boolean);
-  const valid = configured.filter((entry) => EMAIL_PATTERN.test(entry));
-  if (configured.length !== valid.length) {
-    console.warn(`ai-provider-health: ignored ${configured.length - valid.length} invalid ADMIN_NOTIFICATION_EMAILS entr${configured.length - valid.length === 1 ? "y" : "ies"}`);
-  }
-  return Array.from(new Set([...REQUIRED_ADMIN_RECIPIENTS, ...valid]));
-}
 
 interface MonthSpend {
   month: string;
@@ -491,7 +473,7 @@ serve(async (req) => {
     const fromEmail = Deno.env.get("FROM_EMAIL") || "onboarding@resend.dev";
     const fromName = Deno.env.get("FROM_NAME") || "Creatives Takeover";
     if (changes.length > 0 && resendKey) {
-      const recipients = adminRecipients();
+      const recipients = adminRecipients(Deno.env.get("ADMIN_NOTIFICATION_EMAILS"), "ai-provider-health");
       const failing = changes.filter((change) => !change.ok).map((change) => change.provider);
       const recovered = changes.filter((change) => change.recovered).map((change) => change.provider);
       const authEmailFailing = changes.some((change) => change.provider === "auth_email" && !change.ok);
