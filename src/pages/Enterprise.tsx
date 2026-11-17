@@ -546,6 +546,10 @@ const Enterprise = () => {
                       defaultOrgType="accelerator"
                       submitLabel={ENTERPRISE_HERO.primaryCta}
                       variant="plain"
+                      // Every field first; the answers are emailed to Javier
+                      // (contact-form-submission), then his Cal page opens.
+                      requireAll
+                      bookingUrl={PILOT_CALL_URL}
                     />
                   </div>
                 </div>

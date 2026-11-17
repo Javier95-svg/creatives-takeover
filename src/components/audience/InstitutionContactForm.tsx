@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { CheckCircle2, Mail, Send } from "lucide-react";
+import { CalendarDays, CheckCircle2, Mail, Send } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,7 +28,24 @@ type InstitutionContactFormProps = {
    * they are, so "Sales request" shows in the admin email subject.
    */
   reason?: string;
+  /** Every field must be filled before the button can be pressed (/enterprise). */
+  requireAll?: boolean;
+  /**
+   * A booking page to open in a new tab once the form has been sent
+   * (/enterprise: Javier's Cal.com page). The visitor's name and email are
+   * passed along so the booking form arrives filled in.
+   */
+  bookingUrl?: string;
 };
+
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function bookingLink(url: string, name: string, email: string) {
+  const link = new URL(url);
+  if (name) link.searchParams.set("name", name);
+  if (email) link.searchParams.set("email", email);
+  return link.toString();
+}
 
 type Status = "idle" | "sending" | "sent" | "error";
 
@@ -61,6 +78,8 @@ const InstitutionContactForm = ({
   submitLabel,
   variant = "card",
   reason = "partnership",
+  requireAll = false,
+  bookingUrl,
 }: InstitutionContactFormProps) => {
   const framed = variant === "card";
   const [name, setName] = useState("");
@@ -70,11 +89,28 @@ const InstitutionContactForm = ({
   const [size, setSize] = useState("");
   const [message, setMessage] = useState("");
   const [status, setStatus] = useState<Status>("idle");
+  const [calendar, setCalendar] = useState<{ url: string; opened: boolean } | null>(null);
+
+  const complete = !requireAll || (
+    name.trim() !== "" && EMAIL_PATTERN.test(email.trim()) && organization.trim() !== "" &&
+    Boolean(orgType) && size !== "" && message.trim() !== ""
+  );
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
-    if (status === "sending") return;
+    if (status === "sending" || !complete) return;
     setStatus("sending");
+
+    // Open the tab now, while the click still counts as the visitor's own
+    // action; a tab opened after the send finishes would be blocked as a
+    // pop-up. It shows a short note and moves to the booking page once the
+    // form has gone, or closes if sending fails.
+    const tab = bookingUrl ? window.open("", "_blank") : null;
+    if (tab) {
+      tab.document.title = "Opening the calendar…";
+      tab.document.body.style.cssText = "margin:0;display:grid;place-items:center;height:100vh;font:16px system-ui,sans-serif;color:#555";
+      tab.document.body.textContent = "Sending your details, then opening the calendar…";
+    }
 
     const type = INSTITUTION_ORG_TYPES.find((option) => option.value === orgType) ?? INSTITUTION_ORG_TYPES[0];
 
@@ -98,12 +134,45 @@ const InstitutionContactForm = ({
       if (error) throw error;
 
       captureEvent("b2b_lead_submitted", { audience, org_type: orgType, size: size || "not_given" });
+      if (bookingUrl) {
+        const url = bookingLink(bookingUrl, name.trim(), email.trim());
+        if (tab && !tab.closed) {
+          tab.opener = null;
+          tab.location.replace(url);
+        }
+        setCalendar({ url, opened: Boolean(tab && !tab.closed) });
+      }
       setStatus("sent");
     } catch (error) {
       console.error("Institution contact form failed:", error);
+      tab?.close();
       setStatus("error");
     }
   };
+
+  if (status === "sent" && calendar) {
+    return (
+      <div className={framed ? "surface-panel trust-outline rounded-3xl p-8 text-center" : "py-10 text-center"} role="status">
+        <CheckCircle2 className="mx-auto mb-4 h-10 w-10 text-success" aria-hidden="true" />
+        <h3 className="audience-card__title mb-2">Thanks, we’ve got your details.</h3>
+        <p className="audience-card__body">
+          {calendar.opened
+            ? "The calendar opened in a new tab. Pick a time that suits you there."
+            : "Now pick a time for the call."}
+        </p>
+        <a
+          href={calendar.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-5 inline-flex items-center gap-2 font-semibold text-primary hover:underline"
+          onClick={() => captureEvent("b2b_booking_link_clicked", { audience })}
+        >
+          <CalendarDays className="h-4 w-4" aria-hidden="true" />
+          {calendar.opened ? "Didn’t open? Book a time" : "Book a time"}
+        </a>
+      </div>
+    );
+  }
 
   if (status === "sent") {
     return (
@@ -165,7 +234,7 @@ const InstitutionContactForm = ({
           </Select>
         </div>
         <div className="space-y-2">
-          <Label htmlFor="institution-size">Cohort or portfolio size</Label>
+          <Label htmlFor="institution-size">Cohort or portfolio size{requireAll ? " *" : ""}</Label>
           <Select value={size} onValueChange={setSize}>
             <SelectTrigger id="institution-size">
               <SelectValue placeholder="Choose one" />
@@ -182,11 +251,12 @@ const InstitutionContactForm = ({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="institution-message">Anything we should know?</Label>
+        <Label htmlFor="institution-message">Anything we should know?{requireAll ? " *" : ""}</Label>
         <Textarea
           id="institution-message"
           value={message}
           onChange={(e) => setMessage(e.target.value)}
+          required={requireAll}
           rows={4}
           className="resize-none"
           placeholder="Program dates, focus area, what you want to see from your teams..."
@@ -203,7 +273,12 @@ const InstitutionContactForm = ({
         </p>
       ) : null}
 
-      <Button type="submit" disabled={status === "sending"} className="h-12 w-full gap-2 bg-gradient-unified text-base font-semibold text-primary-foreground hover:opacity-90">
+      <Button
+        type="submit"
+        disabled={status === "sending" || !complete}
+        aria-describedby={requireAll && !complete ? "institution-complete-hint" : undefined}
+        className="h-12 w-full gap-2 bg-gradient-unified text-base font-semibold text-primary-foreground hover:opacity-90"
+      >
         {status === "sending" ? (
           <>
             <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" aria-hidden="true" />
@@ -216,6 +291,12 @@ const InstitutionContactForm = ({
           </>
         )}
       </Button>
+
+      {requireAll && !complete ? (
+        <p id="institution-complete-hint" className="-mt-2 text-center text-sm text-muted-foreground">
+          Fill in every field to book your call.
+        </p>
+      ) : null}
 
       {framed ? (
         <p className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
