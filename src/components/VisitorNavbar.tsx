@@ -35,6 +35,7 @@ import ctLogoNav132 from "@/assets/ct-logo-small-132.webp";
 import { cn } from "@/lib/utils";
 import { usePageAnalytics } from "@/hooks/usePageAnalytics";
 import { useCTAAttribution } from "@/hooks/useCTAAttribution";
+import { PILOT_CALL_URL } from "@/config/pilotCall";
 
 type VisitorLink = { label: string; href: string; icon: LucideIcon; sectionId?: string; exact?: boolean };
 type VisitorMenu = { label: string; links: VisitorLink[]; icon: LucideIcon };
@@ -259,10 +260,10 @@ const LegacyVisitorNavbar = () => {
               </Button>
               <Button asChild size="sm" className={onEnterprise ? "gap-2" : "gap-2 nav-join-glow"}>
                 {onEnterprise ? (
-                  <Link to="/enterprise#talk" onClick={() => trackNavClick("Book a pilot call")}>
+                  <a href={PILOT_CALL_URL} target="_blank" rel="noopener noreferrer" onClick={() => trackNavClick("Book a pilot call")}>
                     <CalendarDays className="h-4 w-4" aria-hidden="true" />
                     Book a pilot call
-                  </Link>
+                  </a>
                 ) : (
                   <Link to="/signup" onClick={() => { trackNavClick("Join Today"); setAttribution('navbar_join_today', location.pathname); }}>
                     <Rocket className="h-4 w-4" aria-hidden="true" />
@@ -317,10 +318,10 @@ const LegacyVisitorNavbar = () => {
                   </Button>
                   <Button asChild className="w-full">
                     {onEnterprise ? (
-                      <Link to="/enterprise#talk" onClick={() => trackNavClick("Mobile Book a pilot call")}>
+                      <a href={PILOT_CALL_URL} target="_blank" rel="noopener noreferrer" onClick={() => trackNavClick("Mobile Book a pilot call")}>
                         <CalendarDays className="mr-2 h-4 w-4" aria-hidden="true" />
                         Book a pilot call
-                      </Link>
+                      </a>
                     ) : (
                       <Link to="/signup" onClick={() => { trackNavClick("Mobile Join Today"); setAttribution('navbar_join_today', location.pathname); }}>
                         <Rocket className="mr-2 h-4 w-4" aria-hidden="true" />

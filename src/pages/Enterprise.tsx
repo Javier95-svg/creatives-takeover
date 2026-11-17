@@ -1,4 +1,5 @@
 import { useEffect, useRef, type CSSProperties, type MouseEvent, type ReactNode, type RefObject } from "react";
+import { PILOT_CALL_URL } from "@/config/pilotCall";
 import { useLocation } from "react-router-dom";
 import {
   ArrowDown,
@@ -238,12 +239,6 @@ const Enterprise = () => {
 
   const track = (cta: string, placement: string) => captureEvent("enterprise_cta_clicked", { cta, placement });
 
-  const scrollToContact = (event: MouseEvent<HTMLAnchorElement>, placement: string) => {
-    event.preventDefault();
-    track(ENTERPRISE_HERO.primaryCta, placement);
-    document.getElementById(CONTACT_ID)?.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
-
   // The secondary call to action stays on the page: it shows how the pilot runs.
   const scrollToHow = (event: MouseEvent<HTMLAnchorElement>) => {
     event.preventDefault();
@@ -300,7 +295,8 @@ const Enterprise = () => {
                   </ul>
 
                   <div className="ent-hero__ctas">
-                    <a href={`#${CONTACT_ID}`} className="ent-btn ent-btn--primary" onClick={(event) => scrollToContact(event, "hero")}>
+                    {/* Straight to Javier's booking page, in a new tab (src/config/pilotCall.ts). */}
+                    <a href={PILOT_CALL_URL} target="_blank" rel="noopener noreferrer" className="ent-btn ent-btn--primary" onClick={() => track(ENTERPRISE_HERO.primaryCta, "hero")}>
                       {ENTERPRISE_HERO.primaryCta}
                       <ArrowRight aria-hidden="true" />
                     </a>
