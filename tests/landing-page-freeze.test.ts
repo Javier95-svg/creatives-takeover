@@ -101,7 +101,11 @@ const frozenFiles = {
   // replaced in the same slot by the Project Memory band (HomeMemoryBand,
   // "Pulse Learns Your Business as You Grow"); its placeholder is resized.
   // No other section added, removed or reordered.
-  '../src/pages/Index.tsx': 'ac9cd71274329a5ebf7d1718336b2115607700f680c116a37d99ce697802ca4d',
+  // Rehashed 2026-11-17 (approved by Javier): the Project Memory band moves up
+  // to right after the journey (scroll data: ~37% of desktop visitors reached
+  // it in the old slot, ~44% reach this one) and drops the muted band tint.
+  // Order: Hero, Journey, Memory, Cycle, Founder ID, Nutshell, Pedia, FAQ.
+  '../src/pages/Index.tsx': 'cef0016e70093e8184a7b67d7138de241c132f910e735517b68278494c61e742',
 } as const;
 
 test('the approved unauthenticated landing page remains frozen during core-tool work', () => {

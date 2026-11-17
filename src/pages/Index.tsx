@@ -16,9 +16,9 @@ import HomeWallpaper from "@/components/wallpapers/HomeWallpaper";
 import { trackLandingViewed } from "@/lib/analytics";
 
 // Lazy load below-the-fold components for better performance.
-// The project memory band (Pulse) took the programs band's slot; programs still
-// reach /enterprise from the nav and the FAQ. It loads on approach like the
-// other sections below.
+// The project memory band (Pulse) replaced the programs band (programs reach
+// /enterprise from the nav and the FAQ) and sits right after the journey, where
+// more visitors reach it. It loads on approach like the other sections below.
 const HomeMemoryBand = lazy(() => import("@/components/home/HomeMemoryBand"));
 const HomeFounderIdBand = lazy(() => import("@/components/home/HomeFounderIdBand"));
 const HomeFAQ = lazy(() => import("@/components/HomeFAQ"));
@@ -87,6 +87,13 @@ const Index = () => {
               </div>
             </ScrollReveal>
             <ScrollReveal variant="fade" amount={0.05}>
+              <LoadWhenNear id="home-memory" placeholder={memoryPlaceholder}>
+                <Suspense fallback={memoryPlaceholder}>
+                  <HomeMemoryBand />
+                </Suspense>
+              </LoadWhenNear>
+            </ScrollReveal>
+            <ScrollReveal variant="fade" amount={0.05}>
               <UserReviews />
             </ScrollReveal>
             <ScrollReveal variant="fade" amount={0.05}>
@@ -98,15 +105,6 @@ const Index = () => {
             </ScrollReveal>
             <ScrollReveal variant="fade" amount={0.05}>
               <ValuePropositionCards />
-            </ScrollReveal>
-            <ScrollReveal variant="fade" amount={0.05}>
-              <div className="homepage-band-muted">
-                <LoadWhenNear id="home-memory" placeholder={memoryPlaceholder}>
-                  <Suspense fallback={memoryPlaceholder}>
-                    <HomeMemoryBand />
-                  </Suspense>
-                </LoadWhenNear>
-              </div>
             </ScrollReveal>
             <ScrollReveal variant="fade" amount={0.05}>
               <LoadWhenNear id="pedia-teaser" placeholder={teaserPlaceholder}>
@@ -134,6 +132,13 @@ const Index = () => {
               </div>
             </ScrollReveal>
             <ScrollReveal variant="fade" amount={0.05}>
+              <LoadWhenNear id="home-memory" placeholder={memoryPlaceholder}>
+                <Suspense fallback={memoryPlaceholder}>
+                  <HomeMemoryBand />
+                </Suspense>
+              </LoadWhenNear>
+            </ScrollReveal>
+            <ScrollReveal variant="fade" amount={0.05}>
               <UserReviews />
             </ScrollReveal>
             <ScrollReveal variant="fade" amount={0.05}>
@@ -145,15 +150,6 @@ const Index = () => {
             </ScrollReveal>
             <ScrollReveal variant="fade" amount={0.05}>
               <ValuePropositionCards />
-            </ScrollReveal>
-            <ScrollReveal variant="fade" amount={0.05}>
-              <div className="homepage-band-muted">
-                <LoadWhenNear id="home-memory" placeholder={memoryPlaceholder}>
-                  <Suspense fallback={memoryPlaceholder}>
-                    <HomeMemoryBand />
-                  </Suspense>
-                </LoadWhenNear>
-              </div>
             </ScrollReveal>
             <ScrollReveal variant="fade" amount={0.05}>
               <LoadWhenNear id="pedia-teaser" placeholder={teaserPlaceholder}>
