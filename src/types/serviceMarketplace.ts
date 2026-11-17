@@ -22,7 +22,13 @@ export interface MarketplaceService {
   delivered_by_picture_focal_x: number | null;
   delivered_by_picture_focal_y: number | null;
   delivered_by_user_id: string | null;
+  /**
+   * Never sent with listings (2026-11-17): members pay credits to reveal it
+   * through the service_contact_email RPC. Only set in the admin editor.
+   */
   delivered_by_email: string | null;
+  /** Whether the provider has an email a member can pay to reveal. */
+  has_contact_email: boolean;
   banner_url: string | null;
   banner_focal_x: number | null;
   banner_focal_y: number | null;

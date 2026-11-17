@@ -166,7 +166,7 @@ test('edge functions that act for someone check who is calling', () => {
     'send-push', 'send-article-notification-email', 'ai-model-router', 'embed-text', 'rag-chat',
     'speech-to-text', 'web-search', 'location-search', 'community-ai-moderator', 'bizmap-research',
     'rag-ingest', 'contact-form-submission', 'request-icp-draft-email', 'trigger-icp-sprint',
-    'send-welcome-email', 'pmf-outcome-request', 'notify-admin', 'process-demo-try-drip',
+    'send-welcome-email', 'pmf-outcome-request', 'process-demo-try-drip',
     'process-icp-sprint-emails', 'send-weekly-scorecards', 'check-dormant-users', 'daily-challenge-generator',
     'daily-reminder-service', 'industry-news-feed', 'model-comparison-audit', 'process-icp-guest-drip',
     'task-reminder-service', 'churn-reactivation-service', 'news-aggregator',

@@ -23,6 +23,29 @@ function formatServiceError(error: any, fallback: string) {
   return message || fallback;
 }
 
+/**
+ * The columns the app may read. delivered_by_email is not readable since
+ * 2026-11-17 (migration 20261117070000): `select("*")` would be refused.
+ * A new column needs adding here and to the migration's GRANT SELECT list.
+ */
+export const SERVICE_COLUMNS = [
+  "id", "name", "slug", "category", "description", "banner_url", "pitch_deck_url", "pitch_deck_type",
+  "booking_url", "booking_provider", "is_active", "is_featured", "created_at", "updated_at",
+  "delivered_by_name", "delivered_by_picture_url", "delivered_by_user_id",
+  "banner_focal_x", "banner_focal_y", "delivered_by_picture_focal_x", "delivered_by_picture_focal_y",
+  "has_contact_email",
+].join(",");
+
+/** The provider's email: only for an admin, or a member who paid to reveal it. */
+export async function fetchServiceContactEmail(serviceId: string): Promise<string | null> {
+  const { data, error } = await supabase.rpc("service_contact_email" as never, { p_service_id: serviceId } as never);
+  if (error) {
+    console.error("Error fetching service contact email:", error);
+    return null;
+  }
+  return typeof data === "string" && data.trim() ? data.trim() : null;
+}
+
 function toService(row: any): MarketplaceService {
   const numberOrDefault = (value: unknown, fallback = 50) => Number(value ?? fallback);
 
@@ -38,6 +61,7 @@ function toService(row: any): MarketplaceService {
     delivered_by_picture_focal_y: numberOrDefault(row.delivered_by_picture_focal_y),
     delivered_by_user_id: row.delivered_by_user_id ?? null,
     delivered_by_email: row.delivered_by_email ?? null,
+    has_contact_email: row.has_contact_email === true || Boolean(row.delivered_by_email?.trim?.()),
     banner_url: row.banner_url ?? null,
     banner_focal_x: numberOrDefault(row.banner_focal_x),
     banner_focal_y: numberOrDefault(row.banner_focal_y),
@@ -97,7 +121,7 @@ export function useServices() {
       setLoading(true);
       const { data, error } = await supabase
         .from("services")
-        .select("*")
+        .select(SERVICE_COLUMNS)
         .eq("is_active", true)
         .order("is_featured", { ascending: false })
         .order("name", { ascending: true });
@@ -118,7 +142,7 @@ export function useServices() {
       setLoading(true);
       const { data, error } = await supabase
         .from("services")
-        .select("*")
+        .select(SERVICE_COLUMNS)
         .eq("slug", slug)
         .eq("is_active", true)
         .maybeSingle();
@@ -139,7 +163,7 @@ export function useServices() {
       setLoading(true);
       const { data, error } = await supabase
         .from("services")
-        .select("*")
+        .select(SERVICE_COLUMNS)
         .eq("id", id)
         .eq("is_active", true)
         .maybeSingle();
@@ -167,7 +191,7 @@ export function useServices() {
       const { data, error } = await supabase
         .from("services")
         .insert([payload])
-        .select()
+        .select(SERVICE_COLUMNS)
         .single();
 
       if (error) throw error;
@@ -198,7 +222,7 @@ export function useServices() {
         .from("services")
         .update(payload)
         .eq("id", id)
-        .select()
+        .select(SERVICE_COLUMNS)
         .single();
 
       if (error) throw error;

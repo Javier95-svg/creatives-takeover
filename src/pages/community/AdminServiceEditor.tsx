@@ -14,7 +14,7 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { useAuth } from "@/contexts/AuthContext";
-import { useServices } from "@/hooks/useServices";
+import { fetchServiceContactEmail, useServices } from "@/hooks/useServices";
 import { supabase } from "@/integrations/supabase/client";
 import type { CreateServiceInput, MarketplaceService, ServiceCategory } from "@/types/serviceMarketplace";
 import { SERVICE_CATEGORIES, SERVICE_CATEGORY_LABELS } from "@/types/serviceMarketplace";
@@ -82,8 +82,10 @@ const AdminServiceEditor = () => {
   }, [adminLoading, authLoading, id, isAdmin, navigate]);
 
   const loadService = async (serviceId: string) => {
-    const found = await fetchServiceById(serviceId);
-    if (!found) return;
+    const loaded = await fetchServiceById(serviceId);
+    if (!loaded) return;
+    // Listings never carry the provider's email; admins read it separately.
+    const found = { ...loaded, delivered_by_email: await fetchServiceContactEmail(serviceId) };
 
     setService(found);
     setFormData({

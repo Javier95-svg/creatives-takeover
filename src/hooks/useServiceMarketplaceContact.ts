@@ -5,6 +5,7 @@ import { CREDIT_COSTS } from "@/config/constants";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCreditActions } from "@/hooks/useCreditActions";
 import { useMessaging } from "@/hooks/useMessaging";
+import { fetchServiceContactEmail } from "@/hooks/useServices";
 import type { MarketplaceService } from "@/types/serviceMarketplace";
 import { getServiceProfilePath, resolveServiceMessageUserId } from "@/utils/serviceMarketplace";
 import { trackSocialContactCta } from "@/lib/socialInteractionAnalytics";
@@ -21,7 +22,7 @@ export function useServiceMarketplaceContact(service: MarketplaceService | null)
   const profilePath = service ? getServiceProfilePath(service) : "/marketplace";
   const messageUserId = service ? resolveServiceMessageUserId(service) : null;
   const hasMessageUser = Boolean(messageUserId);
-  const hasEmail = Boolean(service?.delivered_by_email?.trim());
+  const hasEmail = Boolean(service?.has_contact_email || service?.delivered_by_email?.trim());
   const isCharging = chargingAction !== null;
 
   const getCreditMetadata = useCallback(
@@ -33,7 +34,6 @@ export function useServiceMarketplaceContact(service: MarketplaceService | null)
       serviceName: service?.name,
       serviceCategory: service?.category,
       providerUserId: messageUserId,
-      providerEmail: service?.delivered_by_email?.trim() || null,
     }),
     [messageUserId, service],
   );
@@ -90,8 +90,7 @@ export function useServiceMarketplaceContact(service: MarketplaceService | null)
   const handleEmail = useCallback(async () => {
     if (!service) return;
 
-    const email = service.delivered_by_email?.trim();
-    if (!email) {
+    if (!hasEmail) {
       toast.error("This service does not have an email configured yet.");
       return;
     }
@@ -100,20 +99,29 @@ export function useServiceMarketplaceContact(service: MarketplaceService | null)
 
     setChargingAction("email");
     try {
-      const charged = await deductCredits("SERVICE_MARKETPLACE_EMAIL", {
-        featureName: "Service Marketplace Email",
-        requiredCredits: CREDIT_COSTS.SERVICE_MARKETPLACE_EMAIL,
-        description: "Open the email address for a service provider.",
-        metadata: getCreditMetadata("email"),
-      });
+      // Paid once per service: the server releases the address only after a
+      // "Service Marketplace Email" charge for this service exists.
+      let email = await fetchServiceContactEmail(service.id);
+      if (!email) {
+        const charged = await deductCredits("SERVICE_MARKETPLACE_EMAIL", {
+          featureName: "Service Marketplace Email",
+          requiredCredits: CREDIT_COSTS.SERVICE_MARKETPLACE_EMAIL,
+          description: "Open the email address for a service provider.",
+          metadata: getCreditMetadata("email"),
+        });
+        if (!charged) return;
+        email = await fetchServiceContactEmail(service.id);
+      }
 
-      if (charged) {
+      if (email) {
         window.location.href = `mailto:${email}`;
+      } else {
+        toast.error("We could not open the email address. Please try again or contact us.");
       }
     } finally {
       setChargingAction(null);
     }
-  }, [deductCredits, getCreditMetadata, requireAuthenticatedUser, service]);
+  }, [deductCredits, getCreditMetadata, hasEmail, requireAuthenticatedUser, service]);
 
   return {
     chargingAction,
