@@ -73,6 +73,75 @@
   opacity: 0.9;
 }
 
+/* ---- Private to your account ----
+   Sits between the header and the design, so it is read before any example. */
+
+.hm-privacy {
+  display: grid;
+  gap: 18px;
+  max-width: 1120px;
+  margin: 0 auto 40px;
+  padding: 22px 20px;
+  border: 1px solid color-mix(in srgb, var(--hm-teal) 38%, var(--hm-line));
+  border-radius: 24px;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--hm-teal) 10%, transparent), transparent 60%),
+    var(--hm-panel);
+  backdrop-filter: blur(14px);
+}
+
+@media (min-width: 640px) { .hm-privacy { padding: 26px 30px; margin-bottom: 48px; } }
+
+@media (min-width: 1024px) {
+  .hm-privacy { grid-template-columns: minmax(0, 0.9fr) minmax(0, 2.1fr); gap: 32px; align-items: center; }
+}
+
+.hm-privacy__head { display: flex; gap: 14px; align-items: flex-start; }
+
+.hm-privacy__lock {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--hm-teal) 16%, transparent);
+  color: var(--hm-teal);
+}
+
+.hm-privacy__lock svg { width: 20px; height: 20px; }
+
+.hm-privacy__title {
+  font-family: var(--hm-display);
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--hm-ink);
+}
+
+.hm-privacy__lede {
+  margin-top: 6px;
+  color: var(--hm-muted);
+  font-size: 0.9375rem;
+  line-height: 1.55;
+}
+
+.hm-privacy__list {
+  display: grid;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (min-width: 640px) { .hm-privacy__list { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 24px; } }
+
+.hm-privacy__list li { display: flex; gap: 10px; align-items: flex-start; min-width: 0; }
+.hm-privacy__list svg { flex: none; width: 17px; height: 17px; margin-top: 3px; color: var(--hm-teal); }
+.hm-privacy__list p { color: var(--hm-muted); font-size: 0.9rem; line-height: 1.55; }
+.hm-privacy__list strong { color: var(--hm-ink); font-weight: 600; }
+
 /* ---- CTA ---- */
 
 .hm-cta {

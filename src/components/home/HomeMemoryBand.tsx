@@ -4,7 +4,11 @@ import {
   ArrowRight,
   Bookmark,
   CalendarCheck,
+  EyeOff,
   FlaskConical,
+  KeyRound,
+  Lock,
+  ShieldCheck,
   Layers,
   ListPlus,
   Pencil,
@@ -65,6 +69,41 @@ function useEntrance<T extends HTMLElement>() {
   }, []);
   return { ref, state };
 }
+
+// Who the memory belongs to, said before anything else. Each line is checked:
+// Terms 5.1 (ownership); owner-only RLS on every project table and no admin
+// screen that reads them; cohort consent lists what a program receives (idea
+// details, files and messages never); Privacy Policy 4 (never sold); delete
+// controls in PulseMemoryPanel, Pulse Home and /settings/delete-account; and
+// AI providers listed as processors in Privacy Policy 5.1. Do not shorten this
+// to "we have no access": the team runs the database and the AI provider
+// writing an answer receives the context.
+const PRIVACY: Array<{ title: string; body: string; icon: LucideIcon }> = [
+  { title: "Yours", body: "You own what you create here. Delete any memory, any conversation or your whole account whenever you want.", icon: KeyRound },
+  { title: "Not shared", body: "Other members can’t see it. If you join a program’s cohort, you see what it receives before you agree, and your idea details stay private.", icon: EyeOff },
+  { title: "Not for sale", body: "Our team’s admin tools don’t show your workspace, and we never sell your work.", icon: ShieldCheck },
+  { title: "Used for your answers", body: "When you ask Pulse something, your project context goes to the AI model that writes the answer.", icon: Sparkles },
+];
+
+const PrivacyNote = () => (
+  <aside className="hm-privacy" aria-labelledby="home-memory-privacy">
+    <div className="hm-privacy__head">
+      <span className="hm-privacy__lock"><Lock aria-hidden="true" /></span>
+      <div>
+        <h3 id="home-memory-privacy" className="hm-privacy__title">Private to your account</h3>
+        <p className="hm-privacy__lede">Your project’s memory belongs to your account, and only your account can open it.</p>
+      </div>
+    </div>
+    <ul className="hm-privacy__list">
+      {PRIVACY.map(({ title, body, icon: Icon }) => (
+        <li key={title}>
+          <Icon aria-hidden="true" />
+          <p><strong>{title}.</strong> {body}</p>
+        </li>
+      ))}
+    </ul>
+  </aside>
+);
 
 const Cta = ({ align = "center" }: { align?: "center" | "start" }) => (
   <div className={`hm-cta hm-cta--${align}`}>
@@ -332,6 +371,8 @@ export default function HomeMemoryBand() {
           </h2>
           <p className="hm-intro">{copy.intro}</p>
         </div>
+
+        <PrivacyNote />
 
         {variant === "a" && (<><VariantA /><Cta /></>)}
         {variant === "b" && <VariantB />}
