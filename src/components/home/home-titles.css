@@ -46,7 +46,7 @@
 html:not(.dark) html:not(.dark) html:not(.dark) html:not(.dark) .ht--evolve[data-anim] .ht__word { transition: opacity 0.6s var(--ht-ease), translate 0.7s var(--ht-ease); }
 .ht--evolve[data-anim="ready"] .ht__word { opacity: 0; translate: 0 0.5em; }
 
-/* ---- momentum: Programs, the shine keeps moving ---- */
+/* ---- momentum: Project Memory, the shine keeps moving ---- */
 .ht--momentum {
   background-image: var(--ht-silver-flow);
   background-size: 300% 100%;

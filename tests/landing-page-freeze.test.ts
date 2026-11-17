@@ -97,7 +97,11 @@ const frozenFiles = {
   // Rehashed 2026-11-06 (homepage-positioning, approved by Javier): the AI
   // trends section is replaced by a programs band, a short Founder ID band sits
   // before the FAQ, and the title and description lead with the outcome.
-  '../src/pages/Index.tsx': '8d8e278972585d15b2a3d209daa5c063a3431209464183be00343ad89d7caf44',
+  // Rehashed 2026-11-17 (approved by Javier, variant C): the programs band is
+  // replaced in the same slot by the Project Memory band (HomeMemoryBand,
+  // "Pulse Learns Your Business as You Grow"); its placeholder is resized.
+  // No other section added, removed or reordered.
+  '../src/pages/Index.tsx': 'ac9cd71274329a5ebf7d1718336b2115607700f680c116a37d99ce697802ca4d',
 } as const;
 
 test('the approved unauthenticated landing page remains frozen during core-tool work', () => {

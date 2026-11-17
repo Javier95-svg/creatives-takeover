@@ -17,8 +17,8 @@ import { trackLandingViewed } from "@/lib/analytics";
 
 // Lazy load below-the-fold components for better performance.
 // The project memory band (Pulse) took the programs band's slot; programs still
-// reach /enterprise from the nav and the FAQ. It carries product screens, so it
-// loads on approach like the other sections below.
+// reach /enterprise from the nav and the FAQ. It loads on approach like the
+// other sections below.
 const HomeMemoryBand = lazy(() => import("@/components/home/HomeMemoryBand"));
 const HomeFounderIdBand = lazy(() => import("@/components/home/HomeFounderIdBand"));
 const HomeFAQ = lazy(() => import("@/components/HomeFAQ"));
@@ -27,7 +27,7 @@ const HomePediaBand = lazy(() => import("@/components/home/HomePediaBand"));
 // lazy() alone still fetched every chunk on first render, before the visitor
 // scrolled. LoadWhenNear defers each until it is 800px from the viewport; the
 // placeholders keep the space so nothing shifts.
-const memoryPlaceholder =<div className="min-h-[1825px] lg:min-h-[1780px] animate-pulse bg-muted/20" />;
+const memoryPlaceholder = <div className="min-h-[2490px] lg:min-h-[1380px] animate-pulse bg-muted/20" />;
 const founderIdPlaceholder = <div className="min-h-[899px] lg:min-h-[1092px] animate-pulse bg-muted/20" />;
 const teaserPlaceholder = <div className="min-h-[1546px] lg:min-h-[922px] animate-pulse bg-muted/20" />;
 const faqPlaceholder = <div className="h-96 animate-pulse bg-muted/20" />;

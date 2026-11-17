@@ -8,7 +8,7 @@ import "./home-titles.css";
 //
 // sunrise   Journey      amber to coral, colour sweeps across as it rises
 // evolve    Cycle        teal to violet, words arrive one by one
-// momentum  Programs     green to blue, colour keeps flowing ("moving")
+// momentum  Memory       green to blue, colour keeps flowing
 // spectrum  Nutshell     blue to coral, letters tighten into place
 // reading   Pedia        indigo to sky, wipes in left to right
 // gold      Founder ID   champagne foil, a sheen passes now and then
