@@ -162,7 +162,7 @@ export default function HomeMemoryBand() {
           <h2 id="home-memory-heading" className="homepage-section-title text-3xl sm:text-4xl lg:text-[2.9rem]">
             <TitleFx variant="momentum" text="Pulse Learns Your Business as You Grow" />
           </h2>
-          <p className="hm-intro">Pulse keeps four kinds of notes about your business, and only the ones you approve.</p>
+          <p className="hm-intro">Your decisions, hypotheses, commitments and facts, saved once and used in every Pulse answer.</p>
         </div>
 
         {/* Everything under the title is the way in: one link laid over it opens

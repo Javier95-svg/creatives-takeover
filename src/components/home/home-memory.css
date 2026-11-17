@@ -40,6 +40,12 @@
   line-height: 1.65;
 }
 
+/* One line from tablet landscape up (Javier's rule): the sentence is about
+   780px wide, so it never wraps on desktop. Phones wrap it normally. */
+@media (min-width: 1024px) {
+  .hm-intro { max-width: none; white-space: nowrap; }
+}
+
 
 /* ---- Private to your account ----
    Sits between the header and the design, so it is read before any example. */
