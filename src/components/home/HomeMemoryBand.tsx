@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import {
-  ArrowRight,
   Bookmark,
   CalendarCheck,
   EyeOff,
@@ -103,16 +102,6 @@ const PrivacyNote = () => (
       ))}
     </ul>
   </aside>
-);
-
-const Cta = ({ align = "center" }: { align?: "center" | "start" }) => (
-  <div className={`hm-cta hm-cta--${align}`}>
-    <Link to="/signup" className="hm-btn" onClick={track("primary")}>
-      Start your project
-      <ArrowRight aria-hidden="true" />
-    </Link>
-    <p className="hm-note">Pulse comes with the free Rookie plan.</p>
-  </div>
 );
 
 /* ---------------------------------------------------------------- A ---- */
@@ -265,7 +254,6 @@ function VariantB() {
           caption={{ when: "Each day", text: "Notes on your project, each linked to the tool behind it" }}
           alt="Pulse Home for the sample project: today's focus and the notes Pulse made about the project, each linking to the tool its evidence comes from." />
       </div>
-      <Cta />
     </div>
   );
 }
@@ -330,7 +318,6 @@ function VariantC() {
           <p>Each project keeps its own results and notes. Switch projects and Pulse switches with you.</p>
         </article>
       </div>
-      <Cta />
     </div>
   );
 }
@@ -372,11 +359,18 @@ export default function HomeMemoryBand() {
           <p className="hm-intro">{copy.intro}</p>
         </div>
 
-        <PrivacyNote />
-
-        {variant === "a" && (<><VariantA /><Cta /></>)}
-        {variant === "b" && <VariantB />}
-        {variant === "c" && <VariantC />}
+        {/* Everything under the title is the way in: one link laid over it opens
+            /signup, as the programs band did with /enterprise. The text stays
+            outside the link, so screen readers read it as normal content. */}
+        <div className="hm-click">
+          <PrivacyNote />
+          {variant === "a" && <VariantA />}
+          {variant === "b" && <VariantB />}
+          {variant === "c" && <VariantC />}
+          <Link to="/signup" className="hm-click__link" onClick={track("panel")}>
+            <span className="sr-only">Start your project, free account</span>
+          </Link>
+        </div>
       </div>
     </section>
   );

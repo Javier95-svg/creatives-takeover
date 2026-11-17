@@ -142,43 +142,39 @@
 .hm-privacy__list p { color: var(--hm-muted); font-size: 0.9rem; line-height: 1.55; }
 .hm-privacy__list strong { color: var(--hm-ink); font-weight: 600; }
 
-/* ---- CTA ---- */
+/* ---- The whole band opens /signup ----
+   One transparent link lies over everything under the title (privacy block
+   and design). Under the pointer it all lifts and the frames' edges glow;
+   keyboard focus draws a ring around the area. */
 
-.hm-cta {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  margin-top: 44px;
+.hm-click {
+  position: relative;
+  border-radius: 32px;
+  transition: translate 0.4s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.hm-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  height: 50px;
-  padding: 0 24px;
-  border-radius: 14px;
-  background: hsl(var(--foreground));
-  color: hsl(var(--background));
-  font-size: 15px;
-  font-weight: 600;
-  text-decoration: none;
-  box-shadow: 0 14px 34px -14px rgba(79, 143, 247, 0.7);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+.hm-click__link {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  border-radius: inherit;
+  cursor: pointer;
 }
 
-.hm-btn svg { width: 17px; height: 17px; transition: transform 0.2s ease; }
-.hm-btn:hover { transform: translateY(-1px); box-shadow: 0 20px 40px -14px rgba(79, 143, 247, 0.85); }
-.hm-btn:hover svg { transform: translateX(3px); }
-.hm-btn:focus-visible { outline: 2px solid var(--hm-blue); outline-offset: 3px; }
+.hm-click__link:focus-visible {
+  outline: 2px solid var(--hm-blue);
+  outline-offset: 8px;
+}
 
-.hm-note { color: var(--hm-muted); font-size: 0.8125rem; }
+.hm-click:hover { translate: 0 -4px; }
 
-@media (max-width: 639px) {
-  .hm-btn { width: 100%; }
-  .hm-cta { align-items: stretch; text-align: center; }
+.hm-click :is(.hm-privacy, .hm-panel, .hm-c__ledger, .hm-c__card, .ent-window) {
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hm-click:hover :is(.hm-privacy, .hm-panel, .hm-c__ledger, .hm-c__card, .ent-window) {
+  border-color: color-mix(in srgb, var(--hm-blue) 45%, var(--hm-line));
+  box-shadow: 0 50px 100px -50px rgba(79, 143, 247, 0.45);
 }
 
 /* ================================================================ A ==== */
@@ -496,7 +492,6 @@
 
 @media (min-width: 1024px) {
   .hm-c { grid-template-columns: minmax(0, 1fr) minmax(0, 1.12fr); gap: 28px; align-items: start; }
-  .hm-c > .hm-cta { grid-column: 1 / -1; }
 }
 
 /* The memory list, set like a ledger: mono labels, one ruled entry per kind. */
@@ -712,7 +707,8 @@
 .hm-c__card { transition-delay: calc(0.6s + var(--i, 0) * 0.12s); }
 
 @media (prefers-reduced-motion: reduce) {
-  .hm-btn, .hm-btn svg { transition: none; }
+  .hm-click { transition: none; }
+  .hm-click:hover { translate: none; }
   .hm-section[data-anim] .hm-header > *,
   .hm-section[data-anim] .hm-panel,
   .hm-section[data-anim] .hm-a__step,
