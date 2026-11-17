@@ -1,0 +1,661 @@
+/* Homepage band on project memory (HomeMemoryBand.tsx): what Pulse knows about
+   a project and what it does with it. Built on the theme tokens so it follows
+   light and dark mode; brand blue, violet, coral and green as accents. */
+
+.hm-section {
+  --hm-blue: #4f8ff7;
+  --hm-violet: #8b7cf6;
+  --hm-coral: #f37575;
+  --hm-green: #25cb7a;
+  --hm-teal: #2bb8a8;
+  --hm-ink: hsl(var(--foreground));
+  --hm-muted: hsl(var(--muted-foreground));
+  --hm-line: hsl(var(--border) / 0.7);
+  --hm-panel: hsl(var(--card) / 0.86);
+  --hm-tile: hsl(var(--background) / 0.55);
+  --hm-display: "Space Grotesk", "Inter", sans-serif;
+  --hm-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  padding: 96px 0 56px;
+}
+
+@media (min-width: 1024px) {
+  .hm-section { padding: 144px 0 80px; }
+}
+
+.hm-header {
+  max-width: 1120px;
+  margin: 0 auto 48px;
+  text-align: center;
+}
+
+@media (min-width: 640px) {
+  .hm-header { margin-bottom: 60px; }
+}
+
+.hm-intro {
+  max-width: 640px;
+  margin: 18px auto 0;
+  color: var(--hm-muted);
+  font-size: 1.0625rem;
+  line-height: 1.65;
+}
+
+.hm-kicker {
+  color: var(--hm-muted);
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+/* The glass panel, as on the other homepage bands. */
+.hm-panel {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border: 1px solid var(--hm-line);
+  border-radius: 32px;
+  background: var(--hm-panel);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 40px 90px -50px rgba(15, 23, 42, 0.45);
+  padding: 24px 18px;
+}
+
+@media (min-width: 640px) { .hm-panel { padding: 40px 36px; } }
+@media (min-width: 1024px) { .hm-panel { padding: 52px 56px; } }
+
+.hm-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 2px;
+  background: linear-gradient(90deg, var(--hm-blue), var(--hm-violet), var(--hm-coral), var(--hm-green));
+  opacity: 0.9;
+}
+
+/* ---- CTA ---- */
+
+.hm-cta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-top: 44px;
+}
+
+.hm-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  height: 50px;
+  padding: 0 24px;
+  border-radius: 14px;
+  background: hsl(var(--foreground));
+  color: hsl(var(--background));
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+  box-shadow: 0 14px 34px -14px rgba(79, 143, 247, 0.7);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.hm-btn svg { width: 17px; height: 17px; transition: transform 0.2s ease; }
+.hm-btn:hover { transform: translateY(-1px); box-shadow: 0 20px 40px -14px rgba(79, 143, 247, 0.85); }
+.hm-btn:hover svg { transform: translateX(3px); }
+.hm-btn:focus-visible { outline: 2px solid var(--hm-blue); outline-offset: 3px; }
+
+.hm-note { color: var(--hm-muted); font-size: 0.8125rem; }
+
+@media (max-width: 639px) {
+  .hm-btn { width: 100%; }
+  .hm-cta { align-items: stretch; text-align: center; }
+}
+
+/* ================================================================ A ==== */
+
+.hm-a__grid {
+  display: grid;
+  gap: 28px;
+}
+
+@media (min-width: 1024px) {
+  .hm-a__grid { grid-template-columns: minmax(0, 0.72fr) minmax(0, 1.28fr); gap: 48px; }
+}
+
+/* The tools, as a vertical line of stops. Phones skip it: each chip on the
+   right already names its tool. */
+.hm-a__col:first-child { display: none; }
+
+@media (min-width: 1024px) {
+  .hm-a__col:first-child { display: block; }
+}
+
+.hm-a__steps {
+  position: relative;
+  display: grid;
+  gap: 18px;
+  margin: 22px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.hm-a__steps::before {
+  content: "";
+  position: absolute;
+  left: 19px;
+  top: 10px;
+  bottom: 10px;
+  width: 2px;
+  background: linear-gradient(180deg, var(--hm-blue), var(--hm-violet) 50%, var(--hm-line) 50%);
+  opacity: 0.8;
+}
+
+.hm-a__step {
+  --tone: var(--hm-blue);
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-height: 40px;
+}
+
+.hm-a__step:nth-child(2) { --tone: #6f86f6; }
+.hm-a__step:nth-child(3) { --tone: var(--hm-violet); }
+
+.hm-a__dot {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 1px dashed var(--hm-line);
+  border-radius: 50%;
+  background: hsl(var(--card));
+  color: var(--hm-muted);
+  box-shadow: 0 0 0 6px hsl(var(--card) / 0.95);
+}
+
+.hm-a__dot svg { width: 18px; height: 18px; }
+
+.hm-a__step.is-done .hm-a__dot {
+  border: 1px solid color-mix(in srgb, var(--tone) 45%, transparent);
+  background:
+    radial-gradient(circle at 50% 30%, color-mix(in srgb, var(--tone) 22%, transparent), transparent 70%),
+    hsl(var(--card));
+  color: var(--tone);
+}
+
+.hm-a__tool {
+  flex: 1;
+  font-family: var(--hm-display);
+  font-size: 1.0625rem;
+  font-weight: 600;
+  color: var(--hm-muted);
+}
+
+.hm-a__step.is-done .hm-a__tool { color: var(--hm-ink); }
+
+.hm-a__state {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--hm-muted);
+}
+
+.hm-a__step.is-done .hm-a__state { color: var(--tone); }
+
+.hm-a__knows-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px 16px;
+}
+
+.hm-a__project {
+  font-family: var(--hm-mono);
+  font-size: 12px;
+  color: var(--hm-muted);
+}
+
+/* How much of the project Pulse has to work from: three of six steps. */
+.hm-a__meter {
+  position: relative;
+  height: 4px;
+  margin-top: 14px;
+  border-radius: 999px;
+  background: hsl(var(--muted) / 0.7);
+  overflow: hidden;
+}
+
+.hm-a__meter i {
+  position: absolute;
+  inset: 0 50% 0 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--hm-blue), var(--hm-violet));
+  transform-origin: left center;
+}
+
+.hm-a__chips {
+  display: grid;
+  gap: 10px;
+  margin: 18px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (min-width: 640px) {
+  .hm-a__chips { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .hm-a__chip.is-memory { grid-column: span 1; }
+}
+
+.hm-a__chip {
+  --tone: var(--hm-blue);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px;
+  border: 1px solid color-mix(in srgb, var(--tone) 30%, var(--hm-line));
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--tone) 7%, var(--hm-tile));
+}
+
+.hm-a__chip:nth-child(2) { --tone: #6f86f6; }
+.hm-a__chip:nth-child(3) { --tone: var(--hm-violet); }
+.hm-a__chip.is-memory { --tone: var(--hm-teal); }
+
+.hm-a__chip.is-pending {
+  border-style: dashed;
+  border-color: var(--hm-line);
+  background: transparent;
+}
+
+.hm-a__chip-tool {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--tone);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.hm-a__chip-tool svg { width: 12px; height: 12px; }
+.hm-a__chip.is-pending .hm-a__chip-tool { color: var(--hm-muted); }
+
+.hm-a__chip-text {
+  color: var(--hm-ink);
+  font-size: 0.9375rem;
+  line-height: 1.45;
+}
+
+.hm-a__chip.is-pending .hm-a__chip-text { color: var(--hm-muted); }
+
+/* One question and the answer it gets from that context. */
+.hm-a__answer {
+  margin-top: 32px;
+  padding: 22px 20px;
+  border: 1px solid var(--hm-line);
+  border-radius: 20px;
+  background: var(--hm-tile);
+}
+
+@media (min-width: 640px) { .hm-a__answer { padding: 26px 30px; } }
+
+.hm-a__q {
+  font-family: var(--hm-display);
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--hm-ink);
+}
+
+.hm-a__reply {
+  margin-top: 12px;
+  color: var(--hm-ink);
+  font-size: 0.975rem;
+  line-height: 1.65;
+}
+
+.hm-a__pulse {
+  display: inline-block;
+  margin-right: 10px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--hm-teal) 16%, transparent);
+  color: var(--hm-teal);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  vertical-align: 2px;
+}
+
+.hm-a__sources {
+  margin-top: 14px;
+  color: var(--hm-muted);
+  font-size: 0.8125rem;
+}
+
+.hm-facts {
+  display: grid;
+  gap: 14px;
+  margin: 30px 0 0;
+  padding: 0;
+  list-style: none;
+  color: var(--hm-muted);
+  font-size: 0.9375rem;
+  line-height: 1.55;
+}
+
+.hm-facts strong { color: var(--hm-ink); font-weight: 600; }
+
+@media (min-width: 768px) {
+  .hm-facts { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px; }
+}
+
+/* ================================================================ B ==== */
+
+.hm-b__main { max-width: 860px; margin: 0 auto; }
+
+.hm-b__pair {
+  display: grid;
+  gap: 28px;
+  align-items: start;
+  max-width: 1000px;
+  margin: 36px auto 0;
+}
+
+@media (min-width: 768px) {
+  .hm-b__pair { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+.hm-shot { margin: 0; }
+.hm-shot .ent-window { box-shadow: 0 40px 80px -40px rgba(15, 23, 42, 0.55); }
+
+.hm-shot__media {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: var(--ar);
+}
+
+.hm-shot .hm-shot__media img {
+  position: absolute;
+  width: var(--iw);
+  max-width: none;
+  height: auto;
+  left: var(--il);
+  top: var(--it);
+}
+
+@media (max-width: 639px) {
+  .hm-shot__media.has-phone-crop { aspect-ratio: var(--ar-p); }
+  .hm-shot .hm-shot__media.has-phone-crop img { width: var(--iw-p); left: var(--il-p); top: var(--it-p); }
+  .hm-shot__media .ent-hotspot { display: none; }
+}
+
+.hm-shot__caption {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: center;
+  gap: 4px 10px;
+  margin-top: 14px;
+  color: var(--hm-muted);
+  font-size: 0.875rem;
+}
+
+.hm-shot__when {
+  color: var(--hm-teal);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+/* ================================================================ C ==== */
+
+.hm-c {
+  display: grid;
+  gap: 24px;
+}
+
+@media (min-width: 1024px) {
+  .hm-c { grid-template-columns: minmax(0, 1fr) minmax(0, 1.12fr); gap: 28px; align-items: start; }
+  .hm-c > .hm-cta { grid-column: 1 / -1; }
+}
+
+/* The memory list, set like a ledger: mono labels, one ruled entry per kind. */
+.hm-c__ledger {
+  overflow: hidden;
+  border: 1px solid var(--hm-line);
+  border-radius: 28px;
+  background: var(--hm-panel);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 40px 90px -50px rgba(15, 23, 42, 0.45);
+}
+
+.hm-c__ledger-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 6px 16px;
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--hm-line);
+}
+
+.hm-c__mono {
+  font-family: var(--hm-mono);
+  font-size: 12.5px;
+  color: var(--hm-ink);
+}
+
+.hm-c__muted { color: var(--hm-muted); }
+
+.hm-c__kinds { margin: 0; padding: 0; list-style: none; }
+
+.hm-c__kind {
+  --tone: var(--hm-blue);
+  position: relative;
+  padding: 22px 24px 22px 30px;
+  border-bottom: 1px solid var(--hm-line);
+}
+
+.hm-c__kind:last-child { border-bottom: 0; }
+
+.hm-c__kind::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 18px;
+  bottom: 18px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--tone);
+}
+
+.hm-c__kind--violet { --tone: var(--hm-violet); }
+.hm-c__kind--coral { --tone: var(--hm-coral); }
+.hm-c__kind--green { --tone: var(--hm-green); }
+
+.hm-c__label {
+  font-family: var(--hm-mono);
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--tone);
+}
+
+.hm-c__text {
+  margin-top: 8px;
+  font-family: var(--hm-display);
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  color: var(--hm-ink);
+}
+
+.hm-c__meta {
+  font-family: var(--hm-mono);
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--tone);
+}
+
+.hm-c__does {
+  margin-top: 8px;
+  color: var(--hm-muted);
+  font-size: 0.9375rem;
+  line-height: 1.55;
+}
+
+.hm-c__side {
+  display: grid;
+  gap: 16px;
+}
+
+@media (min-width: 640px) {
+  .hm-c__side { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+.hm-c__card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 22px;
+  border: 1px solid var(--hm-line);
+  border-radius: 22px;
+  background: var(--hm-panel);
+  backdrop-filter: blur(14px);
+}
+
+.hm-c__card h3 {
+  font-family: var(--hm-display);
+  font-size: 1.0625rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--hm-ink);
+}
+
+.hm-c__card p {
+  color: var(--hm-muted);
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+.hm-c__demo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 6px;
+}
+
+.hm-c__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border: 1px solid color-mix(in srgb, var(--hm-teal) 35%, transparent);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--hm-teal) 8%, transparent);
+  color: var(--hm-ink);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.hm-c__chip svg { width: 13px; height: 13px; color: var(--hm-teal); }
+
+.hm-c__chip--soft {
+  border-color: var(--hm-line);
+  background: transparent;
+  font-weight: 500;
+}
+
+.hm-c__btn {
+  padding: 5px 10px;
+  border-radius: 8px;
+  background: hsl(var(--foreground));
+  color: hsl(var(--background));
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.hm-c__icon { width: 15px; height: 15px; color: var(--hm-muted); }
+
+/* ============================================================= Motion ==== */
+/* Plays once when the band scrolls in (data-anim="in"). Nothing is hidden
+   until the component marks itself "ready", so without JS everything shows. */
+
+.hm-section[data-anim] .hm-header > *,
+.hm-section[data-anim] .hm-panel,
+.hm-section[data-anim] .hm-a__step,
+.hm-section[data-anim] .hm-a__chip,
+.hm-section[data-anim] .hm-shot,
+.hm-section[data-anim] .hm-c__ledger,
+.hm-section[data-anim] .hm-c__kind,
+.hm-section[data-anim] .hm-c__card {
+  transition:
+    opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+    translate 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.hm-section[data-anim="ready"] .hm-header > *,
+.hm-section[data-anim="ready"] .hm-panel,
+.hm-section[data-anim="ready"] .hm-shot,
+.hm-section[data-anim="ready"] .hm-c__ledger,
+.hm-section[data-anim="ready"] .hm-c__card { opacity: 0; translate: 0 22px; }
+
+.hm-section[data-anim="ready"] .hm-a__step { opacity: 0; translate: -12px 0; }
+.hm-section[data-anim="ready"] .hm-a__chip { opacity: 0; translate: 0 12px; scale: 0.97; }
+.hm-section[data-anim="ready"] .hm-c__kind { opacity: 0; translate: 0 10px; }
+
+.hm-header > :nth-child(2) { transition-delay: 0.08s; }
+.hm-header > :nth-child(3) { transition-delay: 0.16s; }
+.hm-section .hm-panel { transition-delay: 0.2s; }
+.hm-a__step { transition-delay: calc(0.5s + var(--i, 0) * 0.14s); }
+/* Each chip lands just after its tool lights up on the left. */
+.hm-section[data-anim] .hm-a__chip {
+  transition:
+    opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+    translate 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+    scale 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition-delay: calc(0.7s + var(--i, 0) * 0.16s);
+}
+
+.hm-section[data-anim] .hm-a__meter i { transition: scale 1.2s cubic-bezier(0.65, 0, 0.35, 1) 0.8s; }
+.hm-section[data-anim="ready"] .hm-a__meter i { scale: 0 1; }
+
+.hm-section .hm-b__main .hm-shot { transition-delay: 0.2s; }
+.hm-section .hm-b__pair .hm-shot:nth-child(1) { transition-delay: 0.45s; }
+.hm-section .hm-b__pair .hm-shot:nth-child(2) { transition-delay: 0.6s; }
+
+.hm-section .hm-c__ledger { transition-delay: 0.2s; }
+.hm-c__kind { transition-delay: calc(0.45s + var(--i, 0) * 0.14s); }
+.hm-c__card { transition-delay: calc(0.6s + var(--i, 0) * 0.12s); }
+
+@media (prefers-reduced-motion: reduce) {
+  .hm-btn, .hm-btn svg { transition: none; }
+  .hm-section[data-anim] .hm-header > *,
+  .hm-section[data-anim] .hm-panel,
+  .hm-section[data-anim] .hm-a__step,
+  .hm-section[data-anim] .hm-a__chip,
+  .hm-section[data-anim] .hm-a__meter i,
+  .hm-section[data-anim] .hm-shot,
+  .hm-section[data-anim] .hm-c__ledger,
+  .hm-section[data-anim] .hm-c__kind,
+  .hm-section[data-anim] .hm-c__card {
+    opacity: 1 !important;
+    translate: none !important;
+    scale: none !important;
+    transition: none !important;
+  }
+}

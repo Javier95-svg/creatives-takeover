@@ -23,8 +23,8 @@ export function PulseRetrievedSources({ sources }: { sources?: PulseRetrievalRef
     <summary className="cursor-pointer">Verified sources used</summary>
     <ul className="mt-2 space-y-2">{valid.map(source => <li key={`${source.kind}:${source.id}`}>
       <a className="font-medium underline underline-offset-2" href={source.route}>{source.title}</a>
-      <span> Â· {source.kind === 'pedia' ? 'Startup Pedia passage' : source.basis}</span>
-      {source.updatedAt && <span> Â· Updated {new Date(source.updatedAt).toLocaleDateString()}</span>}
+      <span> · {source.kind === 'pedia' ? 'Startup Pedia passage' : source.basis}</span>
+      {source.updatedAt && <span> · Updated {new Date(source.updatedAt).toLocaleDateString()}</span>}
     </li>)}</ul>
   </details>;
 }

@@ -16,10 +16,10 @@ import HomeWallpaper from "@/components/wallpapers/HomeWallpaper";
 import { trackLandingViewed } from "@/lib/analytics";
 
 // Lazy load below-the-fold components for better performance.
-// The programs band replaced the AI trends section (and with it the page's only
-// Recharts use); it carries the /enterprise styles and a product screen, so it
+// The project memory band (Pulse) took the programs band's slot; programs still
+// reach /enterprise from the nav and the FAQ. It carries product screens, so it
 // loads on approach like the other sections below.
-const HomeProgramsBand = lazy(() => import("@/components/home/HomeProgramsBand"));
+const HomeMemoryBand = lazy(() => import("@/components/home/HomeMemoryBand"));
 const HomeFounderIdBand = lazy(() => import("@/components/home/HomeFounderIdBand"));
 const HomeFAQ = lazy(() => import("@/components/HomeFAQ"));
 const HomePediaBand = lazy(() => import("@/components/home/HomePediaBand"));
@@ -27,7 +27,7 @@ const HomePediaBand = lazy(() => import("@/components/home/HomePediaBand"));
 // lazy() alone still fetched every chunk on first render, before the visitor
 // scrolled. LoadWhenNear defers each until it is 800px from the viewport; the
 // placeholders keep the space so nothing shifts.
-const programsPlaceholder = <div className="min-h-[1825px] lg:min-h-[1780px] animate-pulse bg-muted/20" />;
+const memoryPlaceholder =<div className="min-h-[1825px] lg:min-h-[1780px] animate-pulse bg-muted/20" />;
 const founderIdPlaceholder = <div className="min-h-[899px] lg:min-h-[1092px] animate-pulse bg-muted/20" />;
 const teaserPlaceholder = <div className="min-h-[1546px] lg:min-h-[922px] animate-pulse bg-muted/20" />;
 const faqPlaceholder = <div className="h-96 animate-pulse bg-muted/20" />;
@@ -101,9 +101,9 @@ const Index = () => {
             </ScrollReveal>
             <ScrollReveal variant="fade" amount={0.05}>
               <div className="homepage-band-muted">
-                <LoadWhenNear id="home-programs" placeholder={programsPlaceholder}>
-                  <Suspense fallback={programsPlaceholder}>
-                    <HomeProgramsBand />
+                <LoadWhenNear id="home-memory" placeholder={memoryPlaceholder}>
+                  <Suspense fallback={memoryPlaceholder}>
+                    <HomeMemoryBand />
                   </Suspense>
                 </LoadWhenNear>
               </div>
@@ -148,9 +148,9 @@ const Index = () => {
             </ScrollReveal>
             <ScrollReveal variant="fade" amount={0.05}>
               <div className="homepage-band-muted">
-                <LoadWhenNear id="home-programs" placeholder={programsPlaceholder}>
-                  <Suspense fallback={programsPlaceholder}>
-                    <HomeProgramsBand />
+                <LoadWhenNear id="home-memory" placeholder={memoryPlaceholder}>
+                  <Suspense fallback={memoryPlaceholder}>
+                    <HomeMemoryBand />
                   </Suspense>
                 </LoadWhenNear>
               </div>
