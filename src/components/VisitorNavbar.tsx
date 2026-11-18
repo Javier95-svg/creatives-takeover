@@ -65,7 +65,7 @@ const exploreLinks: VisitorLink[] = [
 const visitorEntries: VisitorEntry[] = [
   // exact, because /demo-studio and /demo-calls both start with /demo and would
   // otherwise light this entry up while the visitor is somewhere else entirely.
-  { label: "How it works", href: "/demo", icon: PlayCircle, exact: true },
+  { label: "Platform Tour", href: "/demo", icon: PlayCircle, exact: true },
   { label: "For founders", links: founderLinks, icon: Lightbulb },
   { label: "Enterprise", href: "/enterprise", icon: Building2 },
   { label: "Explore", links: exploreLinks, icon: Compass },
