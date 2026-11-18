@@ -7,6 +7,10 @@ What the product does for the pilot (from migration `20261023120000_cohort_pilot
 - **Founders' plan for the pilot.** Set "Founders' plan" on the cohort (Rising by default). Founders get it from the start date to the end date, then return to their own plan automatically. Rising opens First Customer Proof, the demand test. **It does not add credits.**
 - **Leaving.** A founder can leave the cohort from their dashboard, which stops sharing at once.
 
+**Founding offer (Javier, 2026-11-18, stated on /enterprise):** the first 3 programs run the pilot at no cost. In return they give honest feedback (a short call at the end: what worked for their team and what didn't) and permission to publish what happened as a case study. Founders never pay. After these three, programs get a proposal based on the number of startups. Track which places are taken. When all three are gone, update `ENTERPRISE_FOUNDING`, the hero trust line and the first FAQ in `src/data/enterprisePage.ts`.
+
+**What /enterprise promises on the call:** the program tells us about its cohort and what its funders ask for, we walk them through the pilot and the program dashboard, and we send a proposal within a week.
+
 ---
 
 ## 1. Dry run (one week before kickoff)

@@ -4,11 +4,14 @@ import {
   Check,
   CheckCircle2,
   Circle,
+  FileText,
   Flag,
   FolderCheck,
+  Gift,
   GraduationCap,
   Layers,
   type LucideIcon,
+  MessageSquare,
   TrendingUp,
   Users,
 } from "lucide-react";
@@ -164,6 +167,159 @@ export const PilotBoardMock = () => {
           <p className="ent-float__text">From 11 customer interviews</p>
         </div>
       </div>
+    </div>
+  );
+};
+
+// Day 30 of the same fictional cohort, as the report our team writes. Interview
+// counts show what the platform confirms apart from what founders report, as
+// the program dashboard does.
+type ReportTeam = { name: string; stage: string; interviews: number; confirmed: number; decision?: Decision; next: string; attention?: boolean };
+
+const REPORT_TEAMS: ReportTeam[] = [
+  { name: "Delta", stage: "Validation", interviews: 14, confirmed: 11, decision: "Build", next: "Scope a first version with the buyers who said yes" },
+  { name: "Fjord", stage: "Validation", interviews: 11, confirmed: 8, decision: "Narrow", next: "Re-test with the narrower customer" },
+  { name: "Aurora", stage: "Prototype", interviews: 9, confirmed: 6, next: "Finish the demand test" },
+  { name: "Lumen", stage: "Prototype", interviews: 7, confirmed: 5, next: "Five more customer conversations" },
+  { name: "Cedar", stage: "Identity", interviews: 6, confirmed: 4, next: "Sharpen the customer profile with a mentor" },
+  { name: "Iris", stage: "Identity", interviews: 5, confirmed: 2, next: "Needs a push: two weeks without an update", attention: true },
+];
+const REPORT_EXPERIMENTS = 9;
+const REPORT_UPDATES = { sent: 22, expected: REPORT_TEAMS.length * 4 };
+
+/** Hero visual (2026-11-18): the day-30 cohort report a program receives, on a fictional cohort. */
+export const SampleReport = () => {
+  const interviews = REPORT_TEAMS.reduce((sum, team) => sum + team.interviews, 0);
+  const confirmed = REPORT_TEAMS.reduce((sum, team) => sum + team.confirmed, 0);
+  return (
+    <div
+      className="ent-mock"
+      role="img"
+      aria-label={`Example day-30 cohort report for ${REPORT_TEAMS.length} fictional startups: ${interviews} customer interviews, ${confirmed} confirmed on the platform, ${REPORT_EXPERIMENTS} experiments, ${REPORT_UPDATES.sent} of ${REPORT_UPDATES.expected} weekly updates, and a next step for every startup.`}
+    >
+      <div className="ent-window ent-report">
+        <div className="ent-window__bar">
+          <WindowDots />
+          <span className="ent-window__heading">
+            <span className="ent-window__title">Cohort report · Day 30</span>
+          </span>
+          <ExampleTag />
+        </div>
+        <div className="ent-report__head">
+          <p className="ent-report__program">Example Accelerator</p>
+          <p className="ent-report__meta">Spring cohort · {REPORT_TEAMS.length} startups · Written by our team</p>
+        </div>
+        <div className="ent-kpis">
+          <div>
+            <strong>{interviews}</strong>
+            <span>customer interviews</span>
+          </div>
+          <div>
+            <strong className="is-good">{confirmed}</strong>
+            <span>confirmed on the platform</span>
+          </div>
+          <div>
+            <strong>{REPORT_EXPERIMENTS}</strong>
+            <span>experiments run</span>
+          </div>
+          <div>
+            <strong>
+              {REPORT_UPDATES.sent}/{REPORT_UPDATES.expected}
+            </strong>
+            <span>weekly updates</span>
+          </div>
+        </div>
+        <div className="ent-report__table">
+          <div className="ent-report__row ent-report__row--head">
+            <span>Startup</span>
+            <span className="ent-report__stage">Stage</span>
+            <span>Interviews</span>
+            <span>Decision</span>
+            <span className="ent-report__next">Next step</span>
+          </div>
+          {REPORT_TEAMS.map((team) => (
+            <div key={team.name} className={cn("ent-report__row", team.attention && "is-attention")}>
+              <span className="ent-pilot__name">{team.name}</span>
+              <span className="ent-report__stage">{team.stage}</span>
+              <span className="ent-report__count">
+                <b>{team.interviews}</b>
+                <small>{team.confirmed} confirmed</small>
+              </span>
+              <span>
+                <DecisionBadge decision={team.decision} />
+              </span>
+              <span className="ent-report__next">{team.next}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="ent-float ent-float--report" aria-hidden="true">
+        <span className="ent-float__icon is-good-bg">
+          <FileText />
+        </span>
+        <div>
+          <p className="ent-float__title">In your funder’s format</p>
+          <p className="ent-float__text">Share the template at kickoff</p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/** Step 4 visual: the report arriving, a compact cut of the same sample. */
+export const ReportDelivered = () => (
+  <div className="ent-mock ent-mock--flat" role="img" aria-label="Example: the day-30 cohort report sent to the program, with a next step for each of six fictional startups">
+    <div className="ent-window ent-delivered">
+      <div className="ent-window__bar">
+        <WindowDots />
+        <span className="ent-window__title">Day 30 · Report sent</span>
+        <ExampleTag />
+      </div>
+      <ul className="ent-delivered__list">
+        {REPORT_TEAMS.slice(0, 4).map((team) => (
+          <li key={team.name}>
+            <span className="ent-pilot__name">{team.name}</span>
+            <DecisionBadge decision={team.decision} />
+            <span className="ent-delivered__next">{team.next}</span>
+          </li>
+        ))}
+      </ul>
+      <p className="ent-delivered__more">+ {REPORT_TEAMS.length - 4} more startups, each with a next step</p>
+    </div>
+  </div>
+);
+
+/** Founding offer: the three founding places and what each one involves. */
+export const FoundingPlaces = ({ places, terms }: { places: number; terms: Array<{ key: string; title: string; body: string }> }) => {
+  const icons: Record<string, LucideIcon> = { pilot: Gift, feedback: MessageSquare, case: FileText };
+  return (
+    <div className="ent-founding__visual">
+      <div className="ent-founding__places" aria-label={`${places} founding places`}>
+        {Array.from({ length: places }, (_, index) => (
+          <div key={index} className="ent-founding__place" style={{ "--i": index } as CSSProperties}>
+            <span className="ent-founding__num">{String(index + 1).padStart(2, "0")}</span>
+            <span className="ent-founding__label">Founding place</span>
+            <span className="ent-founding__state">Open</span>
+          </div>
+        ))}
+      </div>
+      <ul className="ent-founding__terms">
+        {terms.map((term) => {
+          const Icon = icons[term.key] ?? Gift;
+          return (
+            <li key={term.key}>
+              <span className="ent-icon" aria-hidden="true">
+                <Icon />
+              </span>
+              <span>
+                <span className="ent-keeps__title">{term.title}</span>
+                <span className="ent-keeps__body">{term.body}</span>
+              </span>
+            </li>
+          );
+        })}
+      </ul>
     </div>
   );
 };

@@ -5,13 +5,16 @@ import {
   ArrowDown,
   ArrowRight,
   Building2,
-  CalendarDays,
+  CalendarCheck,
   Check,
+  FileText,
+  Gift,
+  LayoutDashboard,
+  type LucideIcon,
   Mail,
-  Minus,
   Rocket,
-  Target,
-  Users,
+  ShieldCheck,
+  UserCheck,
 } from "lucide-react";
 
 import SEO, { createBreadcrumbSchema, createFAQSchema, createWebPageSchema } from "@/components/SEO";
@@ -22,31 +25,28 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import InstitutionContactForm from "@/components/audience/InstitutionContactForm";
 import {
   AfterProgramFlow,
-  AfterProgramKeeps,
-  CycleStrip,
-  PilotBoardMock,
+  FoundingPlaces,
   PilotSetupMock,
   ProductShot,
+  ReportDelivered,
+  SampleReport,
 } from "@/components/enterprise/EnterpriseVisuals";
 import javierPhoto from "@/assets/team-javier-pena-profile.jpg";
 import cohortJoinShot from "@/assets/enterprise/cohort-join.webp";
 import cohortJoinLightShot from "@/assets/enterprise/cohort-join-light.webp";
-import cohortFounderShot from "@/assets/enterprise/cohort-founder.webp";
-import cohortFounderLightShot from "@/assets/enterprise/cohort-founder-light.webp";
 import cohortProgramShot from "@/assets/enterprise/cohort-program.webp";
 import cohortProgramLightShot from "@/assets/enterprise/cohort-program-light.webp";
 import { usePageAnalytics } from "@/hooks/usePageAnalytics";
 import { captureEvent } from "@/lib/analytics";
 import {
-  ENTERPRISE_ADAPT,
   ENTERPRISE_AFTER,
-  ENTERPRISE_CONDITIONS,
   ENTERPRISE_CONTACT,
+  ENTERPRISE_DEAL,
   ENTERPRISE_FAQS,
+  ENTERPRISE_FOUNDING,
   ENTERPRISE_HERO,
   ENTERPRISE_PATH,
   ENTERPRISE_PILOT,
-  ENTERPRISE_SCOPE,
   ENTERPRISE_SEO,
 } from "@/data/enterprisePage";
 import "@/components/enterprise/enterprise.css";
@@ -55,10 +55,13 @@ const CONTACT_ID = "talk";
 const HOW_ID = "how";
 
 // Dense screens get the full width under their step, so their numbers stay legible.
-const WIDE_STEP_VISUALS = new Set(["founder", "program"]);
+const WIDE_STEP_VISUALS = new Set(["program"]);
 
-// The pilot steps a program can see in the product: cohort mode on sample data.
+// One visual per pilot step: the real cohort screens on sample data, and two
+// labelled example illustrations (the setup and the report sent on day 30).
 const STEP_VISUALS: Record<string, ReactNode> = {
+  setup: <PilotSetupMock />,
+  report: <ReportDelivered />,
   join: (
     <ProductShot
       src={cohortJoinShot}
@@ -72,21 +75,6 @@ const STEP_VISUALS: Record<string, ReactNode> = {
         { left: 10.5, top: 85.7, label: "Joins only with consent" },
       ]}
       alt="The cohort invitation a founder opens: what is shared with the program (name and email, stage and tasks, counts of interviews, evidence and experiments, weekly check-ins), what stays private (files, idea details, messages) and the consent to join."
-    />
-  ),
-  founder: (
-    <ProductShot
-      src={cohortFounderShot}
-      lightSrc={cohortFounderLightShot}
-      width={1176}
-      height={727}
-      title="Founder view"
-      fade={false}
-      hotspots={[
-        { left: 70, top: 19, label: "Rising plan, free for the pilot" },
-        { left: 69.5, top: 45.7, label: "Check-in sent to the program" },
-      ]}
-      alt="A founder's cohort view in week 2 of 4: the Rising plan given by the program until the pilot ends, this week's tasks for their stage, and the week 2 check-in sent to the program with wins, a blocker, next week's goal and the help needed."
     />
   ),
   program: (
@@ -106,11 +94,9 @@ const STEP_VISUALS: Record<string, ReactNode> = {
   ),
 };
 
-const ADAPT_ICONS: Record<string, typeof Users> = {
-  size: Users,
-  focus: Target,
-  length: CalendarDays,
-};
+// Icons for the hero's trust line and for what the program gets.
+const TRUST_ICONS: Record<string, LucideIcon> = { founding: Gift, consent: UserCheck, iso: ShieldCheck };
+const GET_ICONS: Record<string, LucideIcon> = { dashboard: LayoutDashboard, summary: CalendarCheck, report: FileText, after: Rocket };
 
 /** Delay for an element's scroll reveal, used to stagger lists and pairs. */
 const revealDelay = (ms: number) => ({ "--reveal-delay": `${ms}ms` }) as CSSProperties;
@@ -270,7 +256,8 @@ const Enterprise = () => {
         <div className="relative z-10">
           <Navigation />
           <main>
-            {/* Hero: the pilot offer, its terms at a glance, and the pilot as a program sees it. */}
+            {/* Hero: the pilot offer, its terms at a glance, the founding offer and
+                two trust facts, beside the day-30 report a program receives. */}
             <section className="ent-hero" aria-labelledby="ent-title">
               <div className="ent-hero__backdrop" aria-hidden="true" />
               <div className="ent-container ent-hero__grid">
@@ -283,7 +270,6 @@ const Enterprise = () => {
                     {ENTERPRISE_HERO.titleLead} <span className="ent-hero__accent">{ENTERPRISE_HERO.titleAccent}</span>
                   </h1>
                   <p className="ent-hero__lede">{ENTERPRISE_HERO.lede}</p>
-                  <CycleStrip {...ENTERPRISE_HERO.cycle} />
 
                   <ul className="ent-hero__facts">
                     {ENTERPRISE_HERO.facts.map((fact) => (
@@ -305,16 +291,27 @@ const Enterprise = () => {
                       <ArrowDown aria-hidden="true" />
                     </a>
                   </div>
+
+                  <ul className="ent-hero__trust">
+                    {ENTERPRISE_HERO.trust.map((item) => {
+                      const Icon = TRUST_ICONS[item.key] ?? ShieldCheck;
+                      return (
+                        <li key={item.key} className={item.key === "founding" ? "is-offer" : undefined}>
+                          <Icon aria-hidden="true" />
+                          {item.label}
+                        </li>
+                      );
+                    })}
+                  </ul>
                 </div>
 
                 <div className="ent-hero__visual" data-reveal="zoom" style={revealDelay(150)}>
-                  <PilotBoardMock />
+                  <SampleReport />
                 </div>
               </div>
             </section>
 
-            {/* How the pilot runs, step by step with who does the work, then
-                exactly what it includes, what it doesn't and what the program brings. */}
+            {/* How the pilot runs, in four steps with who does the work, each beside a visual. */}
             <section id={HOW_ID} className="ent-section ent-section--tint scroll-mt-24">
               <div className="ent-container">
                 <SectionHead
@@ -326,9 +323,8 @@ const Enterprise = () => {
                 />
                 <ol ref={stepsRef} className="ent-steps">
                   {ENTERPRISE_PILOT.steps.map((step, index) => {
-                    const visualKey = "visual" in step && step.visual ? step.visual : null;
-                    const visual = visualKey ? STEP_VISUALS[visualKey] : null;
-                    const stepClass = ["ent-step", visual && "has-visual", visualKey && WIDE_STEP_VISUALS.has(visualKey) && "is-wide"]
+                    const visual = STEP_VISUALS[step.visual];
+                    const stepClass = ["ent-step", visual && "has-visual", WIDE_STEP_VISUALS.has(step.visual) && "is-wide"]
                       .filter(Boolean)
                       .join(" ");
                     return (
@@ -358,106 +354,59 @@ const Enterprise = () => {
                     );
                   })}
                 </ol>
-
-                <div className="ent-scope">
-                  <SectionHead eyebrow={ENTERPRISE_SCOPE.eyebrow} title={ENTERPRISE_SCOPE.title} wide />
-                  <div className="ent-scope__grid">
-                    <div className="ent-scope__card is-in" data-reveal="left">
-                      <p className="ent-scope__head">Included</p>
-                      <ul>
-                        {ENTERPRISE_SCOPE.included.map((item) => (
-                          <li key={item.title}>
-                            <Check aria-hidden="true" />
-                            <div>
-                              <strong>{item.title}</strong>
-                              <span>{item.body}</span>
-                            </div>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                    <div className="ent-scope__card is-out" data-reveal="right" style={revealDelay(120)}>
-                      <p className="ent-scope__head">Not included</p>
-                      <ul>
-                        {ENTERPRISE_SCOPE.excluded.map((item) => (
-                          <li key={item.title}>
-                            <Minus aria-hidden="true" />
-                            <div>
-                              <strong>{item.title}</strong>
-                              <span>{item.body}</span>
-                            </div>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
-                  {/* The pilot's conditions: what the program provides, what each startup commits to. */}
-                  <div className="ent-conditions">
-                    <h3 className="ent-conditions__title" data-reveal="up">{ENTERPRISE_CONDITIONS.title}</h3>
-                    <div className="ent-conditions__grid">
-                      {[
-                        { group: ENTERPRISE_CONDITIONS.program, Icon: Building2, reveal: "left" },
-                        { group: ENTERPRISE_CONDITIONS.startups, Icon: Rocket, reveal: "right" },
-                      ].map(({ group, Icon, reveal }, groupIndex) => (
-                        <div key={group.title} className="ent-scope__card ent-conditions__card" data-reveal={reveal} style={revealDelay(groupIndex * 120)}>
-                          <p className="ent-scope__head ent-conditions__head">
-                            <span className="ent-icon" aria-hidden="true">
-                              <Icon />
-                            </span>
-                            {group.title}
-                          </p>
-                          <ol>
-                            {group.items.map((item, index) => (
-                              <li key={item.title}>
-                                <span className="ent-conditions__num" aria-hidden="true">{index + 1}</span>
-                                <div>
-                                  <strong>{item.title}</strong>
-                                  <span>{item.body}</span>
-                                </div>
-                              </li>
-                            ))}
-                          </ol>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
+                <p className="ent-honesty" data-reveal="up">{ENTERPRISE_PILOT.honesty}</p>
               </div>
             </section>
 
-            {/* Programs differ in size, founders and length; the pilot is set up around each. */}
+            {/* What the program gets and what it provides, then where founders go after day 30. */}
             <section className="ent-section">
-              <div className="ent-container ent-adapt">
-                <div>
-                  <SectionHead eyebrow={ENTERPRISE_ADAPT.eyebrow} title={ENTERPRISE_ADAPT.title} />
-                  <ul className="ent-adapt__list">
-                    {ENTERPRISE_ADAPT.items.map((item, index) => {
-                      const Icon = ADAPT_ICONS[item.key] ?? Users;
-                      return (
-                        <li key={item.key} data-reveal="left" style={revealDelay(index * 100)}>
-                          <span className="ent-icon" aria-hidden="true">
-                            <Icon />
-                          </span>
+              <div className="ent-container">
+                <SectionHead eyebrow={ENTERPRISE_DEAL.eyebrow} title={ENTERPRISE_DEAL.title} wide />
+                <div className="ent-deal">
+                  <div className="ent-scope__card is-in ent-deal__card" data-reveal="left">
+                    <p className="ent-scope__head ent-conditions__head">
+                      <span className="ent-icon" aria-hidden="true">
+                        <Gift />
+                      </span>
+                      {ENTERPRISE_DEAL.get.title}
+                    </p>
+                    <ul>
+                      {ENTERPRISE_DEAL.get.items.map((item) => {
+                        const Icon = GET_ICONS[item.key] ?? Check;
+                        return (
+                          <li key={item.key}>
+                            <Icon aria-hidden="true" />
+                            <div>
+                              <strong>{item.title}</strong>
+                              <span>{item.body}</span>
+                            </div>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+                  <div className="ent-scope__card ent-conditions__card ent-deal__card" data-reveal="right" style={revealDelay(120)}>
+                    <p className="ent-scope__head ent-conditions__head">
+                      <span className="ent-icon" aria-hidden="true">
+                        <Building2 />
+                      </span>
+                      {ENTERPRISE_DEAL.need.title}
+                    </p>
+                    <ol>
+                      {ENTERPRISE_DEAL.need.items.map((item, index) => (
+                        <li key={item.title}>
+                          <span className="ent-conditions__num" aria-hidden="true">{index + 1}</span>
                           <div>
-                            <h3>{item.title}</h3>
-                            <p>{item.body}</p>
+                            <strong>{item.title}</strong>
+                            <span>{item.body}</span>
                           </div>
                         </li>
-                      );
-                    })}
-                  </ul>
+                      ))}
+                    </ol>
+                  </div>
                 </div>
-                <div className="ent-adapt__visual" data-reveal="zoom" style={revealDelay(150)}>
-                  <PilotSetupMock />
-                </div>
-              </div>
-            </section>
-
-            {/* Post-program support: founders keep going on their own once the program ends. */}
-            <section className="ent-section ent-section--tint">
-              <div className="ent-container">
-                <SectionHead eyebrow={ENTERPRISE_AFTER.eyebrow} title={ENTERPRISE_AFTER.title} copy={ENTERPRISE_AFTER.copy} wide />
-                <div data-reveal="zoom">
+                <div className="ent-deal__after" data-reveal="zoom">
+                  <h3 className="ent-conditions__title">{ENTERPRISE_AFTER.title}</h3>
                   <AfterProgramFlow
                     programStages={ENTERPRISE_HERO.cycle.pilotStages}
                     duringLabel={ENTERPRISE_AFTER.duringLabel}
@@ -465,8 +414,33 @@ const Enterprise = () => {
                     afterLabel={ENTERPRISE_AFTER.afterLabel}
                   />
                 </div>
-                <AfterProgramKeeps items={ENTERPRISE_AFTER.keeps} />
-                <p className="ent-after__note" data-reveal="up">{ENTERPRISE_AFTER.note}</p>
+              </div>
+            </section>
+
+            {/* The founding offer: the first three programs run the pilot free. */}
+            <section className="ent-section ent-section--tint">
+              <div className="ent-container">
+                <div className="ent-founding" data-reveal="zoom">
+                  <div className="ent-founding__copy">
+                    <p className="ent-eyebrow ent-eyebrow--live">
+                      <span className="ent-eyebrow__dot" aria-hidden="true" />
+                      {ENTERPRISE_FOUNDING.eyebrow}
+                    </p>
+                    <h2 className="ent-h2">
+                      {ENTERPRISE_FOUNDING.title.slice(0, -ENTERPRISE_FOUNDING.titleAccent.length)}
+                      <span className="ent-h2__accent">{ENTERPRISE_FOUNDING.titleAccent}</span>
+                    </h2>
+                    <p className="ent-head__copy">{ENTERPRISE_FOUNDING.copy}</p>
+                    <div className="ent-hero__ctas">
+                      <a href={PILOT_CALL_URL} target="_blank" rel="noopener noreferrer" className="ent-btn ent-btn--primary" onClick={() => track(ENTERPRISE_HERO.primaryCta, "founding")}>
+                        {ENTERPRISE_HERO.primaryCta}
+                        <ArrowRight aria-hidden="true" />
+                      </a>
+                    </div>
+                    <p className="ent-founding__note">{ENTERPRISE_FOUNDING.note}</p>
+                  </div>
+                  <FoundingPlaces places={ENTERPRISE_FOUNDING.places} terms={ENTERPRISE_FOUNDING.terms} />
+                </div>
               </div>
             </section>
 
@@ -497,8 +471,7 @@ const Enterprise = () => {
               </div>
             </section>
 
-            {/* Contact: a brand panel with what the pilot includes and who
-                replies, and the form beside it. */}
+            {/* Contact: what happens on the call and who replies, with the form beside it. */}
             <section id={CONTACT_ID} className="ent-section ent-contact scroll-mt-24">
               <div className="ent-container">
                 <div className="ent-contact__card" data-reveal="zoom">
@@ -508,15 +481,15 @@ const Enterprise = () => {
                     <h2 className="ent-contact__title">{ENTERPRISE_CONTACT.title}</h2>
                     <p className="ent-contact__copy">{ENTERPRISE_CONTACT.copy}</p>
 
-                    <p className="ent-contact__label">Every pilot includes</p>
-                    <ul className="ent-contact__includes">
-                      {ENTERPRISE_CONTACT.pilotIncludes.map((item) => (
+                    <p className="ent-contact__label">{ENTERPRISE_CONTACT.callLabel}</p>
+                    <ol className="ent-contact__includes ent-contact__steps">
+                      {ENTERPRISE_CONTACT.callSteps.map((item, index) => (
                         <li key={item}>
-                          <Check aria-hidden="true" />
+                          <span className="ent-contact__stepnum" aria-hidden="true">{index + 1}</span>
                           {item}
                         </li>
                       ))}
-                    </ul>
+                    </ol>
 
                     <div className="ent-contact__person">
                       <img src={javierPhoto} alt="" width={56} height={56} loading="lazy" decoding="async" />

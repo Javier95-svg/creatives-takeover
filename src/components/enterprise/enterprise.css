@@ -2237,3 +2237,188 @@
     transition: none;
   }
 }
+
+/* ===== 2026-11-18 audit, version A =====
+   Hero trust line, the sample day-30 report, step 4's delivered report, the
+   honesty line, "What you get / We need", and the founding offer. Built on the
+   page's tokens, so light and dark follow the rest of the page. */
+
+.ent-hero__trust {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 20px;
+  margin: 22px 0 0;
+  padding: 0;
+  list-style: none;
+  color: var(--ent-muted);
+  font-size: 14px;
+}
+
+.ent-hero__trust li { display: inline-flex; align-items: center; gap: 8px; }
+.ent-hero__trust svg { width: 16px; height: 16px; color: var(--ent-blue); }
+.ent-hero__trust li.is-offer { color: var(--ent-green); font-weight: 600; }
+.ent-hero__trust li.is-offer svg { color: var(--ent-green); }
+
+/* The sample report: the same window as the old dashboard mock, as a document. */
+.ent-report__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 16px;
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid var(--ent-line-soft);
+}
+
+.ent-report__program {
+  color: var(--ent-ink);
+  font-family: var(--ent-display);
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.ent-report__meta { color: var(--ent-muted); font-size: 12.5px; }
+
+.ent-report__table {
+  padding: 6px 10px 12px;
+  background: linear-gradient(180deg, hsl(var(--foreground) / 0.01), hsl(var(--foreground) / 0.03));
+}
+
+.ent-report__row {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 0.9fr) minmax(0, 0.9fr) minmax(0, 0.8fr) minmax(0, 2fr);
+  gap: 12px;
+  align-items: center;
+  padding: 8px 10px;
+  color: var(--ent-muted);
+  font-size: 12.5px;
+}
+
+.ent-report__row--head {
+  padding-block: 10px 6px;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.ent-report__row.is-attention { background: linear-gradient(90deg, var(--ent-red-soft), transparent 75%); border-radius: 10px; }
+.ent-report__count { display: grid; line-height: 1.25; }
+.ent-report__count b { color: var(--ent-ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+.ent-report__count small { font-size: 11px; color: var(--ent-muted); }
+.ent-report__next { color: var(--ent-ink); line-height: 1.35; }
+.ent-report__row--head .ent-report__next { color: inherit; }
+
+@media (max-width: 640px) {
+  .ent-report__row { grid-template-columns: minmax(0, 0.9fr) minmax(0, 0.8fr) minmax(0, 0.9fr); }
+  .ent-report__stage, .ent-report__next { display: none; }
+}
+
+/* Step 4: the report as it arrives. */
+.ent-delivered__list { display: grid; gap: 2px; margin: 0; padding: 10px 12px 4px; list-style: none; }
+.ent-delivered__list li {
+  display: grid;
+  grid-template-columns: minmax(0, 0.7fr) auto minmax(0, 2fr);
+  gap: 12px;
+  align-items: center;
+  padding: 9px 8px;
+  border-bottom: 1px solid var(--ent-line-soft);
+  font-size: 13px;
+}
+.ent-delivered__next { color: var(--ent-muted); }
+.ent-delivered__more { padding: 10px 20px 14px; color: var(--ent-muted); font-size: 12.5px; }
+
+.ent-honesty {
+  max-width: 760px;
+  margin: 40px auto 0;
+  color: var(--ent-muted);
+  font-size: 14.5px;
+  text-align: center;
+}
+
+/* What you get / what we need: the old scope and conditions cards, side by side. */
+.ent-deal { display: grid; gap: 18px; }
+@media (min-width: 900px) { .ent-deal { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.ent-deal__card ul, .ent-deal__card ol { margin-top: 6px; }
+.ent-deal__card li > svg { flex-shrink: 0; width: 20px; height: 20px; margin-top: 2px; color: var(--ent-blue); }
+.ent-deal__after { margin-top: 48px; }
+
+/* The founding offer: copy beside three open places and the terms. */
+.ent-founding {
+  display: grid;
+  gap: 32px;
+  align-items: center;
+  padding: clamp(24px, 4vw, 48px);
+  border: 1px solid color-mix(in srgb, var(--ent-green) 40%, var(--ent-line));
+  border-radius: 28px;
+  background:
+    radial-gradient(70% 90% at 0% 0%, color-mix(in srgb, var(--ent-green) 14%, transparent), transparent 70%),
+    var(--ent-card);
+  box-shadow: var(--ent-shadow);
+}
+@media (min-width: 960px) { .ent-founding { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+.ent-founding > * { min-width: 0; }
+.ent-founding .ent-eyebrow { color: var(--ent-green); }
+.ent-founding__note { margin-top: 14px; color: var(--ent-muted); font-size: 13.5px; }
+
+.ent-founding__visual { display: grid; gap: 14px; }
+.ent-founding__places { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.ent-founding__place {
+  position: relative;
+  display: grid;
+  gap: 6px;
+  padding: 16px;
+  border: 1px solid color-mix(in srgb, var(--ent-green) 45%, var(--ent-line));
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--ent-green) 7%, var(--ent-card));
+  overflow: hidden;
+}
+.ent-founding__place::after {
+  content: "";
+  position: absolute;
+  inset: auto 16px 12px auto;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--ent-green);
+  box-shadow: 0 0 0 0 color-mix(in srgb, var(--ent-green) 60%, transparent);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .ent-founding__place::after { animation: ent-place 2.4s ease-out infinite; animation-delay: calc(var(--i, 0) * 0.4s); }
+}
+@keyframes ent-place {
+  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--ent-green) 55%, transparent); }
+  100% { box-shadow: 0 0 0 10px transparent; }
+}
+.ent-founding__num { color: var(--ent-ink); font-family: var(--ent-display); font-size: 26px; font-weight: 600; line-height: 1; }
+.ent-founding__label { color: var(--ent-muted); font-size: 12.5px; }
+.ent-founding__state { color: var(--ent-green); font-size: 12px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; }
+
+.ent-founding__terms { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.ent-founding__terms li {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--ent-line);
+  border-radius: 16px;
+  background: var(--ent-card);
+}
+.ent-founding__terms .ent-icon { background: color-mix(in srgb, var(--ent-green) 14%, transparent); color: var(--ent-green); }
+
+/* Contact: what happens on the call, numbered. */
+.ent-contact__steps li { align-items: flex-start; }
+.ent-contact__stepnum {
+  display: inline-grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.16);
+  font-size: 12.5px;
+  font-weight: 700;
+}
+.ent-founding__terms .ent-keeps__title,
+.ent-founding__terms .ent-keeps__body { display: block; }
+.ent-founding__terms .ent-keeps__body { margin-top: 2px; }

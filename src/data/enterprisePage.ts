@@ -12,11 +12,16 @@
  * Rules: promise a disciplined process and documented evidence, never
  * product-market fit, paying customers or investment readiness in 30 days.
  * The cohort report and check-ins are run by our team, not software. No
- * public prices ("talk to us"), no customer logos or testimonials until they
- * exist, every visual is labelled as an example or as the real product on
- * sample data, and the ecosystem is described only with wording verified
- * against the product (checked 2026-10-16). No counts of mentors, providers
- * or investors.
+ * public prices ("talk to us") except the founding offer (free pilot for the
+ * first 3 programs, Javier 2026-11-18), no customer logos or testimonials
+ * until they exist, every visual is labelled as an example or as the real
+ * product on sample data, and the ecosystem is described only with wording
+ * verified against the product (checked 2026-10-16). No counts of mentors,
+ * providers or investors.
+ *
+ * 2026-11-18 audit (version A): about half the words, proof up front (a
+ * sample day-30 report in the hero, the founding offer), and a visual in every
+ * section except the FAQ. Plan: .claude/plans/i-believe-our-pulse-piped-panda.md
  *
  * Pure data with no imports, so node tests can read it. The SEO title and
  * description are mirrored in scripts/seo-route-config.mjs.
@@ -60,225 +65,166 @@ export const ENTERPRISE_HERO = {
     { value: 'Weekly', label: 'check-ins' },
     { value: '1', label: 'cohort report' },
   ],
+  // Under the buttons (2026-11-18 audit, version A): the founding offer, then
+  // two trust facts. No photo here (Javier). ISO 27001 is the infrastructure's
+  // certification (Supabase), never Creatives Takeover's own.
+  trust: [
+    { key: 'founding', label: 'Free for our first 3 programs' },
+    { key: 'consent', label: 'Founders join with consent' },
+    { key: 'iso', label: 'ISO 27001 certified infrastructure' },
+  ],
 };
 
-// The pilot step by step, as a program manager lives it (2026-10-23). Each
-// step says who does the work, so the team's time is clear. Verified against
-// cohort mode: separate founder and staff invite links, consent to join,
-// leaving at any time, the cohort's founders' plan (Rising: its tools,
-// including First Customer Proof, for the cohort dates, then back to their own
-// plan), counts since joining, verified vs founder-reported. Reminders, the
-// weekly summary and the report are done by our team (pilot playbook).
-// `visual` names the real product screen shown beside the step.
-// Said once and shown in the scope section: what 30 days can't do.
+// The pilot in four steps, as a program manager lives it (2026-11-18 audit,
+// version A; was seven steps). Each step says who does the work, so the
+// team's time is clear. Verified against cohort mode: separate founder and
+// staff invite links, consent to join, leaving at any time, the cohort plan's
+// paid tools for the cohort dates, counts since joining, verified vs
+// founder-reported. Reminders, the weekly summary and the report are done by
+// our team (pilot playbook). `visual` names the visual shown beside the step.
 const PILOT_HONESTY =
   'Thirty days won’t prove product-market fit, guarantee paying customers or make a startup investment-ready. They give every founder a disciplined process and documented evidence.';
 
 export const ENTERPRISE_PILOT = {
   eyebrow: 'How the pilot works',
-  title: 'We run it. You bring the founders.',
+  title: 'We run it. Your team watches.',
   // The end of the title, set in the hero's accent gradient on the page.
-  titleAccent: 'You bring the founders.',
-  copy: 'Seven steps, from setup to the day your founders carry on without you.',
+  titleAccent: 'Your team watches.',
+  copy: 'Four steps, and one contact from your team.',
   steps: [
     {
       key: 'setup',
       when: 'Before day 1',
       owner: 'Our team',
       title: 'We set up your cohort',
-      body: 'Your dates, your check-in day and the plan your founders get. You get two links: one to share with your founders, and a private one for your team.',
+      body: 'Your dates, your check-in day and your report format. You get two links: one for your founders, one for your team.',
+      visual: 'setup',
     },
     {
       key: 'join',
       when: 'Day 1',
       owner: 'Your founders',
       title: 'Founders join, with their consent',
-      body: 'Each founder signs up with their own account and sees exactly what your program will see before agreeing. They can leave at any time.',
+      body: 'Each founder sees exactly what your program will see before agreeing, gets our paid tools free for the 30 days and can leave at any time.',
       visual: 'join',
     },
     {
-      key: 'work',
-      when: 'Weeks 1–4',
-      owner: 'Your founders',
-      title: 'Founders do the validation work',
-      body: 'Each founder gets a weekly plan for their stage and full access to our paid tools for the 30 days, at no cost to them. That includes a guided plan to find and contact their first buyers. Every week they send a short update in two minutes.',
-      visual: 'founder',
-    },
-    {
       key: 'track',
-      when: 'Any time',
+      when: 'Weeks 1–4',
       owner: 'Your team',
       title: 'You see every startup on one screen',
-      body: 'Stage, interviews, experiments, check-ins and who needs attention. Unlike a spreadsheet or a weekly form, the numbers come from the work founders do on the platform, and what the platform can confirm is shown apart from what founders report.',
+      body: 'Stage, interviews, experiments, weekly updates and who needs a push. We follow up with anyone who goes quiet and send you a summary every week.',
       visual: 'program',
-    },
-    {
-      key: 'weekly',
-      when: 'Every week',
-      owner: 'Our team',
-      title: 'We follow up. You get a summary.',
-      body: 'We remind every team, follow up with anyone who goes quiet and send you a short summary: progress, highlights and where your help is needed.',
     },
     {
       key: 'report',
       when: 'Day 30',
       owner: 'Our team',
-      title: 'Your cohort report',
-      body: 'Written from each startup’s recorded work, with a next step for every startup. In your funder’s format if you share it.',
-    },
-    {
-      key: 'after',
-      when: 'After day 30',
-      owner: 'Automatic',
-      title: 'Founders keep going',
-      body: 'The pilot plan ends on its own. Founders keep their account, their work and the free plan.',
+      title: 'You get the cohort report',
+      body: 'Written from each startup’s recorded work, with a next step for every team, in your funder’s format if you share it.',
+      visual: 'report',
     },
   ],
   honesty: PILOT_HONESTY,
 };
 
-// What the pilot includes and what it doesn't (2026-10-23), so a program
-// manager can take it to leadership as is. "Not included" says what to expect
-// instead, never only "no".
-export const ENTERPRISE_SCOPE = {
-  eyebrow: 'Scope',
-  title: 'What the pilot includes, and what it doesn’t',
-  included: [
-    { title: 'A program dashboard for your team', body: 'Every startup’s stage, interviews, experiments, check-ins and who needs attention. Export it as a spreadsheet at any time.' },
-    { title: 'Full access for every founder', body: 'Our paid tools for the 30 days, at no cost to them.' },
-    { title: 'Kickoff and onboarding', body: 'We onboard your founders at kickoff.' },
-    { title: 'Weekly follow-up and a summary', body: 'We remind and follow up with every team, and send your team a summary every week.' },
-    { title: 'The final cohort report', body: 'Written by our team, with a next step for every startup, in your funder’s format if you share it.' },
-  ],
-  excluded: [
-    { title: 'Founders’ private work', body: 'Files, idea details and messages stay private. A startup’s plan summary goes in your report only if its founder agrees.' },
-    { title: 'Promised results', body: PILOT_HONESTY },
-    { title: 'Funding or investor introductions', body: 'The pilot produces evidence of demand, not fundraising.' },
-    { title: 'A replacement for your curriculum', body: 'It works alongside your sessions and mentors.' },
-  ],
-};
-
-// Our requirements (2026-10-24): what the program provides and
-// what each startup commits to, so both sides know the pilot's conditions.
-// Grounded in how the pilot runs: we onboard founders at kickoff; each founder
-// joins with their own (free) account and must agree to share progress, and
-// can leave at any time; the dashboard counts per founder, so one project;
-// check-ins are weekly on the cohort's check-in day; the pilot covers the
-// first three stages. The weekly hours are Javier's call.
-export const ENTERPRISE_CONDITIONS = {
-  title: 'Our requirements',
-  program: {
-    title: 'Your program provides',
+// What the program gets and what it provides, in one panel (2026-11-18; it
+// replaces the scope, requirements, "built around your program" and
+// post-program sections). Kept to four short lines a side.
+export const ENTERPRISE_DEAL = {
+  eyebrow: 'The pilot',
+  title: 'What you get, and what we need from you',
+  get: {
+    title: 'Your program gets',
     items: [
-      { title: '5 to 10 startups', body: 'Chosen by you, all taking part in the same 30 days.' },
-      { title: 'One contact from your team', body: 'To introduce the pilot to your founders and read the weekly summary.' },
-      { title: 'A kickoff session with your founders', body: 'In week 1, so we can onboard every startup together.' },
-      { title: 'Your funder’s report format, if you need one', body: 'Optional. Share it at kickoff and the final report will follow it.' },
+      { key: 'dashboard', title: 'A dashboard of every startup', body: 'Stage, interviews, experiments and check-ins. Export it whenever you need.' },
+      { key: 'summary', title: 'A weekly summary', body: 'Progress, highlights and where your help is needed, from our team.' },
+      { key: 'report', title: 'A day-30 cohort report', body: 'A next step for every startup, in your funder’s format.' },
+      { key: 'after', title: 'Founders who keep going', body: 'Their account, their work and the free plan stay theirs after day 30.' },
     ],
   },
-  // Kept to three, so founders feel welcome rather than bound by rules
-  // (Javier, 2026-10-24). Consent to share progress is part of joining; the
-  // weekly update is part of the time; one project per founder is handled at
-  // kickoff (pilot playbook), not asked here.
-  startups: {
-    title: 'Each startup brings',
+  need: {
+    title: 'We need from you',
     items: [
-      { title: 'An idea worth testing', body: 'An idea or a first version they want to try with real customers.' },
-      { title: 'One founder to lead it', body: 'On their own free account. Their progress is shared with your program, their files and ideas stay private, and they can stop at any time.' },
-      { title: 'About 3 hours a week', body: 'Mostly talking to potential customers, plus a two-minute update.' },
+      { title: '5 to 10 startups', body: 'Chosen by you, all in the same 30 days.' },
+      { title: 'One contact from your team', body: 'To introduce the pilot and read the weekly summary.' },
+      { title: 'A kickoff session in week 1', body: 'So we can onboard every startup together.' },
+      { title: 'About 3 hours a week per founder', body: 'Mostly talking to potential customers, plus a two-minute update.' },
     ],
   },
 };
 
-export const ENTERPRISE_ADAPT = {
-  eyebrow: 'Built around your program',
-  title: 'Your size, your founders, your calendar',
-  items: [
-    { key: 'size', title: 'Cohort size', body: 'Start with 5 to 10 startups, then bring the rest of the cohort.' },
-    { key: 'focus', title: 'Founder focus', body: 'Fintech, health, climate or mixed: the check-ins and the report follow your founders’ sector.' },
-    { key: 'length', title: 'Program length', body: 'After the pilot, the setup follows your calendar, from a few weeks to several months.' },
-  ],
-};
-
-// Post-program support (Javier, 2026-10-16): founders keep their account,
-// their work and the free plan (Rookie, 50 monthly credits) after the program,
-// so alumni keep getting support without the program team. Only what the free
-// plan keeps open is named (src/config/planPermissions.ts): the angels
-// community and First Customer Proof need paid plans, so investors and
-// providers are not promised here.
+// After day 30: the stages founders worked on with the program, then the ones
+// they carry on with alone (the free plan keeps the stage tools).
 export const ENTERPRISE_AFTER = {
-  eyebrow: 'Post-program support',
-  title: 'Your founders keep going after the program ends',
-  copy: 'Alumni keep getting support from the platform, with no extra work for your team.',
+  title: 'And after day 30',
   duringLabel: 'With your program',
-  endLabel: 'Program ends',
+  endLabel: 'Pilot ends',
   afterLabel: 'On their own, with the platform',
-  keeps: [
-    { key: 'work', title: 'Their account and work', body: 'Everything they built stays theirs.' },
-    { key: 'tools', title: 'The stage tools', body: 'On the free plan, with monthly credits.' },
-    { key: 'mentors', title: 'Mentors', body: 'Experts in specific fields.' },
-    { key: 'founders', title: 'Other founders', body: 'Rooms, launches and co-founder matching.' },
-  ],
-  note: 'Paid plans add more credits and features.',
 };
 
-// Written for program managers (2026-10-16), in the order they ask:
-// expectations, their team's time, cost, visibility, reporting, fit with their
-// curriculum, sector, and what comes next. Every promise here is delivered by
-// our team during the pilot (onboarding, weekly summary, report), or verified
-// in the product (founders keep account, work and the free plan).
+// Founding offer (Javier, 2026-11-18): the first 3 programs run the pilot at no
+// cost, for honest feedback and permission to publish a case study. The one
+// exception to "no public prices"; after these three, a proposal per cohort.
+export const ENTERPRISE_FOUNDING = {
+  eyebrow: 'Founding programs',
+  title: 'Be one of our first three programs. The pilot is free.',
+  titleAccent: 'The pilot is free.',
+  copy: 'We are running the 30-day pilot at no cost for three programs. In return we ask for honest feedback and permission to publish what happened as a case study.',
+  places: 3,
+  terms: [
+    { key: 'pilot', title: 'The full pilot, free', body: 'Setup, weekly follow-up and the day-30 report.' },
+    { key: 'feedback', title: 'Your honest feedback', body: 'What worked for your team and what didn’t.' },
+    { key: 'case', title: 'A published case study', body: 'What happened in your cohort, shared with your permission.' },
+  ],
+  note: 'Founders never pay to take part.',
+};
+
+// Written for program managers (2026-11-18), in the order they ask: cost,
+// their team's time, what they see and what stays private, reporting, fit with
+// their curriculum, and what comes next.
 export const ENTERPRISE_FAQS = [
   {
-    question: 'What can we realistically expect from the pilot?',
+    question: 'How much does it cost?',
     answer:
-      'Every startup gets a validation plan and a weekly routine. How many interviews and experiments each one completes depends on the founders. Your dashboard shows who is doing the work and who needs a push, and the final report records what each startup actually did.',
+      'Free for our first three programs. After that, we send a proposal based on the number of startups. Founders never pay to take part.',
   },
   {
     question: 'How much of our team’s time does it take?',
     answer:
-      'One contact on your side, to introduce the pilot to your founders and receive the weekly summary. We onboard founders at kickoff, run the weekly check-ins and write the final report.',
+      'One contact on your side, to introduce the pilot to your founders and read the weekly summary. We onboard founders at kickoff, follow up every week and write the final report.',
   },
   {
-    question: 'How much does the pilot cost?',
+    question: 'What do we see, and what stays private?',
     answer:
-      'It depends on the number of startups. After a short call about your program, we send you a proposal. Founders don’t pay to take part.',
-  },
-  {
-    question: 'What will we see during the pilot?',
-    answer:
-      'A weekly summary for every team: its current stage, interviews logged, experiments run, decisions made and whether it needs attention. Founders’ files and messages stay private.',
+      'Each startup’s stage, interviews, experiments, check-ins and whether it needs attention. Founders’ files, idea details and messages stay private. Every founder agrees to share progress before joining and can leave at any time.',
   },
   {
     question: 'Can the final report follow our funder’s format?',
     answer:
-      'Yes. We build it from each team’s recorded work and can follow your funder’s or university’s template. Share the template with us at kickoff.',
+      'Yes. We build it from each team’s recorded work and can follow your funder’s or university’s template. Share it with us at kickoff.',
   },
   {
     question: 'Does it replace our curriculum or mentors?',
     answer:
-      'No, it works alongside them. Your sessions and mentors teach, and the platform helps founders turn that into finished work, one stage at a time. Founders can also find experts in specific fields and other founders on the platform.',
-  },
-  {
-    question: 'Our founders are all in one sector. Does that work?',
-    answer:
-      'Yes. Whether your cohort is fintech, health, climate or mixed, we tailor the check-ins and the final report to your founders’ sector.',
+      'No, it works alongside them. Your sessions and mentors teach, and the platform helps founders turn that into finished work, one stage at a time.',
   },
   {
     question: 'What happens after the pilot?',
     answer:
-      'Founders keep their accounts, their work and the free plan. If the pilot meets your goals, we extend it to your full cohort and set it up around your program’s calendar, from a few weeks to several months.',
+      'Founders keep their accounts, their work and the free plan. If the pilot meets your goals, we set it up for your full cohort and your program’s calendar, from a few weeks to several months.',
   },
 ];
 
 export const ENTERPRISE_CONTACT = {
   eyebrow: 'Talk to us',
   title: 'Book a pilot call',
-  copy: 'A short call about your program. We send you a proposal within a week.',
-  pilotIncludes: [
-    'Platform access for 5 to 10 startups',
-    'A structured validation workflow',
-    'Weekly progress check-ins',
-    'A final cohort report',
+  copy: 'A 30-minute call about your program.',
+  callLabel: 'What happens on the call',
+  callSteps: [
+    'You tell us about your cohort and what your funders ask for.',
+    'We walk you through the pilot and the program dashboard.',
+    'We send you a proposal within a week.',
   ],
   person: {
     name: 'Javier Alonso',

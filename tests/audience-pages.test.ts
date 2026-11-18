@@ -13,6 +13,7 @@ const app = readFileSync('src/App.tsx', 'utf8');
 const navbar = readFileSync('src/components/VisitorNavbar.tsx', 'utf8');
 const form = readFileSync('src/components/audience/InstitutionContactForm.tsx', 'utf8');
 const enterprisePage = readFileSync('src/pages/Enterprise.tsx', 'utf8');
+const visuals = readFileSync('src/components/enterprise/EnterpriseVisuals.tsx', 'utf8');
 const pages = [
   ...Object.values(AUDIENCE_PAGES).map((page) => ({ path: page.path, seo: page.seo, copy: JSON.stringify(page) })),
   { path: enterprise.ENTERPRISE_PATH, seo: enterprise.ENTERPRISE_SEO, copy: JSON.stringify(enterprise) },
@@ -67,25 +68,33 @@ test('the enterprise page lands the pilot offer in the hero', () => {
   );
   const heroStart = enterprisePage.indexOf('className="ent-hero"');
   const hero = enterprisePage.slice(heroStart, enterprisePage.indexOf('</section>', heroStart));
-  for (const piece of ['ENTERPRISE_HERO.titleLead', 'ENTERPRISE_HERO.lede', 'ENTERPRISE_HERO.facts', 'ENTERPRISE_HERO.primaryCta', '<CycleStrip', '<PilotBoardMock />']) {
+  for (const piece of ['ENTERPRISE_HERO.titleLead', 'ENTERPRISE_HERO.lede', 'ENTERPRISE_HERO.facts', 'ENTERPRISE_HERO.primaryCta', 'ENTERPRISE_HERO.trust', '<SampleReport />']) {
     assert.ok(hero.includes(piece), `hero is missing ${piece}`);
   }
 });
 
-test('the pilot promises a process and evidence, and adapts to each program', () => {
+test('the pilot promises a process and evidence, and shows proof without inventing customers', () => {
   // Thirty days can't prove product-market fit, so the page says so instead of
-  // implying it. The steps and the scope explain the pilot (2026-10-23); the
-  // separate outcomes section was removed as redundant.
+  // implying it. The 2026-11-18 audit (version A) replaced the scope,
+  // requirements, "built around your program" and post-program sections with
+  // one "what you get / what we need" panel, and added honest proof: a sample
+  // day-30 report and the founding offer.
   assert.equal('ENTERPRISE_OUTCOMES' in enterprise, false);
-  assert.doesNotMatch(enterprisePage, /ENTERPRISE_OUTCOMES/);
+  assert.equal('ENTERPRISE_ADAPT' in enterprise, false);
+  assert.doesNotMatch(enterprisePage, /ENTERPRISE_OUTCOMES|ENTERPRISE_ADAPT|ENTERPRISE_SCOPE|ENTERPRISE_CONDITIONS/);
   assert.match(enterprise.ENTERPRISE_PILOT.honesty, /won’t prove product-market fit/);
+  assert.match(enterprisePage, /ENTERPRISE_PILOT\.honesty/);
   assert.doesNotMatch(JSON.stringify(enterprise), /guaranteed|get funded|achieve product-market fit/i);
-  // Programs differ in size, founder focus and length.
-  assert.deepEqual(
-    enterprise.ENTERPRISE_ADAPT.items.map((item) => item.key),
-    ['size', 'focus', 'length'],
-  );
-  assert.match(JSON.stringify(enterprise.ENTERPRISE_ADAPT), /[Ff]intech/);
+  // The founding offer (Javier, 2026-11-18): the first three programs, free,
+  // for feedback and a case study; founders never pay.
+  assert.equal(enterprise.ENTERPRISE_FOUNDING.places, 3);
+  assert.match(enterprise.ENTERPRISE_FOUNDING.title, /first three programs/);
+  assert.match(JSON.stringify(enterprise.ENTERPRISE_FOUNDING), /case study/);
+  assert.match(enterprise.ENTERPRISE_FAQS[0].answer, /^Free for our first three programs/);
+  // The sample report and every illustration are labelled examples.
+  assert.match(visuals, /export const SampleReport/);
+  assert.match(visuals, /Example day-30 cohort report for/);
+  assert.match(visuals, /const ExampleTag/);
 });
 
 test('the institution form reuses the contact function with known roles', () => {
@@ -98,38 +107,34 @@ test('the institution form reuses the contact function with known roles', () => 
   assert.equal(AUDIENCE_PAGES.founders.contact, undefined);
 });
 
-test('the pilot is explained step by step, with who does the work and its scope', () => {
-  // A program manager follows the pilot from setup to after day 30
-  // (2026-10-23), each step owned by someone so their team's time is clear.
+test('the pilot is explained in four steps, with who does the work and what each side brings', () => {
+  // A program manager follows the pilot from setup to day 30 (four steps since
+  // the 2026-11-18 audit), each step owned by someone so their team's time is
+  // clear, and each beside a visual.
   assert.deepEqual(
     enterprise.ENTERPRISE_PILOT.steps.map((step) => step.key),
-    ['setup', 'join', 'work', 'track', 'weekly', 'report', 'after'],
+    ['setup', 'join', 'track', 'report'],
   );
   for (const step of enterprise.ENTERPRISE_PILOT.steps) {
-    assert.ok(['Our team', 'Your team', 'Your founders', 'Automatic'].includes(step.owner), step.key);
-    if ('visual' in step && step.visual) assert.match(enterprisePage, new RegExp(`\\b${step.visual}: \\(`), `${step.key} has a screen`);
+    assert.ok(['Our team', 'Your team', 'Your founders'].includes(step.owner), step.key);
+    assert.match(enterprisePage, new RegExp(`\\b${step.visual}: [(<]`), `${step.key} has a visual`);
   }
-  // Each screen is the real product, captured light and dark.
-  for (const asset of ['cohort-join', 'cohort-founder', 'cohort-program']) {
+  // Each product screen is the real product, captured light and dark.
+  for (const asset of ['cohort-join', 'cohort-program']) {
     assert.match(enterprisePage, new RegExp(`@/assets/enterprise/${asset}\.webp`));
     assert.match(enterprisePage, new RegExp(`@/assets/enterprise/${asset}-light\.webp`));
   }
-  // What the program can't see or expect is said plainly, next to what it gets.
-  const scope = JSON.stringify(enterprise.ENTERPRISE_SCOPE);
-  assert.ok(enterprise.ENTERPRISE_SCOPE.included.length >= 5);
   // Plain words for program directors (2026-10-24): no internal plan or feature names.
-  assert.match(scope, /at no cost to them/);
   assert.doesNotMatch(JSON.stringify(enterprise), /Rising plan|First Customer Proof|Startup Development Cycle/);
-  assert.match(scope, /Files, idea details and messages stay private/);
-  assert.match(scope, /only if its founder agrees/);
-  assert.match(scope, /won’t prove product-market fit/);
-  assert.match(enterprisePage, /ENTERPRISE_SCOPE\.excluded\.map/);
-  // The pilot's conditions for both sides (2026-10-24).
-  assert.match(enterprisePage, /ENTERPRISE_CONDITIONS\.program/);
-  assert.match(enterprisePage, /ENTERPRISE_CONDITIONS\.startups/);
-  assert.ok(enterprise.ENTERPRISE_CONDITIONS.program.items.some((item) => /kickoff/.test(item.title)));
-  // Few rules for founders (2026-10-24): three asks, consent included.
-  assert.ok(enterprise.ENTERPRISE_CONDITIONS.startups.items.length <= 3);
-  assert.match(JSON.stringify(enterprise.ENTERPRISE_CONDITIONS.startups), /progress is shared with your program/);
-  assert.match(JSON.stringify(enterprise.ENTERPRISE_CONDITIONS.startups), /can stop at any time/);
+  // What stays private and the founders' consent are said plainly.
+  const faqs = JSON.stringify(enterprise.ENTERPRISE_FAQS);
+  assert.match(faqs, /files, idea details and messages stay private/);
+  assert.match(faqs, /agrees to share progress before joining and can leave at any time/);
+  assert.match(JSON.stringify(enterprise.ENTERPRISE_PILOT), /before agreeing/);
+  // What each side brings (2026-10-24 conditions, kept short).
+  assert.equal(enterprise.ENTERPRISE_DEAL.get.items.length, 4);
+  assert.equal(enterprise.ENTERPRISE_DEAL.need.items.length, 4);
+  assert.ok(enterprise.ENTERPRISE_DEAL.need.items.some((item) => /kickoff/.test(item.title)));
+  assert.match(enterprisePage, /ENTERPRISE_DEAL\.get\.items\.map/);
+  assert.match(enterprisePage, /ENTERPRISE_DEAL\.need\.items\.map/);
 });
