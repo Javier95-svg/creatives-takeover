@@ -28,6 +28,7 @@ import {
   FoundingPlaces,
   PilotSetupMock,
   ProductShot,
+  PilotBoardMock,
   ReportDelivered,
   SampleReport,
 } from "@/components/enterprise/EnterpriseVisuals";
@@ -47,6 +48,7 @@ import {
   ENTERPRISE_HERO,
   ENTERPRISE_PATH,
   ENTERPRISE_PILOT,
+  ENTERPRISE_REPORT,
   ENTERPRISE_SEO,
 } from "@/data/enterprisePage";
 import "@/components/enterprise/enterprise.css";
@@ -54,13 +56,15 @@ import "@/components/enterprise/enterprise.css";
 const CONTACT_ID = "talk";
 const HOW_ID = "how";
 
-// Dense screens get the full width under their step, so their numbers stay legible.
-const WIDE_STEP_VISUALS = new Set(["program"]);
+// Dense screens get the full width under their step, so their numbers stay
+// legible. None of the four steps needs it since the dashboard moved to the hero.
+const WIDE_STEP_VISUALS = new Set<string>();
 
-// One visual per pilot step: the real cohort screens on sample data, and two
-// labelled example illustrations (the setup and the report sent on day 30).
+// One visual per pilot step: the real founder invitation on sample data, and
+// three labelled example illustrations (setup, the day-18 board, the report).
 const STEP_VISUALS: Record<string, ReactNode> = {
   setup: <PilotSetupMock />,
+  board: <PilotBoardMock />,
   report: <ReportDelivered />,
   join: (
     <ProductShot
@@ -77,26 +81,30 @@ const STEP_VISUALS: Record<string, ReactNode> = {
       alt="The cohort invitation a founder opens: what is shared with the program (name and email, stage and tasks, counts of interviews, evidence and experiments, weekly check-ins), what stays private (files, idea details, messages) and the consent to join."
     />
   ),
-  program: (
-    <ProductShot
-      src={cohortProgramShot}
-      lightSrc={cohortProgramLightShot}
-      width={1176}
-      height={955}
-      title="Program dashboard"
-      fade={false}
-      hotspots={[
-        { left: 83, top: 37.6, label: "Needs attention" },
-        { left: 40.5, top: 45.1, label: "Verified / total", side: "below" },
-      ]}
-      alt="The program dashboard for five startups: customer profiles ready, median interviews, experiments run, check-ins this week and startups that need attention, then one row per startup with stage, tasks, interviews, evidence, experiments, last activity, check-in and attention flags such as a reported blocker or no interviews logged."
-    />
-  ),
 };
+
+// Hero visual (version B): the real program dashboard. Narrower than in a step,
+// so the right-hand label opens to the left to stay inside the frame.
+const HERO_DASHBOARD = (
+  <ProductShot
+    src={cohortProgramShot}
+    lightSrc={cohortProgramLightShot}
+    width={1176}
+    height={955}
+    title="Program dashboard"
+    fade={false}
+    hotspots={[
+      { left: 83, top: 37.6, label: "Needs attention", side: "left" },
+      { left: 40.5, top: 45.1, label: "Verified / total", side: "below" },
+    ]}
+    alt="The program dashboard for five startups: customer profiles ready, median interviews, experiments run, check-ins this week and startups that need attention, then one row per startup with stage, tasks, interviews, evidence, experiments, last activity, check-in and attention flags such as a reported blocker or no interviews logged."
+  />
+);
 
 // Icons for the hero's trust line and for what the program gets.
 const TRUST_ICONS: Record<string, LucideIcon> = { founding: Gift, consent: UserCheck, iso: ShieldCheck };
 const GET_ICONS: Record<string, LucideIcon> = { dashboard: LayoutDashboard, summary: CalendarCheck, report: FileText, after: Rocket };
+const REPORT_ICONS: Record<string, LucideIcon> = { cohort: LayoutDashboard, next: ArrowRight, confirmed: ShieldCheck };
 
 /** Delay for an element's scroll reveal, used to stagger lists and pairs. */
 const revealDelay = (ms: number) => ({ "--reveal-delay": `${ms}ms` }) as CSSProperties;
@@ -305,7 +313,36 @@ const Enterprise = () => {
                   </ul>
                 </div>
 
+                {/* Version B (Javier, 2026-11-18): the real program dashboard leads. */}
                 <div className="ent-hero__visual" data-reveal="zoom" style={revealDelay(150)}>
+                  {HERO_DASHBOARD}
+                </div>
+              </div>
+            </section>
+
+            {/* The day-30 report, right after the hero: what a program can show its funders. */}
+            <section className="ent-section">
+              <div className="ent-container ent-adapt">
+                <div>
+                  <SectionHead eyebrow={ENTERPRISE_REPORT.eyebrow} title={ENTERPRISE_REPORT.title} />
+                  <ul className="ent-adapt__list">
+                    {ENTERPRISE_REPORT.points.map((point, index) => {
+                      const Icon = REPORT_ICONS[point.key] ?? FileText;
+                      return (
+                        <li key={point.key} data-reveal="left" style={revealDelay(index * 100)}>
+                          <span className="ent-icon" aria-hidden="true">
+                            <Icon />
+                          </span>
+                          <div>
+                            <h3>{point.title}</h3>
+                            <p>{point.body}</p>
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+                <div className="ent-adapt__visual" data-reveal="zoom" style={revealDelay(150)}>
                   <SampleReport />
                 </div>
               </div>

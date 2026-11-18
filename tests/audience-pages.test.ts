@@ -68,7 +68,7 @@ test('the enterprise page lands the pilot offer in the hero', () => {
   );
   const heroStart = enterprisePage.indexOf('className="ent-hero"');
   const hero = enterprisePage.slice(heroStart, enterprisePage.indexOf('</section>', heroStart));
-  for (const piece of ['ENTERPRISE_HERO.titleLead', 'ENTERPRISE_HERO.lede', 'ENTERPRISE_HERO.facts', 'ENTERPRISE_HERO.primaryCta', 'ENTERPRISE_HERO.trust', '<SampleReport />']) {
+  for (const piece of ['ENTERPRISE_HERO.titleLead', 'ENTERPRISE_HERO.lede', 'ENTERPRISE_HERO.facts', 'ENTERPRISE_HERO.primaryCta', 'ENTERPRISE_HERO.trust', 'HERO_DASHBOARD']) {
     assert.ok(hero.includes(piece), `hero is missing ${piece}`);
   }
 });
@@ -91,7 +91,10 @@ test('the pilot promises a process and evidence, and shows proof without inventi
   assert.match(enterprise.ENTERPRISE_FOUNDING.title, /first three programs/);
   assert.match(JSON.stringify(enterprise.ENTERPRISE_FOUNDING), /case study/);
   assert.match(enterprise.ENTERPRISE_FAQS[0].answer, /^Free for our first three programs/);
-  // The sample report and every illustration are labelled examples.
+  // The sample report (its own band after the hero since version B, Javier
+  // 2026-11-18) and every illustration are labelled examples.
+  assert.match(enterprisePage, /ENTERPRISE_REPORT\.points\.map/);
+  assert.match(enterprisePage, /<SampleReport \/>/);
   assert.match(visuals, /export const SampleReport/);
   assert.match(visuals, /Example day-30 cohort report for/);
   assert.match(visuals, /const ExampleTag/);

@@ -114,7 +114,9 @@ export const ENTERPRISE_PILOT = {
       owner: 'Your team',
       title: 'You see every startup on one screen',
       body: 'Stage, interviews, experiments, weekly updates and who needs a push. We follow up with anyone who goes quiet and send you a summary every week.',
-      visual: 'program',
+      // The real dashboard is the hero visual (version B), so this step shows
+      // the labelled example board on day 18.
+      visual: 'board',
     },
     {
       key: 'report',
@@ -126,6 +128,18 @@ export const ENTERPRISE_PILOT = {
     },
   ],
   honesty: PILOT_HONESTY,
+};
+
+// The day-30 report as its own band after the hero (version B, Javier
+// 2026-11-18): what a program can show its funders, beside the sample report.
+export const ENTERPRISE_REPORT = {
+  eyebrow: 'What you get on day 30',
+  title: 'A report your funders can read',
+  points: [
+    { key: 'cohort', title: 'Every startup on one page', body: 'Stage, interviews, experiments and the decision each team made.' },
+    { key: 'next', title: 'A next step for every team', body: 'So your mentors know where to help after the pilot.' },
+    { key: 'confirmed', title: 'Confirmed, not just reported', body: 'What the platform confirms is kept apart from what founders report.' },
+  ],
 };
 
 // What the program gets and what it provides, in one panel (2026-11-18; it
