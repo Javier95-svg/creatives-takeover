@@ -261,6 +261,12 @@
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+  /* The gradient is only painted inside this box, and at line-height 1.02 the
+     box ends just under the baseline, which cut the "g" of "doing" in half.
+     Extend the painted area below the descenders, then take the same space
+     back so the layout doesn't move. */
+  padding-bottom: 0.14em;
+  margin-bottom: -0.14em;
 }
 
 .ent-hero__lede {
