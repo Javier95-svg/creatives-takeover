@@ -2422,3 +2422,55 @@
 .ent-founding__terms .ent-keeps__title,
 .ent-founding__terms .ent-keeps__body { display: block; }
 .ent-founding__terms .ent-keeps__body { margin-top: 2px; }
+
+/* Partnership page: concise outcomes and delivery, with inspectable evidence. */
+.ent-outcomes, .ent-process {
+  display: grid;
+  gap: 24px;
+  list-style: none;
+  padding: 0;
+  margin: 28px 0 0;
+}
+.ent-outcomes { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.ent-outcome {
+  padding: 28px;
+  border: 1px solid var(--ent-line);
+  border-radius: 18px;
+  background: var(--ent-card);
+}
+.ent-outcome__when, .ent-process__number {
+  display: block;
+  color: var(--ent-blue);
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+.ent-outcome__title { font: 600 22px/1.25 var(--ent-display); margin-bottom: 12px; }
+.ent-outcome__body { color: var(--ent-muted); line-height: 1.65; }
+.ent-process { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.ent-process > li { border-top: 1px solid var(--ent-line); padding-top: 24px; }
+.ent-process__number { font: 500 28px/1 var(--ent-display); }
+.ent-process .ent-step__title { font-size: 21px; margin: 12px 0; }
+.ent-process .ent-step__copy { font-size: 15px; }
+.ent-process .ent-step__meta { font-size: 12px; flex-wrap: wrap; }
+.ent-evidence-label { color: var(--ent-muted); font-size: 13px; margin-bottom: 12px; }
+.ent-dashboard-expand { margin-top: 16px; width: 100%; }
+.ent-dashboard-detail { overflow: auto; }
+.ent-dashboard-detail img { width: 100%; min-width: 720px; height: auto; }
+.ent-dashboard-dialog { z-index: 100; max-width: 1200px; max-height: 90dvh; overflow-y: auto; }
+.ent-hero__visual .ent-example { white-space: normal; }
+.ent .ent-hotspot__dot::after { animation: none; }
+.ent-btn:focus-visible { outline: 3px solid var(--ent-blue); outline-offset: 4px; }
+@media (max-width: 1023px) {
+  .ent-process { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 767px) {
+  .ent-outcomes { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+  .ent-outcome { padding: 22px; }
+  .ent-hero__visual .ent-window__bar { flex-wrap: wrap; }
+}
+@media (max-width: 480px) {
+  .ent-process { grid-template-columns: minmax(0, 1fr); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ent-dashboard-dialog { animation: none !important; transition: none !important; }
+}

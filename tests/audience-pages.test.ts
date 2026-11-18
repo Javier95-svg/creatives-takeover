@@ -74,25 +74,19 @@ test('the enterprise page lands the pilot offer in the hero', () => {
 });
 
 test('the pilot promises a process and evidence, and shows proof without inventing customers', () => {
-  // Thirty days can't prove product-market fit, so the page says so instead of
-  // implying it. The 2026-11-18 audit (version A) replaced the scope,
-  // requirements, "built around your program" and post-program sections with
-  // one "what you get / what we need" panel, and added honest proof: a sample
-  // day-30 report and the founding offer.
-  assert.equal('ENTERPRISE_OUTCOMES' in enterprise, false);
-  assert.equal('ENTERPRISE_ADAPT' in enterprise, false);
-  assert.doesNotMatch(enterprisePage, /ENTERPRISE_OUTCOMES|ENTERPRISE_ADAPT|ENTERPRISE_SCOPE|ENTERPRISE_CONDITIONS/);
+  assert.equal(enterprise.ENTERPRISE_OUTCOMES.items.length, 3);
   assert.match(enterprise.ENTERPRISE_PILOT.honesty, /won’t prove product-market fit/);
   assert.match(enterprisePage, /ENTERPRISE_PILOT\.honesty/);
-  assert.doesNotMatch(JSON.stringify(enterprise), /guaranteed|get funded|achieve product-market fit/i);
-  // The founding offer (Javier, 2026-11-18): the first three programs, free,
-  // for feedback and a case study; founders never pay.
-  assert.equal(enterprise.ENTERPRISE_FOUNDING.places, 3);
-  assert.match(enterprise.ENTERPRISE_FOUNDING.title, /first three programs/);
-  assert.match(JSON.stringify(enterprise.ENTERPRISE_FOUNDING), /case study/);
-  assert.match(enterprise.ENTERPRISE_FAQS[0].answer, /^Free for our first three programs/);
-  // The sample report (its own band after the hero since version B, Javier
-  // 2026-11-18) and every illustration are labelled examples.
+  assert.doesNotMatch(JSON.stringify(enterprise), /guaranteed|get funded|achieve product-market fit|first (three|3) programs|free.pilot|ISO 27001/i);
+  assert.match(enterprise.ENTERPRISE_FAQS[0].answer, /proposal/);
+  assert.equal(enterprise.ENTERPRISE_HERO.secondaryCta.href, '#report');
+  assert.match(enterprisePage, /id={REPORT_ID}/);
+  assert.ok(enterprisePage.indexOf('<OutcomeCards') < enterprisePage.indexOf('<SampleReport'));
+  assert.match(visuals, /Real product · Sample data/);
+  assert.match(visuals, /Illustrative report · Fictional data/);
+  const route = INDEXABLE_ROUTES.find((entry: { path: string }) => entry.path === '/enterprise');
+  assert.equal(route.heroHeading, enterprise.ENTERPRISE_HERO.titleLead + enterprise.ENTERPRISE_HERO.titleAccent);
+  assert.equal(route.heroCopy, enterprise.ENTERPRISE_HERO.lede);
   assert.match(enterprisePage, /ENTERPRISE_REPORT\.points\.map/);
   assert.match(enterprisePage, /<SampleReport \/>/);
   assert.match(visuals, /export const SampleReport/);
@@ -120,10 +114,9 @@ test('the pilot is explained in four steps, with who does the work and what each
   );
   for (const step of enterprise.ENTERPRISE_PILOT.steps) {
     assert.ok(['Our team', 'Your team', 'Your founders'].includes(step.owner), step.key);
-    assert.match(enterprisePage, new RegExp(`\\b${step.visual}: [(<]`), `${step.key} has a visual`);
   }
   // Each product screen is the real product, captured light and dark.
-  for (const asset of ['cohort-join', 'cohort-program']) {
+  for (const asset of ['cohort-program']) {
     assert.match(enterprisePage, new RegExp(`@/assets/enterprise/${asset}\.webp`));
     assert.match(enterprisePage, new RegExp(`@/assets/enterprise/${asset}-light\.webp`));
   }

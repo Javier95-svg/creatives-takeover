@@ -4,14 +4,11 @@ import {
   Check,
   CheckCircle2,
   Circle,
-  FileText,
   Flag,
   FolderCheck,
-  Gift,
   GraduationCap,
   Layers,
   type LucideIcon,
-  MessageSquare,
   TrendingUp,
   Users,
 } from "lucide-react";
@@ -182,7 +179,7 @@ const REPORT_TEAMS: ReportTeam[] = [
   { name: "Aurora", stage: "Prototype", interviews: 9, confirmed: 6, next: "Finish the demand test" },
   { name: "Lumen", stage: "Prototype", interviews: 7, confirmed: 5, next: "Five more customer conversations" },
   { name: "Cedar", stage: "Identity", interviews: 6, confirmed: 4, next: "Sharpen the customer profile with a mentor" },
-  { name: "Iris", stage: "Identity", interviews: 5, confirmed: 2, next: "Needs a push: two weeks without an update", attention: true },
+  { name: "Iris", stage: "Identity", interviews: 5, confirmed: 2, next: "Discuss support: two weeks without an update", attention: true },
 ];
 const REPORT_EXPERIMENTS = 9;
 const REPORT_UPDATES = { sent: 22, expected: REPORT_TEAMS.length * 4 };
@@ -195,8 +192,9 @@ export const SampleReport = () => {
     <div
       className="ent-mock"
       role="img"
-      aria-label={`Example day-30 cohort report for ${REPORT_TEAMS.length} fictional startups: ${interviews} customer interviews, ${confirmed} confirmed on the platform, ${REPORT_EXPERIMENTS} experiments, ${REPORT_UPDATES.sent} of ${REPORT_UPDATES.expected} weekly updates, and a next step for every startup.`}
+      aria-label={`Example day-30 cohort report for ${REPORT_TEAMS.length} fictional startups: ${interviews} customer interviews, ${confirmed} recorded on the platform, ${REPORT_EXPERIMENTS} experiments, ${REPORT_UPDATES.sent} of ${REPORT_UPDATES.expected} weekly updates, and a next step for every startup.`}
     >
+      <p className="ent-evidence-label">Illustrative report · Fictional data</p>
       <div className="ent-window ent-report">
         <div className="ent-window__bar">
           <WindowDots />
@@ -216,7 +214,7 @@ export const SampleReport = () => {
           </div>
           <div>
             <strong className="is-good">{confirmed}</strong>
-            <span>confirmed on the platform</span>
+            <span>recorded on the platform</span>
           </div>
           <div>
             <strong>{REPORT_EXPERIMENTS}</strong>
@@ -243,7 +241,7 @@ export const SampleReport = () => {
               <span className="ent-report__stage">{team.stage}</span>
               <span className="ent-report__count">
                 <b>{team.interviews}</b>
-                <small>{team.confirmed} confirmed</small>
+                <small>{team.confirmed} recorded</small>
               </span>
               <span>
                 <DecisionBadge decision={team.decision} />
@@ -254,15 +252,6 @@ export const SampleReport = () => {
         </div>
       </div>
 
-      <div className="ent-float ent-float--report" aria-hidden="true">
-        <span className="ent-float__icon is-good-bg">
-          <FileText />
-        </span>
-        <div>
-          <p className="ent-float__title">In your funder’s format</p>
-          <p className="ent-float__text">Share the template at kickoff</p>
-        </div>
-      </div>
     </div>
   );
 };
@@ -290,39 +279,18 @@ export const ReportDelivered = () => (
   </div>
 );
 
-/** Founding offer: the three founding places and what each one involves. */
-export const FoundingPlaces = ({ places, terms }: { places: number; terms: Array<{ key: string; title: string; body: string }> }) => {
-  const icons: Record<string, LucideIcon> = { pilot: Gift, feedback: MessageSquare, case: FileText };
-  return (
-    <div className="ent-founding__visual">
-      <div className="ent-founding__places" aria-label={`${places} founding places`}>
-        {Array.from({ length: places }, (_, index) => (
-          <div key={index} className="ent-founding__place" style={{ "--i": index } as CSSProperties}>
-            <span className="ent-founding__num">{String(index + 1).padStart(2, "0")}</span>
-            <span className="ent-founding__label">Founding place</span>
-            <span className="ent-founding__state">Open</span>
-          </div>
-        ))}
-      </div>
-      <ul className="ent-founding__terms">
-        {terms.map((term) => {
-          const Icon = icons[term.key] ?? Gift;
-          return (
-            <li key={term.key}>
-              <span className="ent-icon" aria-hidden="true">
-                <Icon />
-              </span>
-              <span>
-                <span className="ent-keeps__title">{term.title}</span>
-                <span className="ent-keeps__body">{term.body}</span>
-              </span>
-            </li>
-          );
-        })}
-      </ul>
-    </div>
-  );
-};
+/** Outcomes: what a program gets from the pilot, in the order it happens. */
+export const OutcomeCards = ({ items }: { items: Array<{ key: string; when: string; title: string; body: string }> }) => (
+  <ol className="ent-outcomes">
+    {items.map((item, index) => (
+      <li key={item.key} className={`ent-outcome is-${item.key}`} data-reveal="up" style={{ "--reveal-delay": `${index * 110}ms` } as CSSProperties}>
+        <span className="ent-outcome__when">{item.when}</span>
+        <h3 className="ent-outcome__title">{item.title}</h3>
+        <p className="ent-outcome__body">{item.body}</p>
+      </li>
+    ))}
+  </ol>
+);
 
 const titleCase = (title: string) => title.charAt(0) + title.slice(1).toLowerCase();
 
@@ -383,12 +351,12 @@ export const ProductShot = ({
       <WindowDots />
       <span className="ent-window__title">{title}</span>
       <span className="ent-example is-real">
-        Real product<span className="ent-example__more"> · sample data</span>
+        Real product · Sample data
       </span>
     </div>
     <div className="ent-shot__media">
       <img className="is-light" src={lightSrc} width={width} height={height} alt={alt} loading="lazy" decoding="async" />
-      <img className="is-dark" src={src} width={width} height={height} alt="" aria-hidden="true" loading="lazy" decoding="async" />
+      <img className="is-dark" src={src} width={width} height={height} alt={alt} loading="lazy" decoding="async" />
       {hotspots.map((spot, index) => (
         <span
           key={spot.label}
