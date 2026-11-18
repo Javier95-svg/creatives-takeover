@@ -2,6 +2,7 @@ import type { MouseEvent } from "react";
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
+  ArrowRight,
   BookMarked,
   Building2,
   CalendarDays,
@@ -37,7 +38,11 @@ import { usePageAnalytics } from "@/hooks/usePageAnalytics";
 import { useCTAAttribution } from "@/hooks/useCTAAttribution";
 import { PILOT_CALL_URL } from "@/config/pilotCall";
 
-type VisitorLink = { label: string; href: string; icon: LucideIcon; sectionId?: string; exact?: boolean };
+// Menu items carry a one-line description (from each page's own copy) and a
+// colour for their icon tile in the desktop dropdown (2026-11-18, Javier's
+// pick "Rich list"; styles in index.css under .nav-rich-menu).
+type MenuTone = "amber" | "teal" | "blue" | "coral" | "violet" | "sky";
+type VisitorLink = { label: string; href: string; icon: LucideIcon; sectionId?: string; exact?: boolean; description?: string; tone?: MenuTone };
 type VisitorMenu = { label: string; links: VisitorLink[]; icon: LucideIcon };
 type VisitorEntry = VisitorLink | VisitorMenu;
 
@@ -46,17 +51,17 @@ const isMenu = (entry: VisitorEntry): entry is VisitorMenu => "links" in entry;
 // The For founders menu's contents: what founders build, who they work with,
 // and the Founder ID page (2026-10-21).
 const founderLinks: VisitorLink[] = [
-  { label: "Build", href: "/build", icon: Wrench },
-  { label: "Collab", href: "/mentorship", icon: Handshake },
-  { label: "Founder ID", href: "/founder-id", icon: IdCard },
+  { label: "Build", href: "/build", icon: Wrench, tone: "amber", description: "Turn your evidence into a first version" },
+  { label: "Collab", href: "/mentorship", icon: Handshake, tone: "teal", description: "Book sessions with mentors and founders" },
+  { label: "Founder ID", href: "/founder-id", icon: IdCard, tone: "blue", description: "Your project, links and updates in one link" },
 ];
 
 // The Explore menu's contents.
 const exploreLinks: VisitorLink[] = [
-  { label: "Newspaper", href: "/newspaper", icon: Newspaper },
-  { label: "Podcast", href: "/podcast", icon: Mic },
+  { label: "Newspaper", href: "/newspaper", icon: Newspaper, tone: "coral", description: "Founder stories and startup lessons" },
+  { label: "Podcast", href: "/podcast", icon: Mic, tone: "violet", description: "Founders Unleashed: conversations with founders" },
   // Startup Pedia, the knowledge hub that replaced /answers (2026-10-25).
-  { label: "Startup Pedia", href: "/startup-pedia", icon: BookMarked },
+  { label: "Startup Pedia", href: "/startup-pedia", icon: BookMarked, tone: "sky", description: "Clear answers for your next decision" },
 ];
 
 // The bar in display order (2026-10-17). Home is covered by the brand lockup.
@@ -223,14 +228,22 @@ const LegacyVisitorNavbar = () => {
                         aria-hidden="true"
                       />
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="center" sideOffset={10} className="w-52 rounded-2xl p-1.5">
+                    <DropdownMenuContent align="center" sideOffset={10} className="nav-rich-menu w-80 rounded-2xl p-2">
                       {entry.links.map((item) => {
                         const Icon = item.icon;
                         return (
-                          <DropdownMenuItem key={item.label} asChild className="cursor-pointer rounded-xl px-3 py-2.5">
+                          <DropdownMenuItem
+                            key={item.label}
+                            asChild
+                            className={cn("nav-rich-item cursor-pointer rounded-xl px-3 py-2.5", item.tone && `nav-tone-${item.tone}`)}
+                          >
                             <Link to={item.href} onClick={() => trackNavClick(`${entry.label} ${item.label}`)}>
-                              <Icon className="mr-2.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-                              {item.label}
+                              <span className="nav-rich-tile" aria-hidden="true"><Icon className="h-[18px] w-[18px]" /></span>
+                              <span className="nav-rich-text">
+                                <span className="nav-rich-label">{item.label}</span>
+                                {item.description ? <span className="nav-rich-desc">{item.description}</span> : null}
+                              </span>
+                              <ArrowRight className="nav-rich-arrow h-4 w-4" aria-hidden="true" />
                             </Link>
                           </DropdownMenuItem>
                         );
