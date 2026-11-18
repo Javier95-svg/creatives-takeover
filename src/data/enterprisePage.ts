@@ -6,15 +6,15 @@ export const ENTERPRISE_SEO = {
   keywords: 'accelerator programs, incubators, university entrepreneurship, cohort reporting, founder validation',
 };
 export const ENTERPRISE_HERO = {
-  eyebrow: 'A partner for your startup program',
-  titleLead: 'Know where your cohort stands—',
-  titleAccent: 'and where to help next.',
-  lede: 'Give your program team a clear view of founder progress, structured weekly follow-up, and a cohort report for stakeholder updates. Built for accelerators, incubators, and university programs.',
+  eyebrow: 'For accelerators, incubators and universities',
+  titleLead: 'See cohort progress.',
+  titleAccent: 'Focus your support.',
+  lede: 'One dashboard. Weekly follow-up from our team. Clear reports for your stakeholders.',
   primaryCta: 'Book a pilot call',
   secondaryCta: { label: 'See the sample report', href: '#report' },
   facts: [
     { value: '30', label: 'day pilot' },
-    { value: '5–10', label: 'startups' },
+    { value: '5 to 10', label: 'startups' },
     { value: 'Weekly', label: 'check-ins' },
     { value: '1', label: 'cohort report' },
   ],
@@ -26,45 +26,45 @@ export const ENTERPRISE_HERO = {
 export const ENTERPRISE_OUTCOMES = {
   eyebrow: 'Your program, better informed',
   title: 'Clear progress. Focused support.',
-  copy: 'A shared view of the cohort, with our team supporting the follow-through.',
+  copy: '',
   items: [
-    { key: 'visibility', when: 'Visibility', title: 'Identify support needs', body: 'See stages, activity and reported blockers together, so you can focus mentor time where it is needed.' },
-    { key: 'time', when: 'Follow-through', title: 'Reduce manual follow-up', body: 'Our team follows up with founders and prepares a weekly summary for your program contact.' },
-    { key: 'evidence', when: 'Reporting', title: 'Document cohort progress', body: 'Use a team-prepared report to discuss recorded activity, founder decisions and next steps with stakeholders.' },
+    { key: 'visibility', when: 'Visibility', title: 'Identify support needs', body: 'Spot blockers and focus mentor time.' },
+    { key: 'time', when: 'Follow-through', title: 'Reduce manual follow-up', body: 'We follow up. You get the weekly summary.' },
+    { key: 'evidence', when: 'Reporting', title: 'Document cohort progress', body: 'Share activity, decisions and next steps.' },
   ],
 };
 export const ENTERPRISE_REPORT = {
   eyebrow: 'See the deliverable',
-  title: 'Turn cohort activity into clear stakeholder reporting.',
+  title: 'Progress you can show.',
   points: [
-    { key: 'cohort', title: 'A cohort-level view', body: 'Stages, interviews, experiments and founder decisions in one report.' },
-    { key: 'next', title: 'Practical next steps', body: 'A starting point for your next conversation with each team.' },
-    { key: 'confirmed', title: 'Clear evidence sources', body: 'Platform-recorded activity is distinguished from founder-reported totals. Neither independently verifies customer demand or business results.' },
+    { key: 'cohort', title: 'A cohort-level view', body: 'Activity and decisions, together.' },
+    { key: 'next', title: 'Practical next steps', body: 'A next step for every team.' },
+    { key: 'confirmed', title: 'Clear evidence sources', body: 'Recorded activity and self-reported totals shown separately. Not independent proof of demand.' },
   ],
 };
 export const ENTERPRISE_PILOT = {
   eyebrow: 'How we work together',
-  title: 'We coordinate delivery. You guide the program.',
-  copy: 'A focused engagement alongside your curriculum and mentors.',
+  title: 'Your program. Our follow-through.',
+  copy: '',
   steps: [
-    { key: 'setup', when: 'Before day 1', owner: 'Our team', title: 'Align on the scope', body: 'Together, we agree cohort dates, goals, check-ins and reporting requirements before kickoff.' },
-    { key: 'join', when: 'Week 1', owner: 'Your founders', title: 'Onboard the cohort', body: 'We lead onboarding. Founders see what is shared before agreeing to join; platform access is included for the pilot.' },
-    { key: 'track', when: 'Weeks 1–4', owner: 'Our team', title: 'Review progress weekly', body: 'We follow up and send a summary. Your team uses the dashboard to guide support and mentor conversations.' },
-    { key: 'report', when: 'Day 30', owner: 'Our team', title: 'Report and agree next steps', body: 'We prepare the cohort report and review what a continued partnership would involve.' },
+    { key: 'setup', when: 'Before day 1', owner: 'Our team', title: 'Align on the scope', body: 'Agree dates, goals and reporting.' },
+    { key: 'join', when: 'Week 1', owner: 'Your founders', title: 'Onboard the cohort', body: 'We onboard founders with consent. Access included.' },
+    { key: 'track', when: 'Weeks 1 to 4', owner: 'Our team', title: 'Review progress weekly', body: 'We send the summary. You guide support.' },
+    { key: 'report', when: 'Day 30', owner: 'Our team', title: 'Review the results', body: 'Review the report and decide what comes next.' },
   ],
-  honesty: 'The pilot provides a structured process and documented activity. It won’t prove product-market fit or promise customers, funding or investment readiness.',
+  honesty: 'A structured process, not a promise of customers or funding.',
 };
 export const ENTERPRISE_DEAL = {
   eyebrow: 'Start with a scoped pilot',
-  title: '30 days. 5–10 startups. A clear scope.',
-  copy: 'Pricing follows the agreed scope. We send a proposal after discussing your cohort and reporting needs.',
-  get: { title: 'Included in the engagement', items: [
-    { key: 'dashboard', title: 'Program dashboard and founder access', body: 'Track cohort activity and export progress data.' },
-    { key: 'summary', title: 'Weekly follow-up and summary', body: 'Coordinated and prepared by our team.' },
-    { key: 'report', title: 'A final cohort report', body: 'Reporting requirements and any template adaptation agreed at kickoff.' },
+  title: 'Start with 30 days.',
+  copy: 'A proposal tailored to your cohort and reporting needs.',
+  get: { title: 'We provide', items: [
+    { key: 'dashboard', title: 'Dashboard + founder access', body: 'Track cohort activity and export progress data.' },
+    { key: 'summary', title: 'Weekly follow-up', body: 'Coordinated and prepared by our team.' },
+    { key: 'report', title: 'Cohort report', body: 'Reporting requirements and any template adaptation agreed at kickoff.' },
     { key: 'kickoff', title: 'Kickoff and onboarding', body: 'Our team introduces the workflow to your founders.' },
   ] },
-  need: { title: 'Your program contributes', items: [
+  need: { title: 'You bring', items: [
     { title: '5 to 10 startups', body: 'Selected by you for the same 30-day period.' },
     { title: 'One program contact', body: 'To coordinate introductions and review summaries.' },
     { title: 'A kickoff session', body: 'Bring your founders together for onboarding.' },
@@ -72,22 +72,22 @@ export const ENTERPRISE_DEAL = {
   ] },
 };
 export const ENTERPRISE_AFTER = {
-  title: 'Continue on an agreed scope',
-  copy: 'At the end of the pilot, we review the engagement together and discuss support for your full cohort and program calendar.',
+  title: 'Then scale together',
+  copy: 'Continue with your full cohort on an agreed scope.',
 };
 export const ENTERPRISE_FAQS = [
-  { question: 'How much does it cost?', answer: 'Pricing depends on cohort size and the agreed delivery and reporting scope. After discussing your program, we send a proposal. Founder access is included in the engagement.' },
-  { question: 'How much of our team’s time does it take?', answer: 'One program contact coordinates introductions, attends kickoff and reviews the weekly summary. We handle onboarding, weekly follow-up and report preparation. We agree the working rhythm before starting.' },
-  { question: 'What do we see, and what stays private?', answer: 'Your team sees cohort progress, including stages, activity counts and check-ins. Founders’ files, idea details and messages stay private. Every founder agrees to share progress before joining and can leave at any time.' },
-  { question: 'Can the report follow our stakeholder template?', answer: 'Share your funder’s or university’s template before kickoff. We agree which requirements the recorded activity can support and include the adaptation in the engagement scope.' },
-  { question: 'Does it replace our curriculum or mentors?', answer: 'No. The workflow supports your existing program. Your mentors and team guide founders; the dashboard and weekly summaries help inform those conversations.' },
-  { question: 'What happens after the pilot?', answer: 'Founders keep their accounts and work, with access under the free plan. Continued program support is scoped separately around your cohort, goals and calendar.' },
+  { question: 'How much does it cost?', answer: 'We send a proposal based on cohort size and reporting needs. Founder access is included.' },
+  { question: 'How much of our team’s time does it take?', answer: 'One contact, a kickoff and a weekly review. We handle onboarding, follow-up and reporting.' },
+  { question: 'What do we see, and what stays private?', answer: 'You see progress. Founders’ files, idea details and messages stay private. Each founder agrees to share progress before joining and can leave at any time.' },
+  { question: 'Can the report follow our stakeholder template?', answer: 'Share the template before kickoff. We agree the supported requirements and scope together.' },
+  { question: 'Does it replace our curriculum or mentors?', answer: 'No. It supports your existing curriculum and mentor conversations.' },
+  { question: 'What happens after the pilot?', answer: 'Founders keep their work and free-plan access. Continued program support is scoped separately.' },
 ];
 export const ENTERPRISE_CONTACT = {
   eyebrow: 'Explore a partnership',
   title: 'Book a pilot call',
-  copy: 'A 30-minute conversation to assess fit and define the starting scope.',
+  copy: '30 minutes to explore the fit.',
   callLabel: 'What we will cover',
-  callSteps: ['Your cohort, program goals and reporting needs.', 'The dashboard and our delivery workflow.', 'The scope and next steps for a proposal.'],
-  person: { name: 'Javier Alonso', role: 'Founder & CEO', line: 'You’ll speak with me directly about your program.', email: 'javier@creatives-takeover.com' },
+  callSteps: ['Your cohort and goals.', 'A dashboard walkthrough.', 'Scope and next steps.'],
+  person: { name: 'Javier Alonso', role: 'Founder & CEO', line: 'Speak with me directly.', email: 'javier@creatives-takeover.com' },
 };

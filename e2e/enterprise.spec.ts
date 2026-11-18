@@ -15,9 +15,13 @@ for (const theme of ['light', 'dark']) {
       await page.emulateMedia({ reducedMotion: 'reduce', colorScheme: theme as 'light' | 'dark' });
       await page.addInitScript(value => localStorage.setItem('theme-preference', value), theme);
       await page.goto('/enterprise');
-      await expect(page.getByRole('heading', { level: 1 })).toHaveText('Know where your cohort stands— and where to help next.');
-      await expect(page.getByText('Real product · Sample data', { exact: true })).toBeVisible();
+      await expect(page.getByRole('heading', { level: 1 })).toHaveText('See cohort progress. Focus your support.');
+      await expect(page.getByText('Real product · Sample data', { exact: true }).first()).toBeVisible();
       await expect(page.getByText(/Free for our first/)).toHaveCount(0);
+      await expect(page.locator('.ent main')).not.toContainText('—');
+      for (const section of await page.locator('.ent main > section').all()) {
+        expect(await section.locator('img, .ent-evidence-card, .ent-report, .ent-setup').count()).toBeGreaterThan(0);
+      }
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
       await expect(page.getByRole('link', { name: 'Book a pilot call' }).first()).toHaveAttribute('href', 'https://cal.com/javier-creatives-takeover/30min');
       const trigger = page.getByRole('button', { name: 'Enlarge dashboard' });
@@ -36,6 +40,13 @@ for (const theme of ['light', 'dark']) {
       await page.getByRole('link', { name: 'See the sample report' }).click();
       await expect(page).toHaveURL(/#report$/);
       await expect(page.getByText('Illustrative report · Fictional data', { exact: true })).toBeVisible();
+      await page.locator('.ent img').evaluateAll(async images => {
+        await Promise.all(images.map(async image => {
+          const img = image as HTMLImageElement;
+          img.loading = 'eager';
+          await img.decode();
+        }));
+      });
       await page.evaluate(() => window.scrollTo(0, 0));
       await page.screenshot({ path: testInfo.outputPath('enterprise-full.png'), fullPage: true });
     });

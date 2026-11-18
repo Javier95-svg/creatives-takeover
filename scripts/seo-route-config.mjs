@@ -295,24 +295,24 @@ export const INDEXABLE_ROUTES = [
       "Cohort visibility, founder follow-up and stakeholder reporting for accelerators, incubators and university programs. Start with a scoped 30-day pilot.",
     changefreq: "monthly",
     priority: 0.9,
-    heroHeading: "Know where your cohort stands—and where to help next.",
+    heroHeading: "See cohort progress. Focus your support.",
     heroCopy:
-      "Give your program team a clear view of founder progress, structured weekly follow-up, and a cohort report for stakeholder updates. Built for accelerators, incubators, and university programs.",
+      "One dashboard. Weekly follow-up from our team. Clear reports for your stakeholders.",
     sections: [
       {
         heading: "Clear progress. Focused support.",
         copy: "Identify support needs, reduce manual follow-up and document cohort progress. Our team follows up with founders and prepares weekly summaries.",
       },
       {
-        heading: "Turn cohort activity into clear stakeholder reporting.",
+        heading: "Progress you can show.",
         copy: "Review stages, interviews, experiments and next steps in a team-prepared cohort report. Platform-recorded activity is distinguished from founder-reported totals; neither independently verifies business results. Product screens use sample data and the illustrative report uses fictional data.",
       },
       {
-        heading: "We coordinate delivery. You guide the program.",
+        heading: "Your program. Our follow-through.",
         copy: "Align on scope, onboard the cohort with founder consent, review progress weekly, and report on day 30. The workflow supports your curriculum and mentors.",
       },
       {
-        heading: "30 days. 5–10 startups. A clear scope.",
+        heading: "Start with 30 days.",
         copy: "Includes dashboard and founder access, kickoff and onboarding, weekly follow-up and summaries, and a final cohort report. Pricing follows the agreed scope. Reporting requirements and any template adaptation are agreed at kickoff. Continued program support is scoped separately.",
       },
     ],

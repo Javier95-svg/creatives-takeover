@@ -75,7 +75,7 @@ test('the enterprise page lands the pilot offer in the hero', () => {
 
 test('the pilot promises a process and evidence, and shows proof without inventing customers', () => {
   assert.equal(enterprise.ENTERPRISE_OUTCOMES.items.length, 3);
-  assert.match(enterprise.ENTERPRISE_PILOT.honesty, /won’t prove product-market fit/);
+  assert.match(enterprise.ENTERPRISE_PILOT.honesty, /not a promise of customers or funding/);
   assert.match(enterprisePage, /ENTERPRISE_PILOT\.honesty/);
   assert.doesNotMatch(JSON.stringify(enterprise), /guaranteed|get funded|achieve product-market fit|first (three|3) programs|free.pilot|ISO 27001/i);
   assert.match(enterprise.ENTERPRISE_FAQS[0].answer, /proposal/);
@@ -85,7 +85,7 @@ test('the pilot promises a process and evidence, and shows proof without inventi
   assert.match(visuals, /Real product · Sample data/);
   assert.match(visuals, /Illustrative report · Fictional data/);
   const route = INDEXABLE_ROUTES.find((entry: { path: string }) => entry.path === '/enterprise');
-  assert.equal(route.heroHeading, enterprise.ENTERPRISE_HERO.titleLead + enterprise.ENTERPRISE_HERO.titleAccent);
+  assert.equal(route.heroHeading, enterprise.ENTERPRISE_HERO.titleLead + ' ' + enterprise.ENTERPRISE_HERO.titleAccent);
   assert.equal(route.heroCopy, enterprise.ENTERPRISE_HERO.lede);
   assert.match(enterprisePage, /ENTERPRISE_REPORT\.points\.map/);
   assert.match(enterprisePage, /<SampleReport \/>/);
@@ -126,7 +126,7 @@ test('the pilot is explained in four steps, with who does the work and what each
   const faqs = JSON.stringify(enterprise.ENTERPRISE_FAQS);
   assert.match(faqs, /files, idea details and messages stay private/);
   assert.match(faqs, /agrees to share progress before joining and can leave at any time/);
-  assert.match(JSON.stringify(enterprise.ENTERPRISE_PILOT), /before agreeing/);
+  assert.match(JSON.stringify(enterprise.ENTERPRISE_PILOT), /with consent/);
   // What each side brings (2026-10-24 conditions, kept short).
   assert.equal(enterprise.ENTERPRISE_DEAL.get.items.length, 4);
   assert.equal(enterprise.ENTERPRISE_DEAL.need.items.length, 4);

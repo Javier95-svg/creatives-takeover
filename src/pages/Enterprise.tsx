@@ -25,11 +25,15 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import InstitutionContactForm from "@/components/audience/InstitutionContactForm";
 import {
+  EvidenceCard,
+  PilotSetupMock,
   OutcomeCards,
   ProductShot,
   SampleReport,
 } from "@/components/enterprise/EnterpriseVisuals";
 import javierPhoto from "@/assets/team-javier-pena-profile.jpg";
+import cohortJoinShot from "@/assets/enterprise/cohort-join.webp";
+import cohortJoinLightShot from "@/assets/enterprise/cohort-join-light.webp";
 import cohortProgramShot from "@/assets/enterprise/cohort-program.webp";
 import cohortProgramLightShot from "@/assets/enterprise/cohort-program-light.webp";
 import { usePageAnalytics } from "@/hooks/usePageAnalytics";
@@ -307,6 +311,7 @@ const Enterprise = () => {
                       <p className="ent-step__meta">{step.when} · {step.owner}</p>
                       <h3 className="ent-step__title">{step.title}</h3>
                       <p className="ent-step__copy">{step.body}</p>
+                      <EvidenceCard kind={step.key} />
                     </li>
                   ))}
                 </ol>
@@ -326,6 +331,7 @@ const Enterprise = () => {
                       </span>
                       {ENTERPRISE_DEAL.get.title}
                     </p>
+                    <EvidenceCard kind="join" />
                     <ul>
                       {ENTERPRISE_DEAL.get.items.map((item) => {
                         const Icon = GET_ICONS[item.key] ?? Check;
@@ -334,14 +340,14 @@ const Enterprise = () => {
                             <Icon aria-hidden="true" />
                             <div>
                               <strong>{item.title}</strong>
-                              <span>{item.body}</span>
                             </div>
                           </li>
                         );
                       })}
                     </ul>
                   </div>
-                  <div className="ent-scope__card ent-conditions__card ent-deal__card" data-reveal="right" style={revealDelay(120)}>
+                  <div className="ent-pilot-package" data-reveal="right" style={revealDelay(120)}>
+                    <PilotSetupMock />
                     <p className="ent-scope__head ent-conditions__head">
                       <span className="ent-icon" aria-hidden="true">
                         <Building2 />
@@ -354,7 +360,6 @@ const Enterprise = () => {
                           <span className="ent-conditions__num" aria-hidden="true">{index + 1}</span>
                           <div>
                             <strong>{item.title}</strong>
-                            <span>{item.body}</span>
                           </div>
                         </li>
                       ))}
@@ -377,6 +382,15 @@ const Enterprise = () => {
                     Something else on your mind?{" "}
                     <a href="mailto:javier@creatives-takeover.com?subject=Programs%20and%20partnerships">Email us</a>.
                   </p>
+                  <ProductShot
+                    src={cohortJoinShot}
+                    lightSrc={cohortJoinLightShot}
+                    width={712}
+                    height={594}
+                    title="Founder consent"
+                    fade={false}
+                    alt="Real founder invitation on sample data showing shared progress, private work and the consent to join."
+                  />
                 </div>
                 <Accordion type="single" collapsible className="ent-faq__list">
                   {ENTERPRISE_FAQS.map((faq, index) => (
@@ -405,15 +419,7 @@ const Enterprise = () => {
                     <h2 className="ent-contact__title">{ENTERPRISE_CONTACT.title}</h2>
                     <p className="ent-contact__copy">{ENTERPRISE_CONTACT.copy}</p>
 
-                    <p className="ent-contact__label">{ENTERPRISE_CONTACT.callLabel}</p>
-                    <ol className="ent-contact__includes ent-contact__steps">
-                      {ENTERPRISE_CONTACT.callSteps.map((item, index) => (
-                        <li key={item}>
-                          <span className="ent-contact__stepnum" aria-hidden="true">{index + 1}</span>
-                          {item}
-                        </li>
-                      ))}
-                    </ol>
+                    <EvidenceCard kind="call" />
 
                     <div className="ent-contact__person">
                       <img src={javierPhoto} alt="" width={56} height={56} loading="lazy" decoding="async" />

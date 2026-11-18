@@ -43,7 +43,7 @@ const DecisionBadge = ({ decision }: { decision?: Decision }) =>
   decision ? (
     <span className={cn("ent-decision", `ent-decision--${decisionKey(decision)}`)}>{decision}</span>
   ) : (
-    <span className="ent-decision ent-decision--none">—</span>
+    <span className="ent-decision ent-decision--none">Pending</span>
   );
 
 // Day 18 of a 30-day pilot with eight fictional startups.
@@ -279,12 +279,38 @@ export const ReportDelivered = () => (
   </div>
 );
 
-/** Outcomes: what a program gets from the pilot, in the order it happens. */
+/** Compact sample artifacts. Always labeled; never presented as customer results. */
+export const EvidenceCard = ({ kind }: { kind: string }) => (
+  <div className="ent-evidence-card" aria-label="Illustrative workflow example">
+    <div className="ent-evidence-card__bar"><span>{kind === "visibility" || kind === "track" ? "Cohort snapshot" : kind === "time" ? "Weekly summary" : kind === "join" ? "Founder invitation" : kind === "setup" ? "Pilot calendar" : kind === "call" ? "Your pilot call" : "Cohort report"}</span>{kind === "call" ? <span className="ent-example">Agenda</span> : <ExampleTag />}</div>
+    {kind === "visibility" || kind === "track" ? (
+      <div className="ent-evidence-rows">
+        {[["Delta", "On track", 85], ["Fjord", "On track", 65], ["Iris", "Needs support", 25]].map(([name, status, progress]) => (
+          <div key={name}><b>{name}</b><span className="ent-evidence-meter"><i style={{ width: progress + "%" }} /></span><small>{status}</small></div>
+        ))}
+      </div>
+    ) : kind === "time" ? (
+      <div className="ent-evidence-summary"><CheckCircle2 /><strong>Weekly review ready</strong><div><span>Progress</span><span>Blockers</span><span>Next steps</span></div></div>
+    ) : kind === "setup" || kind === "call" ? (
+      <div className="ent-evidence-calendar">
+        <div className="ent-evidence-date"><strong>{kind === "call" ? "30" : "01"}</strong><span>{kind === "call" ? "minutes" : "kickoff"}</span></div>
+        <div className="ent-evidence-agenda">{(kind === "call" ? ["Your goals", "Product walkthrough", "Next steps"] : ["Onboarding", "Weekly check-ins", "Day 30 report"]).map(label => <span key={label}><Check />{label}</span>)}</div>
+      </div>
+    ) : kind === "join" ? (
+      <div className="ent-evidence-summary"><Users /><strong>You choose what to share</strong><div><span>Review access</span><ArrowRight /><span>Join cohort</span></div></div>
+    ) : (
+      <div className="ent-evidence-document"><span className="ent-evidence-document__line" /><span className="ent-evidence-document__line" /><div><DecisionBadge decision="Build" /><DecisionBadge decision="Narrow" /></div><span className="ent-evidence-document__line" /></div>
+    )}
+  </div>
+);
+
+/** Outcomes paired with concrete sample artifacts. */
 export const OutcomeCards = ({ items }: { items: Array<{ key: string; when: string; title: string; body: string }> }) => (
   <ol className="ent-outcomes">
     {items.map((item, index) => (
       <li key={item.key} className={`ent-outcome is-${item.key}`} data-reveal="up" style={{ "--reveal-delay": `${index * 110}ms` } as CSSProperties}>
         <span className="ent-outcome__when">{item.when}</span>
+        <EvidenceCard kind={item.key} />
         <h3 className="ent-outcome__title">{item.title}</h3>
         <p className="ent-outcome__body">{item.body}</p>
       </li>
@@ -414,7 +440,7 @@ export const PilotSetupMock = () => (
       </div>
       <div className="ent-setup__row">
         <span className="ent-setup__label">Report</span>
-        <span className="ent-setup__value">Your funder’s template</span>
+        <span className="ent-setup__value">Format agreed at kickoff</span>
       </div>
       <div className="ent-setup__row">
         <span className="ent-setup__label">Your side</span>
