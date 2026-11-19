@@ -2494,8 +2494,6 @@
 .ent-pilot-package > ol strong { font-weight: 500; }
 .ent-pilot-package .ent-conditions__num { display: none; }
 .ent-pilot-package > .ent-scope__head { margin-bottom: 0; }
-.ent-faq__intro .ent-shot { margin-top: 28px; }
-.ent-faq__intro .ent-window__bar { flex-wrap: wrap; }
 .ent-contact__panel .ent-evidence-card { --ent-bg: #172139; --ent-ink: #f4f6ff; --ent-muted: #c5cde0; --ent-line: #39445c; --ent-blue-soft: #253656; }
 .ent-section { padding-top: 72px; padding-bottom: 72px; }
 .ent-dashboard-detail { overflow: auto; }

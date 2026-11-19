@@ -20,6 +20,11 @@ for (const theme of ['light', 'dark']) {
       await expect(page.getByText(/Free for our first/)).toHaveCount(0);
       await expect(page.locator('.ent main')).not.toContainText('—');
       for (const section of await page.locator('.ent main > section').all()) {
+        // The approved FAQ is intentionally text-only.
+        if (await section.locator('.ent-faq').count()) {
+          await expect(section.locator('img, .ent-shot')).toHaveCount(0);
+          continue;
+        }
         expect(await section.locator('img, .ent-evidence-card, .ent-report, .ent-setup').count()).toBeGreaterThan(0);
       }
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);

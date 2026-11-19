@@ -32,8 +32,6 @@ import {
   SampleReport,
 } from "@/components/enterprise/EnterpriseVisuals";
 import javierPhoto from "@/assets/team-javier-pena-profile.jpg";
-import cohortJoinShot from "@/assets/enterprise/cohort-join.webp";
-import cohortJoinLightShot from "@/assets/enterprise/cohort-join-light.webp";
 import cohortProgramShot from "@/assets/enterprise/cohort-program.webp";
 import cohortProgramLightShot from "@/assets/enterprise/cohort-program-light.webp";
 import { usePageAnalytics } from "@/hooks/usePageAnalytics";
@@ -382,15 +380,6 @@ const Enterprise = () => {
                     Something else on your mind?{" "}
                     <a href="mailto:javier@creatives-takeover.com?subject=Programs%20and%20partnerships">Email us</a>.
                   </p>
-                  <ProductShot
-                    src={cohortJoinShot}
-                    lightSrc={cohortJoinLightShot}
-                    width={712}
-                    height={594}
-                    title="Founder consent"
-                    fade={false}
-                    alt="Real founder invitation on sample data showing shared progress, private work and the consent to join."
-                  />
                 </div>
                 <Accordion type="single" collapsible className="ent-faq__list">
                   {ENTERPRISE_FAQS.map((faq, index) => (
