@@ -15,22 +15,25 @@ const PARAGRAPHS = [
  */
 const StoriesHero = () => {
   let word = 0;
-  const dateline = new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
+  const today = new Date();
+  const dateline = today.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
+  const shortDate = today.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 
   return (
-    <section className="relative py-20 lg:py-32 overflow-hidden">
+    <section className="relative w-full py-20 lg:py-32 overflow-hidden">
       <div className="container mx-auto px-4 sm:px-6 relative z-20">
         <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-6 sm:mb-7 takeover-title creatives-font">
-            <span className="takeover-gradient">Newspaper</span>
-          </h1>
-
           <div className="sh-press">
+            {/* Masthead: sized to span the column exactly (stories-hero.css). */}
+            <h1 className="sh-masthead">
+              <span className="takeover-gradient">Newspaper</span>
+            </h1>
             {/* Decorative: changes daily, so it stays out of screen readers and the crawler capture. */}
             <p className="sh-press__dateline" aria-hidden="true">
               <span>Founder edition</span>
               <i />
-              <span>{dateline}</span>
+              <span className="sh-press__date-long">{dateline}</span>
+              <span className="sh-press__date-short">{shortDate}</span>
             </p>
             {PARAGRAPHS.map((text, p) => (
               <p key={p} className={p === 0 ? "sh-press__lead" : "sh-press__body"}>

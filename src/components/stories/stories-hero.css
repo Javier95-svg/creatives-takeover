@@ -2,6 +2,22 @@
    page, words inked in once. The final text is laid out from the first frame;
    only opacity, transform and filter animate. */
 
+/* Masthead and drop cap face, loaded only on this page. The fallback is Georgia
+   scaled to Playfair's width, so the masthead fits the column before the font arrives. */
+@font-face {
+  font-family: "Playfair Display";
+  font-style: normal;
+  font-weight: 400 900;
+  font-display: swap;
+  src: url(/fonts/playfair-display-latin.woff2) format("woff2");
+}
+
+@font-face {
+  font-family: "Playfair Fallback";
+  src: local("Georgia");
+  size-adjust: 88.8%;
+}
+
 :root {
   --sh-ink: hsl(var(--foreground) / 0.78);
   --sh-rule: hsl(var(--foreground) / 0.28);
@@ -14,6 +30,22 @@
   color: var(--sh-ink);
   font-family: "Space Grotesk", "Inter", sans-serif;
   text-align: left;
+  container-type: inline-size;
+}
+
+/* "Newspaper" set as a masthead spanning the column: at weight 800 the word is
+   5.06 times its font size wide, so 19.7cqi fills the column at every width. */
+.sh-masthead {
+  margin: 0 0 1.4rem;
+  font: 800 19.6cqi/1.08 "Playfair Display", "Playfair Fallback", Georgia, serif;
+  letter-spacing: -0.01em;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.sh-masthead .takeover-gradient {
+  display: inline-block;
+  padding-bottom: 0.06em;
 }
 
 .sh-press__dateline {
@@ -29,6 +61,16 @@
   font-weight: 600;
   letter-spacing: 0.2em;
   text-transform: uppercase;
+}
+
+.sh-press__dateline span { white-space: nowrap; }
+.sh-press__date-short { display: none; }
+
+@media (max-width: 639px) {
+  .sh-masthead { margin-top: 1.5rem; }
+  .sh-press__dateline { gap: 0.6rem; letter-spacing: 0.14em; }
+  .sh-press__date-long { display: none; }
+  .sh-press__date-short { display: inline; }
 }
 
 .sh-press__dateline i {
@@ -60,13 +102,13 @@
 
 .sh-press__cap {
   float: left;
-  margin: 0.08em 0.12em 0 0;
-  padding-right: 0.04em;
+  margin: -0.02em 0.12em 0 0;
+  padding: 0 0.04em 0.06em 0;
   background: var(--gradient-primary);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  font: 700 4.3em/0.78 Georgia, "Times New Roman", serif;
+  font: 800 4.3em/0.92 "Playfair Display", "Playfair Fallback", Georgia, serif;
 }
 
 .sh-press__word {
