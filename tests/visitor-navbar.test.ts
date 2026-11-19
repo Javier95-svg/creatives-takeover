@@ -24,17 +24,17 @@ const linkTable = (name: string) => {
 };
 
 test('visitor navigation keeps the intended public destinations', () => {
-  for (const label of ['Platform Tour', 'For founders', 'Explore', 'Enterprise', 'Build', 'Collab', 'Founder ID', 'Newspaper', 'Podcast', 'About', 'Pricing']) {
+  for (const label of ['Try Pulse', 'For founders', 'Explore', 'Enterprise', 'Build', 'Collab', 'Founder ID', 'Newspaper', 'Podcast', 'About', 'Pricing']) {
     assert.match(source, new RegExp(`label: "${label}"`));
   }
 });
 
-test('the bar runs Platform Tour, For founders, Enterprise, Explore, About, Pricing', () => {
+test('the bar runs Try Pulse, For founders, Enterprise, Explore, About, Pricing', () => {
   // Order requested 2026-10-17. Tour became "How it works" on the same route
-  // (renamed "Platform Tour" 2026-11-18, Javier),
+  // (renamed "Platform Tour" 2026-11-18, then "Try Pulse" 2026-11-19, Javier),
   // and Enterprise is the programs page. For founders and Explore are menus.
   const { table, labels } = linkTable('visitorEntries');
-  assert.deepEqual(labels, ['Platform Tour', 'For founders', 'Enterprise', 'Explore', 'About', 'Pricing']);
+  assert.deepEqual(labels, ['Try Pulse', 'For founders', 'Enterprise', 'Explore', 'About', 'Pricing']);
   assert.match(table, /label: "For founders", links: founderLinks/);
   assert.match(table, /label: "Explore", links: exploreLinks/);
   assert.match(table, /label: "Enterprise", href: "\/enterprise"/);

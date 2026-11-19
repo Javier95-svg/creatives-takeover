@@ -10,7 +10,7 @@ const script = readFileSync('scripts/generate-prerendered-pages.mjs', 'utf8');
  * the visitor navbar since 2026-10-16.
  */
 const WANTED = [
-  ['/demo', 'Platform Tour'],
+  ['/demo', 'Try Pulse'],
   ['/build', 'Build'],
   ['/enterprise', 'Enterprise'],
   ['/about', 'About'],
