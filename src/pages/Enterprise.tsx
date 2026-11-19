@@ -106,6 +106,42 @@ const useScrollReveal = (root: RefObject<HTMLElement | null>) => {
   }, [root]);
 };
 
+/**
+ * Graphics play their entry motion once, then glow (`is-glow-live`) only while
+ * they are on screen, so off-screen loops cost nothing. Cards marked
+ * `data-glow-follow` get a glow that follows the pointer.
+ */
+const useVisualMotion = (root: RefObject<HTMLElement | null>) => {
+  useEffect(() => {
+    const element = root.current;
+    if (!element || typeof IntersectionObserver === "undefined") return;
+    const observer = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        if (entry.isIntersecting) entry.target.classList.add("is-motion-visible", "is-glow-live");
+        else entry.target.classList.remove("is-glow-live");
+      }
+    }, { threshold: 0.2 });
+    element.querySelectorAll("[data-visual-motion]").forEach(target => observer.observe(target));
+
+    const follow = (event: PointerEvent) => {
+      if (event.pointerType !== "mouse") return;
+      // Cards can nest (a sample card inside an outcome card): update each one.
+      let card = (event.target as Element | null)?.closest<HTMLElement>("[data-glow-follow]");
+      while (card) {
+        const box = card.getBoundingClientRect();
+        card.style.setProperty("--glow-x", `${event.clientX - box.left}px`);
+        card.style.setProperty("--glow-y", `${event.clientY - box.top}px`);
+        card = card.parentElement?.closest<HTMLElement>("[data-glow-follow]");
+      }
+    };
+    element.addEventListener("pointermove", follow, { passive: true });
+    return () => {
+      observer.disconnect();
+      element.removeEventListener("pointermove", follow);
+    };
+  }, [root]);
+};
+
 const SectionHead = ({
   eyebrow,
   title,
@@ -143,6 +179,7 @@ const Enterprise = () => {
   const location = useLocation();
   const pageRef = useRef<HTMLDivElement>(null);
   useScrollReveal(pageRef);
+  useVisualMotion(pageRef);
   usePageAnalytics(ENTERPRISE_PATH, "Enterprise - Creatives Takeover");
 
   // Links like /enterprise#talk (pricing band, tour panel) land on the form.

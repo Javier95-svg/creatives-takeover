@@ -34,6 +34,9 @@ const WindowDots = () => (
   </span>
 );
 
+/** A light that travels around a graphic's frame. Decorative; CSS runs it only while the graphic is on screen. */
+const GlowRing = () => <span className="ent-glow-ring" aria-hidden="true" />;
+
 type Decision = "Build" | "Narrow" | "Pivot" | "Keep testing";
 
 // build, narrow, pivot or keep: the colour key shared by badges, bars and the donut.
@@ -195,7 +198,7 @@ export const SampleReport = () => {
       aria-label={`Example day-30 cohort report for ${REPORT_TEAMS.length} fictional startups: ${interviews} customer interviews, ${confirmed} recorded on the platform, ${REPORT_EXPERIMENTS} experiments, ${REPORT_UPDATES.sent} of ${REPORT_UPDATES.expected} weekly updates, and a next step for every startup.`}
     >
       <p className="ent-evidence-label">Illustrative report · Fictional data</p>
-      <div className="ent-window ent-report">
+      <div className="ent-window ent-report" data-visual-motion>
         <div className="ent-window__bar">
           <WindowDots />
           <span className="ent-window__heading">
@@ -250,8 +253,8 @@ export const SampleReport = () => {
             </div>
           ))}
         </div>
+        <GlowRing />
       </div>
-
     </div>
   );
 };
@@ -281,7 +284,7 @@ export const ReportDelivered = () => (
 
 /** Compact sample artifacts. Always labeled; never presented as customer results. */
 export const EvidenceCard = ({ kind }: { kind: string }) => (
-  <div className="ent-evidence-card" aria-label="Illustrative workflow example">
+  <div className="ent-evidence-card" data-visual-motion data-glow-follow aria-label="Illustrative workflow example">
     <div className="ent-evidence-card__bar"><span>{kind === "visibility" || kind === "track" ? "Cohort snapshot" : kind === "time" ? "Weekly summary" : kind === "join" ? "Founder invitation" : kind === "setup" ? "Pilot calendar" : kind === "call" ? "Your pilot call" : "Cohort report"}</span>{kind === "call" ? <span className="ent-example">Agenda</span> : <ExampleTag />}</div>
     {kind === "visibility" || kind === "track" ? (
       <div className="ent-evidence-rows">
@@ -301,6 +304,7 @@ export const EvidenceCard = ({ kind }: { kind: string }) => (
     ) : (
       <div className="ent-evidence-document"><span className="ent-evidence-document__line" /><span className="ent-evidence-document__line" /><div><DecisionBadge decision="Build" /><DecisionBadge decision="Narrow" /></div><span className="ent-evidence-document__line" /></div>
     )}
+    <GlowRing />
   </div>
 );
 
@@ -308,7 +312,7 @@ export const EvidenceCard = ({ kind }: { kind: string }) => (
 export const OutcomeCards = ({ items }: { items: Array<{ key: string; when: string; title: string; body: string }> }) => (
   <ol className="ent-outcomes">
     {items.map((item, index) => (
-      <li key={item.key} className={`ent-outcome is-${item.key}`} data-reveal="up" style={{ "--reveal-delay": `${index * 110}ms` } as CSSProperties}>
+      <li key={item.key} className={`ent-outcome is-${item.key}`} data-glow-follow data-reveal="up" style={{ "--reveal-delay": `${index * 110}ms` } as CSSProperties}>
         <span className="ent-outcome__when">{item.when}</span>
         <EvidenceCard kind={item.key} />
         <h3 className="ent-outcome__title">{item.title}</h3>
@@ -372,7 +376,7 @@ export const ProductShot = ({
   /** What to look at on the screen. Decorative: the alt text already says it. */
   hotspots?: ShotHotspot[];
 }) => (
-  <figure className={cn("ent-window ent-shot", fade && "is-faded")}>
+  <figure className={cn("ent-window ent-shot", fade && "is-faded")} data-visual-motion>
     <div className="ent-window__bar">
       <WindowDots />
       <span className="ent-window__title">{title}</span>
@@ -395,6 +399,7 @@ export const ProductShot = ({
         </span>
       ))}
     </div>
+    <GlowRing />
   </figure>
 );
 
@@ -404,7 +409,7 @@ const SETUP_STARTUPS = 8;
 /** Adaptability: one example pilot setup, sized and focused for its program. */
 export const PilotSetupMock = () => (
   <div className="ent-mock ent-mock--flat" role="img" aria-label="Example pilot setup for a fintech program with eight startups">
-    <div className="ent-window ent-setup">
+    <div className="ent-window ent-setup" data-visual-motion>
       <div className="ent-window__bar">
         <WindowDots />
         <span className="ent-window__title">Pilot setup</span>
@@ -446,6 +451,7 @@ export const PilotSetupMock = () => (
         <span className="ent-setup__label">Your side</span>
         <span className="ent-setup__value">One program contact</span>
       </div>
+      <GlowRing />
     </div>
   </div>
 );

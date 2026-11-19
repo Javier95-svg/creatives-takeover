@@ -8,6 +8,41 @@ test.beforeEach(async ({ page, context }) => {
   await page.route('**/*amplitude.com/**', route => route.abort());
 });
 
+test('visual motion plays on entry, settles, and respects reduced motion', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  await page.goto('/enterprise');
+  const offscreenGraphic = page.locator('.ent-contact__panel [data-visual-motion]');
+  await expect(offscreenGraphic).not.toHaveClass(/is-motion-visible/);
+  const graphic = page.locator('.ent-outcome [data-visual-motion]').first();
+  await graphic.scrollIntoViewIfNeeded();
+  await expect(graphic).toHaveClass(/is-motion-visible/);
+  const bar = graphic.locator('.ent-evidence-meter i').first();
+  await expect(bar).toHaveCSS('animation-name', 'ent-graphic-fill');
+  await bar.evaluate(async element => {
+    await Promise.all(element.getAnimations().map(animation => animation.finished));
+  });
+  await expect(bar).toHaveCSS('transform', 'matrix(1, 0, 0, 1, 0, 0)');
+  await expect(graphic.getByText('Delta', { exact: true })).toBeVisible();
+  // Glow loops run only while a graphic is on screen.
+  const report = page.locator('.ent-report');
+  await report.scrollIntoViewIfNeeded();
+  await expect(report).toHaveClass(/is-glow-live/);
+  const ring = report.locator('.ent-glow-ring');
+  await expect(ring).toHaveCSS('opacity', '1');
+  expect(await ring.evaluate(element => getComputedStyle(element, '::before').animationPlayState)).toBe('running');
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await expect(report).not.toHaveClass(/is-glow-live/);
+  expect(await ring.evaluate(element => getComputedStyle(element, '::before').animationPlayState)).toBe('paused');
+  await graphic.scrollIntoViewIfNeeded();
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await expect(ring).toBeHidden();
+  await expect(bar).toHaveCSS('animation-name', 'none');
+  await expect(bar).toHaveCSS('transform', 'none');
+  await expect(graphic).toBeVisible();
+  await offscreenGraphic.scrollIntoViewIfNeeded();
+  await expect(offscreenGraphic.locator('.ent-evidence-date')).toHaveCSS('animation-name', 'none');
+});
+
 for (const theme of ['light', 'dark']) {
   for (const width of [390, 1440]) {
     test(`enterprise ${theme} at ${width}px`, async ({ page }, testInfo) => {

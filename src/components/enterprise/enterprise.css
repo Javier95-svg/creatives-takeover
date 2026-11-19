@@ -2500,7 +2500,8 @@
 .ent-dashboard-detail img { width: 100%; min-width: 720px; height: auto; }
 .ent-dashboard-dialog { z-index: 100; max-width: 1200px; max-height: 90dvh; overflow-y: auto; }
 .ent-hero__visual .ent-example { white-space: normal; }
-.ent .ent-hotspot__dot::after { animation: none; }
+.ent .ent-shot .ent-hotspot__dot::before,
+.ent .ent-shot .ent-hotspot__dot::after { animation: none; opacity: 0; }
 .ent-btn:focus-visible { outline: 3px solid var(--ent-blue); outline-offset: 4px; }
 @media (max-width: 1023px) {
   .ent-process { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -2515,4 +2516,230 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .ent-dashboard-dialog { animation: none !important; transition: none !important; }
+}
+
+/* Graphics play once when visible. Values and copy never change or count up. */
+[data-visual-motion] :is(.ent-evidence-rows > div, .ent-evidence-document > span, .ent-evidence-agenda > span, .ent-report__row, .ent-setup__dots > i) { --motion-order: 0; }
+[data-visual-motion] :is(.ent-evidence-rows > div, .ent-evidence-document > span, .ent-evidence-agenda > span, .ent-report__row, .ent-setup__dots > i):nth-child(2) { --motion-order: 1; }
+[data-visual-motion] :is(.ent-evidence-rows > div, .ent-evidence-document > span, .ent-evidence-agenda > span, .ent-report__row, .ent-setup__dots > i):nth-child(3) { --motion-order: 2; }
+[data-visual-motion] :is(.ent-evidence-document > span, .ent-report__row, .ent-setup__dots > i):nth-child(4) { --motion-order: 3; }
+[data-visual-motion] :is(.ent-report__row, .ent-setup__dots > i):nth-child(5) { --motion-order: 4; }
+[data-visual-motion] :is(.ent-report__row, .ent-setup__dots > i):nth-child(6) { --motion-order: 5; }
+[data-visual-motion] :is(.ent-report__row, .ent-setup__dots > i):nth-child(7) { --motion-order: 6; }
+[data-visual-motion] .ent-setup__dots > i:nth-child(8) { --motion-order: 7; }
+@media (prefers-reduced-motion: no-preference) {
+  .is-motion-visible .ent-evidence-meter i,
+  .is-motion-visible .ent-evidence-document__line {
+    transform-origin: left center;
+    animation: ent-graphic-fill 850ms cubic-bezier(.22, 1, .36, 1) both;
+    animation-delay: calc(180ms + var(--motion-order, 0) * 100ms);
+  }
+  .is-motion-visible .ent-evidence-summary > svg,
+  .is-motion-visible .ent-evidence-agenda svg,
+  .is-motion-visible .ent-setup__dots > i.is-on {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: ent-graphic-pop 650ms cubic-bezier(.22, 1, .36, 1) both;
+    animation-delay: calc(180ms + var(--motion-order, 0) * 80ms);
+  }
+  .is-motion-visible .ent-report__row:not(.ent-report__row--head) {
+    animation: ent-graphic-appear 700ms ease-out both;
+    animation-delay: calc(150ms + var(--motion-order, 0) * 80ms);
+  }
+  .is-motion-visible .ent-evidence-date {
+    animation: ent-calendar-emphasis 1400ms ease-out both;
+  }
+  .ent-shot.is-motion-visible .ent-shot__media::after {
+    animation: ent-screen-sheen 1200ms ease-out 250ms both;
+  }
+  .ent .ent-shot.is-motion-visible .ent-hotspot__dot::before {
+    animation: ent-hotspot-pulse 1200ms ease-out 2 both;
+    animation-delay: var(--hotspot-delay, 0ms);
+  }
+}
+@keyframes ent-graphic-fill { from { transform: scaleX(.08); opacity: .35; } to { transform: scaleX(1); opacity: 1; } }
+@keyframes ent-graphic-pop { from { transform: scale(.65); opacity: .3; } 65% { transform: scale(1.08); opacity: 1; } to { transform: scale(1); opacity: 1; } }
+@keyframes ent-graphic-appear { from { opacity: .35; } to { opacity: 1; } }
+@keyframes ent-calendar-emphasis { 0%, 100% { box-shadow: 0 0 0 0 transparent; } 40% { box-shadow: 0 0 0 5px var(--ent-blue-soft); } }
+@media (prefers-reduced-motion: reduce) {
+  [data-visual-motion] *, [data-visual-motion] *::before, [data-visual-motion] *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* ---------- Glow ----------
+   Graphics glow while they are on screen (.is-glow-live, set by
+   useVisualMotion). Loops animate transform and opacity where they can, so
+   they stay on the compositor; nothing loops off screen or with reduced motion.
+   Values and copy never change. */
+
+/* A light that travels around the frame: a spinning conic gradient, masked to a thin border. */
+.ent-evidence-card { position: relative; }
+.ent-glow-ring {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  overflow: hidden;
+  padding: 2px;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.6s ease;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+.ent-glow-ring::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 260%;
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  background: conic-gradient(from 0deg, transparent 0 50%, rgba(90, 162, 251, 0.35) 60%, #6aa6ff 72%, #f37575 83%, #3ccf8e 93%, transparent 100%);
+  animation: ent-ring-spin 6.5s linear infinite paused;
+}
+.ent-evidence-card .ent-glow-ring::before { animation-duration: 4.5s; }
+
+/* Hover: cards lift slightly, glow, and a soft light follows the pointer. */
+.ent-evidence-card {
+  background-image: radial-gradient(260px circle at var(--glow-x, 50%) var(--glow-y, 0%), rgba(90, 162, 251, 0), transparent 70%);
+  transition: translate 0.35s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.35s ease, border-color 0.35s ease;
+}
+.ent-evidence-card:hover {
+  translate: 0 -3px;
+  border-color: rgba(90, 162, 251, 0.45);
+  background-image: radial-gradient(260px circle at var(--glow-x, 50%) var(--glow-y, 0%), rgba(90, 162, 251, 0.12), transparent 70%);
+  box-shadow: 0 12px 32px -12px rgba(79, 143, 247, 0.45), 0 0 0 1px rgba(90, 162, 251, 0.12);
+}
+.ent .ent-outcome[data-glow-follow] {
+  background-image: radial-gradient(420px circle at var(--glow-x, 50%) var(--glow-y, 0%), rgba(90, 162, 251, 0), transparent 65%);
+  transition-property: opacity, transform, box-shadow, border-color;
+  transition-duration: 0.75s, 0.9s, 0.4s, 0.4s;
+  transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: var(--reveal-delay, 0ms), var(--reveal-delay, 0ms), 0ms, 0ms;
+}
+.ent .ent-outcome[data-glow-follow]:hover {
+  border-color: rgba(90, 162, 251, 0.4);
+  background-image: radial-gradient(420px circle at var(--glow-x, 50%) var(--glow-y, 0%), rgba(90, 162, 251, 0.1), transparent 65%);
+  box-shadow: 0 18px 48px -20px rgba(79, 143, 247, 0.5);
+}
+
+/* Static glow: bars, badges, numbers and dots carry a little light of their own. */
+.ent-evidence-meter { overflow: visible; }
+.ent-evidence-meter i { position: relative; overflow: hidden; box-shadow: 0 0 10px rgba(37, 203, 122, 0.45); }
+.ent-evidence-rows > div:last-child .ent-evidence-meter i { box-shadow: 0 0 10px rgba(243, 117, 117, 0.5); }
+[data-visual-motion] .ent-decision--build { box-shadow: 0 0 12px rgba(37, 203, 122, 0.28); }
+[data-visual-motion] .ent-decision--narrow { box-shadow: 0 0 12px rgba(90, 162, 251, 0.3); }
+.ent-report .ent-kpis strong.is-good { text-shadow: 0 0 18px rgba(37, 203, 122, 0.45); }
+.ent-setup__dots i.is-on { box-shadow: 0 0 8px rgba(90, 162, 251, 0.45); }
+.ent-setup__chips span.is-on,
+.ent-setup__length span.is-on { box-shadow: 0 0 14px rgba(90, 162, 251, 0.3); }
+.ent-process__number { text-shadow: 0 0 22px rgba(90, 162, 251, 0.5); }
+.ent-hotspot__dot { box-shadow: 0 2px 10px rgba(16, 24, 40, 0.3), 0 0 14px rgba(90, 162, 251, 0.7); }
+.ent-report__row.is-attention { position: relative; }
+.ent-report__row.is-attention::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1px rgba(243, 117, 117, 0.45), 0 0 18px rgba(243, 117, 117, 0.25);
+  opacity: 0;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* The big frames (dashboard, report, setup) glow whenever on screen; cards on hover. */
+  .is-glow-live:is(.ent-shot, .ent-report, .ent-setup) > .ent-glow-ring { opacity: 1; }
+  .is-glow-live > .ent-glow-ring::before { animation-play-state: running; }
+  .ent-evidence-card:hover > .ent-glow-ring { opacity: 1; }
+
+  /* Bars and placeholder lines: a sheen runs along them every few seconds. */
+  .ent-evidence-meter i::after,
+  .ent-evidence-document__line::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.65), transparent);
+    transform: translateX(-110%);
+  }
+  .ent-evidence-document__line { position: relative; overflow: hidden; }
+  .is-glow-live .ent-evidence-meter i::after,
+  .is-glow-live .ent-evidence-document__line::after {
+    animation: ent-bar-sheen 3.6s ease-in-out infinite;
+    animation-delay: calc(1.2s + var(--motion-order, 0) * 0.25s);
+  }
+
+  /* Ticks, icons and the date breathe. */
+  .is-glow-live .ent-evidence-summary > svg,
+  .is-glow-live .ent-evidence-agenda svg {
+    filter: drop-shadow(0 0 5px rgba(37, 203, 122, 0.65));
+    animation: ent-graphic-pop 650ms cubic-bezier(.22, 1, .36, 1) both, ent-icon-breathe 3.2s ease-in-out infinite;
+    animation-delay: calc(180ms + var(--motion-order, 0) * 80ms), calc(1s + var(--motion-order, 0) * 0.3s);
+  }
+  .ent-evidence-date { position: relative; }
+  .ent-evidence-date::after {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    box-shadow: 0 0 18px rgba(90, 162, 251, 0.5), inset 0 0 0 1px rgba(90, 162, 251, 0.6);
+    opacity: 0;
+    pointer-events: none;
+  }
+  .is-glow-live .ent-evidence-date::after { animation: ent-attention-pulse 3.6s ease-in-out 1.4s infinite; }
+  .is-glow-live .ent-evidence-summary > div > svg { animation: ent-nudge 2.4s ease-in-out infinite; }
+
+  /* Setup: a wave of light passes along the startups. */
+  .is-glow-live .ent-setup__dots > i.is-on {
+    animation: ent-graphic-pop 650ms cubic-bezier(.22, 1, .36, 1) both, ent-dot-wave 3s ease-in-out infinite;
+    box-shadow: 0 0 10px rgba(122, 127, 242, 0.6);
+    animation-delay: calc(180ms + var(--motion-order, 0) * 80ms), calc(1.2s + var(--motion-order, 0) * 0.12s);
+  }
+
+  /* Report: the startup that needs support pulses softly. */
+  .is-glow-live .ent-report__row.is-attention::before { animation: ent-attention-pulse 2.8s ease-in-out 1.2s infinite; }
+
+  /* Dashboard markers keep pulsing while the screen is in view. */
+  .ent .ent-shot.is-glow-live .ent-hotspot__dot::before,
+  .ent .ent-shot.is-glow-live .ent-hotspot__dot::after {
+    animation: ent-hotspot-pulse 2.6s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+    animation-delay: var(--hotspot-delay, 0ms);
+  }
+  .ent .ent-shot.is-glow-live .ent-hotspot__dot::after { animation-delay: calc(var(--hotspot-delay, 0ms) + 1.3s); }
+
+  /* The colour behind the dashboard, the report and the contact panel drifts and breathes. */
+  .ent-hero__visual::before,
+  .ent-adapt__visual::before { will-change: transform, opacity; }
+  .ent-hero__visual:has(.is-glow-live)::before { animation: ent-aura 9s ease-in-out infinite; }
+  .ent-adapt__visual::before {
+    content: "";
+    position: absolute;
+    inset: 14% -4% 0 8%;
+    border-radius: 40px;
+    background:
+      radial-gradient(50% 50% at 25% 45%, rgba(79, 143, 247, 0.24), transparent 70%),
+      radial-gradient(40% 40% at 80% 75%, rgba(60, 207, 142, 0.16), transparent 70%);
+    filter: blur(34px);
+    pointer-events: none;
+  }
+  .ent-adapt__visual:has(.is-glow-live)::before { animation: ent-aura 10s ease-in-out infinite reverse; }
+  .ent-contact__panel:has(.is-glow-live) .ent-contact__glow { animation: ent-aura 8s ease-in-out infinite; }
+}
+.ent-adapt__visual > .ent-mock { position: relative; }
+
+@keyframes ent-ring-spin { to { rotate: 360deg; } }
+@keyframes ent-bar-sheen { 0% { transform: translateX(-110%); } 45%, 100% { transform: translateX(110%); } }
+@keyframes ent-icon-breathe { 0%, 100% { opacity: 1; scale: 1; } 50% { opacity: 0.7; scale: 0.92; } }
+@keyframes ent-nudge { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(3px); } }
+@keyframes ent-dot-wave { 0%, 60%, 100% { translate: 0 0; opacity: 1; } 20% { translate: 0 -3px; opacity: 0.75; } }
+@keyframes ent-attention-pulse { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }
+@keyframes ent-aura { 0%, 100% { transform: translate3d(0, 0, 0) scale(1); opacity: 0.85; } 50% { transform: translate3d(2%, -3%, 0) scale(1.06); opacity: 1; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .ent-glow-ring { display: none; }
+  .ent-evidence-card, .ent-evidence-card:hover { translate: none; }
+  .ent-hero__visual::before, .ent-contact__glow { animation: none !important; }
 }
