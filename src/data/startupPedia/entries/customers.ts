@@ -97,6 +97,11 @@ export const customerEntries: PediaEntry[] = [
       "A unique selling proposition (USP) is the one clear reason your target customer should choose you over every alternative, including doing nothing. It names a benefit that matters to that customer and that competitors do not offer in the same way.",
     sections: [
       {
+        id: "origin",
+        heading: "Where the term comes from",
+        body: "The term was coined by Rosser Reeves of the Ted Bates advertising agency, who set out the idea in his 1961 book *Reality in Advertising*. His test had three parts: make the customer a specific proposition (buy this and you get this benefit), make it one that competitors do not or cannot make, and make it strong enough to win new customers.\n\nStartups use the same test today, mostly outside advertising: on the landing page, in the pitch and in the first sales conversations.",
+      },
+      {
         id: "usp-vs-value-proposition",
         heading: "USP vs value proposition",
         body: "The terms overlap. A **value proposition** explains the value you create for a customer: the problem you solve and the outcome they get. A **USP** is the part of that value which is distinctive, the reason to pick you instead of someone else.\n\nYou can have a clear value proposition without a USP, for example \"accounting software for small businesses\". That describes value but gives no reason to switch from the market leader. A USP adds the difference: \"accounting software that reconciles supplier invoices automatically for restaurants\".",
@@ -114,7 +119,7 @@ export const customerEntries: PediaEntry[] = [
       {
         id: "examples",
         heading: "Examples",
-        body: "- **Weak:** \"High-quality project management software.\" Every competitor says this.\n- **Better:** \"Project management for architecture firms that tracks hours against fee stages automatically.\" Specific customer, specific benefit.\n- **Weak:** \"Affordable legal help for startups.\"\n- **Better:** \"Fixed-price incorporation documents for startup founders, ready in 48 hours.\" Specific outcome, time frame and pricing model.\n\nFor more on turning a USP into a full message, see [startup positioning examples](/startup-pedia/startup-positioning-examples).",
+        body: "### Well-known USPs\n\n- **M&M's: \"Melts in your mouth, not in your hand.\"** One of the slogans Rosser Reeves's agency created. It names a concrete benefit, no chocolate on your fingers, that other chocolate bars could not claim.\n- **FedEx: \"When it absolutely, positively has to be there overnight.\"** One promise, aimed at the customer who cannot afford a late delivery.\n- **Domino's: \"30 minutes or less.\"** A specific promise that customers could check every time they ordered. Domino's dropped it in 1993, days after a jury awarded nearly $79 million to a woman injured by one of its delivery drivers. A USP has to be one you can keep safely.\n\n### Startup USPs, weak and better\n\n- **Weak:** \"High-quality project management software.\" Every competitor says this.\n- **Better:** \"Project management for architecture firms that tracks hours against fee stages automatically.\" Specific customer, specific benefit.\n- **Weak:** \"Affordable legal help for startups.\"\n- **Better:** \"Fixed-price incorporation documents for startup founders, ready in 48 hours.\" Specific outcome, time frame and pricing model.\n\nFor more on turning a USP into a full message, see [startup positioning examples](/startup-pedia/startup-positioning-examples).",
       },
     ],
     roleNotes: {
@@ -133,9 +138,19 @@ export const customerEntries: PediaEntry[] = [
         question: "Does every startup need a USP?",
         answer: "Yes. Without one, customers have no reason to move from what they use today, and price becomes the only way to compete.",
       },
+      {
+        question: "What is an example of a USP?",
+        answer: "M&M's \"melts in your mouth, not in your hand\" and FedEx's \"when it absolutely, positively has to be there overnight\" are classic USPs: each names one specific benefit competitors did not claim. For a startup it might be \"fixed-price incorporation documents for founders, ready in 48 hours\".",
+      },
+      {
+        question: "Who invented the USP?",
+        answer: "Rosser Reeves of the Ted Bates advertising agency coined the term and described it in his 1961 book Reality in Advertising.",
+      },
     ],
     sources: [
       { title: "The Value Proposition Canvas", publisher: "Strategyzer", url: "https://www.strategyzer.com/library/the-value-proposition-canvas" },
+      { title: "Rosser Reeves", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/Rosser_Reeves" },
+      { title: "Domino's puts the brakes on 30-minute deliveries", publisher: "Deseret News", url: "https://www.deseret.com/1993/12/22/19083018/domino-s-puts-the-brakes-on-30-minute-deliveries/" },
     ],
     relatedSlugs: ["startup-positioning-examples", "ideal-customer-profile", "go-to-market-strategy"],
     cta: {
@@ -144,7 +159,7 @@ export const customerEntries: PediaEntry[] = [
       description: "A sharp USP depends on a sharp customer. ICP Builder helps you define who the difference matters to.",
     },
     publishedAt: "2026-10-25",
-    modifiedAt: "2026-10-25",
+    modifiedAt: "2026-11-19",
   },
   {
     slug: "tam-sam-som",

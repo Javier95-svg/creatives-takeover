@@ -33,7 +33,7 @@ export const productEntries: PediaEntry[] = [
       {
         id: "examples",
         heading: "Examples",
-        body: "- A founder testing a meal-kit idea for people with food allergies takes orders through a simple form and assembles the first 30 boxes herself. That is a concierge MVP.\n- A team building an expense tool launches with one feature: photograph a receipt and get it categorised. No approvals, no integrations, no reports. That is a single-feature MVP.\n- A recruiting startup matches candidates by hand while clients see a polished dashboard. That is a Wizard of Oz MVP.",
+        body: "Four well-known companies started with an MVP that was far smaller than the product they became:\n\n- **Dropbox: a demo video.** During Dropbox's private beta, Drew Houston posted a three-minute demo aimed at early adopters. \"Our beta waiting list went from 5,000 people to 75,000 people literally overnight,\" he told TechCrunch. The video measured demand before the product was open to everyone.\n- **Zappos: Wizard of Oz.** Nick Swinmurn's offer to a shoe store was: \"I'll take some pictures, put your shoes online, and if people buy them, I'll buy them from you at full price.\" Customers saw an online shoe shop. Behind it, each order was bought from the store by hand. It tested whether people would buy shoes online before the company held any stock.\n- **Airbnb: concierge.** In 2007 a design conference had sold out San Francisco's hotels, so Brian Chesky and Joe Gebbia inflated three airbeds in their apartment and hosted three guests. It tested whether people would stay in a stranger's home before the founders built a booking site.\n- **Buffer: landing page.** Joel Gascoigne published a two-page site that described the product, then added a pricing page between the two to see whether people would pay. He built the first version in evenings and weekends over seven weeks, and had his first paying customer within four days of launch.\n\nEach answered one question (is there demand, will people buy this online, will people stay, will people pay) with the least possible building.",
       },
       {
         id: "mistakes",
@@ -53,7 +53,7 @@ export const productEntries: PediaEntry[] = [
       },
       {
         question: "What is an example of an MVP?",
-        answer: "A landing page that takes pre-orders, a service delivered by hand to the first customers, or an app with only its single most important feature are all MVPs.",
+        answer: "A landing page that takes pre-orders, a service delivered by hand to the first customers, or an app with only its single most important feature are all MVPs. Dropbox started with a demo video, Zappos by photographing shoes in a store and buying each pair by hand when an order came in, and Buffer with a two-page website.",
       },
       {
         question: "How long should it take to build an MVP?",
@@ -67,6 +67,10 @@ export const productEntries: PediaEntry[] = [
     sources: [
       { title: "Principles", publisher: "The Lean Startup", url: "https://theleanstartup.com/principles" },
       { title: "Practical Design: MVP Spec", publisher: "Y Combinator", url: "https://www.ycombinator.com/blog/practical-design-mvp/" },
+      { title: "How DropBox Started As A Minimal Viable Product", publisher: "TechCrunch", url: "https://techcrunch.com/2011/10/19/dropbox-minimal-viable-product/" },
+      { title: "Zappos' silent founder", publisher: "Fortune", url: "https://fortune.com/2012/09/05/nick-swinmurn-zappos-silent-founder/" },
+      { title: "What makes Airbnb, Airbnb", publisher: "Airbnb", url: "https://news.airbnb.com/what-makes-airbnb-airbnb/" },
+      { title: "Idea to Paying Customers in 7 Weeks: How We Did It", publisher: "Buffer", url: "https://buffer.com/resources/idea-to-paying-customers-in-7-weeks-how-we-did-it" },
     ],
     relatedSlugs: ["how-to-build-an-mvp", "mvp-feature-prioritization", "product-market-fit", "waitlist-before-mvp"],
     cta: {
@@ -75,7 +79,7 @@ export const productEntries: PediaEntry[] = [
       description: "MVP Scope helps you cut a feature list down to the version that answers your riskiest question.",
     },
     publishedAt: "2026-10-25",
-    modifiedAt: "2026-10-25",
+    modifiedAt: "2026-11-19",
   },
   {
     slug: "product-market-fit",

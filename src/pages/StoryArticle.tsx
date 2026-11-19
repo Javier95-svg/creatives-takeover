@@ -13,6 +13,7 @@ import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { createArticleSchema, createBreadcrumbSchema } from "@/components/SEO";
+import { FOUNDER_AUTHOR, founderPersonSchema, isFounderArticle } from "@/config/founderAuthor";
 import { slugifyTag } from "@/utils/hashtagUtils";
 import { openingText, stripEmoji, truncateAtWord } from "@/utils/storyMeta";
 import { linkPediaTerms } from "@/lib/pediaTermLinks";
@@ -140,6 +141,11 @@ const StoryArticle = () => {
   };
   const readingTime = calculateReadingTime(article.body_content || article.excerpt);
 
+  // Articles written from the founder's account carry his name and link to his
+  // Founder ID; anything else is credited to the publication.
+  const byFounder = isFounderArticle(article.author_id);
+  const authorName = byFounder ? FOUNDER_AUTHOR.name : "Creatives Takeover";
+
   const primaryTag = article.hashtags && article.hashtags.length > 0
     ? article.hashtags[0].replace('#', '')
     : '';
@@ -173,7 +179,7 @@ const StoryArticle = () => {
         {article.hashtags && article.hashtags.length > 0 && (
           <meta name="keywords" content={article.hashtags.map(t => t.replace('#', '')).join(', ')} />
         )}
-        <meta name="author" content="Creatives Takeover" />
+        <meta name="author" content={authorName} />
 
         {/* Open Graph - Optimized for LinkedIn (1200x627 or 1920x1080) */}
         <meta property="og:type" content="article" />
@@ -181,7 +187,7 @@ const StoryArticle = () => {
         <meta property="og:description" content={metaDescription} />
         <meta property="og:url" content={articleUrl} />
         <meta property="article:section" content={articleSection} />
-        <meta property="article:author" content="Creatives Takeover" />
+        <meta property="article:author" content={authorName} />
         <meta property="article:publisher" content="Creatives Takeover" />
         {ogImageUrl && (
           <>
@@ -230,7 +236,7 @@ const StoryArticle = () => {
                 title: article.title,
                 description: metaDescription,
                 image: ogImageUrl || undefined,
-                author: "Creatives Takeover",
+                author: authorName,
                 publishedTime: article.published_at ? new Date(article.published_at).toISOString() : new Date(article.created_at).toISOString(),
                 modifiedTime: article.updated_at ? new Date(article.updated_at).toISOString() : undefined,
                 url: `/newspaper/${article.slug}`,
@@ -238,6 +244,10 @@ const StoryArticle = () => {
                 articleSection: articleSection,
               }),
               "@id": `https://creatives-takeover.com/newspaper/${article.slug}`,
+              // The same Person entity as Organization.founder, linked to his Founder ID.
+              "author": byFounder
+                ? founderPersonSchema()
+                : { "@type": "Organization", "@id": "https://creatives-takeover.com/#organization", "name": "Creatives Takeover", "url": "https://creatives-takeover.com" },
               "mainEntity": {
                 "@type": "WebPage",
                 "@id": `https://creatives-takeover.com/newspaper/${article.slug}`
@@ -245,7 +255,7 @@ const StoryArticle = () => {
             },
             createBreadcrumbSchema([
               { name: 'Home', url: '/' },
-              { name: 'Stories', url: '/newspaper' },
+              { name: 'Newspaper', url: '/newspaper' },
               { name: article.title, url: `/newspaper/${article.slug}` }
             ]),
             // ImageObject schema for banner image
@@ -347,7 +357,18 @@ const StoryArticle = () => {
               )}
 
               {/* Metadata */}
-              <div className="flex items-center gap-6 mb-6 text-muted-foreground text-sm">
+              <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mb-6 text-muted-foreground text-sm">
+                {byFounder && (
+                  <>
+                    <span>
+                      By{" "}
+                      <Link to={FOUNDER_AUTHOR.profilePath} rel="author" className="font-medium text-foreground hover:text-primary hover:underline">
+                        {FOUNDER_AUTHOR.name}
+                      </Link>
+                    </span>
+                    <span>•</span>
+                  </>
+                )}
                 <time dateTime={publishedDate.toISOString()} className="flex items-center gap-2">
                   <Calendar className="w-4 h-4" />
                   <span>{fullDate}</span>

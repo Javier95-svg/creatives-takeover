@@ -23,7 +23,8 @@ serve(async (req) => {
 
   const { data, error } = await serviceClient()
     .from('stories_articles')
-    .select('slug,title,banner_image_url,excerpt,meta_title,meta_description,hashtags,published_at,updated_at,body_content')
+    // author_id decides the byline (src/config/founderAuthor.ts); it is already public in the article list.
+    .select('slug,title,banner_image_url,excerpt,meta_title,meta_description,hashtags,published_at,updated_at,body_content,author_id')
     .eq('slug', slug)
     .eq('status', 'published')
     .maybeSingle();

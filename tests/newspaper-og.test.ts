@@ -153,3 +153,46 @@ test('routes WebP Supabase banners through the image-transform endpoint as a 120
   assert.ok(html.includes(`<meta name="twitter:image" content="${expectedImage}" />`));
   assert.doesNotMatch(html, /object\/public\/story-banners\/temp\/1781299719271\.webp/);
 });
+
+test('articles by the founder are credited to him and link to his Founder ID; others to the publication', async (t) => {
+  process.env.VITE_SUPABASE_URL = 'https://example.supabase.co';
+  process.env.VITE_SUPABASE_KEY = 'test-anon-key';
+  const { FOUNDER_AUTHOR } = await import('../src/config/founderAuthor.ts');
+  const originalFetch = globalThis.fetch;
+  t.after(() => {
+    globalThis.fetch = originalFetch;
+  });
+
+  const render = async (authorId: string | undefined, restAuthorId?: string) => {
+    globalThis.fetch = async (input) => {
+      const url = input.toString();
+      if (url.endsWith('/index.html')) return new Response(shellHtml, { status: 200, headers: { 'content-type': 'text/html' } });
+      if (url.includes('/functions/v1/public-story-metadata')) {
+        return Response.json({ article: {
+          slug: 'a-story', title: 'A Story', banner_image_url: null, excerpt: 'Teaser.', meta_title: null, meta_description: null,
+          hashtags: [], published_at: '2026-11-01T12:00:00.000Z', updated_at: '2026-11-02T12:00:00.000Z',
+          body_content: 'Body text for the story.',
+          ...(authorId === undefined ? {} : { author_id: authorId }),
+        } });
+      }
+      // The older deployed function has no author_id: the handler asks the public table.
+      if (url.includes('/rest/v1/stories_articles') && url.includes('select=author_id')) {
+        return Response.json([{ author_id: restAuthorId ?? null }]);
+      }
+      throw new Error(`Unexpected fetch: ${url}`);
+    };
+    const { default: handler } = await import('../api/newspaper-og.ts');
+    return (await handler(new Request('https://creatives-takeover.com/api/newspaper-og?slug=a-story'))).text();
+  };
+
+  const byFounder = await render(FOUNDER_AUTHOR.profileId);
+  assert.match(byFounder, /By <a href="\/profile\/javier" rel="author">Javier Alonso<\/a>, Founder \(CEO &amp; CTO\)/);
+  assert.match(byFounder, /"author":\{"@type":"Person","@id":"https:\/\/creatives-takeover\.com\/about#founder","name":"Javier Alonso"/);
+
+  const viaTable = await render(undefined, FOUNDER_AUTHOR.profileId);
+  assert.match(viaTable, /rel="author">Javier Alonso<\/a>/);
+
+  const byOther = await render('00000000-0000-0000-0000-000000000000');
+  assert.doesNotMatch(byOther, /Javier Alonso/);
+  assert.match(byOther, /By <a href="\/about" rel="author">Creatives Takeover<\/a>/);
+});

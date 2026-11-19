@@ -11,6 +11,8 @@
 
 export const config = { runtime: 'edge' };
 
+import { FOUNDER_AUTHOR, founderPersonSchema, isFounderArticle } from '../src/config/founderAuthor.ts';
+
 // --- Startup Pedia term links: a copy of src/lib/pediaTermLinks.ts ---
 // The server-rendered article body links the first mention of a few Startup
 // Pedia terms, exactly as the SPA does. tests/pedia-term-links.test.ts keeps
@@ -154,6 +156,8 @@ interface StoryRecord {
   published_at: string | null;
   updated_at: string | null;
   body_content: string | null;
+  /** Missing from older responses; then the article is credited to the publication. */
+  author_id?: string | null;
 }
 
 function escapeAttr(value: string): string {
@@ -430,7 +434,7 @@ export default async function handler(request: Request): Promise<Response> {
       `${SUPABASE_URL}/rest/v1/stories_articles` +
         `?slug=eq.${encodeURIComponent(slug)}` +
         `&status=eq.published` +
-        `&select=slug,title,banner_image_url,excerpt,meta_title,meta_description,hashtags,published_at,updated_at,body_content` +
+        `&select=slug,title,banner_image_url,excerpt,meta_title,meta_description,hashtags,published_at,updated_at,body_content,author_id` +
         `&limit=1`,
       { headers: { apikey: SUPABASE_KEY } },
     );
@@ -461,6 +465,24 @@ export default async function handler(request: Request): Promise<Response> {
     return notFound();
   }
 
+  // The deployed public-story-metadata may predate author_id. Ask the public
+  // article table for it, so the byline is right either way; a failure here only
+  // means the article is credited to the publication.
+  if (article.author_id === undefined && SUPABASE_KEY) {
+    try {
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/stories_articles?slug=eq.${encodeURIComponent(article.slug)}&status=eq.published&select=author_id&limit=1`,
+        { headers: { apikey: SUPABASE_KEY } },
+      );
+      if (res.ok) {
+        const rows = await res.json() as Array<{ author_id?: string | null }>;
+        article.author_id = Array.isArray(rows) ? rows[0]?.author_id ?? null : null;
+      }
+    } catch {
+      // Keep the publication byline.
+    }
+  }
+
   const { optimizedMetaTitle, metaDescription, ogImageUrl } = buildMeta(article);
   const articleUrl = `${SITE_ORIGIN}/newspaper/${article.slug}`;
 
@@ -487,7 +509,12 @@ export default async function handler(request: Request): Promise<Response> {
   html = setMeta(html, 'name', 'twitter:image:alt', optimizedMetaTitle);
 
   // Article structured data (E-E-A-T: author, dates, publisher, image).
-  const authorName = 'Creatives Takeover Editorial Team';
+  // Articles written from the founder's account carry his name and link to his
+  // Founder ID; anything else is credited to the publication.
+  const byFounder = isFounderArticle(article.author_id);
+  const authorName = byFounder ? FOUNDER_AUTHOR.name : 'Creatives Takeover';
+  const authorHref = byFounder ? FOUNDER_AUTHOR.profilePath : '/about';
+  const authorRole = byFounder ? `, ${FOUNDER_AUTHOR.jobTitle}` : '';
   const publishedIso = article.published_at || article.updated_at || new Date().toISOString();
   const modifiedIso = article.updated_at || publishedIso;
   html = injectJsonLd(html, {
@@ -496,12 +523,14 @@ export default async function handler(request: Request): Promise<Response> {
     headline: optimizedMetaTitle,
     description: metaDescription,
     image: ogImageUrl,
-    author: {
-      '@type': 'Organization',
-      '@id': `${SITE_ORIGIN}/#organization`,
-      name: 'Creatives Takeover',
-      url: SITE_ORIGIN,
-    },
+    author: byFounder
+      ? founderPersonSchema()
+      : {
+          '@type': 'Organization',
+          '@id': `${SITE_ORIGIN}/#organization`,
+          name: 'Creatives Takeover',
+          url: SITE_ORIGIN,
+        },
     publisher: {
       '@type': 'Organization',
       '@id': `${SITE_ORIGIN}/#organization`,
@@ -529,7 +558,7 @@ export default async function handler(request: Request): Promise<Response> {
       </header>
       <article>
         <h1>${escapeAttr(article.title)}</h1>
-        <p>By ${escapeAttr(authorName)} · ${escapeAttr(publishedLabel)}</p>
+        <p>By <a href="${authorHref}" rel="author">${escapeAttr(authorName)}</a>${escapeAttr(authorRole)} · ${escapeAttr(publishedLabel)}</p>
         ${article.excerpt ? `<p>${escapeAttr(article.excerpt)}</p>` : ''}
         ${markdownToHtml(linkPediaTerms(article.body_content, SITE_ORIGIN))}
         <p><a href="/newspaper">Read more founder insights on Creatives Takeover</a></p>

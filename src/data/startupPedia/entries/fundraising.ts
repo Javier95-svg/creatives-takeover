@@ -107,6 +107,11 @@ export const fundraisingEntries: PediaEntry[] = [
         body: "- **Company stage:** VC backs early or growing startups. PE backs mature, often profitable companies.\n- **Ownership:** VC takes minority stakes. PE usually takes majority or full control.\n- **Risk profile:** VC accepts that many investments fail. PE expects most deals to succeed.\n- **Use of debt:** VC rarely uses it. PE often does.\n- **Source of returns:** VC relies on fast growth and a few large exits. PE relies on operational improvement, debt paydown and resale.",
       },
       {
+        id: "economics",
+        heading: "How VC and PE funds make money",
+        body: "Both are usually paid the same way. Investors in the fund pay an annual management fee, typically 1% to 2% of the fund, and the firm keeps a share of the profits called carried interest, historically 20% for buyout and venture funds. Together that is often called \"2 and 20\".\n\nWhere the profit comes from is what differs. Venture returns are extremely uneven: in more than 21,000 venture financings from 2004 to 2013, data from Correlation Ventures found that 65% returned less than the money invested and only 4% returned 10 times or more. A venture fund therefore depends on a few very large winners. A buyout fund instead expects most of its companies to sell for more than it paid, helped by operational changes and by paying down the debt used to buy them.",
+      },
+      {
         id: "middle-ground",
         heading: "The middle ground",
         body: "**Growth equity** sits between the two: minority investments in fast-growing companies that are already proven. Some private equity firms now invest earlier than they used to, and some large venture firms invest at very late stages, so the line has blurred. **Angel investors** are individuals who invest their own money, usually before VCs.",
@@ -133,6 +138,10 @@ export const fundraisingEntries: PediaEntry[] = [
         question: "Should my startup raise venture capital?",
         answer: "Only if you aim for very fast, large growth and accept dilution and investor expectations that come with it. Many good businesses never raise VC.",
       },
+      {
+        question: "How do VC and PE firms make money?",
+        answer: "Mostly through \"2 and 20\": an annual management fee of about 1% to 2% of the fund, plus carried interest, historically 20% of the profits. VC profits come from a few very large exits; PE profits come from improving and reselling companies it controls.",
+      },
     ],
     sources: [
       {
@@ -140,6 +149,12 @@ export const fundraisingEntries: PediaEntry[] = [
         publisher: "Investopedia",
         url: "https://www.investopedia.com/ask/answers/020415/what-difference-between-private-equity-and-venture-capital.asp",
       },
+      {
+        title: "Venture Outcomes are Even More Skewed Than You Think (Correlation Ventures data)",
+        publisher: "Seth Levine",
+        url: "https://sethlevine.com/archives/2014/08/venture-outcomes-are-even-more-skewed-than-you-think.html",
+      },
+      { title: "Carried interest", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/Carried_interest" },
     ],
     relatedSlugs: ["startup-funding-stages", "how-to-find-investors", "pre-seed-vs-seed-funding"],
     cta: {
@@ -148,7 +163,7 @@ export const fundraisingEntries: PediaEntry[] = [
       description: "VC Search filters a venture capital database by stage, geography, sector and check size.",
     },
     publishedAt: "2026-10-25",
-    modifiedAt: "2026-10-25",
+    modifiedAt: "2026-11-19",
   },
   {
     slug: "employee-stock-option-plan",
