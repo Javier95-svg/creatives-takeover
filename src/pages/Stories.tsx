@@ -257,7 +257,7 @@ const Stories = () => {
   return (
     <>
       <Helmet>
-        <title>Stories | Creatives Takeover</title>
+        <title>Newspaper | Creatives Takeover</title>
         <meta
           name="description"
           content="Read expert stories, insights, and articles from Creatives Takeover. Learn about entrepreneurship, startups, marketing, fundraising, business strategy, and creative success stories from industry leaders."
@@ -267,7 +267,7 @@ const Stories = () => {
           content="startups, entrepreneurship, marketing, fundraising, business stories, creative insights, business strategy, startup advice, entrepreneur stories, business growth"
         />
         <meta name="author" content="Creatives Takeover" />
-        <meta property="og:title" content="Stories | Creatives Takeover" />
+        <meta property="og:title" content="Newspaper | Creatives Takeover" />
         <meta
           property="og:description"
           content="Discover expert stories, insights, and articles about turning ideas into reality. Learn from successful entrepreneurs and creative professionals."
@@ -276,7 +276,7 @@ const Stories = () => {
         <meta property="og:url" content="https://creatives-takeover.com/newspaper" />
         <meta property="og:site_name" content="Creatives Takeover" />
         <meta name="twitter:card" content="summary" />
-        <meta name="twitter:title" content="Stories | Creatives Takeover" />
+        <meta name="twitter:title" content="Newspaper | Creatives Takeover" />
         <meta name="twitter:description" content="Discover expert stories, insights, and articles about turning ideas into reality." />
         <meta name="twitter:site" content="@CreativesTakeover" />
         <link rel="canonical" href="https://creatives-takeover.com/newspaper" />
