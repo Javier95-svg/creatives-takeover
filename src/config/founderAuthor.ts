@@ -1,6 +1,6 @@
-// The founder as an author. Pure data, no "@/" imports: the Vercel edge function
-// api/newspaper-og.ts imports this file too, so the crawler HTML and the React
-// article page credit the same person.
+// The founder as an author. api/newspaper-og.ts keeps a copy (the Edge bundler
+// cannot import from src/); tests/newspaper-og.test.ts fails if the two differ,
+// so the crawler HTML and the React article page always credit the same person.
 
 const SITE = "https://creatives-takeover.com";
 

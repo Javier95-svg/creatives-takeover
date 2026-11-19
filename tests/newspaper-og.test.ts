@@ -196,3 +196,13 @@ test('articles by the founder are credited to him and link to his Founder ID; ot
   assert.doesNotMatch(byOther, /Javier Alonso/);
   assert.match(byOther, /By <a href="\/about" rel="author">Creatives Takeover<\/a>/);
 });
+
+test('the edge copy of the founder author matches src/config/founderAuthor.ts', async () => {
+  // api/newspaper-og.ts cannot import from src/ (the Edge bundler rejects it), so it keeps a copy.
+  const source = await import('../src/config/founderAuthor.ts');
+  const edge = await import('../api/newspaper-og.ts');
+  assert.deepEqual(edge.FOUNDER_AUTHOR, source.FOUNDER_AUTHOR);
+  assert.deepEqual(edge.founderPersonSchema(), source.founderPersonSchema());
+  const api = readFileSync(new URL('../api/newspaper-og.ts', import.meta.url), 'utf8');
+  assert.doesNotMatch(api, /from ['"]\.\.\/src\//, 'edge functions must not import from src/');
+});

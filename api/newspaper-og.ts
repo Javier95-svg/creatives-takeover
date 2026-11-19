@@ -11,7 +11,31 @@
 
 export const config = { runtime: 'edge' };
 
-import { FOUNDER_AUTHOR, founderPersonSchema, isFounderArticle } from '../src/config/founderAuthor.ts';
+// --- Founder author: a copy of src/config/founderAuthor.ts ---
+// The Edge bundler cannot import that file ("unsupported modules", deploys of
+// 2026-11-19 failed), so the values live here too. tests/newspaper-og.test.ts
+// keeps them identical to the source file.
+const SITE_FOR_AUTHOR = 'https://creatives-takeover.com';
+
+export const FOUNDER_AUTHOR = {
+  profileId: 'b87c3c91-de0e-404b-b321-6dc918c0eb91',
+  name: 'Javier Alonso',
+  jobTitle: 'Founder (CEO & CTO)',
+  profilePath: '/profile/javier',
+  sameAs: ['https://www.linkedin.com/in/javier-digital-marketing/', 'https://x.com/JavierForge'],
+} as const;
+
+export const founderPersonSchema = () => ({
+  '@type': 'Person',
+  '@id': `${SITE_FOR_AUTHOR}/about#founder`,
+  name: FOUNDER_AUTHOR.name,
+  jobTitle: FOUNDER_AUTHOR.jobTitle,
+  url: `${SITE_FOR_AUTHOR}${FOUNDER_AUTHOR.profilePath}`,
+  sameAs: [...FOUNDER_AUTHOR.sameAs],
+});
+
+const isFounderArticle = (authorId: string | null | undefined) => authorId === FOUNDER_AUTHOR.profileId;
+// --- end of the copy ---
 
 // --- Startup Pedia term links: a copy of src/lib/pediaTermLinks.ts ---
 // The server-rendered article body links the first mention of a few Startup
