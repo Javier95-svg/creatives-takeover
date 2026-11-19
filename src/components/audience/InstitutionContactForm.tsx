@@ -32,20 +32,13 @@ type InstitutionContactFormProps = {
   requireAll?: boolean;
   /**
    * A booking page to open in a new tab once the form has been sent
-   * (/enterprise: Javier's Cal.com page). The visitor's name and email are
-   * passed along so the booking form arrives filled in.
+   * (/enterprise: Javier's Cal.com page). Opened exactly as given, with
+   * nothing appended (Javier, 2026-11-19).
    */
   bookingUrl?: string;
 };
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-function bookingLink(url: string, name: string, email: string) {
-  const link = new URL(url);
-  if (name) link.searchParams.set("name", name);
-  if (email) link.searchParams.set("email", email);
-  return link.toString();
-}
 
 type Status = "idle" | "sending" | "sent" | "error";
 
@@ -135,7 +128,7 @@ const InstitutionContactForm = ({
 
       captureEvent("b2b_lead_submitted", { audience, org_type: orgType, size: size || "not_given" });
       if (bookingUrl) {
-        const url = bookingLink(bookingUrl, name.trim(), email.trim());
+        const url = bookingUrl;
         if (tab && !tab.closed) {
           tab.opener = null;
           tab.location.replace(url);

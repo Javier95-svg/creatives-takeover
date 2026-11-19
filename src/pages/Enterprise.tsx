@@ -444,6 +444,10 @@ const Enterprise = () => {
                     <p className="ent-eyebrow ent-contact__eyebrow">{ENTERPRISE_CONTACT.eyebrow}</p>
                     <h2 className="ent-contact__title">{ENTERPRISE_CONTACT.title}</h2>
                     <p className="ent-contact__copy">{ENTERPRISE_CONTACT.copy}</p>
+                    <a href={PILOT_CALL_URL} target="_blank" rel="noopener noreferrer" className="ent-btn ent-btn--primary ent-contact__book" onClick={() => track(ENTERPRISE_HERO.primaryCta, "contact")}>
+                      {ENTERPRISE_HERO.primaryCta}
+                      <ArrowRight aria-hidden="true" />
+                    </a>
 
                     <EvidenceCard kind="call" />
 
@@ -473,7 +477,9 @@ const Enterprise = () => {
                     <InstitutionContactForm
                       audience="enterprise"
                       defaultOrgType="accelerator"
-                      submitLabel={ENTERPRISE_HERO.primaryCta}
+                      // Not "Book a pilot call": that label only ever links straight
+                      // to the Cal page (Javier, 2026-11-19).
+                      submitLabel="Send details"
                       variant="plain"
                       // Every field first; the answers are emailed to Javier
                       // (contact-form-submission), then his Cal page opens.

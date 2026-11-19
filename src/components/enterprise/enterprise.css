@@ -2743,3 +2743,4 @@
   .ent-evidence-card, .ent-evidence-card:hover { translate: none; }
   .ent-hero__visual::before, .ent-contact__glow { animation: none !important; }
 }
+.ent-contact__book { margin-top: 22px; background: #f4f6ff; color: #0d1630; }

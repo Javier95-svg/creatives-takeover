@@ -63,7 +63,14 @@ for (const theme of ['light', 'dark']) {
         expect(await section.locator('img, .ent-evidence-card, .ent-report, .ent-setup').count()).toBeGreaterThan(0);
       }
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-      await expect(page.getByRole('link', { name: 'Book a pilot call' }).first()).toHaveAttribute('href', 'https://cal.com/javier-creatives-takeover/30min');
+      // Every "Book a pilot call" is a link straight to the 30-minute Cal page, never a form button.
+      await expect(page.getByRole('button', { name: 'Book a pilot call' })).toHaveCount(0);
+      const bookLinks = page.getByRole('link', { name: 'Book a pilot call' });
+      expect(await bookLinks.count()).toBeGreaterThanOrEqual(2);
+      for (const link of await bookLinks.all()) {
+        await expect(link).toHaveAttribute('href', 'https://cal.com/javier-creatives-takeover/30min');
+        await expect(link).toHaveAttribute('target', '_blank');
+      }
       const trigger = page.getByRole('button', { name: 'Enlarge dashboard' });
       await trigger.focus();
       await page.keyboard.press('Enter');
@@ -110,13 +117,13 @@ for (const success of [true, false]) {
     await page.getByRole('combobox', { name: 'Cohort or portfolio size' }).click();
     await page.getByRole('option', { name: 'Under 10 teams', exact: true }).click();
     await page.getByLabel('Anything we should know?').fill('Preview test only.');
-    await page.getByRole('button', { name: 'Book a pilot call' }).click();
+    await page.getByRole('button', { name: 'Send details' }).click();
     if (success) {
       await expect(page.getByRole('status').filter({ hasText: 'Thanks' })).toContainText('got your details');
-      await expect(page.getByRole('link', { name: /Book a time/ })).toHaveAttribute('href', /cal.com.*preview%40example.com/);
+      await expect(page.getByRole('link', { name: /Book a time/ })).toHaveAttribute('href', 'https://cal.com/javier-creatives-takeover/30min');
     } else {
       await expect(page.getByRole('alert').filter({ hasText: 'send the form' })).toContainText('javier@creatives-takeover.com');
-      await expect(page.getByRole('button', { name: 'Book a pilot call' })).toBeEnabled();
+      await expect(page.getByRole('button', { name: 'Send details' })).toBeEnabled();
     }
     expect(submissions).toBe(1);
     for (const tab of context.pages()) if (tab !== page) await tab.close();
