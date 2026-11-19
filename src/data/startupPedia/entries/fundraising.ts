@@ -83,7 +83,7 @@ export const fundraisingEntries: PediaEntry[] = [
     topic: "fundraising",
     audiences: ["founder", "investor", "program"],
     title: "Venture Capital vs Private Equity: Key Differences",
-    metaTitle: "Venture Capital vs Private Equity: What's the Difference?",
+    metaTitle: "Private Equity vs Venture Capital: The Key Differences",
     metaDescription:
       "Venture capital (VC) backs young, fast-growing startups; private equity (PE) buys into mature companies. How they differ in stage, risk, control and returns.",
     acronyms: ["VC", "PE"],

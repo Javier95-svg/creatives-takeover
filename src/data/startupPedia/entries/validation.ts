@@ -500,8 +500,8 @@ export const validationEntries: PediaEntry[] = [
       },
       {
         id: "example",
-        heading: "Example",
-        body: "A team surveys 120 active users of its note-taking app. Overall, 28% say very disappointed. Among researchers who use it to organise interview transcripts, the figure is 52%. Their main benefit is \"finding quotes again in seconds\". The team narrows its marketing and roadmap to researchers, and three months later the overall score is 41%.",
+        heading: "Real example: Superhuman",
+        body: "The best-documented use of this survey is Superhuman, the email app. Its founder Rahul Vohra wrote in First Round Review that \"when we started this journey in the summer of 2017, our product-market fit score was 22%\", well under the 40% that Sean Ellis had found across nearly a hundred startups.\n\nThe team first segmented the answers and focused on the kind of user who would be very disappointed without the product: \"After segmenting to focus on the very disappointed set of users, we were at 33%.\" It then studied what those users loved and what held back the users who were close to loving it, and built the roadmap from both. \"Within just three quarters of our work to improve the product, the score nearly doubled to 58%.\"\n\nThe lesson for an early team: the overall score matters less than which segment answers \"very disappointed\", and the score is something you can move by focusing on that segment.",
       },
     ],
     roleNotes: {
@@ -515,7 +515,11 @@ export const validationEntries: PediaEntry[] = [
       },
       {
         question: "What is the 40% rule for product-market fit?",
-        answer: "It is a rule of thumb that if about 40% or more of active users would be very disappointed without your product, you likely have strong product-market fit. Treat it as a guide, not a guarantee.",
+        answer: "It is a rule of thumb that if about 40% or more of active users would be very disappointed without your product, you likely have strong product-market fit. Sean Ellis arrived at it by benchmarking nearly a hundred startups. Treat it as a guide, not a guarantee.",
+      },
+      {
+        question: "What is an example of a product-market fit survey result?",
+        answer: "Superhuman scored 22% \"very disappointed\" in 2017, 33% after focusing on its most enthusiastic segment, and 58% within three quarters of improving the product for that segment, according to its founder in First Round Review.",
       },
       {
         question: "Can surveys replace user interviews?",
@@ -537,7 +541,7 @@ export const validationEntries: PediaEntry[] = [
       description: "PMF Lab scores the demand evidence you have collected and recommends whether to build now or keep validating.",
     },
     publishedAt: "2026-05-17",
-    modifiedAt: "2026-10-25",
+    modifiedAt: "2026-11-19",
     legacySlugs: ["product-market-fit-survey-questions"],
   },
 ];

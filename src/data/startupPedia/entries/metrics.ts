@@ -6,12 +6,12 @@ export const metricEntries: PediaEntry[] = [
     kind: "term",
     topic: "metrics",
     audiences: ["founder", "investor", "mentor", "program", "service-provider"],
-    title: "Customer Acquisition Cost (CAC): Formula and Examples",
-    metaTitle: "Customer Acquisition Cost (CAC): Formula and Examples",
+    title: "Customer Acquisition Cost (CAC): Formula and Average CAC by Industry",
+    metaTitle: "Customer Acquisition Cost: Formula & Average CAC by Industry",
     metaDescription:
-      "Customer acquisition cost (CAC) is what you spend to win one new customer. The formula, a worked example, blended vs paid CAC and payback period.",
+      "Customer acquisition cost (CAC) is what you spend to win one customer. The formula, a worked example, average CAC by industry and what a good CAC is.",
     acronyms: ["CAC"],
-    aliases: ["cac meaning", "cost per acquisition", "how to calculate cac", "cac payback"],
+    aliases: ["cac meaning", "cost per acquisition", "how to calculate cac", "cac payback", "average cac", "average cac by industry", "cac benchmarks"],
     answer:
       "Customer acquisition cost (CAC) is the average amount you spend on sales and marketing to win one new customer. Divide your total sales and marketing costs for a period by the number of new customers you gained in that period.",
     formulas: [
@@ -40,6 +40,11 @@ export const metricEntries: PediaEntry[] = [
         body: "CAC is only meaningful next to how much a customer is worth. A common rule of thumb for subscription businesses is that [customer lifetime value](/startup-pedia/customer-lifetime-value) should be about three times CAC or more, and that payback should be well under a year. Benchmarks vary widely by business model and price, so compare against your own trend over time first.",
       },
       {
+        id: "average-cac",
+        heading: "Average CAC by industry",
+        body: "There is no official average CAC. Published figures come from agencies and software vendors, use different definitions (blended or paid, with or without salaries) and can disagree several times over.\n\nOne widely cited set is First Page Sage's November 2026 reports, built from its own clients' data. Combined average CAC for B2B companies:\n\n- **eCommerce:** about $87\n- **B2B SaaS:** about $243\n- **Cybersecurity:** about $393\n- **Manufacturing:** about $734\n- **Legal services:** about $764\n- **Financial services:** about $798\n- **Real estate:** about $805\n- **Education:** about $1,166\n\nFor consumer (B2C) businesses, the same firm found averages of $167 through organic channels and $240 through paid channels across 20 industries, with eCommerce at about $74 organic and $79 paid.\n\nRead these as a sense of scale, not a target. First Page Sage is an SEO agency and says its B2B figures are weighted 75% organic, so paid-heavy businesses will usually spend more. Your own CAC depends on price, channel and sales motion, so judge it against your customer lifetime value and payback period rather than an industry average.",
+      },
+      {
         id: "early-stage",
         heading: "CAC at the early stage",
         body: "Before product-market fit, CAC is noisy. Small numbers, founder-led selling and experiments make it swing from month to month. Track it anyway, but focus on whether it falls as you learn which channel and message work. See the [go-to-market strategy](/startup-pedia/go-to-market-strategy) entry.",
@@ -64,6 +69,10 @@ export const metricEntries: PediaEntry[] = [
         answer: "One that is well below what a customer is worth. A common guide is lifetime value of at least three times CAC, with payback in under a year.",
       },
       {
+        question: "What is the average CAC?",
+        answer: "It depends heavily on the industry and the channel. First Page Sage's November 2026 reports put combined average CAC at about $243 for B2B SaaS and $87 for B2B eCommerce, and $167 organic or $240 paid across 20 consumer industries. Figures from different sources disagree widely, so compare CAC with your own customer lifetime value first.",
+      },
+      {
         question: "Should CAC include salaries?",
         answer: "Yes. Sales and marketing salaries are usually the largest acquisition cost. Leaving them out understates CAC.",
       },
@@ -71,6 +80,8 @@ export const metricEntries: PediaEntry[] = [
     sources: [
       { title: "16 Startup Metrics", publisher: "Andreessen Horowitz", url: "https://a16z.com/16-startup-metrics/" },
       { title: "SaaS Metrics 2.0", publisher: "David Skok, For Entrepreneurs", url: "https://www.forentrepreneurs.com/saas-metrics-2/" },
+      { title: "Average Customer Acquisition Cost (CAC) By Industry: B2B Edition", publisher: "First Page Sage", url: "https://firstpagesage.com/reports/average-customer-acquisition-cost-cac-by-industry-b2b-edition-fc/" },
+      { title: "Average Customer Acquisition Cost (CAC) by Industry: B2C Edition", publisher: "First Page Sage", url: "https://firstpagesage.com/reports/average-cac-by-industry-b2c-edition/" },
     ],
     relatedSlugs: ["customer-lifetime-value", "roi-and-roas", "go-to-market-strategy", "mrr-and-arr"],
     cta: {
@@ -79,7 +90,7 @@ export const metricEntries: PediaEntry[] = [
       description: "Traction Engine logs weekly distribution experiments and measures channel efficiency.",
     },
     publishedAt: "2026-10-25",
-    modifiedAt: "2026-10-25",
+    modifiedAt: "2026-11-19",
   },
   {
     slug: "customer-lifetime-value",
@@ -87,11 +98,11 @@ export const metricEntries: PediaEntry[] = [
     topic: "metrics",
     audiences: ["founder", "investor", "mentor", "program"],
     title: "Customer Lifetime Value (LTV): Formula and the LTV:CAC Ratio",
-    metaTitle: "Customer Lifetime Value (LTV): Formula and LTV:CAC Ratio",
+    metaTitle: "LTV Formula: Customer Lifetime Value and the LTV:CAC Ratio",
     metaDescription:
       "Customer lifetime value (LTV) is the gross profit you expect from a customer over the whole relationship. Formulas, a worked example and the LTV:CAC ratio.",
     acronyms: ["LTV", "CLV", "CLTV"],
-    aliases: ["lifetime value", "ltv meaning", "ltv cac ratio", "how to calculate ltv"],
+    aliases: ["lifetime value", "ltv meaning", "ltv cac ratio", "how to calculate ltv", "ltv formula", "customer ltv formula", "clv formula"],
     answer:
       "Customer lifetime value (LTV, also CLV) is the total gross profit you expect to earn from an average customer over the whole time they stay with you. Compared with customer acquisition cost, it tells you whether winning customers is profitable.",
     formulas: [
@@ -150,7 +161,7 @@ export const metricEntries: PediaEntry[] = [
       description: "Traction Engine tracks retention alongside your weekly distribution experiments.",
     },
     publishedAt: "2026-10-25",
-    modifiedAt: "2026-10-25",
+    modifiedAt: "2026-11-19",
   },
   {
     slug: "average-order-value",

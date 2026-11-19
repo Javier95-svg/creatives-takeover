@@ -109,7 +109,7 @@ Plain-English reference entries on startup terms, metrics and frameworks, plus p
 
 ### Metrics & progress tracking
 
-- [Customer Acquisition Cost (CAC): Formula and Examples](https://creatives-takeover.com/startup-pedia/customer-acquisition-cost)
+- [Customer Acquisition Cost (CAC): Formula and Average CAC by Industry](https://creatives-takeover.com/startup-pedia/customer-acquisition-cost)
 - [Customer Lifetime Value (LTV): Formula and the LTV:CAC Ratio](https://creatives-takeover.com/startup-pedia/customer-lifetime-value)
 - [Average Order Value (AOV): Formula and How to Increase It](https://creatives-takeover.com/startup-pedia/average-order-value)
 - [ROI vs ROAS: Return on Investment and Return on Ad Spend](https://creatives-takeover.com/startup-pedia/roi-and-roas)
