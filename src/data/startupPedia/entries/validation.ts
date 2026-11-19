@@ -12,17 +12,17 @@ export const validationEntries: PediaEntry[] = [
       "Buildpad, ValidatorAI, IdeaBuddy, Upmetrics, Notion, ChatGPT and Creatives Takeover compared: what each one does and which founder it suits.",
     aliases: ["best idea validation tools", "validatorai alternatives", "buildpad alternatives", "ideabuddy alternatives", "ai idea validator", "business idea validation software"],
     answer:
-      "The main options split into four groups: AI idea scorers such as ValidatorAI, guided idea-to-launch workspaces such as Buildpad and Creatives Takeover, business-plan tools such as IdeaBuddy and Upmetrics, and general tools such as Notion and ChatGPT. Pick the group that matches your next step: a quick score, structured customer evidence, a written plan, or a flexible place to organise your own process.",
+      "The main options split into four groups: AI idea scorers such as ValidatorAI, Preuve AI and IdeaProof, guided idea-to-launch workspaces such as Buildpad and Creatives Takeover, business-plan tools such as IdeaBuddy and Upmetrics, and general tools such as Notion and ChatGPT. Pick the group that matches your next step: a quick score, structured customer evidence, a written plan, or a flexible place to organise your own process.",
     sections: [
       {
         id: "how-we-compared",
         heading: "How this comparison was made",
-        body: "Creatives Takeover publishes this page, so we have tried to be fair. Each product is described from its own public website as of October 2026, not from hands-on testing, and we avoid scoring competitors. Features and prices change, so check each site before you decide. If you spot something out of date, contact us and we will correct it.",
+        body: "Creatives Takeover publishes this page, so we have tried to be fair. Each product is described from its own public website as of October and November 2026, not from hands-on testing, and we avoid scoring competitors. Features and prices change, so check each site before you decide. If you spot something out of date, contact us and we will correct it.",
       },
       {
         id: "ai-idea-scorers",
         heading: "AI idea scorers",
-        body: "### ValidatorAI\nAccording to its site, ValidatorAI scores your idea with AI, helps identify your customer and suggests next steps, alongside tools such as an idea generator, a customer feedback simulator and a pivot assistant. Its site presents these tools as free.\n\n**Suits you if** you want a fast first read on an idea in minutes.\n**Look elsewhere if** you need to collect evidence from real customers. An AI score is a starting point, not proof of demand. See [how to validate a startup idea](/startup-pedia/how-to-validate-a-startup-idea).",
+        body: "### ValidatorAI\nAccording to its site, ValidatorAI scores your idea with AI, helps identify your customer and suggests next steps, alongside tools such as an idea generator, a customer feedback simulator and a pivot assistant. Its site presents these tools as free.\n\n**Suits you if** you want a fast first read on an idea in minutes.\n**Look elsewhere if** you need to collect evidence from real customers. An AI score is a starting point, not proof of demand. See [how to validate a startup idea](/startup-pedia/how-to-validate-a-startup-idea).\n\n### Preuve AI\nPreuve AI's site says it scans more than 60 live data sources, including Crunchbase, Google Trends, Reddit, Product Hunt and G2, and returns a report with a viability score, up to 15 competitors, market sizing, scored risks and suggested pivots, with every claim linked to its source. A free scan gives a score, the main risks and two competitor previews; its site lists the full report at $59, one-time.\n\n**Suits you if** you want a sourced desk-research report on a market before you commit time to it.\n\n### IdeaProof\nIdeaProof's site describes a 100-point viability score with green flags, risk flags and a go or no-go verdict, plus optional market analysis, a business plan, brand strategy and a pitch deck. New accounts get enough free credits for one full validation, and paid credit packs are one-time purchases. Its own site cautions that the score \"is not a probability of success or proof that customers will buy\".\n\n**Suits you if** you want a fast verdict and launch materials generated from the same idea.",
       },
       {
         id: "guided-workspaces",
@@ -65,6 +65,8 @@ export const validationEntries: PediaEntry[] = [
     ],
     sources: [
       { title: "ValidatorAI", publisher: "ValidatorAI", url: "https://validatorai.com/" },
+      { title: "Preuve AI", publisher: "Preuve AI", url: "https://preuve.ai/" },
+      { title: "IdeaProof", publisher: "IdeaProof", url: "https://ideaproof.io/" },
       { title: "Buildpad", publisher: "Buildpad", url: "https://buildpad.io/" },
       { title: "IdeaBuddy", publisher: "IdeaBuddy", url: "https://ideabuddy.com/" },
       { title: "Upmetrics", publisher: "Upmetrics", url: "https://upmetrics.co/" },
@@ -77,7 +79,7 @@ export const validationEntries: PediaEntry[] = [
       description: "ICP Builder turns your idea into a saved customer profile, the first step of validating it. Included in the free plan.",
     },
     publishedAt: "2026-10-25",
-    modifiedAt: "2026-10-25",
+    modifiedAt: "2026-11-19",
   },
   {
     slug: "startup-idea-validation-tools",
