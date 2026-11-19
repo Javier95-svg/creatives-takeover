@@ -6,6 +6,7 @@ import './index.css'
 import './styles/responsive-overrides.css'
 import { ThemeProvider } from './contexts/ThemeContext'
 import { reportAppError } from './lib/errorReporting'
+import { isBrowserExtensionError } from './lib/extensionErrors'
 import { reloadForStaleChunk } from './lib/staleChunkReload'
 import { bootstrapPosthog, captureUtmSuperProperties, isLikelyBot } from './lib/analytics'
 import { captureFirstTouch } from './lib/attribution'
@@ -72,6 +73,11 @@ window.addEventListener('vite:preloadError', (event) => {
 
 // Global error handlers for unhandled promise rejections
 window.addEventListener('unhandledrejection', (event) => {
+  // A browser extension's failure, not ours: don't log or store it as an app error.
+  if (isBrowserExtensionError(event.reason)) {
+    event.preventDefault();
+    return;
+  }
   reportAppError(
     event.reason,
     'unhandled_rejection',
@@ -85,6 +91,7 @@ window.addEventListener('unhandledrejection', (event) => {
 });
 
 window.addEventListener('error', (event) => {
+  if (isBrowserExtensionError(event.error, event.filename)) return;
   reportAppError(
     event.error || event.message,
     'window_error',
