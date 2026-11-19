@@ -290,30 +290,30 @@ export const INDEXABLE_ROUTES = [
   },
   {
     path: "/enterprise",
-    title: "For Accelerators and Incubators | Creatives Takeover",
+    title: "For Startup Programs | Creatives Takeover",
     description:
-      "A 30-day founder validation pilot for accelerators and incubators: a validation plan and documented evidence for every founder, and a cohort report.",
+      "Cohort visibility, founder follow-up and stakeholder reporting for accelerators, incubators and university programs. Start with a scoped 30-day pilot.",
     changefreq: "monthly",
     priority: 0.9,
-    heroHeading: "See which startups in your cohort are doing the work.",
+    heroHeading: "See cohort progress. Focus your support.",
     heroCopy:
-      "A 30-day founder validation pilot for accelerators, incubators and university programs. We keep your cohort engaged and accountable throughout the program. Start with a 30-day pilot, then we shape it around your program’s length, size and founders.",
+      "One dashboard. Weekly follow-up from our team. Clear reports for your stakeholders.",
     sections: [
       {
-        heading: "We run it. You bring the founders.",
-        copy: "Seven steps: we set up your cohort; founders join with their consent; they get a weekly plan and full access to our paid tools for the 30 days, at no cost to them; you see every startup on one screen; we follow up every week and send you a summary; on day 30 you get the cohort report; after that, founders keep their account, their work and the free plan.",
+        heading: "Clear progress. Focused support.",
+        copy: "Identify support needs, reduce manual follow-up and document cohort progress. Our team follows up with founders and prepares weekly summaries.",
       },
       {
-        heading: "What the pilot includes, and what it doesn’t",
-        copy: "Included: a program dashboard with spreadsheet export, full access for every founder, kickoff and onboarding, weekly follow-up and a summary, and the final cohort report. Not included: founders’ private work, promised results, funding or investor introductions, or a replacement for your curriculum. Your program provides 5 to 10 startups, one contact from your team, a kickoff session with your founders and, if you need one, your funder’s report format. Each startup brings an idea worth testing, one founder to lead it, and about 3 hours a week.",
+        heading: "Progress you can show.",
+        copy: "Review stages, interviews, experiments and next steps in a team-prepared cohort report. Platform-recorded activity is distinguished from founder-reported totals; neither independently verifies business results. Product screens use sample data and the illustrative report uses fictional data.",
       },
       {
-        heading: "Your size, your founders, your calendar",
-        copy: "The pilot is set up around your cohort size, your founders’ sector, such as fintech, and your program’s length.",
+        heading: "Your program. Our follow-through.",
+        copy: "Align on scope, onboard the cohort with founder consent, review progress weekly, and report on day 30. The workflow supports your curriculum and mentors.",
       },
       {
-        heading: "Your founders keep going after the program ends",
-        copy: "Alumni keep getting support from the platform, with the stage tools, mentors, and rooms, launches and co-founder matching with other founders. No extra work for your team.",
+        heading: "Start with 30 days.",
+        copy: "Includes dashboard and founder access, kickoff and onboarding, weekly follow-up and summaries, and a final cohort report. Pricing follows the agreed scope. Reporting requirements and any template adaptation are agreed at kickoff. Continued program support is scoped separately.",
       },
     ],
   },
