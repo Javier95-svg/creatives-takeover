@@ -299,7 +299,7 @@ const StoryArticle = () => {
               <Button variant="ghost" asChild>
                 <Link to="/newspaper" className="flex items-center gap-2">
                   <ArrowLeft className="w-4 h-4" />
-                  Back to Stories
+                  Back to Newspaper
                 </Link>
               </Button>
               {user?.email?.toLowerCase() === "admin@creatives-takeover.com" && article && (
