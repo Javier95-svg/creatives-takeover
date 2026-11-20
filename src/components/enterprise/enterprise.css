@@ -2254,6 +2254,46 @@
   font-size: 14px;
 }
 
+/* The hero's three promises: one row each, the icon tiles following the title's blue → violet → pink accent. */
+.ent-hero__promises {
+  display: grid;
+  gap: 12px;
+  max-width: 520px;
+  margin: 24px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.ent-hero__promises li {
+  --promise: var(--ent-blue);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  color: var(--ent-ink);
+  font-size: 17px;
+  font-weight: 500;
+  line-height: 1.35;
+}
+.ent-hero__promises li.is-follow-up { --promise: var(--ent-violet); }
+.ent-hero__promises li.is-reports { --promise: var(--ent-red); }
+.ent-hero__promise-icon {
+  display: inline-grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid color-mix(in srgb, var(--promise) 35%, transparent);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--promise) 14%, transparent);
+  color: var(--promise);
+}
+.ent-hero__promise-icon svg { width: 17px; height: 17px; }
+@media (max-width: 640px) {
+  .ent-hero__promises { gap: 10px; margin-top: 20px; }
+  .ent-hero__promises li { font-size: 15.5px; gap: 12px; }
+  .ent-hero__promise-icon { width: 30px; height: 30px; border-radius: 9px; }
+  .ent-hero__promise-icon svg { width: 15px; height: 15px; }
+}
+
 .ent-hero__trust li { display: inline-flex; align-items: center; gap: 8px; }
 .ent-hero__trust svg { width: 16px; height: 16px; color: var(--ent-blue); }
 .ent-hero__trust li.is-offer { color: var(--ent-green); font-weight: 600; }

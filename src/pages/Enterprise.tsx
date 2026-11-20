@@ -73,6 +73,7 @@ const HERO_DASHBOARD = (
 
 // Icons for the hero's trust line and for what the program gets.
 const TRUST_ICONS: Record<string, LucideIcon> = { contact: Users, consent: UserCheck, iso: ShieldCheck };
+const PROMISE_ICONS: Record<string, LucideIcon> = { dashboard: LayoutDashboard, "follow-up": CalendarCheck, reports: FileText };
 const GET_ICONS: Record<string, LucideIcon> = { dashboard: LayoutDashboard, summary: CalendarCheck, report: FileText, kickoff: Rocket };
 const REPORT_ICONS: Record<string, LucideIcon> = { cohort: LayoutDashboard, next: ArrowRight, confirmed: ShieldCheck };
 
@@ -233,7 +234,19 @@ const Enterprise = () => {
                   <h1 id="ent-title" className="ent-hero__title">
                     {ENTERPRISE_HERO.titleLead} <span className="ent-hero__accent">{ENTERPRISE_HERO.titleAccent}</span>
                   </h1>
-                  <p className="ent-hero__lede">{ENTERPRISE_HERO.lede}</p>
+                  <ul className="ent-hero__promises">
+                    {ENTERPRISE_HERO.promises.map((promise) => {
+                      const Icon = PROMISE_ICONS[promise.key] ?? Check;
+                      return (
+                        <li key={promise.key} className={`is-${promise.key}`}>
+                          <span className="ent-hero__promise-icon" aria-hidden="true">
+                            <Icon />
+                          </span>
+                          {promise.text}
+                        </li>
+                      );
+                    })}
+                  </ul>
 
                   <ul className="ent-hero__facts">
                     {ENTERPRISE_HERO.facts.map((fact) => (

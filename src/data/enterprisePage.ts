@@ -5,11 +5,20 @@ export const ENTERPRISE_SEO = {
   description: 'Cohort visibility, founder follow-up and stakeholder reporting for accelerators, incubators and university programs. Start with a scoped 30-day pilot.',
   keywords: 'accelerator programs, incubators, university entrepreneurship, cohort reporting, founder validation',
 };
+/** The hero's three promises, shown as a list (2026-11-19). */
+const HERO_PROMISES = [
+  { key: 'dashboard', text: 'One dashboard' },
+  { key: 'follow-up', text: 'Weekly follow-up from our team' },
+  { key: 'reports', text: 'Clear reports for your stakeholders' },
+] as const;
+
 export const ENTERPRISE_HERO = {
   eyebrow: 'For accelerators, incubators and universities',
   titleLead: 'See cohort progress.',
   titleAccent: 'Focus your support.',
-  lede: 'One dashboard. Weekly follow-up from our team. Clear reports for your stakeholders.',
+  promises: HERO_PROMISES,
+  /** The same three promises as one sentence, for SEO (scripts/seo-route-config.mjs). */
+  lede: HERO_PROMISES.map((promise) => `${promise.text}.`).join(' '),
   primaryCta: 'Book a pilot call',
   secondaryCta: { label: 'See the sample report', href: '#report' },
   facts: [
