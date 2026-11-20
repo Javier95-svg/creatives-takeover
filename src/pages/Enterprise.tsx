@@ -290,7 +290,7 @@ const Enterprise = () => {
                     </DialogTrigger>
                     <DialogContent className="ent-dashboard-dialog">
                       <DialogTitle>Program dashboard</DialogTitle>
-                      <DialogDescription>Real product · Sample data. Activity counts inform support decisions; they do not independently verify business results.</DialogDescription>
+                      <DialogDescription>Real product · Sample data. Counts show what founders did on the platform and what they reported. Use them to decide where to support; they are not proof of business results.</DialogDescription>
                       <div className="ent-dashboard-detail">
                         <img className="block dark:hidden" src={cohortProgramLightShot} width={1176} height={955} alt="Sample program dashboard showing cohort activity and support flags for five startups." />
                         <img className="hidden dark:block" src={cohortProgramShot} width={1176} height={955} alt="Sample program dashboard showing cohort activity and support flags for five startups." />

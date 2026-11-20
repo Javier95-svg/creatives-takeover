@@ -9,7 +9,7 @@ export const ENTERPRISE_SEO = {
 const HERO_PROMISES = [
   { key: 'dashboard', text: 'One dashboard' },
   { key: 'follow-up', text: 'Weekly follow-up from our team' },
-  { key: 'reports', text: 'Clear reports for your stakeholders' },
+  { key: 'reports', text: 'A day-30 report for your stakeholders' },
 ] as const;
 
 export const ENTERPRISE_HERO = {
@@ -50,7 +50,7 @@ export const ENTERPRISE_REPORT = {
   points: [
     { key: 'cohort', title: 'A cohort-level view', body: 'Activity and decisions, together.' },
     { key: 'next', title: 'Practical next steps', body: 'A next step for every team.' },
-    { key: 'confirmed', title: 'Clear evidence sources', body: 'Recorded activity and self-reported totals shown separately. Not independent proof of demand.' },
+    { key: 'confirmed', title: 'Clear evidence sources', body: 'What the platform recorded is shown apart from what founders report, so you know what each number rests on.' },
   ],
 };
 export const ENTERPRISE_PILOT = {
@@ -59,7 +59,7 @@ export const ENTERPRISE_PILOT = {
   copy: '',
   steps: [
     { key: 'setup', when: 'Before day 1', owner: 'Our team', title: 'Align on the scope', body: 'Agree dates, goals and reporting.' },
-    { key: 'join', when: 'Week 1', owner: 'Your founders', title: 'Onboard the cohort', body: 'We onboard founders with consent. Access included.' },
+    { key: 'join', when: 'Week 1', owner: 'Our team and your founders', title: 'Founders join', body: 'We onboard your founders. Each one agrees to share progress, and their platform access is included.' },
     { key: 'track', when: 'Weeks 1 to 4', owner: 'Our team', title: 'Review progress weekly', body: 'We send the summary. You guide support.' },
     { key: 'report', when: 'Day 30', owner: 'Our team', title: 'Review the results', body: 'Review the report and decide what comes next.' },
   ],
@@ -89,8 +89,8 @@ export const ENTERPRISE_AFTER = {
 export const ENTERPRISE_FAQS = [
   { question: 'How much does it cost?', answer: 'We send a proposal based on cohort size and reporting needs. Founder access is included.' },
   { question: 'How much of our team’s time does it take?', answer: 'One contact, a kickoff and a weekly review. We handle onboarding, follow-up and reporting.' },
-  { question: 'What do we see, and what stays private?', answer: 'You see progress. Founders’ files, idea details and messages stay private. Each founder agrees to share progress before joining and can leave at any time.' },
-  { question: 'Can the report follow our stakeholder template?', answer: 'Share the template before kickoff. We agree the supported requirements and scope together.' },
+  { question: 'What do we see, and what stays private?', answer: 'You see each startup’s stage, interviews, experiments, weekly check-ins and whether it needs attention. Founders’ files, ideas, messages and the companies they research are never shown. Each founder agrees to share progress before joining and can leave at any time.' },
+  { question: 'Can the report follow our stakeholder template?', answer: 'Yes, for what the platform records. Share your template before kickoff and we confirm which sections we can fill.' },
   { question: 'Does it replace our curriculum or mentors?', answer: 'No. It supports your existing curriculum and mentor conversations.' },
   { question: 'What happens after the pilot?', answer: 'Founders keep their work and free-plan access. Continued program support is scoped separately.' },
 ];
