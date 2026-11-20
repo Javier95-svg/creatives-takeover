@@ -38,6 +38,7 @@ import { captureEvent } from "@/lib/analytics";
 import {
   ENTERPRISE_AFTER,
   ENTERPRISE_CONTACT,
+  ENTERPRISE_DAY30,
   ENTERPRISE_DEAL,
   ENTERPRISE_FAQS,
   ENTERPRISE_OUTCOMES,
@@ -75,6 +76,7 @@ const TRUST_ICONS: Record<string, LucideIcon> = { verified: ShieldCheck, export:
 const PROMISE_ICONS: Record<string, LucideIcon> = { dashboard: LayoutDashboard, "follow-up": CalendarCheck, reports: FileText };
 const GET_ICONS: Record<string, LucideIcon> = { dashboard: LayoutDashboard, summary: CalendarCheck, report: FileText, kickoff: Rocket };
 const REPORT_ICONS: Record<string, LucideIcon> = { cohort: LayoutDashboard, next: ArrowRight, confirmed: ShieldCheck };
+const DAY30_ICONS: Record<string, LucideIcon> = { status: LayoutDashboard, summaries: CalendarCheck, report: FileText, decision: ArrowRight };
 
 /** Delay for an element's scroll reveal, used to stagger lists and pairs. */
 const revealDelay = (ms: number) => ({ "--reveal-delay": `${ms}ms` }) as CSSProperties;
@@ -370,6 +372,26 @@ const Enterprise = () => {
             <section className="ent-section">
               <div className="ent-container">
                 <SectionHead eyebrow={ENTERPRISE_DEAL.eyebrow} title={ENTERPRISE_DEAL.title} copy={ENTERPRISE_DEAL.copy} wide />
+                {/* What the program holds at the end, before what each side provides. */}
+                <div className="ent-day30" data-reveal="up">
+                  <h3 className="ent-conditions__title">{ENTERPRISE_DAY30.title}</h3>
+                  <ul className="ent-adapt__list ent-day30__list">
+                    {ENTERPRISE_DAY30.items.map((item) => {
+                      const Icon = DAY30_ICONS[item.key] ?? Check;
+                      return (
+                        <li key={item.key}>
+                          <span className="ent-icon" aria-hidden="true">
+                            <Icon />
+                          </span>
+                          <div>
+                            <h4>{item.title}</h4>
+                            <p>{item.body}</p>
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
                 <div className="ent-deal">
                   <div className="ent-scope__card is-in ent-deal__card" data-reveal="left">
                     <p className="ent-scope__head ent-conditions__head">
@@ -378,7 +400,8 @@ const Enterprise = () => {
                       </span>
                       {ENTERPRISE_DEAL.get.title}
                     </p>
-                    <EvidenceCard kind="join" />
+                    {/* The weekly summary: the deliverable the program pays for (the invitation card is already in step 2). */}
+                    <EvidenceCard kind="time" />
                     <ul>
                       {ENTERPRISE_DEAL.get.items.map((item) => {
                         const Icon = GET_ICONS[item.key] ?? Check;

@@ -64,12 +64,12 @@ test('the enterprise page lands the pilot offer in the hero', () => {
   // pilot, its terms at a glance, a way to talk to us, and the pilot itself.
   assert.deepEqual(
     enterprise.ENTERPRISE_HERO.facts.map((fact) => fact.label),
-    ['day pilot', 'startups', 'check-ins', 'cohort report'],
+    ['day pilot', 'startups', 'contact on your side', 'cohort report'],
   );
   const heroStart = enterprisePage.indexOf('className="ent-hero"');
   const hero = enterprisePage.slice(heroStart, enterprisePage.indexOf('</section>', heroStart));
   // The three promises show as a list (2026-11-19); lede is the same text as one sentence, for SEO.
-  assert.deepEqual(enterprise.ENTERPRISE_HERO.promises.map((p) => p.text), ['One dashboard', 'Weekly follow-up from our team', 'A day-30 report for your stakeholders']);
+  assert.deepEqual(enterprise.ENTERPRISE_HERO.promises.map((p) => p.text), ['Know which startups need help, without chasing updates', 'Weekly founder follow-up, handled by our team', 'A day-30 report you can share with funders']);
   for (const piece of ['ENTERPRISE_HERO.titleLead', 'ENTERPRISE_HERO.promises', 'ENTERPRISE_HERO.facts', 'ENTERPRISE_HERO.primaryCta', 'ENTERPRISE_HERO.trust', 'HERO_DASHBOARD']) {
     assert.ok(hero.includes(piece), `hero is missing ${piece}`);
   }
@@ -115,7 +115,7 @@ test('the pilot is explained in four steps, with who does the work and what each
     ['setup', 'join', 'track', 'report'],
   );
   for (const step of enterprise.ENTERPRISE_PILOT.steps) {
-    assert.ok(['Our team', 'Your team', 'Your founders', 'Our team and your founders'].includes(step.owner), step.key);
+    assert.ok(['Our team', 'Your team', 'Your founders', 'Our team and your founders', 'Both teams'].includes(step.owner), step.key);
   }
   // Each product screen is the real product, captured light and dark.
   for (const asset of ['cohort-program']) {

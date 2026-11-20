@@ -290,14 +290,14 @@ export const INDEXABLE_ROUTES = [
   },
   {
     path: "/enterprise",
-    title: "For Startup Programs | Creatives Takeover",
+    title: "Cohort Tracking for Accelerators | Creatives Takeover",
     description:
       "Cohort visibility, founder follow-up and stakeholder reporting for accelerators, incubators and university programs. Start with a scoped 30-day pilot.",
     changefreq: "monthly",
     priority: 0.9,
     heroHeading: "See cohort progress. Focus your support.",
     heroCopy:
-      "One dashboard. Weekly follow-up from our team. A day-30 report for your stakeholders.",
+      "Know which startups need help, without chasing updates. Weekly founder follow-up, handled by our team. A day-30 report you can share with funders.",
     sections: [
       {
         heading: "Clear progress. Focused support.",
