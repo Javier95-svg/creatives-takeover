@@ -69,7 +69,7 @@ test('the enterprise page lands the pilot offer in the hero', () => {
   const heroStart = enterprisePage.indexOf('className="ent-hero"');
   const hero = enterprisePage.slice(heroStart, enterprisePage.indexOf('</section>', heroStart));
   // The three promises show as a list (2026-11-19); lede is the same text as one sentence, for SEO.
-  assert.deepEqual(enterprise.ENTERPRISE_HERO.promises.map((p) => p.text), ['Know which startups need help, without chasing updates', 'Weekly founder follow-up, handled by our team', 'A day-30 report you can share with funders']);
+  assert.deepEqual(enterprise.ENTERPRISE_HERO.promises.map((p) => p.text), ['One dashboard', 'Weekly follow-up from our team', 'A day-30 report for your stakeholders']);
   for (const piece of ['ENTERPRISE_HERO.titleLead', 'ENTERPRISE_HERO.promises', 'ENTERPRISE_HERO.facts', 'ENTERPRISE_HERO.primaryCta', 'ENTERPRISE_HERO.trust', 'HERO_DASHBOARD']) {
     assert.ok(hero.includes(piece), `hero is missing ${piece}`);
   }

@@ -6,15 +6,13 @@ export const ENTERPRISE_SEO = {
   keywords: 'accelerator programs, incubators, university entrepreneurship, cohort reporting, founder validation',
 };
 /**
- * The hero's three promises, shown as a list, written as what the program
- * gains (2026-11-20). Each is something the product does today: attention
- * flags (src/lib/cohorts.ts attentionReasons), weekly follow-up and the
- * day-30 report.
+ * The hero's three promises, shown as a list. Kept short on purpose: Javier
+ * preferred these to longer "gains" wording (2026-11-20).
  */
 const HERO_PROMISES = [
-  { key: 'dashboard', text: 'Know which startups need help, without chasing updates' },
-  { key: 'follow-up', text: 'Weekly founder follow-up, handled by our team' },
-  { key: 'reports', text: 'A day-30 report you can share with funders' },
+  { key: 'dashboard', text: 'One dashboard' },
+  { key: 'follow-up', text: 'Weekly follow-up from our team' },
+  { key: 'reports', text: 'A day-30 report for your stakeholders' },
 ] as const;
 
 export const ENTERPRISE_HERO = {

@@ -297,7 +297,7 @@ export const INDEXABLE_ROUTES = [
     priority: 0.9,
     heroHeading: "See cohort progress. Focus your support.",
     heroCopy:
-      "Know which startups need help, without chasing updates. Weekly founder follow-up, handled by our team. A day-30 report you can share with funders.",
+      "One dashboard. Weekly follow-up from our team. A day-30 report for your stakeholders.",
     sections: [
       {
         heading: "Clear progress. Focused support.",
