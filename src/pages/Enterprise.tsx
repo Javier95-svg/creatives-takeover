@@ -7,14 +7,13 @@ import {
   Building2,
   CalendarCheck,
   Check,
+  Download,
   FileText,
   LayoutDashboard,
   type LucideIcon,
   Mail,
   Rocket,
   ShieldCheck,
-  UserCheck,
-  Users,
 } from "lucide-react";
 
 import SEO, { createBreadcrumbSchema, createFAQSchema, createWebPageSchema } from "@/components/SEO";
@@ -72,7 +71,7 @@ const HERO_DASHBOARD = (
 );
 
 // Icons for the hero's trust line and for what the program gets.
-const TRUST_ICONS: Record<string, LucideIcon> = { contact: Users, consent: UserCheck, iso: ShieldCheck };
+const TRUST_ICONS: Record<string, LucideIcon> = { verified: ShieldCheck, export: Download };
 const PROMISE_ICONS: Record<string, LucideIcon> = { dashboard: LayoutDashboard, "follow-up": CalendarCheck, reports: FileText };
 const GET_ICONS: Record<string, LucideIcon> = { dashboard: LayoutDashboard, summary: CalendarCheck, report: FileText, kickoff: Rocket };
 const REPORT_ICONS: Record<string, LucideIcon> = { cohort: LayoutDashboard, next: ArrowRight, confirmed: ShieldCheck };

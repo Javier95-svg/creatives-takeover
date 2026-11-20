@@ -28,8 +28,10 @@ export const ENTERPRISE_HERO = {
     { value: '1', label: 'cohort report' },
   ],
   trust: [
-    { key: 'contact', label: 'One program contact' },
-    { key: 'consent', label: 'Founders choose to share progress' },
+    // Both are in the program dashboard (src/components/cohort/ProgramDashboard.tsx): counts split
+    // platform-verified from founder-reported, and an Export CSV of each week (checked 2026-11-19).
+    { key: 'verified', label: 'Verified activity, not just self-reports' },
+    { key: 'export', label: 'CSV export for funder reporting' },
   ],
 };
 export const ENTERPRISE_OUTCOMES = {
