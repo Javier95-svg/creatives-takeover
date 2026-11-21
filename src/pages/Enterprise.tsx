@@ -1,5 +1,5 @@
 import { useEffect, useRef, type CSSProperties, type RefObject } from "react";
-import { PILOT_CALL_URL } from "@/config/pilotCall";
+import { CAL_BOOKING_URL, PILOT_CALL_URL } from "@/config/pilotCall";
 import { useLocation } from "react-router-dom";
 import {
   ArrowDown,
@@ -259,7 +259,7 @@ const Enterprise = () => {
                   </ul>
 
                   <div className="ent-hero__ctas">
-                    {/* Straight to Javier's booking page, in a new tab (src/config/pilotCall.ts). */}
+                    {/* The qualifying Typeform, which redirects to Javier's Cal page; new tab (src/config/pilotCall.ts). */}
                     <a href={PILOT_CALL_URL} target="_blank" rel="noopener noreferrer" className="ent-btn ent-btn--primary" onClick={() => track(ENTERPRISE_HERO.primaryCta, "hero")}>
                       {ENTERPRISE_HERO.primaryCta}
                       <ArrowRight aria-hidden="true" />
@@ -512,14 +512,14 @@ const Enterprise = () => {
                     <InstitutionContactForm
                       audience="enterprise"
                       defaultOrgType="accelerator"
-                      // Not "Book a pilot call": that label only ever links straight
-                      // to the Cal page (Javier, 2026-11-19).
+                      // Not "Book a pilot call": that label only ever links straight to the
+                      // qualifying Typeform (src/config/pilotCall.ts).
                       submitLabel="Send details"
                       variant="plain"
                       // Every field first; the answers are emailed to Javier
                       // (contact-form-submission), then his Cal page opens.
                       requireAll
-                      bookingUrl={PILOT_CALL_URL}
+                      bookingUrl={CAL_BOOKING_URL}
                     />
                   </div>
                 </div>

@@ -63,12 +63,12 @@ for (const theme of ['light', 'dark']) {
         expect(await section.locator('img, .ent-evidence-card, .ent-report, .ent-setup').count()).toBeGreaterThan(0);
       }
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-      // Every "Book a pilot call" is a link straight to the 30-minute Cal page, never a form button.
+      // Every "Book a pilot call" is a link to the qualifying Typeform (which redirects to Cal), never a form button.
       await expect(page.getByRole('button', { name: 'Book a pilot call' })).toHaveCount(0);
       const bookLinks = page.getByRole('link', { name: 'Book a pilot call' });
       expect(await bookLinks.count()).toBeGreaterThanOrEqual(2);
       for (const link of await bookLinks.all()) {
-        await expect(link).toHaveAttribute('href', 'https://cal.com/javier-creatives-takeover/30min');
+        await expect(link).toHaveAttribute('href', 'https://form.typeform.com/to/EPRRkJNV');
         await expect(link).toHaveAttribute('target', '_blank');
       }
       const trigger = page.getByRole('button', { name: 'Enlarge dashboard' });
