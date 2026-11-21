@@ -488,7 +488,19 @@ const Enterprise = () => {
                       </a>
                     </p>
 
-                    <EvidenceCard kind="call" />
+                    {/* What happens after "Send details": the form opens the Cal page (src/config/pilotCall.ts). */}
+                    <p className="ent-contact__label">{ENTERPRISE_CONTACT.stepsLabel}</p>
+                    <ol className="ent-contact__includes ent-contact__steps">
+                      {ENTERPRISE_CONTACT.steps.map((step, index) => (
+                        <li key={step.title}>
+                          <span className="ent-contact__stepnum" aria-hidden="true">{index + 1}</span>
+                          <span>
+                            <strong className="ent-contact__step-title">{step.title}</strong>
+                            <span className="ent-contact__step-body">{step.body}</span>
+                          </span>
+                        </li>
+                      ))}
+                    </ol>
 
                     <div className="ent-contact__person">
                       <img src={javierPhoto} alt="" width={56} height={56} loading="lazy" decoding="async" />

@@ -2795,4 +2795,6 @@
 .ent-contact__alt svg { width: 16px; height: 16px; transition: transform 0.2s ease; }
 .ent-contact__alt a:hover svg { transform: translateX(2px); }
 @media (prefers-reduced-motion: reduce) { .ent-contact__alt svg { transition: none; } }
+.ent-contact__step-title { display: block; font-weight: 600; }
+.ent-contact__step-body { display: block; color: rgba(232, 237, 248, 0.7); font-size: 14.5px; }
 .ent-day30__list h4 { color: var(--ent-ink); font-family: var(--ent-display); font-size: 18px; font-weight: 600; letter-spacing: -0.015em; }

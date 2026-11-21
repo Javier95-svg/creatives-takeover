@@ -115,6 +115,13 @@ export const ENTERPRISE_CONTACT = {
   // A quiet link to the qualifying Typeform; the form beside it is the main action.
   quizPrompt: 'Prefer to pick a time first?',
   quizLink: 'Answer 8 quick questions',
+  // What happens after "Send details": the form opens Javier's Cal page as soon as it sends.
+  stepsLabel: 'How it works',
+  steps: [
+    { title: 'Send your details', body: 'The form takes about two minutes.' },
+    { title: 'Pick a time', body: "Javier's calendar opens as soon as you send." },
+    { title: 'Talk for 30 minutes', body: 'Your goals, a product walkthrough, next steps.' },
+  ],
   callLabel: 'What we will cover',
   callSteps: ['Your cohort and goals.', 'A dashboard walkthrough.', 'Scope and next steps.'],
   person: { name: 'Javier Alonso', role: 'Founder (CEO & CTO)', line: 'Speak with me directly.', email: 'javier@creatives-takeover.com' },

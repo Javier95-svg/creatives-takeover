@@ -11,7 +11,7 @@ test.beforeEach(async ({ page, context }) => {
 test('visual motion plays on entry, settles, and respects reduced motion', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'no-preference' });
   await page.goto('/enterprise');
-  const offscreenGraphic = page.locator('.ent-contact__panel [data-visual-motion]');
+  const offscreenGraphic = page.locator('[data-visual-motion]:has(.ent-evidence-date)').last();
   await expect(offscreenGraphic).not.toHaveClass(/is-motion-visible/);
   const graphic = page.locator('.ent-outcome [data-visual-motion]').first();
   await graphic.scrollIntoViewIfNeeded();
@@ -76,6 +76,7 @@ for (const theme of ['light', 'dark']) {
       await expect(quizLink).toHaveAttribute('href', 'https://form.typeform.com/to/EPRRkJNV');
       await expect(quizLink).toHaveAttribute('target', '_blank');
       await expect(page.locator('#talk').getByRole('link', { name: 'Book a pilot call' })).toHaveCount(0);
+      await expect(page.locator('#talk .ent-contact__steps li')).toHaveText([/Send your details/, /Pick a time/, /Talk for 30 minutes/]);
       const trigger = page.getByRole('button', { name: 'Enlarge dashboard' });
       await trigger.focus();
       await page.keyboard.press('Enter');
