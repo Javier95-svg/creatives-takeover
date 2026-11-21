@@ -71,6 +71,11 @@ for (const theme of ['light', 'dark']) {
         await expect(link).toHaveAttribute('href', 'https://form.typeform.com/to/EPRRkJNV');
         await expect(link).toHaveAttribute('target', '_blank');
       }
+      // The contact panel offers the Typeform as a quiet text link, not a second big button.
+      const quizLink = page.locator('#talk').getByRole('link', { name: 'Answer 8 quick questions' });
+      await expect(quizLink).toHaveAttribute('href', 'https://form.typeform.com/to/EPRRkJNV');
+      await expect(quizLink).toHaveAttribute('target', '_blank');
+      await expect(page.locator('#talk').getByRole('link', { name: 'Book a pilot call' })).toHaveCount(0);
       const trigger = page.getByRole('button', { name: 'Enlarge dashboard' });
       await trigger.focus();
       await page.keyboard.press('Enter');

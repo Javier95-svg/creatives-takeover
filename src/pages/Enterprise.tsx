@@ -479,10 +479,14 @@ const Enterprise = () => {
                     <p className="ent-eyebrow ent-contact__eyebrow">{ENTERPRISE_CONTACT.eyebrow}</p>
                     <h2 className="ent-contact__title">{ENTERPRISE_CONTACT.title}</h2>
                     <p className="ent-contact__copy">{ENTERPRISE_CONTACT.copy}</p>
-                    <a href={PILOT_CALL_URL} target="_blank" rel="noopener noreferrer" className="ent-btn ent-btn--primary ent-contact__book" onClick={() => track(ENTERPRISE_HERO.primaryCta, "contact")}>
-                      {ENTERPRISE_HERO.primaryCta}
-                      <ArrowRight aria-hidden="true" />
-                    </a>
+                    {/* The Typeform as a quiet alternative: the form beside it is the main action here. */}
+                    <p className="ent-contact__alt">
+                      {ENTERPRISE_CONTACT.quizPrompt}{" "}
+                      <a href={PILOT_CALL_URL} target="_blank" rel="noopener noreferrer" onClick={() => track(ENTERPRISE_CONTACT.quizLink, "contact")}>
+                        {ENTERPRISE_CONTACT.quizLink}
+                        <ArrowRight aria-hidden="true" />
+                      </a>
+                    </p>
 
                     <EvidenceCard kind="call" />
 

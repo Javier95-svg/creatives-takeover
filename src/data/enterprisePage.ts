@@ -112,6 +112,9 @@ export const ENTERPRISE_CONTACT = {
   eyebrow: 'Explore a partnership',
   title: 'Talk to us about a pilot',
   copy: '30 minutes to explore the fit.',
+  // A quiet link to the qualifying Typeform; the form beside it is the main action.
+  quizPrompt: 'Prefer to pick a time first?',
+  quizLink: 'Answer 8 quick questions',
   callLabel: 'What we will cover',
   callSteps: ['Your cohort and goals.', 'A dashboard walkthrough.', 'Scope and next steps.'],
   person: { name: 'Javier Alonso', role: 'Founder (CEO & CTO)', line: 'Speak with me directly.', email: 'javier@creatives-takeover.com' },
