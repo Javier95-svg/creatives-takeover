@@ -287,7 +287,7 @@ const InstitutionContactForm = ({
 
       {requireAll && !complete ? (
         <p id="institution-complete-hint" className="-mt-2 text-center text-sm text-muted-foreground">
-          {bookingUrl ? "All fields are required. After sending, you can pick a time for the call." : "All fields are required."}
+          All fields are required.
         </p>
       ) : null}
 

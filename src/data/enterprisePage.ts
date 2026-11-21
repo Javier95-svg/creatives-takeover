@@ -119,7 +119,7 @@ export const ENTERPRISE_CONTACT = {
   stepsLabel: 'How it works',
   steps: [
     { title: 'Send your details', body: 'The form takes about two minutes.' },
-    { title: 'Pick a time', body: "Javier's calendar opens as soon as you send." },
+    { title: 'Pick a time', body: 'Our calendar opens as soon as you send.' },
     { title: 'Talk for 30 minutes', body: 'Your goals, a product walkthrough, next steps.' },
   ],
   callLabel: 'What we will cover',
