@@ -124,5 +124,5 @@ export const ENTERPRISE_CONTACT = {
   ],
   callLabel: 'What we will cover',
   callSteps: ['Your cohort and goals.', 'A dashboard walkthrough.', 'Scope and next steps.'],
-  person: { name: 'Javier Alonso', role: 'Founder (CEO & CTO)', line: 'Speak with me directly.', email: 'javier@creatives-takeover.com' },
+  person: { name: 'Javier Alonso', role: 'Founder (CEO)', line: 'Speak with me directly.', email: 'javier@creatives-takeover.com' },
 };
