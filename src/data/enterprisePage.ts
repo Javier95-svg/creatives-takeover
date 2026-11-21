@@ -113,7 +113,7 @@ export const ENTERPRISE_CONTACT = {
   title: 'Talk to us about a pilot',
   copy: '30 minutes to explore the fit.',
   // A quiet link to the qualifying Typeform; the form beside it is the main action.
-  quizPrompt: 'Prefer to pick a time first?',
+  quizPrompt: 'Ready?',
   quizLink: 'Answer 8 quick questions',
   // What happens after "Send details": the form opens Javier's Cal page as soon as it sends.
   stepsLabel: 'How it works',
