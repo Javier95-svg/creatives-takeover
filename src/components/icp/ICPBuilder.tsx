@@ -34,6 +34,7 @@ import {
 } from "@/lib/analytics";
 import { markOnboardingPathCompleted } from "@/lib/onboardingPath";
 import { useOnboardingContext } from "@/hooks/useOnboardingContext";
+import { useProjects } from "@/hooks/useProjects";
 import {
   fastIcpInputSchema,
   guidedIcpInputSchema,
@@ -461,6 +462,28 @@ const ICPBuilder: React.FC<ICPBuilderProps> = ({ backControl }) => {
       return { ...previous, fastDescription: brief };
     });
   }, [onboardingContext]);
+
+  // A signed-in founder's workspace project already says what they are
+  // building. The empty box was where most opens ended (20 opened, 4 typed in
+  // the month to 2026-11-22), so start from that summary when nothing else has
+  // filled it. Same rules as the onboarding seed: never overwrite, only on a
+  // seed screen, always editable.
+  const { activeProject } = useProjects();
+  const seededFromProjectRef = useRef(false);
+  useEffect(() => {
+    if (seededFromProjectRef.current) return;
+    const summary = activeProject?.ideaSummary?.trim();
+    if (!summary) return;
+    seededFromProjectRef.current = true;
+    setSession((previous) => {
+      if (previous.fastDescription.trim()) return previous;
+      const atSeedScreen = previous.currentScreen === 'mode_select'
+        || previous.currentScreen === 'fast_input'
+        || previous.currentScreen === 'guided_seed';
+      if (!atSeedScreen) return previous;
+      return { ...previous, fastDescription: summary };
+    });
+  }, [activeProject?.ideaSummary]);
   const [loadingPhase, setLoadingPhase] = useState<LoadingPhase>(null);
   const [loadingStartedAt, setLoadingStartedAt] = useState<number | null>(null);
   const [isPersisting, setIsPersisting] = useState(false);
