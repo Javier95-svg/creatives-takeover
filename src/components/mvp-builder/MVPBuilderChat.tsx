@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import {
   Send,
@@ -303,10 +304,12 @@ interface MVPBuilderChatProps {
   isGenerating: boolean;
 }
 
+// Prototypes of one workflow since 2026-11-22. A page that only collects
+// signups belongs in Demo Studio's concept page, linked under the examples.
 const START_EXAMPLES = [
-  'A booking page for a dog groomer: customers pick a time slot and leave their phone number. Success is 5 bookings in the first week.',
-  'A waitlist page for a budgeting app for freelancers, with an email signup and three short benefit sections.',
-  'A tool where small fleet owners upload a fuel receipt and see spending per truck for the month.',
+  'A tool where small fleet owners upload a fuel receipt and see spending per truck for the month, with sample data.',
+  'A booking flow for a dog groomer: customers pick a service, choose a time slot and see a confirmation. Success is 5 bookings in the first week.',
+  'A weekly budget check-in for freelancers: they enter this week\'s income and see what to set aside for tax.',
 ];
 
 export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
@@ -758,6 +761,13 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
               </div>
               <p className="text-xs leading-relaxed text-muted-foreground">
                 Works today: pages, forms that save signups and requests to your Leads tab, export and your own domain. Not yet: user logins and payments.
+              </p>
+              <p className="text-xs leading-relaxed text-muted-foreground">
+                Only need a page that collects signups?{' '}
+                <Link to="/demo-studio" className="font-medium text-white underline underline-offset-2 hover:text-white/80">
+                  Demo Studio publishes one from your ICP draft
+                </Link>
+                .
               </p>
               <div className="border-t border-white/8 pt-4">
                 <Button

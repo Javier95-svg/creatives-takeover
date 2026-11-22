@@ -66,9 +66,13 @@ test('MVP Builder offers a first message built from the ICP', () => {
   const start = icpArtifactToMvpStart(artifact, 'FleetReceipts');
   assert.ok(start);
   assert.equal(start.customer, 'Owners of 5 to 30 truck fleets in Texas');
-  assert.match(start.prompt, /^A first version of FleetReceipts for Owners of 5 to 30 truck fleets in Texas\./);
+  // A clickable prototype of the one workflow since 2026-11-22; the signup
+  // page is Demo Studio's concept page.
+  assert.match(start.prompt, /^A clickable prototype of FleetReceipts for Owners of 5 to 30 truck fleets in Texas\./);
   assert.match(start.prompt, /The one thing they should get done: snap a fuel receipt and see it filed under the right truck\./);
   assert.match(start.prompt, /It works if month-end closes in ten minutes\./);
+  assert.match(start.prompt, /Skip the marketing landing page\./);
+  assert.ok(start.examples.every((example) => !/waitlist|landing page/i.test(example)));
 });
 
 test('choosing a project makes it current on the server too', () => {

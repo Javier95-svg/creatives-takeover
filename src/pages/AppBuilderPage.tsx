@@ -77,7 +77,7 @@ export default function AppBuilderPage() {
     <div className="tool-theme-mvp h-screen w-screen overflow-hidden bg-background">
       <SEO
         title="AI MVP Builder | Creatives Takeover"
-        description="Describe your product and publish a landing page or simple prototype on its own live URL, then iterate with live preview and see how many people visit."
+        description="Describe the workflow your customer needs and publish a clickable prototype on its own live URL, then iterate with live preview and see how many people visit."
         keywords="ai mvp builder, app builder ai, startup prototype builder, mvp generator, prompt to app"
         url="/mvp-builder"
         structuredData={structuredData}
@@ -92,7 +92,7 @@ export default function AppBuilderPage() {
               Describe your idea. Publish a first version people can try.
             </h1>
             <p className="mx-auto mt-3 max-w-xl text-base text-muted-foreground">
-              Type what you want to build and MVP Builder generates a landing page or simple prototype
+              Describe the one thing your customer needs to get done and MVP Builder generates a clickable prototype of it
               with live preview, then change it with plain-English requests and publish it to its own
               URL. Your first build is free.
             </p>

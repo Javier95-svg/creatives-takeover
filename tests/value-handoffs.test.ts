@@ -62,7 +62,7 @@ test('alternatives to beat are the easiest real options, never "do nothing"', ()
 test('the MVP brief leads with what they get and names the alternative to beat', () => {
   const start = icpArtifactToMvpStart(artifact(), 'Fleet receipts');
   assert.ok(start);
-  assert.match(start.prompt, /Lead the page with what they get: month-end closes in an hour instead of a day\./);
+  assert.match(start.prompt, /Lead with what they get: month-end closes in an hour instead of a day\./);
   assert.match(start.prompt, /better for them than a spreadsheet\./);
 });
 

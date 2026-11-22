@@ -23,23 +23,27 @@ export function icpArtifactToMvpStart(artifact: StoredIcpArtifact, projectTitle:
   const success = clean(doc.build.outcome);
   if (!customer || !task) return null;
   const title = clean(projectTitle) || 'my product';
-  // Everything on the page should serve what the customer gets; if the draft
-  // names an easy alternative, the page has to say why this beats it.
+  // Since 2026-11-22 MVP Builder makes a clickable prototype of the one
+  // workflow; the page that collects signups is Demo Studio's concept page.
+  // Everything shown should serve what the customer gets, and if the draft
+  // names an easy alternative, the prototype has to show why this beats it.
   const value = clean(answeredWhatTheyGet(doc));
   const toBeat = alternativesToBeat(doc, 1)[0];
+  const lowerFirst = (text: string) => `${text.charAt(0).toLowerCase()}${text.slice(1)}`;
   const parts = [
-    `A first version of ${title} for ${customer}.`,
+    `A clickable prototype of ${title} for ${customer}.`,
     `The one thing they should get done: ${task}.`,
-    value ? `Lead the page with what they get: ${value.charAt(0).toLowerCase()}${value.slice(1)}.` : '',
-    toBeat ? `Make clear why this is better for them than ${clean(toBeat.option).charAt(0).toLowerCase()}${clean(toBeat.option).slice(1)}.` : '',
-    success ? `It works if ${success.charAt(0).toLowerCase()}${success.slice(1)}.` : '',
-    'Keep it to one page with a clear signup or request form.',
+    value ? `Lead with what they get: ${lowerFirst(value)}.` : '',
+    toBeat ? `Make clear why this is better for them than ${lowerFirst(clean(toBeat.option))}.` : '',
+    'Show that one workflow screen by screen, from the first step to the result, with realistic sample data.',
+    success ? `It works if ${lowerFirst(success)}.` : '',
+    'End on one clear call to action so you can count who gets to the result. Skip the marketing landing page.',
   ];
   const pain = clean(doc.decisionBrief?.rankedPains?.slice().sort((a, b) => a.rank - b.rank)[0]?.pain || doc.pain.whyItHurts);
   const examples = [
-    `A waitlist page for ${title} aimed at ${customer}: a headline about ${success ? success.toLowerCase() : task}, three short benefits, and an email signup.`,
-    `A request form where ${customer} ask ${title} to ${task.charAt(0).toLowerCase()}${task.slice(1)}, with a confirmation message.`,
-    `A page where ${customer} book a 15-minute call${pain ? ` about ${pain.charAt(0).toLowerCase()}${pain.slice(1)}` : ''}, with name, email and a short note.`,
+    `A clickable prototype where ${customer} ${lowerFirst(task)}, from the first screen to the result, with sample data.`,
+    `The screen ${customer} would check each week to see ${success ? lowerFirst(success) : 'their progress'}, filled with realistic sample data.`,
+    `A short guided flow where ${customer} answer three questions${pain ? ` about ${lowerFirst(pain)}` : ''} and see a tailored result.`,
   ];
   return { title, customer, prompt: parts.filter(Boolean).join(' '), examples };
 }
