@@ -330,7 +330,7 @@ export default function IcpDraftPage() {
             <Button
               type="button"
               size="lg"
-              className="shrink-0 gap-2 bg-white text-foreground hover:bg-white/90"
+              className="shrink-0 gap-2 bg-white text-slate-950 hover:bg-white/90"
               onClick={() => handleConversationsClick("next_step_card")}
             >
               <span>Start your conversations</span>

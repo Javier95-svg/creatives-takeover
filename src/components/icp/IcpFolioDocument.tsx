@@ -1229,7 +1229,7 @@ export function IcpFolioDocument({
             <div className="sticky top-24">
               <nav
                 aria-label="ICP draft sections"
-                className="rounded-xl border border-border/70 bg-background/92 p-3 text-sm backdrop-blur-sm transition-colors"
+                className="rounded-xl border border-border/70 bg-background/95 p-3 text-sm text-foreground backdrop-blur-sm transition-colors"
               >
                 <p className="px-2 pb-3 text-label font-semibold uppercase tracking-[0.16em] text-foreground/60">
                   Jump to section
@@ -1250,7 +1250,7 @@ export function IcpFolioDocument({
                             ? "bg-foreground/[0.06] text-foreground"
                             : isLocked
                               ? "text-foreground/45 hover:bg-foreground/[0.04] hover:text-foreground/70"
-                              : "text-foreground/68 hover:bg-foreground/[0.04] hover:text-foreground"
+                              : "text-foreground/70 hover:bg-foreground/[0.04] hover:text-foreground"
                         }`}
                         aria-current={isActive ? "true" : undefined}
                       >

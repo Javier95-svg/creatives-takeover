@@ -49,7 +49,11 @@ import {
   createEmptyIcpBuilderSession,
   persistIcpBuilderSession,
   persistIcpBuilderAuthHandoff,
+  persistIcpBuilderEmailHandoff,
+  readIcpBuilderClaim,
   readIcpBuilderSession,
+  recordIcpBuilderClaimSaved,
+  takeIcpBuilderEmailHandoff,
   type IcpBuilderMode,
   type IcpBuilderSession,
   type IcpFlowScreen,
@@ -489,6 +493,8 @@ const ICPBuilder: React.FC<ICPBuilderProps> = ({ backControl }) => {
   const [isPersisting, setIsPersisting] = useState(false);
   const [isHydratingEdit, setIsHydratingEdit] = useState(false);
   const [isHydratingResume, setIsHydratingResume] = useState(false);
+  // Another tab took this draft's email-confirmation claim and is saving it.
+  const [savingInOtherTab, setSavingInOtherTab] = useState(false);
   const [guestClaimError, setGuestClaimError] = useState<string | null>(null);
   const [guestCompact, setGuestCompact] = useState<HeroDecisionBrief | null>(null);
   const [guestClaimAttempt, setGuestClaimAttempt] = useState(0);
@@ -1432,6 +1438,8 @@ const ICPBuilder: React.FC<ICPBuilderProps> = ({ backControl }) => {
         }
 
         const artifact = (data.artifact as StoredIcpArtifact) ?? session.draftPreview;
+        // A tab left waiting on the same email sign-up opens this draft too.
+        recordIcpBuilderClaimSaved(session.sessionId, user.id, data.analysisId);
 
         await unlockSavedDraft({
           analysisId: data.analysisId,
@@ -1457,15 +1465,22 @@ const ICPBuilder: React.FC<ICPBuilderProps> = ({ backControl }) => {
     } finally {
       setIsPersisting(false);
     }
-  }, [completeDraftGeneration, isPersisting, session.draftPreview, session.mode, session.unlockRequired, unlockSavedDraft, user]);
+  }, [completeDraftGeneration, isPersisting, session.draftPreview, session.mode, session.sessionId, session.unlockRequired, unlockSavedDraft, user]);
 
   useEffect(() => {
     if (guestArtifactToken || !user || !session.draftPreview || !session.unlockRequired || session.savedAnalysisId || isPersisting || persistError) {
       return;
     }
 
-    const authorizedSession = authorizeIcpBuilderSession(session, user.id);
+    const authorizedSession = authorizeIcpBuilderSession(session, user.id, user.email);
     if (!authorizedSession) {
+      // The email confirmation opened in another tab, and that tab took the
+      // draft first: follow it to the saved draft instead of starting over.
+      if (readIcpBuilderClaim(user.id)?.sessionId === session.sessionId) {
+        setSession(createEmptyIcpBuilderSession());
+        setSavingInOtherTab(true);
+        return;
+      }
       captureEvent("activation_resume_failed", {
         entry_id: "icp_draft_unlock",
         tool: "icp_builder",
@@ -1484,6 +1499,53 @@ const ICPBuilder: React.FC<ICPBuilderProps> = ({ backControl }) => {
 
     void persistDraftAndContinue();
   }, [guestArtifactToken, isPersisting, persistDraftAndContinue, persistError, session, user]);
+
+  // The confirmation link of an email sign-up opens here, in a new tab with
+  // none of the first tab's session storage. The draft waits in local storage
+  // for this address (persistIcpBuilderEmailHandoff); take it and the effect
+  // above saves it. If the first tab already took it, follow that tab.
+  const unlockParam = searchParams.get("unlock");
+  useEffect(() => {
+    if (!user || unlockParam !== "1" || guestArtifactToken || resumeToken || editDraftId) return;
+    if (session.draftPreview || session.savedAnalysisId || savingInOtherTab) return;
+
+    const adopted = takeIcpBuilderEmailHandoff(user.id, user.email ?? null);
+    if (adopted) {
+      captureEvent("activation_step_completed", {
+        entry_id: "icp_draft_unlock",
+        tool: "icp_builder",
+        source: "email_confirmation",
+        step: "draft_restored",
+        is_authenticated: true,
+      });
+      setSession(adopted);
+      return;
+    }
+    if (readIcpBuilderClaim(user.id)) setSavingInOtherTab(true);
+  }, [editDraftId, guestArtifactToken, resumeToken, savingInOtherTab, session.draftPreview, session.savedAnalysisId, unlockParam, user]);
+
+  useEffect(() => {
+    if (!savingInOtherTab || !user) return;
+    const deadline = Date.now() + 60_000;
+    const check = () => {
+      const analysisId = readIcpBuilderClaim(user.id)?.analysisId;
+      if (analysisId) {
+        navigate(buildIcpUnlockNavigationPath(analysisId), { replace: true });
+        return true;
+      }
+      if (Date.now() > deadline) {
+        // The other tab has not finished; the dashboard lists the draft once it does.
+        navigate("/dashboard", { replace: true });
+        return true;
+      }
+      return false;
+    };
+    if (check()) return;
+    const timer = window.setInterval(() => {
+      if (check()) window.clearInterval(timer);
+    }, 1_000);
+    return () => window.clearInterval(timer);
+  }, [navigate, savingInOtherTab, user]);
 
   useEffect(() => {
     if (!guestArtifactToken || !user || isHydratingResume || showCelebration) return;
@@ -2265,6 +2327,22 @@ const ICPBuilder: React.FC<ICPBuilderProps> = ({ backControl }) => {
     );
   }
 
+  if (savingInOtherTab) {
+    return (
+      <div className="min-h-screen bg-transparent">
+        <IcpProgressBar progress={0} shellOffset />
+        <div className="flex min-h-screen items-center justify-center px-6">
+          <Card className="rounded-5xl border-border/60 bg-white/80 shadow-sm backdrop-blur dark:bg-slate-950/75">
+            <CardContent className="space-y-4 px-6 py-8 text-muted-foreground" role="status">
+              <Loader2 className="h-5 w-5 animate-spin" />
+              Your draft is being saved in your other tab. Opening it here…
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
   if (isHydratingEdit || isHydratingResume) {
     return (
       <div className="min-h-screen bg-transparent">
@@ -2350,6 +2428,7 @@ const ICPBuilder: React.FC<ICPBuilderProps> = ({ backControl }) => {
                 persistIcpBuilderAuthHandoff(session, unlockPath);
               }}
               onEmailLinkRequest={(email) => requestResumeLink({ email, source: "unlock_gate", includeArtifact: true })}
+              onEmailConfirmationPending={(email) => persistIcpBuilderEmailHandoff(session, email)}
             />
           </div>
           <Footer />

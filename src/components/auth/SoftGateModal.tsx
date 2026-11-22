@@ -51,6 +51,11 @@ interface SoftGateModalProps {
   description?: string;
   returnPathOverride?: string;
   onBeforeAuthContinue?: () => void;
+  /**
+   * Email sign-up is waiting for the confirmation link, which opens in a new
+   * tab. Lets the caller keep whatever that tab will need.
+   */
+  onEmailConfirmationPending?: (email: string) => void;
   signupSource?: string;
   entryId?: ActivationEntryId;
   activationTool?: ActivationTool;
@@ -83,6 +88,7 @@ const SoftGateModal = ({
   description = "Create your founder profile in 10 seconds. Free forever. No credit card.",
   returnPathOverride,
   onBeforeAuthContinue,
+  onEmailConfirmationPending,
   signupSource = "icp-draft-unlock",
   entryId = "icp_draft_unlock",
   activationTool = "icp_builder",
@@ -261,6 +267,7 @@ const SoftGateModal = ({
         if (autoSignInError) {
           // With "Confirm email" on, the account waits for the link we just sent.
           if (/not confirmed|not verified/i.test(autoSignInError.message ?? "")) {
+            onEmailConfirmationPending?.(email.trim());
             toast.success(confirmationSentMessage(email), { duration: 10000 });
           } else {
             toast.error("Account created, but automatic sign in failed. Please sign in manually.");

@@ -35,6 +35,8 @@ interface IcpSaveDraftCardProps {
   returnPath: string;
   onBeforeAuthContinue?: () => void;
   onEmailLinkRequest?: (email: string) => Promise<void>;
+  /** Email sign-up waits for its confirmation link, which opens a new tab. */
+  onEmailConfirmationPending?: (email: string) => void;
   /** Opened from the button beside the score as well as from the card. */
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -46,6 +48,7 @@ export function IcpSaveDraftCard({
   returnPath,
   onBeforeAuthContinue,
   onEmailLinkRequest,
+  onEmailConfirmationPending,
   open,
   onOpenChange,
 }: IcpSaveDraftCardProps) {
@@ -188,6 +191,7 @@ export function IcpSaveDraftCard({
         description="Create your founder profile in seconds. This draft is saved to it automatically."
         returnPathOverride={returnPath}
         onBeforeAuthContinue={prepareAuth}
+        onEmailConfirmationPending={onEmailConfirmationPending}
         signupSource="icp-draft-save"
         entryId="icp_draft_unlock"
         activationTool="icp_builder"

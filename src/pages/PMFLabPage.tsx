@@ -86,6 +86,9 @@ export default function PMFLabPage() {
   const [demoId, setDemoId] = useState<string | null>(searchParams.get('demo'));
   const [contexts, setContexts] = useState<PrebuildValidationContext[] | null>(null);
   const [contextStartedAt, setContextStartedAt] = useState<string | null>(null);
+  // Opening the idea's evidence case failed; without this the page spun forever.
+  const [contextOpenFailed, setContextOpenFailed] = useState(false);
+  const [contextOpenAttempt, setContextOpenAttempt] = useState(0);
   // ?step=interviews is the conversation entry point ICP Builder links to.
   const [activeStep, setActiveStep] = useState<PmfStepId | null>(
     () => (new URLSearchParams(window.location.search).get('step') === 'interviews' ? 'talk' : null),
@@ -133,10 +136,12 @@ export default function PMFLabPage() {
 
   useEffect(() => {
     if (!user || validationContextId || !icpParam) return;
+    setContextOpenFailed(false);
     void ensurePrebuildContext({ userId: user.id, icpAnalysisId: icpParam, sourceTool: 'pmf_lab' })
-      .then((context) => selectContext(context));
+      .then((context) => selectContext(context))
+      .catch(() => setContextOpenFailed(true));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [icpParam, user, validationContextId]);
+  }, [icpParam, user, validationContextId, contextOpenAttempt]);
 
   // Evidence never mixes across ideas: every interview, survey and score belongs to
   // one case. Open the case for the workspace project's customer profile
@@ -158,7 +163,7 @@ export default function PMFLabPage() {
       }).then((context) => {
         setContexts((items) => (items?.some((item) => item.id === context.id) ? items : [context, ...(items ?? [])]));
         selectContext(context);
-      }).catch(() => undefined);
+      }).catch(() => setContextOpenFailed(true));
       return;
     }
     if (contexts.length > 0) selectContext(contexts[0]);
@@ -473,6 +478,27 @@ export default function PMFLabPage() {
   );
 
   const renderSignedIn = () => {
+    if (!validationContextId && contextOpenFailed) {
+      return (
+        <div role="alert" className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+          We could not open this idea.
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={() => {
+              setContextOpenFailed(false);
+              // Re-runs the ?icp= open; the project case re-opens on the next project change or reload.
+              if (icpParam) setContextOpenAttempt((attempt) => attempt + 1);
+              else window.location.reload();
+            }}
+          >
+            Try again
+          </Button>
+        </div>
+      );
+    }
+
     if (!validationContextId) {
       return (
         <div className="flex items-center gap-2 text-sm text-muted-foreground">

@@ -19,6 +19,7 @@ interface IcpGuestResultViewProps {
   returnPath: string;
   onBeforeAuthContinue?: () => void;
   onEmailLinkRequest?: (email: string) => Promise<void>;
+  onEmailConfirmationPending?: (email: string) => void;
 }
 
 /**
@@ -36,6 +37,7 @@ export function IcpGuestResultView({
   returnPath,
   onBeforeAuthContinue,
   onEmailLinkRequest,
+  onEmailConfirmationPending,
 }: IcpGuestResultViewProps) {
   const [saveOpen, setSaveOpen] = useState(false);
   const scoreCard = useMemo(
@@ -106,6 +108,7 @@ export function IcpGuestResultView({
           returnPath={returnPath}
           onBeforeAuthContinue={onBeforeAuthContinue}
           onEmailLinkRequest={onEmailLinkRequest}
+          onEmailConfirmationPending={onEmailConfirmationPending}
           open={saveOpen}
           onOpenChange={setSaveOpen}
         />
