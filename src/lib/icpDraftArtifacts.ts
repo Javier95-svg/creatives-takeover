@@ -249,6 +249,9 @@ export function normalizeIcpDraftDocument(
         typeof draft.build?.valueProposition === "string" && draft.build.valueProposition.trim().length > 0
           ? draft.build.valueProposition
           : "The first product promise still needs to be made more concrete.",
+      ...(typeof draft.build?.whatTheyGet === "string" && draft.build.whatTheyGet.trim()
+        ? { whatTheyGet: draft.build.whatTheyGet }
+        : {}),
       replaces: normalizeSectionList(draft.build?.replaces),
       coreFeatures: Array.isArray(draft.build?.coreFeatures)
         ? draft.build.coreFeatures.filter(
@@ -371,6 +374,8 @@ function passThroughChain(draft: Partial<IcpDraftDocument>): Partial<IcpDraftDoc
     chain.viabilityAssessment = draft.viabilityAssessment;
   }
   if (draft.fieldProvenance && typeof draft.fieldProvenance === "object") chain.fieldProvenance = draft.fieldProvenance;
+  if (draft.valueForm && typeof draft.valueForm === "object") chain.valueForm = draft.valueForm;
+  if (Array.isArray(draft.alternatives)) chain.alternatives = draft.alternatives;
   return chain;
 }
 

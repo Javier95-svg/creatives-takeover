@@ -138,6 +138,7 @@ export const ICP_FIELD_LABELS: Readonly<Record<string, string>> = {
   "decisionBrief.currentAlternative": "What they use instead today",
 
   "build.valueProposition": "The promise the product makes",
+  "build.whatTheyGet": "What the customer actually gets from it",
   "build.outcome": "The outcome the customer gets",
 
   "moat.edge": "The founder's unfair advantage",

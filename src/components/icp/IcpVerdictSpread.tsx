@@ -4,8 +4,10 @@ import {
   ArrowRight,
   Banknote,
   FlaskConical,
+  Gem,
   Globe2,
   ShieldQuestion,
+  Shuffle,
   Target,
 } from "lucide-react";
 
@@ -21,6 +23,13 @@ import {
 } from "@/lib/icpViabilityScore";
 import type { IcpDraftDocument, IcpDraftRisk, IcpRiskType } from "@/lib/icpBuilderSession";
 import type { IcpScoreCard } from "@/lib/icpScoreCard";
+import {
+  ALTERNATIVE_EASE_LABELS,
+  ALTERNATIVE_KIND_LABELS,
+  computeValuePosition,
+  VALUE_FORM_LABELS,
+  type ValuePosition,
+} from "@/lib/icpValuePosition";
 
 /**
  * The answer, above the evidence.
@@ -176,6 +185,59 @@ function RiskRow({ risk, draft, index }: { risk: IcpDraftRisk; draft: IcpDraftDo
         </p>
       </div>
     </li>
+  );
+}
+
+/**
+ * Wanted against hard to get elsewhere, as a small two-by-two.
+ *
+ * The top-right cell is the only one worth building in, so it is the only one
+ * tinted; the dot shows how far into (or out of) it this idea sits.
+ */
+function ValuePositionChart({ position }: { position: ValuePosition }) {
+  const cells: Array<{ key: ValuePosition["quadrant"]; className: string }> = [
+    { key: "easy_to_replace", className: "rounded-tl-lg" },
+    { key: "valuable", className: "rounded-tr-lg bg-success/10" },
+    { key: "weak", className: "rounded-bl-lg" },
+    { key: "unwanted", className: "rounded-br-lg" },
+  ];
+
+  return (
+    <div>
+      <p className="text-[0.7rem] font-semibold uppercase tracking-[0.14em] text-foreground/50">Where it sits</p>
+      <div className="mt-2 flex flex-wrap items-start gap-4">
+        <div className="flex shrink-0 items-stretch gap-1.5">
+          <span className="text-[0.65rem] text-foreground/45 [writing-mode:vertical-rl] rotate-180 text-center">Wanted</span>
+          <div>
+            <div
+              className="relative grid h-24 w-24 grid-cols-2 grid-rows-2 gap-px overflow-hidden rounded-lg border border-border/60 bg-border/60"
+              role="img"
+              aria-label={`${position.label}. Wanted ${position.wanted} of 100, hard to get elsewhere ${position.hardToFind} of 100.`}
+            >
+              {cells.map((cell) => (
+                <span
+                  key={cell.key}
+                  className={`bg-background ${cell.className} ${cell.key === position.quadrant ? "ring-1 ring-inset ring-foreground/25" : ""}`}
+                />
+              ))}
+              <span
+                className="absolute h-2.5 w-2.5 -translate-x-1/2 translate-y-1/2 rounded-full bg-foreground shadow"
+                style={{ left: `${position.hardToFind}%`, bottom: `${position.wanted}%` }}
+                aria-hidden
+              />
+            </div>
+            <p className="mt-1 text-center text-[0.65rem] text-foreground/45">Hard to get elsewhere</p>
+          </div>
+        </div>
+        <div className="min-w-0 flex-1 basis-48">
+          <p className="text-sm font-semibold leading-6 text-foreground/85">{position.label}</p>
+          <p className="mt-1 text-xs tabular-nums text-foreground/50">
+            Wanted {position.wanted}/100 · Hard to get elsewhere {position.hardToFind}/100
+          </p>
+          <p className="mt-1.5 text-xs leading-5 text-foreground/65">{position.advice}</p>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -345,11 +407,16 @@ export function IcpVerdictSpread({
       };
   const openQuestions = useMemo(() => collectLabelledOpenQuestions(draft), [draft]);
 
-  const { market, pricing, risks, experiment, recommendation } = draft;
+  const { market, pricing, risks, experiment, recommendation, valueForm, alternatives } = draft;
+  const valuePosition = useMemo(() => computeValuePosition(draft), [draft]);
+  const whatTheyGet = draft.build.whatTheyGet;
+  const hasValueDetail = Boolean(whatTheyGet || valueForm || valuePosition);
   // A draft generated before the chain existed still renders the verdict, which
   // is derived from dimensions those drafts already carry. Only the panels that
   // have no data are dropped.
-  const hasChainDetail = Boolean(market || pricing || (risks && risks.length > 0) || experiment);
+  const hasChainDetail = Boolean(
+    market || pricing || (risks && risks.length > 0) || experiment || hasValueDetail || (alternatives && alternatives.length > 0),
+  );
 
   return (
     <section
@@ -426,12 +493,79 @@ export function IcpVerdictSpread({
 
       {!compact && hasChainDetail ? (
         <div className="mt-6 grid gap-4 md:grid-cols-2">
+          {hasValueDetail ? (
+            <Panel icon={<Gem className="h-4 w-4" />} title="What they get">
+              <Finding draft={draft} path="build.whatTheyGet" value={whatTheyGet} label="What changes for them" />
+              {valueForm ? (
+                <div>
+                  <p className="text-[0.7rem] font-semibold uppercase tracking-[0.14em] text-foreground/50">Kind of value</p>
+                  <p className="mt-1 text-sm leading-6 text-foreground/80">
+                    {VALUE_FORM_LABELS[valueForm.primary]}
+                    {valueForm.secondary ? (
+                      <span className="text-foreground/55"> · also {VALUE_FORM_LABELS[valueForm.secondary].toLowerCase()}</span>
+                    ) : null}
+                  </p>
+                </div>
+              ) : null}
+              {valuePosition ? <ValuePositionChart position={valuePosition} /> : null}
+            </Panel>
+          ) : null}
+
+          {alternatives && alternatives.length > 0 ? (
+            <Panel icon={<Shuffle className="h-4 w-4" />} title="Where else they could get it">
+              <ul className="space-y-2">
+                {alternatives.map((alternative) => (
+                  <li key={alternative.option} className="flex flex-wrap items-start justify-between gap-x-3 gap-y-1 text-sm leading-6">
+                    <span className="min-w-0 flex-1 basis-40 text-foreground/80">
+                      {alternative.option}
+                      <span className="block text-xs text-foreground/50">{ALTERNATIVE_KIND_LABELS[alternative.kind]}</span>
+                    </span>
+                    <span
+                      className={`mt-0.5 shrink-0 rounded-full border px-2 py-0.5 text-[0.65rem] font-semibold uppercase tracking-[0.1em] ${
+                        alternative.ease === "easy"
+                          ? "border-destructive/40 text-destructive"
+                          : alternative.ease === "hard"
+                            ? "border-success/40 text-success"
+                            : "border-border/60 text-foreground/55"
+                      }`}
+                    >
+                      {ALTERNATIVE_EASE_LABELS[alternative.ease]}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              <p className="text-xs leading-5 text-foreground/50">
+                The easier these are for your customer, the less your version is worth to them.
+              </p>
+            </Panel>
+          ) : null}
+
           {market ? (
             <Panel icon={<Globe2 className="h-4 w-4" />} title="Market">
               <Finding draft={draft} path="market.category" value={market.category} label="Category" />
               <Finding draft={draft} path="market.whoBuysToday" value={market.whoBuysToday} label="Who pays today" />
               <Finding draft={draft} path="market.demandSignal" value={market.demandSignal} label="Demand signal" />
               <Finding draft={draft} path="market.whyNow" value={market.whyNow} label="Why now" />
+              {market.shifts ? (
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {market.shifts.becomingPlentiful.length > 0 ? (
+                    <div>
+                      <p className="text-[0.7rem] font-semibold uppercase tracking-[0.14em] text-foreground/50">Getting easier to find</p>
+                      <ul className="mt-1 space-y-1 text-xs leading-5 text-foreground/70">
+                        {market.shifts.becomingPlentiful.map((item) => <li key={item}>{item}</li>)}
+                      </ul>
+                    </div>
+                  ) : null}
+                  {market.shifts.becomingScarce.length > 0 ? (
+                    <div>
+                      <p className="text-[0.7rem] font-semibold uppercase tracking-[0.14em] text-foreground/50">Getting harder to find</p>
+                      <ul className="mt-1 space-y-1 text-xs leading-5 text-foreground/70">
+                        {market.shifts.becomingScarce.map((item) => <li key={item}>{item}</li>)}
+                      </ul>
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
             </Panel>
           ) : null}
 

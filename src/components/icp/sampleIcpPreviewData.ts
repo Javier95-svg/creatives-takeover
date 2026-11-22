@@ -56,6 +56,7 @@ const ANSWERED_PATHS = [
   'pain.triggerMoment',
   'pain.costOfInaction',
   'build.valueProposition',
+  'build.whatTheyGet',
   'build.outcome',
   'moat.edge',
   'moat.edgeSource',
@@ -877,26 +878,77 @@ const aiVoiceAssistantForSeniorsDraft: IcpDraftDocument = {
   ),
 };
 
+/** Adds what the customer gets, the kind of value and the alternatives to a sample. */
+const withValue = (
+  draft: IcpDraftDocument,
+  value: {
+    whatTheyGet: string;
+    valueForm: NonNullable<IcpDraftDocument["valueForm"]>;
+    alternatives: NonNullable<IcpDraftDocument["alternatives"]>;
+  },
+): IcpDraftDocument => ({
+  ...draft,
+  build: { ...draft.build, whatTheyGet: value.whatTheyGet },
+  valueForm: value.valueForm,
+  alternatives: value.alternatives,
+});
+
 export const SAMPLE_ICP_PREVIEW_SAMPLES: IcpSamplePreviewProfile[] = [
   {
     key: "ai_powered_personal_finance_coach",
     label: "AI-Powered Personal Finance Coach",
-    draft: aiPoweredPersonalFinanceCoachDraft,
+    draft: withValue(aiPoweredPersonalFinanceCoachDraft, {
+      whatTheyGet: "Knowing each week what to do with their money, and no longer dreading opening the bank app.",
+      valueForm: { primary: "protect", secondary: "growth" },
+      alternatives: [
+        { option: "A budgeting app", kind: "competitor", ease: "easy" },
+        { option: "A spreadsheet they update when they remember", kind: "diy", ease: "easy" },
+        { option: "A human financial adviser", kind: "competitor", ease: "hard" },
+        { option: "Keep winging it", kind: "do_nothing", ease: "easy" },
+      ],
+    }),
   },
   {
     key: "creator_analytics_growth_platform",
     label: "Creator Analytics & Growth Platform",
-    draft: creatorAnalyticsGrowthPlatformDraft,
+    draft: withValue(creatorAnalyticsGrowthPlatformDraft, {
+      whatTheyGet: "Knowing what to post next and which posts will pay, instead of guessing from five dashboards.",
+      valueForm: { primary: "save", secondary: "growth" },
+      alternatives: [
+        { option: "Each platform's own analytics", kind: "competitor", ease: "easy" },
+        { option: "A weekly spreadsheet of their numbers", kind: "diy", ease: "some_effort" },
+        { option: "A paid analytics tool", kind: "competitor", ease: "some_effort" },
+        { option: "Post on instinct", kind: "do_nothing", ease: "easy" },
+      ],
+    }),
   },
   {
     key: "sustainability_compliance_consulting",
     label: "Sustainability Compliance Consulting",
-    draft: sustainabilityComplianceConsultingDraft,
+    draft: withValue(sustainabilityComplianceConsultingDraft, {
+      whatTheyGet: "Answers they can send when a customer or auditor asks, without a scramble every time.",
+      valueForm: { primary: "protect", secondary: "save" },
+      alternatives: [
+        { option: "A large consultancy engagement", kind: "competitor", ease: "hard" },
+        { option: "Compliance software", kind: "competitor", ease: "some_effort" },
+        { option: "Someone on the team pieces it together in spreadsheets", kind: "diy", ease: "some_effort" },
+        { option: "Answer each request as it comes", kind: "do_nothing", ease: "easy" },
+      ],
+    }),
   },
   {
     key: "ai_voice_assistant_for_seniors",
     label: "AI Voice Assistant for Seniors",
-    draft: aiVoiceAssistantForSeniorsDraft,
+    draft: withValue(aiVoiceAssistantForSeniorsDraft, {
+      whatTheyGet: "Peace of mind for the family, and a parent who stays independent at home for longer.",
+      valueForm: { primary: "protect", secondary: "belonging" },
+      alternatives: [
+        { option: "A general smart speaker", kind: "competitor", ease: "easy" },
+        { option: "Daily phone calls and paper reminders", kind: "diy", ease: "some_effort" },
+        { option: "A paid carer who visits", kind: "competitor", ease: "hard" },
+        { option: "Hope nothing gets missed", kind: "do_nothing", ease: "easy" },
+      ],
+    }),
   },
 ];
 

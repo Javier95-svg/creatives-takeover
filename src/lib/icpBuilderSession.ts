@@ -76,6 +76,16 @@ export interface IcpViabilityDimension {
 
 export type IcpViabilityAssessment = Record<IcpViabilityDimensionKey, IcpViabilityDimension>;
 
+/** Relief: fix, protect, save. Desire: identity, pleasure, belonging, growth. */
+export type IcpValueForm = "fix" | "protect" | "save" | "identity" | "pleasure" | "belonging" | "growth";
+
+export interface IcpDraftAlternative {
+  option: string;
+  kind: "competitor" | "diy" | "do_nothing" | "other";
+  /** How easy that option is for this customer, not how good it is. */
+  ease: "easy" | "some_effort" | "hard";
+}
+
 export interface IcpDraftDocument {
   gatePreview: {
     personaName: string;
@@ -113,6 +123,8 @@ export interface IcpDraftDocument {
   };
   build: {
     valueProposition: string;
+    /** What changes for the customer. Absent on drafts generated before 2026-11-21. */
+    whatTheyGet?: string;
     replaces: string[];
     coreFeatures: IcpDraftCoreFeature[];
     outcome: string;
@@ -143,8 +155,14 @@ export interface IcpDraftDocument {
     whoBuysToday: string;
     demandSignal: string;
     whyNow: string;
+    /** Only present when retrieved evidence supported it. */
+    shifts?: { becomingPlentiful: string[]; becomingScarce: string[] };
     evidence: IcpDraftSectionEvidence;
   };
+  /** The kind of value on offer. Absent on older drafts and when the model did not commit. */
+  valueForm?: { primary: IcpValueForm; secondary: IcpValueForm | null };
+  /** Every other way the customer could get the same thing, with how easy each one is. */
+  alternatives?: IcpDraftAlternative[];
   pricing?: {
     model: string;
     hypothesis: string;

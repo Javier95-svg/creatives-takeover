@@ -245,13 +245,23 @@ function computeRigorPillars(draft: IcpDraftDocument): ViabilityDriver[] {
   ];
 }
 
+/**
+ * For a want-led idea (identity, pleasure, belonging, growth) the generator
+ * scores painSeverity as how hard the customer already pursues it, so naming
+ * it "pain severity" in "Weakest on ..." would describe a rubric it was not
+ * scored on. Label only: the weight and the score are unchanged.
+ */
+const DESIRE_FORMS = new Set(["identity", "pleasure", "belonging", "growth"]);
+
 function computeDimensions(draft: IcpDraftDocument): ViabilityDriver[] | null {
   const assessment = draft.viabilityAssessment;
   if (!assessment) return null;
+  const wantLed = DESIRE_FORMS.has(draft.valueForm?.primary ?? "");
   return (Object.keys(DIMENSION_WEIGHTS) as Array<keyof typeof DIMENSION_WEIGHTS>).map((key) => {
     const raw = assessment[key]?.score;
     const score = typeof raw === "number" && Number.isFinite(raw) ? clamp(raw, 0, 100) : 0;
-    return { key, label: DIMENSION_LABELS[key], ratio: score / 100 };
+    const label = key === "painSeverity" && wantLed ? "how much they want it" : DIMENSION_LABELS[key];
+    return { key, label, ratio: score / 100 };
   });
 }
 
