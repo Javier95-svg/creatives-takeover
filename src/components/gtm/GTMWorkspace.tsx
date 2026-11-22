@@ -254,6 +254,18 @@ export default function GTMWorkspace({
                 {plan.positioning.uniqueValueProposition ? (
                   <div><p className="font-medium text-foreground">What is new for them</p><p className="mt-1 text-muted-foreground">{plan.positioning.uniqueValueProposition}</p></div>
                 ) : null}
+                {plan.positioning.beyondCategory ? (
+                  <div className="rounded-lg border border-border/60 p-3">
+                    <p className="font-medium text-foreground">Later: people outside your category</p>
+                    <dl className="mt-1 grid gap-1 text-muted-foreground sm:grid-cols-[auto_1fr] sm:gap-x-3">
+                      <dt className="font-medium text-foreground">Who</dt><dd>{plan.positioning.beyondCategory.audience}</dd>
+                      <dt className="font-medium text-foreground">What they want</dt><dd>{plan.positioning.beyondCategory.abstractValue}</dd>
+                      <dt className="font-medium text-foreground">How to show it</dt><dd>{plan.positioning.beyondCategory.howToShowIt}</dd>
+                      <dt className="font-medium text-foreground">Where to reach them</dt><dd>{plan.positioning.beyondCategory.channel}</dd>
+                    </dl>
+                    <p className="mt-1 text-xs text-muted-foreground">An idea to test after the plan above, not part of it.</p>
+                  </div>
+                ) : null}
                 {readFakeValueFlags(plan.positioning.fakeValueFlags).length > 0 ? (
                   <div className="rounded-lg border border-warning/40 bg-warning-subtle p-3">
                     <p className="font-medium text-foreground">Claims that will not win the buyer</p>

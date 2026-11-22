@@ -1,6 +1,7 @@
 import type { StoredIcpArtifact } from '@/lib/icpBuilderSession';
 import type { DemoStudioBrief } from '@/lib/demoStudio/types';
 import { DEFAULT_DEMO_STUDIO_CTA } from '@/lib/demoStudio/brief';
+import { answeredWhatTheyGet } from '@/lib/icpValuePosition';
 
 /**
  * Maps a saved ICP Draft onto a Demo Studio brief so the founder never re-types the
@@ -46,9 +47,13 @@ function derivePainStatement(artifact: StoredIcpArtifact): string {
   );
 }
 
+/**
+ * The promise leads with what the customer gets, when the draft states it.
+ * The value proposition describes the product; this describes what they buy.
+ */
 function derivePromise(artifact: StoredIcpArtifact): string {
   const build = artifact.draftDocument.build;
-  return truncate(firstNonEmpty(build.valueProposition, build.outcome), 240);
+  return truncate(firstNonEmpty(answeredWhatTheyGet(artifact.draftDocument), build.valueProposition, build.outcome), 240);
 }
 
 function deriveAhaMoment(artifact: StoredIcpArtifact): string {

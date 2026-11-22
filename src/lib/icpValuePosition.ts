@@ -67,6 +67,32 @@ export function computeValuePosition(draft: IcpDraftDocument): ValuePosition | n
   return { wanted, hardToFind, quadrant, ...QUADRANT_COPY[quadrant] };
 }
 
+/**
+ * What the customer gets, only when the generator actually answered it. The
+ * unanswered field holds placeholder prose ("...still needs to be stated"),
+ * which must never be handed to another tool as if it were the value.
+ */
+export function answeredWhatTheyGet(draft: IcpDraftDocument): string {
+  const value = draft.build.whatTheyGet?.trim() ?? "";
+  if (!value) return "";
+  if (draft.fieldProvenance && draft.fieldProvenance["build.whatTheyGet"] !== "model") return "";
+  return value;
+}
+
+/**
+ * The alternatives a later tool has to beat, easiest first. "Do nothing" is
+ * left out: it is not a product to position against, and it reads oddly in a
+ * competitor list.
+ */
+export function alternativesToBeat(draft: IcpDraftDocument, limit = 3): IcpDraftAlternative[] {
+  const order: Record<IcpDraftAlternative["ease"], number> = { easy: 0, some_effort: 1, hard: 2 };
+  return (draft.alternatives ?? [])
+    .filter((alternative) => alternative.kind !== "do_nothing" && alternative.option.trim().length > 0)
+    .slice()
+    .sort((a, b) => order[a.ease] - order[b.ease])
+    .slice(0, limit);
+}
+
 export const DESIRE_FORMS: ReadonlySet<IcpValueForm> = new Set(["identity", "pleasure", "belonging", "growth"]);
 
 export function isDesireForm(form: IcpValueForm | null | undefined): boolean {

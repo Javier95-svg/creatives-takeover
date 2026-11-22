@@ -1,4 +1,5 @@
 import type { StoredIcpArtifact } from '../icpBuilderSession';
+import { alternativesToBeat, answeredWhatTheyGet } from '../icpValuePosition.ts';
 
 // Turns the project's ICP into a first build message for MVP Builder, in the
 // shape the start screen asks for: who it is for, the one thing they should get
@@ -22,9 +23,15 @@ export function icpArtifactToMvpStart(artifact: StoredIcpArtifact, projectTitle:
   const success = clean(doc.build.outcome);
   if (!customer || !task) return null;
   const title = clean(projectTitle) || 'my product';
+  // Everything on the page should serve what the customer gets; if the draft
+  // names an easy alternative, the page has to say why this beats it.
+  const value = clean(answeredWhatTheyGet(doc));
+  const toBeat = alternativesToBeat(doc, 1)[0];
   const parts = [
     `A first version of ${title} for ${customer}.`,
     `The one thing they should get done: ${task}.`,
+    value ? `Lead the page with what they get: ${value.charAt(0).toLowerCase()}${value.slice(1)}.` : '',
+    toBeat ? `Make clear why this is better for them than ${clean(toBeat.option).charAt(0).toLowerCase()}${clean(toBeat.option).slice(1)}.` : '',
     success ? `It works if ${success.charAt(0).toLowerCase()}${success.slice(1)}.` : '',
     'Keep it to one page with a clear signup or request form.',
   ];

@@ -9,12 +9,16 @@ import { Textarea } from '@/components/ui/textarea';
 import type { JourneyAssumption } from '@/lib/journeyOutcomes';
 import type { ChangedExperimentVariable, DecisionReadiness } from '@/lib/marketExperiment';
 import type { TractionDecision, TractionExperimentInput } from '@/lib/tractionEngine';
+import type { IcpValueForm } from '@/lib/icpBuilderSession';
+import { VALUE_FORM_LABELS } from '@/lib/icpValuePosition';
 
 export type TractionExperimentDraft = TractionExperimentInput & {
   localId: string;
   decisionRationale: string;
   assumptionFingerprint?: string;
   assumptionStatus?: 'confirmed' | 'rejected';
+  /** Which kind of value this week's message or offer led with. */
+  valueForm?: IcpValueForm;
   sampleSize: number;
   minimumSampleSize: number;
   marketExperimentId?: string;
@@ -172,6 +176,21 @@ export function TractionExperimentCard({
             onChange={(event) => onChange({ timeInvestedHours: numberFromInput(event.target.value) })} />
         </Field>
       </div>
+
+      <Field label="Value this week led with" hint="Over a few weeks this shows which kind of value actually brings people back.">
+        <Select
+          value={experiment.valueForm ?? 'none'}
+          onValueChange={(value) => onChange({ valueForm: value === 'none' ? undefined : value as IcpValueForm })}
+        >
+          <SelectTrigger aria-label="Value this week led with"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="none">Not set</SelectItem>
+            {(Object.keys(VALUE_FORM_LABELS) as IcpValueForm[]).map((form) => (
+              <SelectItem key={form} value={form}>{VALUE_FORM_LABELS[form]}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </Field>
 
       {assumptions.length > 0 && (
         <div className="grid gap-4 rounded-lg border border-border p-3 sm:grid-cols-2">

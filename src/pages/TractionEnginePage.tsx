@@ -559,7 +559,12 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
     if (deleteError) throw deleteError;
     const { error: insertError } = await supabase
       .from(EXPERIMENTS_TABLE)
-      .insert(experimentRows.map((row) => ({ ...row, user_id: userId, weekly_log_id: logId })) as never);
+      .insert(experimentRows.map((row) => {
+        // A database without save_traction_week may also lack value_form; only
+        // send it when there is something to store.
+        const { value_form: valueForm, ...rest } = row as typeof row & { value_form?: string | null };
+        return { ...rest, ...(valueForm ? { value_form: valueForm } : {}), user_id: userId, weekly_log_id: logId };
+      }) as never);
     if (insertError) throw insertError;
     return logId;
   };
@@ -633,6 +638,8 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
           efficiency_score: experimentScore.efficiencyScore,
           quality_score: experimentScore.qualityScore,
           sample_size: experiment.sampleSize,
+          // Read by save_traction_week since 20261122100000; ignored before it.
+          value_form: experiment.valueForm ?? null,
         };
       });
       const logId = await persistWeek(logPayload, experimentRows);

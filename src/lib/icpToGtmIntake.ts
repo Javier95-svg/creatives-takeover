@@ -1,5 +1,6 @@
 import type { StoredIcpArtifact } from './icpBuilderSession';
 import type { GTMIntakeV2 } from './gtmV2';
+import { alternativesToBeat, answeredWhatTheyGet } from './icpValuePosition.ts';
 
 // Pre-fills GTM Strategist from the project's ICP draft (and PMF verdict when
 // there is one), so a founder who has done the ICP confirms the plan inputs
@@ -47,10 +48,17 @@ export function icpArtifactToGtmIntake({ artifact, projectTitle, pmf }: IcpToGtm
   const competitors = [
     ...(doc.competition?.directCompetitors ?? []).map((competitor) => competitor.name?.trim()).filter(Boolean) as string[],
     ...(alternative ? [alternative] : []),
+    // Everything else the buyer could use instead, easiest first, so GTM
+    // positions against what is actually hard to beat.
+    ...alternativesToBeat(doc).map((item) => item.option.trim()),
   ];
 
   const problem = first(topPain, doc.pain.whyItHurts, doc.pain.rootCause, doc.gatePreview.painLine);
-  const solution = [doc.build.valueProposition, doc.build.outcome].map((part) => (part ?? '').trim()).filter(Boolean).join(' ');
+  const solution = [answeredWhatTheyGet(doc), doc.build.valueProposition, doc.build.outcome]
+    .map((part) => (part ?? '').trim())
+    .filter(Boolean)
+    .map(sentence)
+    .join(' ');
 
   const prefill: Partial<GTMIntakeV2> = {
     productName: productNameFrom(artifact, projectTitle),

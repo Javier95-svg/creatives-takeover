@@ -279,6 +279,11 @@ export interface GTMPlanV2 {
     keyDifferentiators: string[];
     /** Claims that sound like value but are not. Absent on plans made before 2026-11-21. */
     fakeValueFlags?: FakeValueFlag[];
+    /**
+     * A stretch idea, never a selected channel: people outside the category who
+     * want what it gives them, and a channel the category does not use.
+     */
+    beyondCategory?: { abstractValue: string; audience: string; howToShowIt: string; channel: string };
   };
   messaging: {
     headline: string;

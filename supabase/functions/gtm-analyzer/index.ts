@@ -8,7 +8,7 @@ import { inferMotion, rankChannels, type GTMIntakeV2 } from '../_shared/gtm-chan
 import { emitBusinessEvent, resolveAnalyticsErrorCode } from '../_shared/analytics.ts';
 import { searchWeb } from '../_shared/web-research.ts';
 import { FAST_JSON_MODELS, generateJsonText } from '../_shared/json-generation.ts';
-import { FAKE_VALUE_TRAP_GUIDE, normalizeFakeValueFlags, parseLenientJson } from '../_shared/fake-value.ts';
+import { FAKE_VALUE_TRAP_GUIDE, normalizeBeyondCategory, normalizeFakeValueFlags, parseLenientJson } from '../_shared/fake-value.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -291,12 +291,15 @@ Positioning must rest on real value: something the buyer wants and cannot easily
 ${FAKE_VALUE_TRAP_GUIDE}
 - Write your own fields so they avoid these traps. Return "fakeValueFlags": [] when there is nothing to flag.
 
+Beyond the category (optional, one idea): people who do not shop this category at all may still want what it gives them in the abstract (for oat milk, lower emissions rather than milk). If such a group plausibly exists, return "beyondCategory" with the abstract value, who wants it but does not buy in this category today, how to show that value very visibly, and one channel that reaches them which competitors in the category are not using. It is a stretch idea for later, never one of the selected channels. Return null when nothing credible comes to mind.
+
 Return only JSON with this shape:
 {
   "summaryInsight":"2-3 sentence thesis",
   "thesis":{"target":"","buyingTrigger":"","competitiveAlternative":"","value":"","rationale":"","risks":[""]},
   "positioning":{"competitiveAlternatives":[""],"differentiatedCapabilities":[""],"customerValue":[""],"bestFitSegment":"","marketCategory":"","positioningStatement":"","uniqueValueProposition":"","keyDifferentiators":[""]},
   "fakeValueFlags":[{"text":"","trap":"process|category_generic|bolted_on_feature|shared_values|messaging_only","fix":""}],
+  "beyondCategory":{"abstractValue":"","audience":"","howToShowIt":"","channel":""},
   "messaging":{"headline":"","hookLine":"","proofPoint":"","ctaCopy":"","toneOfVoice":[""]},
   "channelNarratives":{"channel-id":{"rationale":"","evidence":[""],"audience":"","buyingTrigger":"","offer":"","message":"","hypothesis":"","killRule":"","actions":[""],"requiredAssets":[""]}},
   "funnel":[{"stage":"","exitCriteria":"","metric":""}],
@@ -468,6 +471,7 @@ Return only JSON with this shape:
       uniqueValueProposition: safeText(positioning.uniqueValueProposition, intake.solution),
       keyDifferentiators: safeStringArray(positioning.keyDifferentiators),
       fakeValueFlags: normalizeFakeValueFlags(strategic.fakeValueFlags),
+      ...(normalizeBeyondCategory(strategic.beyondCategory) ? { beyondCategory: normalizeBeyondCategory(strategic.beyondCategory) } : {}),
     },
     messaging: {
       headline: safeText(messaging.headline, intake.productName, 120),

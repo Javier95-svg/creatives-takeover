@@ -63,6 +63,30 @@ export function normalizeFakeValueFlags(value: unknown): FakeValueFlag[] {
 }
 
 /**
+ * A stretch idea for GTM: people outside the category who want what it gives
+ * them in the abstract, and a channel the category does not use to reach them.
+ * Kept only when every part is filled in; half an idea is not actionable.
+ */
+export interface BeyondCategoryIdea {
+  abstractValue: string;
+  audience: string;
+  howToShowIt: string;
+  channel: string;
+}
+
+export function normalizeBeyondCategory(value: unknown): BeyondCategoryIdea | null {
+  if (!value || typeof value !== "object") return null;
+  const raw = value as Record<string, unknown>;
+  const idea = {
+    abstractValue: clean(raw.abstractValue, 300),
+    audience: clean(raw.audience, 300),
+    howToShowIt: clean(raw.howToShowIt, 400),
+    channel: clean(raw.channel, 200),
+  };
+  return Object.values(idea).every((part) => part.length > 0) ? idea : null;
+}
+
+/**
  * JSON.parse that forgives a trailing comma before } or ], the most common
  * slip in long model answers. Anything else still throws.
  */

@@ -1229,7 +1229,14 @@ function emitMVPGenerationFailed({
 function formatFounderContext(context: Record<string, unknown> | null): string {
   if (!context) return "";
 
-  const lines: string[] = ["FOUNDER CONTEXT (pre-loaded from validated research — use this to make the output specific, not generic)"];
+  // "Validated" only when PMF Lab's verdict is "ready" (75+ on interview
+  // evidence). An ICP draft on its own is the founder's working hypothesis, and
+  // calling it validated invited the model to state it as fact on the page.
+  const pmfSummary = ((context.dashboardHome as Record<string, any> | null | undefined)?.generated?.pmf ?? null) as Record<string, unknown> | null;
+  const pmfDecided = pmfSummary?.verdict === "ready";
+  const lines: string[] = [pmfDecided
+    ? "FOUNDER CONTEXT (validated by PMF Lab interviews; use it to make the output specific, not generic)"
+    : "FOUNDER CONTEXT (the founder's own research, still being tested; use it to make the output specific, and do not present it as proven fact)"];
 
   const quiz = context.onboardingQuiz as Record<string, unknown> | null | undefined;
   const dashboard = context.dashboardHome as Record<string, unknown> | null | undefined;
@@ -1259,10 +1266,31 @@ function formatFounderContext(context: Record<string, unknown> | null): string {
   if (icp?.target_audience) lines.push(`ICP target audience: ${icp.target_audience}`);
   if (icp?.business_description) lines.push(`Business description: ${icp.business_description}`);
 
+  // The value the whole product exists to deliver, from the ICP draft. Every
+  // page element should serve it, and the page should say why this beats the
+  // easiest alternative the customer already has.
+  const draft = ((icp?.analysis_data as Record<string, any> | undefined)?.draftDocument ?? null) as Record<string, any> | null;
+  if (draft) {
+    const whatTheyGet = typeof draft.build?.whatTheyGet === "string" ? draft.build.whatTheyGet.trim() : "";
+    const answered = !draft.fieldProvenance || draft.fieldProvenance["build.whatTheyGet"] === "model";
+    if (whatTheyGet && answered) lines.push(`What the customer gets (lead with this): ${whatTheyGet}`);
+    const form = typeof draft.valueForm?.primary === "string" ? draft.valueForm.primary : "";
+    if (form) lines.push(`Kind of value: ${form}${["identity", "pleasure", "belonging", "growth"].includes(form) ? " (a want, not a problem: write to the desire, not to a pain)" : ""}`);
+    const alternatives = Array.isArray(draft.alternatives)
+      ? draft.alternatives
+          .filter((item: any) => item && typeof item.option === "string" && item.kind !== "do_nothing")
+          .slice(0, 3)
+          .map((item: any) => `${item.option} (${item.ease === "easy" ? "easy for them" : item.ease === "hard" ? "hard for them" : "some effort"})`)
+      : [];
+    if (alternatives.length > 0) lines.push(`What they could use instead (show why this is better): ${alternatives.join("; ")}`);
+  }
+
   // PMF signals
   const generated = dashboard?.generated as Record<string, unknown> | null | undefined;
   const pmf = generated?.pmf as Record<string, unknown> | null | undefined;
-  if (pmf?.pmf_score) lines.push(`PMF Score: ${pmf.pmf_score}`);
+  // The dashboard summary names it "score"; "pmf_score" is the table column.
+  const pmfScore = pmf?.score ?? pmf?.pmf_score;
+  if (typeof pmfScore === "number") lines.push(`PMF Score: ${pmfScore}`);
   if (pmf?.verdict) lines.push(`PMF Verdict: ${pmf.verdict}`);
 
   return lines.filter(Boolean).join("\n");
