@@ -1,16 +1,14 @@
-import { useMemo } from "react";
-import { isCompletionChainEnabled } from '@/lib/completionChain';
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
-import { useNavigate } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { IcpScoreShareModal } from "@/components/icp/IcpScoreShareModal";
 import { IcpFolioDocument } from "@/components/icp/IcpFolioDocument";
-import { IcpUnlockGate } from "@/components/icp/IcpUnlockGate";
+import { IcpSaveDraftCard } from "@/components/icp/IcpSaveDraftCard";
 import type { StoredIcpArtifact } from "@/lib/icpBuilderSession";
-import { ICP_GUEST_VISIBLE_SECTIONS } from "@/lib/icpUnlockFlow";
+import { ICP_GUEST_LOCKED_SECTIONS, ICP_GUEST_VISIBLE_SECTIONS } from "@/lib/icpUnlockFlow";
 import { buildIcpScoreCard } from "@/lib/icpScoreCard";
 import { getGuestScoreCardUrl, publishGuestScoreCard } from "@/lib/guestActivationArtifacts";
 import { readHeroGuestArtifact } from "@/lib/heroIcpGeneration";
@@ -24,17 +22,14 @@ interface IcpGuestResultViewProps {
 }
 
 /**
- * Guests read their idea, their ideal customer and their core pain in full,
- * then hit the gate. What they are building and their moat stay blurred behind
- * it, along with the decision brief - which the folio moves in with them.
+ * Guests read the whole draft, then are asked to save it.
  *
- * The previous build locked nothing and put the gate in the footer, so the
- * whole draft was readable and creating an account bought the reader nothing
- * they could see. Enough is given away to prove the output is real; the part
- * that answers "so what do I do about it" is the reason to sign up.
+ * Until 2026-11-22 "what to build", the moat and the decision brief were
+ * blurred behind an account wall; 13 guests saw it in a month and 1 clicked.
+ * A draft the founder cannot read gives them no reason to keep it, so nothing
+ * is locked now (ICP_GUEST_LOCKED_SECTIONS) and the account buys what comes
+ * next. See the history in src/lib/icpUnlockFlow.ts.
  */
-const GUEST_LOCKED_SECTIONS = ["build", "moat"] as const;
-
 export function IcpGuestResultView({
   artifact,
   seed = "",
@@ -42,8 +37,7 @@ export function IcpGuestResultView({
   onBeforeAuthContinue,
   onEmailLinkRequest,
 }: IcpGuestResultViewProps) {
-  const navigate = useNavigate();
-  const signUpPath = `/signup?source=icp-score-cta&return=${encodeURIComponent(returnPath)}`;
+  const [saveOpen, setSaveOpen] = useState(false);
   const scoreCard = useMemo(
     () =>
       buildIcpScoreCard(artifact.draftDocument, {
@@ -57,7 +51,7 @@ export function IcpGuestResultView({
    * Minting the link is what makes the loop run, and it has to happen here:
    * this is the one moment the founder is looking at their own number. Asking
    * them to create an account first puts the request at the point of least
-   * willingness. Only the card is published; the draft stays behind the gate.
+   * willingness. Only the card is published.
    */
   const handleShare = async (): Promise<string | null> => {
     const guest = readHeroGuestArtifact();
@@ -81,7 +75,7 @@ export function IcpGuestResultView({
         tone="platformPreview"
         ideaDescription={artifact.founderInputs.fastDescription ?? seed}
         visibleSections={ICP_GUEST_VISIBLE_SECTIONS}
-        lockedSections={GUEST_LOCKED_SECTIONS}
+        lockedSections={ICP_GUEST_LOCKED_SECTIONS}
         scoreAction={
           <div className="flex flex-col flex-wrap gap-3 sm:flex-row sm:items-center">
             <Button
@@ -91,10 +85,10 @@ export function IcpGuestResultView({
               className="gap-2"
               onClick={() => {
                 onBeforeAuthContinue?.();
-                navigate(signUpPath);
+                setSaveOpen(true);
               }}
             >
-              {isCompletionChainEnabled() ? 'Save and create your concept page' : 'Create my demo'}
+              Save my draft
               <ArrowRight className="h-4 w-4" />
             </Button>
             <IcpScoreShareModal
@@ -104,24 +98,23 @@ export function IcpGuestResultView({
             />
           </div>
         }
-        lockedSectionBreak={
-          <div id="icp-unlock" className="scroll-mt-24">
-            <IcpUnlockGate
-              artifact={artifact}
-              seed={seed}
-              returnPath={returnPath}
-              lockedSections={GUEST_LOCKED_SECTIONS}
-              onBeforeAuthContinue={onBeforeAuthContinue}
-              onEmailLinkRequest={onEmailLinkRequest}
-            />
-          </div>
-        }
       />
+      <div id="icp-save" className="scroll-mt-24 px-4">
+        <IcpSaveDraftCard
+          artifact={artifact}
+          seed={seed}
+          returnPath={returnPath}
+          onBeforeAuthContinue={onBeforeAuthContinue}
+          onEmailLinkRequest={onEmailLinkRequest}
+          open={saveOpen}
+          onOpenChange={setSaveOpen}
+        />
+      </div>
       <a
-        href="#icp-unlock"
+        href="#icp-save"
         className="fixed inset-x-4 bottom-4 z-40 flex min-h-12 items-center justify-center rounded-xl bg-primary px-4 text-center text-sm font-semibold text-primary-foreground shadow-xl md:hidden"
       >
-        Save this and keep going
+        Save this draft
       </a>
     </div>
   );

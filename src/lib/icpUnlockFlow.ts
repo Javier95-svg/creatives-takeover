@@ -17,8 +17,20 @@
 //     output at all in those seventeen days, so nothing about the gate can be
 //     concluded from that window.
 //   - from 2026-08-18, build + moat gated: 7 reached an output, 7 saw the gate,
-//     1 clicked through, 0 drafts saved.
+//     1 clicked through, 0 drafts saved. Again 2026-10-23 to 2026-11-22: 13 saw
+//     the gate, 1 clicked, 10 abandoned the builder on it.
+//   - from 2026-11-22, nothing locked: guests read the whole draft, and the ask
+//     is to save it and get the next step, in an inline sign-up (Google or
+//     email) rather than a trip to /signup. Gate events carry
+//     layout: "save_card" and locked_after: "none" so this regime is separable.
 export const ICP_GUEST_VISIBLE_SECTIONS = ["customer", "pain", "build", "moat"] as const;
+
+/**
+ * Sections blurred for guests. Empty since 2026-11-22: a draft the founder
+ * cannot read gives them no reason to keep it, and the account now buys what
+ * comes next (saving it and the first conversations), not the draft itself.
+ */
+export const ICP_GUEST_LOCKED_SECTIONS: readonly (typeof ICP_GUEST_VISIBLE_SECTIONS)[number][] = [];
 
 export type IcpDraftSaveResult = {
   success?: boolean;

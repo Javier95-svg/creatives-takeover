@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
+  ICP_GUEST_LOCKED_SECTIONS,
   ICP_GUEST_VISIBLE_SECTIONS,
   buildIcpSaveExistingArtifactRequest,
   buildIcpSaveFallbackPreviewRequest,
@@ -14,6 +15,9 @@ import { fastIcpInputSchema } from '../src/lib/icpBuilderSchema.ts';
 
 test('guest ICP preview is ungated - every section renders before account creation', () => {
   assert.deepEqual([...ICP_GUEST_VISIBLE_SECTIONS], ['customer', 'pain', 'build', 'moat']);
+  // Since 2026-11-22 nothing is blurred: the account is for saving the draft
+  // and getting the next step, not for reading it.
+  assert.deepEqual([...ICP_GUEST_LOCKED_SECTIONS], []);
 });
 
 // The 40-character floor here was the largest single drop-off in the funnel: of

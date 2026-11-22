@@ -448,7 +448,7 @@ export function HeroResultIsland({
       {showSignupCard && guestRef ? (
         <div className="ct-hero__save-card">
           <h3>Keep your brief and continue</h3>
-          <p>Create a free account to save this brief and unlock the deeper customer report.</p>
+          <p>Create a free account to keep this brief, open the full draft and get your next step.</p>
           <div className="ct-hero__save-card-actions">
             <button
               className="ct-hero__cta"

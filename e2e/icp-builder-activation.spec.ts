@@ -153,7 +153,7 @@ const FAKE_SESSION = {
   },
 };
 
-test("fast ICP preview preserves provenance through auth return and opens interview tasks", async ({ page }) => {
+test("a guest reads the whole ICP draft and can sign up to save it without leaving the page", async ({ page }) => {
   test.slow();
   // Keep unrelated authenticated workspace hydration deterministic. The
   // activation-specific handlers below are registered later and take priority.
@@ -246,7 +246,8 @@ test("fast ICP preview preserves provenance through auth return and opens interv
       body: JSON.stringify({ success: false, code: "UNAVAILABLE" }),
     }),
   );
-  await page.route("**/auth/v1/signup", (route) =>
+  // The SDK adds ?redirect_to=..., so match any query string.
+  await page.route("**/auth/v1/signup**", (route) =>
     route.fulfill({
       status: 200,
       contentType: "application/json",
@@ -260,23 +261,28 @@ test("fast ICP preview preserves provenance through auth return and opens interv
   );
   await page.getByRole("button", { name: /Generate my free draft/i }).click();
 
-  await expect(page.getByText("Cited market signal")).toBeVisible();
-  await expect(page.getByRole("link", { name: "View source" })).toHaveAttribute(
+  // Since 2026-11-22 guests read the whole draft: what to build and the moat
+  // are visible and interactive, not blurred behind the account.
+  await page.getByRole("button", { name: /ICP draft/ }).click();
+  await expect(page.getByText("Turn interviews into decision-ready evidence.").first()).toBeVisible();
+  await expect(page.getByText("Decision history compounds.").first()).toBeVisible();
+  await expect(page.locator("[inert]")).toHaveCount(0);
+  await expect(page.getByRole("link", { name: /Product research operations guide/ }).first()).toHaveAttribute(
     "href",
     "https://example.com/research-guide",
   );
-  await expect(page.getByText("Save my brief and reveal the action plan").first()).toBeVisible();
 
-  await page.getByRole("button", { name: /Sign up with email/i }).click();
+  // The ask is to save, and sign-up opens in place rather than on /signup.
+  const saveCard = page.getByRole("region", { name: "Save this draft and get your next step" });
+  await expect(saveCard).toBeVisible();
+  await saveCard.getByRole("button", { name: "Save my draft" }).click();
+  await expect(page.getByRole("dialog")).toBeVisible();
+  await expect(page).toHaveURL(/\/icp-builder/);
+
+  // The dialog offers Google and an inline email form; neither leaves the page.
   await page.getByRole("button", { name: /Use email instead/i }).click();
-  await page.getByPlaceholder("you@company.com").fill("icp-e2e@example.com");
-  await page.getByPlaceholder("Create a password").fill("StrongPass123!");
-  await page.getByRole("button", { name: /Continue with email/i }).click();
-
-  await expect(page).toHaveURL(/\/icp\/draft\/icp-e2e-activation\?source=icp-unlock/, { timeout: 25_000 });
-  const demoHandoff = page.getByRole("button", { name: /Create my prospect demo/i }).first();
-  await expect(demoHandoff).toBeVisible();
-  await demoHandoff.click();
-
-  await expect(page).toHaveURL(/\/demo-studio\?icp=icp-e2e-activation/);
+  await expect(page.getByPlaceholder("you@company.com")).toBeVisible();
+  await expect(page.getByPlaceholder("Create a password")).toBeVisible();
+  await expect(page.getByRole("button", { name: /Continue with Google/i })).toBeVisible();
+  await expect(page).toHaveURL(/\/icp-builder/);
 });

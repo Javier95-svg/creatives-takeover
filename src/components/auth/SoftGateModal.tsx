@@ -321,7 +321,7 @@ const SoftGateModal = ({
 
   return (
     <Dialog open={open} onOpenChange={(nextOpen) => (nextOpen ? onOpenChange(true) : handleDismiss())}>
-      <DialogContent className="max-w-md overflow-hidden border border-border/60 bg-background/96 p-0 shadow-[0_24px_80px_-36px_rgba(15,23,42,0.45)]">
+      <DialogContent className="max-w-md overflow-hidden border border-border/60 bg-background p-0 shadow-[0_24px_80px_-36px_rgba(15,23,42,0.45)]">
         <div className="relative px-6 pb-6 pt-7 sm:px-7">
           <button
             aria-label="Close"
