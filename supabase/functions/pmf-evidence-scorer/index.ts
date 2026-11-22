@@ -7,6 +7,7 @@ import { resolveCreditIdempotencyKey } from '../_shared/request-idempotency.ts';
 import { assessPmfEvidence, PMF_SIGNAL_THRESHOLDS } from '../_shared/pmf-evidence.ts';
 import { emitBusinessEvent, resolveAnalyticsErrorCode } from '../_shared/analytics.ts';
 import { generateJsonText } from '../_shared/json-generation.ts';
+import { applyScarcityGate, assessAlternativeScarcity, describeScarcityGate } from '../_shared/pmf-scarcity.ts';
 
 const MIN_INTERVIEWS_FOR_READY = 25;
 const DECISION_GRADE_SIGNAL_THRESHOLD = 25;
@@ -214,7 +215,25 @@ async function fetchStoredInterviews(supabase: any, userId: string, validationCo
     landingPageShown: row.landing_page_shown, solutionPitched: row.solution_pitched,
     askedAboutPricing: row.asked_about_pricing, joinedWaitlist: row.joined_waitlist,
     referredSomeone: row.referred_someone, offeredToPay: row.offered_to_pay,
+    currentAlternative: row.current_alternative ?? null, alternativeEase: row.alternative_ease ?? null,
   }));
+}
+
+const DESIRE_FORMS = new Set(['identity', 'pleasure', 'belonging', 'growth']);
+
+/**
+ * The kind of value the ICP draft says this offers. A want-led idea (identity,
+ * pleasure, belonging, growth) has no "pain" in the usual sense, so pain and
+ * urgency are read as how clearly and how actively people pursue it instead.
+ * Null when there is no ICP draft or it predates the value form.
+ */
+// deno-lint-ignore no-explicit-any
+async function fetchIcpValueForm(supabase: any, userId: string, icpAnalysisId: string | null): Promise<string | null> {
+  if (!icpAnalysisId) return null;
+  const { data } = await supabase.from('icp_analysis_results').select('analysis_data')
+    .eq('id', icpAnalysisId).eq('user_id', userId).maybeSingle();
+  const primary = data?.analysis_data?.draftDocument?.valueForm?.primary;
+  return typeof primary === 'string' ? primary : null;
 }
 
 interface PMFInterviewLog {
@@ -233,6 +252,8 @@ interface PMFInterviewLog {
   joinedWaitlist: boolean;
   referredSomeone: boolean;
   offeredToPay: boolean;
+  currentAlternative?: string | null;
+  alternativeEase?: 'easy' | 'some_effort' | 'hard' | 'none' | null;
 }
 
 // ─── Main handler ─────────────────────────────────────────────────────────────
@@ -271,6 +292,7 @@ serve(async (req) => {
     // Interviews are hydrated from the owner-scoped store. Client totals and
     // client-supplied "verified" rows are never accepted as decision evidence.
     const rawInterviews = await fetchStoredInterviews(supabase, user.id, validationContext.id);
+    const icpValueForm = await fetchIcpValueForm(supabase, user.id, validationContext.icp_analysis_id ?? body.icpAnalysisId ?? null);
     const preliminaryEvidence = assessPmfEvidence({ interviews: rawInterviews, surveyResponses: 0, verifiedDemoBehaviors: 0, researchSources: 0 });
     const interviews = preliminaryEvidence.uniqueInterviews;
     const loggedInterviewCount = interviews.length;
@@ -399,7 +421,8 @@ serve(async (req) => {
           `   Missing features: ${interview.missingFeatures}\n` +
           `   Interest level: ${interview.interestLevel}/5 | Buying intent: ${interview.buyingIntent}\n` +
           `   Landing page shown: ${interview.landingPageShown ? 'yes' : 'no'} | Solution pitched: ${interview.solutionPitched ? 'yes' : 'no'}\n` +
-          `   Demand behaviors: pricing=${interview.askedAboutPricing ? 'yes' : 'no'}, waitlist=${interview.joinedWaitlist ? 'yes' : 'no'}, referral=${interview.referredSomeone ? 'yes' : 'no'}, pay=${interview.offeredToPay ? 'yes' : 'no'}`
+          `   Demand behaviors: pricing=${interview.askedAboutPricing ? 'yes' : 'no'}, waitlist=${interview.joinedWaitlist ? 'yes' : 'no'}, referral=${interview.referredSomeone ? 'yes' : 'no'}, pay=${interview.offeredToPay ? 'yes' : 'no'}` +
+          `\n   Would use instead: ${interview.currentAlternative || 'not recorded'} | How easy that is for them: ${interview.alternativeEase || 'not recorded'}`
         )).join('\n\n')
       : 'No structured interview records provided.';
 
@@ -539,6 +562,13 @@ SPECIFICITY RULES — these are non-negotiable:
 • When writing summaryInsight, strengths, gaps, diagnosis, or contradictions: reference specific interviewees by name and segment when the interview log supports it. Do NOT use phrases like "several participants", "some users", or "many interviewees". Name the pattern AND the person. Example: "Maria Gomez (B2B agency owner) and two others independently raised the same Slack integration blocker."
 • scoreMeaning must be specific to the actual score value and the evidence submitted. Do not use generic template phrases like "your interviews show enough pain". Connect the score to what was actually found.
 • nextExperiment must describe a specific test the founder can run given their actual product, segments, and gaps. It must never be a generic instruction like "run more interviews".
+
+VALUE FORM FROM THE ICP DRAFT: ${icpValueForm ?? 'not recorded'}
+${icpValueForm && DESIRE_FORMS.has(icpValueForm)
+  ? `This is a want-led product (${icpValueForm}): people choose it because they want it, not to remove a problem. Score PAIN CLARITY as how clearly and specifically people describe what they want and lack today, and URGENCY as how actively they already pursue it (money, time or effort spent, joining, showing it off). Do NOT mark it down for having no problem to solve.`
+  : 'Score PAIN CLARITY and URGENCY on the problem as written below.'}
+
+ALTERNATIVES: each interview may record what the person would use instead and how easy that is. A buyer who wants it but can easily get the same thing elsewhere is weak evidence. Name those alternatives in gaps and diagnosis. The platform will hold a "Build" at "Narrow" unless at least 3 interviewees could not easily get this elsewhere, so recommend recording alternatives when they are missing.
 
 SCORING RUBRIC — five dimensions, each 0–20 points:
 
@@ -740,7 +770,16 @@ Apply the scoring rubric to this evidence and return the PMF readiness JSON. Mak
         verifiedDemoBehaviors: { count: demoBehaviorSignalCount, weight: 0.75 },
         corroboratingResearch: { count: researchSignalCount, weight: 0.25 },
       };
-      analysis.decision = resolvePmfDecision(analysis.overallScore);
+      // Wanting it is half of value. Build also needs buyers who cannot easily
+      // get the same thing elsewhere (_shared/pmf-scarcity.ts).
+      const scarcityCheck = assessAlternativeScarcity(interviews);
+      const scoreDecision = resolvePmfDecision(analysis.overallScore);
+      analysis.decision = applyScarcityGate(scoreDecision, scarcityCheck);
+      analysis.scarcityCheck = {
+        ...scarcityCheck,
+        heldAtNarrow: scoreDecision === 'build' && analysis.decision === 'narrow',
+        explanation: describeScarcityGate(scarcityCheck),
+      };
       analysis.verdict = analysis.overallScore >= 75 ? 'ready' : analysis.overallScore >= 50 ? 'partial' : 'weak';
       analysis.verdictLabel = analysis.verdict === 'ready'
         ? 'Strong Validation'

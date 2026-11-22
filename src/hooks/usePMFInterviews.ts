@@ -26,7 +26,32 @@ function fromRow(row: any): PMFInterviewLog {
     joinedWaitlist: row.joined_waitlist,
     referredSomeone: row.referred_someone,
     offeredToPay: row.offered_to_pay,
+    currentAlternative: row.current_alternative ?? undefined,
+    alternativeEase: row.alternative_ease ?? undefined,
   };
+}
+
+/** The alternative columns arrived in 20261122100000; sent only when filled in. */
+function alternativeColumns(interview: PMFInterviewLog) {
+  const columns: Record<string, string | null> = {};
+  // undefined = never touched (omit); "" = cleared by the founder (store null).
+  if (interview.currentAlternative !== undefined) columns.current_alternative = interview.currentAlternative.trim() || null;
+  if (interview.alternativeEase) columns.alternative_ease = interview.alternativeEase;
+  return columns;
+}
+
+/**
+ * True when the database does not have the alternative columns yet. The save
+ * then retries without them, so a founder's conversation is never lost to a
+ * migration that has not been applied.
+ */
+function isMissingAlternativeColumn(error: { message?: string } | null): boolean {
+  return Boolean(error?.message && /current_alternative|alternative_ease/.test(error.message));
+}
+
+function withoutAlternativeColumns<T extends Record<string, unknown>>(row: T): T {
+  const { current_alternative: _alternative, alternative_ease: _ease, ...rest } = row;
+  return rest as T;
 }
 
 function toRow(userId: string, contextId: string, handoffId: string | null, interview: PMFInterviewLog) {
@@ -54,6 +79,7 @@ function toRow(userId: string, contextId: string, handoffId: string | null, inte
     referred_someone: interview.referredSomeone,
     offered_to_pay: interview.offeredToPay,
     evidence_origin: 'founder_reported',
+    ...alternativeColumns(interview),
   };
 }
 
@@ -86,11 +112,19 @@ export function usePMFInterviews(userId?: string, contextId?: string | null, han
 
   const saveInterview = useCallback(async (interview: PMFInterviewLog) => {
     if (!userId || !contextId) throw new Error('Choose an evidence case before saving an interview.');
-    const { data, error } = await supabase
+    const row = toRow(userId, contextId, handoffId ?? null, interview);
+    let { data, error } = await supabase
       .from(TABLE)
-      .upsert(toRow(userId, contextId, handoffId ?? null, interview) as any, { onConflict: 'id' })
+      .upsert(row as any, { onConflict: 'id' })
       .select('*')
       .single();
+    if (isMissingAlternativeColumn(error)) {
+      ({ data, error } = await supabase
+        .from(TABLE)
+        .upsert(withoutAlternativeColumns(row) as any, { onConflict: 'id' })
+        .select('*')
+        .single());
+    }
     if (error) throw error;
     const saved = fromRow(data);
     setInterviews((current) => {
@@ -106,9 +140,11 @@ export function usePMFInterviews(userId?: string, contextId?: string | null, han
 
   const saveMany = useCallback(async (items: PMFInterviewLog[]) => {
     if (!userId || !contextId || items.length === 0) return;
-    const { error } = await supabase
-      .from(TABLE)
-      .upsert(items.map((item) => toRow(userId, contextId, handoffId ?? null, item)) as any, { onConflict: 'id' });
+    const rows = items.map((item) => toRow(userId, contextId, handoffId ?? null, item));
+    let { error } = await supabase.from(TABLE).upsert(rows as any, { onConflict: 'id' });
+    if (isMissingAlternativeColumn(error)) {
+      ({ error } = await supabase.from(TABLE).upsert(rows.map(withoutAlternativeColumns) as any, { onConflict: 'id' }));
+    }
     if (error) throw error;
     await reload();
   }, [contextId, handoffId, reload, userId]);

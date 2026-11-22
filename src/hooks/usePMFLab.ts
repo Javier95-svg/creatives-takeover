@@ -79,7 +79,13 @@ export interface PMFInterviewLog {
   joinedWaitlist: boolean;
   referredSomeone: boolean;
   offeredToPay: boolean;
+  /** What they would use if this product did not exist. */
+  currentAlternative?: string;
+  /** How easy that alternative is for them; "none" means nothing as good exists. */
+  alternativeEase?: PMFAlternativeEase;
 }
+
+export type PMFAlternativeEase = 'easy' | 'some_effort' | 'hard' | 'none';
 
 export interface PMFEvidenceSource {
   title: string;
@@ -134,6 +140,21 @@ export interface PMFReadinessAnalysis {
     explanation: string;
   };
   decisionProvisional?: boolean;
+  /**
+   * How many interviewees could not easily get this elsewhere. "Build" needs
+   * `required` of them; heldAtNarrow is true when the score said Build but this
+   * check did not pass. Absent on analyses from before 2026-11-22.
+   */
+  scarcityCheck?: {
+    recorded: number;
+    hardToReplace: number;
+    easyToReplace: number;
+    easyAlternatives: string[];
+    passed: boolean;
+    required: number;
+    heldAtNarrow: boolean;
+    explanation: string;
+  };
   evidenceBreakdown?: {
     interviews: { count: number; weight: number };
     hostedSurveyResponses: { count: number; weight: number };

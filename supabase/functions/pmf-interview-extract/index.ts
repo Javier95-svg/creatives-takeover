@@ -31,9 +31,13 @@ interface ExtractedInterview {
   joinedWaitlist: boolean;
   referredSomeone: boolean;
   offeredToPay: boolean;
+  /** Only when the notes say what they would use instead. */
+  currentAlternative?: string;
+  alternativeEase?: "easy" | "some_effort" | "hard" | "none";
 }
 
 const BUYING_INTENTS = new Set(["low", "medium", "high", "ready_to_pay"]);
+const ALTERNATIVE_EASE = new Set(["easy", "some_effort", "hard", "none"]);
 
 function clampText(value: unknown, max: number, fallback = ""): string {
   return typeof value === "string" && value.trim() ? value.trim().slice(0, max) : fallback;
@@ -67,6 +71,10 @@ function normalizeInterview(raw: Record<string, unknown>, index: number): Extrac
     joinedWaitlist: asBool(raw.joinedWaitlist),
     referredSomeone: asBool(raw.referredSomeone),
     offeredToPay: asBool(raw.offeredToPay),
+    ...(clampText(raw.currentAlternative, 200) ? { currentAlternative: clampText(raw.currentAlternative, 200) } : {}),
+    ...(typeof raw.alternativeEase === "string" && ALTERNATIVE_EASE.has(raw.alternativeEase)
+      ? { alternativeEase: raw.alternativeEase as ExtractedInterview["alternativeEase"] }
+      : {}),
   };
 }
 
@@ -81,6 +89,7 @@ Rules:
 - intervieweeName: use the name in the notes; if none, use a short descriptor like "Ops manager (call 2)".
 - mainFeedback should keep the interviewee's strongest verbatim phrases in quotes where available.
 - objections and missingFeatures: what THIS person pushed back on or said was missing; write "None captured in notes" if absent.
+- currentAlternative and alternativeEase: ONLY when the notes say what this person uses today or would use instead (another product, doing it themselves, or nothing). alternativeEase is how easy that is for them: easy, some_effort, hard, or none (nothing as good exists). Omit both when the notes do not say.
 
 Each entry shape:
 {
@@ -97,7 +106,9 @@ Each entry shape:
   "askedAboutPricing": boolean,
   "joinedWaitlist": boolean,
   "referredSomeone": boolean,
-  "offeredToPay": boolean
+  "offeredToPay": boolean,
+  "currentAlternative": "string (omit if not in notes)",
+  "alternativeEase": "easy" | "some_effort" | "hard" | "none" (omit if not in notes)
 }`;
 
 serve(async (req) => {

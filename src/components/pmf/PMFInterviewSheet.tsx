@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import type { PMFInterviewLog } from '@/hooks/usePMFLab';
 import type { JourneyAssumption } from '@/lib/journeyOutcomes';
 import { cn } from '@/lib/utils';
-import { BUYING_INTENT_OPTIONS, CONVERSATION_SIGNALS, isInterviewComplete } from './pmfInterviewModel';
+import { ALTERNATIVE_EASE_OPTIONS, BUYING_INTENT_OPTIONS, CONVERSATION_SIGNALS, isInterviewComplete } from './pmfInterviewModel';
 
 interface PMFInterviewSheetProps {
   open: boolean;
@@ -67,6 +67,40 @@ export function PMFInterviewSheet({ open, interview, isNew, assumptions, saving,
             <div className="space-y-1.5">
               <Label htmlFor="pmf-missing">What they wished it did (optional)</Label>
               <Textarea id="pmf-missing" rows={2} value={draft.missingFeatures} onChange={(e) => set('missingFeatures', e.target.value)} />
+            </div>
+          </div>
+
+          <div className="space-y-2 rounded-lg border border-border p-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="pmf-alternative">What would they use if your product did not exist? (optional)</Label>
+              <Input
+                id="pmf-alternative"
+                value={draft.currentAlternative ?? ''}
+                onChange={(e) => set('currentAlternative', e.target.value)}
+                placeholder="e.g. a spreadsheet, another app, or nothing at all"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <p id="pmf-alternative-ease" className="text-sm font-medium text-foreground">How easy is that for them?</p>
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4" role="group" aria-labelledby="pmf-alternative-ease">
+                {ALTERNATIVE_EASE_OPTIONS.map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    aria-pressed={draft.alternativeEase === option.value}
+                    onClick={() => set('alternativeEase', draft.alternativeEase === option.value ? undefined : option.value)}
+                    className={cn(
+                      'rounded-lg border px-3 py-2 text-sm transition-colors',
+                      draft.alternativeEase === option.value ? 'border-primary bg-primary/10 text-foreground' : 'border-border hover:border-primary/40',
+                    )}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Wanting it is not enough. If they can easily get the same thing elsewhere, PMF Lab will not recommend building yet.
+              </p>
             </div>
           </div>
 

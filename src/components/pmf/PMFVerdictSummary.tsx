@@ -75,6 +75,19 @@ export function PMFVerdictSummary({
             Early read: based on {analysis.evidenceSignalCount ?? 0} of 25 signals. More conversations and survey answers make it firmer.
           </p>
         )}
+        {analysis.scarcityCheck ? (
+          <div
+            className={`mt-3 rounded-lg border p-3 text-sm ${
+              analysis.scarcityCheck.heldAtNarrow ? 'border-warning/40 bg-warning-subtle' : 'border-border/60'
+            }`}
+          >
+            <p className="font-medium text-foreground">
+              Hard to get elsewhere: {analysis.scarcityCheck.hardToReplace} of {analysis.scarcityCheck.required} needed
+              {analysis.scarcityCheck.heldAtNarrow ? ' · held at Narrow' : ''}
+            </p>
+            <p className="mt-0.5 text-muted-foreground">{analysis.scarcityCheck.explanation}</p>
+          </div>
+        ) : null}
 
         {change && (
           <p className="mt-3 border-t border-border/60 pt-3 text-sm text-muted-foreground">

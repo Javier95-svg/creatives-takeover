@@ -35,6 +35,18 @@ export const CONVERSATION_SIGNALS: Array<{ key: keyof Pick<PMFInterviewLog,
   { key: 'offeredToPay', label: 'They offered to pay' },
 ];
 
+/**
+ * How easy it is for this person to get the same thing elsewhere. A buyer who
+ * wants it but can easily get it elsewhere is not evidence that this is worth
+ * building, which is why PMF Lab will not call "Build" on easy alternatives.
+ */
+export const ALTERNATIVE_EASE_OPTIONS: Array<{ value: NonNullable<PMFInterviewLog['alternativeEase']>; label: string }> = [
+  { value: 'easy', label: 'Easy for them' },
+  { value: 'some_effort', label: 'Some effort' },
+  { value: 'hard', label: 'Hard for them' },
+  { value: 'none', label: 'Nothing as good' },
+];
+
 export const newInterviewId = () => {
   if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) return crypto.randomUUID();
   return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
