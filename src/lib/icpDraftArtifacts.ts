@@ -348,7 +348,30 @@ export function normalizeIcpDraftDocument(
             detail: typeof source.detail === "string" && source.detail.trim() ? source.detail : null,
           }))
       : [],
+    // The decision chain and its scoring inputs are passed through untouched.
+    // They are optional on purpose (drafts saved before they existed must still
+    // open), and they were already normalized by the generator, so rebuilding
+    // them here would only risk dropping them, which is what used to happen:
+    // a reopened draft lost its verdict chain and scored on the legacy formula.
+    ...passThroughChain(draft),
   };
+}
+
+function passThroughChain(draft: Partial<IcpDraftDocument>): Partial<IcpDraftDocument> {
+  const chain: Partial<IcpDraftDocument> = {};
+  if (draft.market && typeof draft.market === "object") chain.market = draft.market;
+  if (draft.pricing && typeof draft.pricing === "object") chain.pricing = draft.pricing;
+  if (Array.isArray(draft.risks)) chain.risks = draft.risks;
+  if (draft.experiment && typeof draft.experiment === "object") chain.experiment = draft.experiment;
+  if (draft.recommendation && typeof draft.recommendation === "object") chain.recommendation = draft.recommendation;
+  if (draft.evidenceRetrieval === "ok" || draft.evidenceRetrieval === "unavailable") {
+    chain.evidenceRetrieval = draft.evidenceRetrieval;
+  }
+  if (draft.viabilityAssessment && typeof draft.viabilityAssessment === "object") {
+    chain.viabilityAssessment = draft.viabilityAssessment;
+  }
+  if (draft.fieldProvenance && typeof draft.fieldProvenance === "object") chain.fieldProvenance = draft.fieldProvenance;
+  return chain;
 }
 
 function normalizeArtifactShape(artifact: StoredIcpArtifact) {
