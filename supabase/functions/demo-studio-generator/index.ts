@@ -6,6 +6,7 @@ import { CREDIT_COSTS } from "../_shared/credit-constants.ts";
 import { resolveCreditIdempotencyKey } from "../_shared/request-idempotency.ts";
 import { isDemoStoryDraft } from "../_shared/demo-story.ts";
 import { generateJsonText, hasTextProvider } from "../_shared/json-generation.ts";
+import { FAKE_VALUE_TRAP_GUIDE, normalizeFakeValueFlags } from "../_shared/fake-value.ts";
 
 // Anonymous "/demo-studio/try" draft previews are uncharged, so cap them per IP.
 const DRAFT_RATE_LIMIT_PER_MIN = 5;
@@ -218,11 +219,17 @@ Infer the likely audience, their problem, the product promise and the moment the
 These are hypotheses, not proven market facts. Do not invent a brand name, metrics, proof, UI controls,
 screenshots, integrations or capabilities absent from the description. Use a descriptive product name
 when no name is supplied. Write a script the founder can use; do not pretend any screen was captured.
+Lead the pitch and product_promise with what the customer gets that they cannot easily get elsewhere,
+not with how the product is built. Then check the founder's description for claims a buyer will not
+decide on, and list each in "fakeValueFlags" with the exact words and a concrete fix:
+${FAKE_VALUE_TRAP_GUIDE}
+Return "fakeValueFlags": [] when the description has none.
 Return exactly this JSON shape, with exactly three steps ordered problem, product action, outcome:
 {"productName":"max 80 chars","brief":{"audience":"max 600 chars","problem":"max 600 chars",
 "product_promise":"max 600 chars","aha_moment":"max 600 chars"},"pitch":"max 1000 chars",
 "steps":[{"title":"max 80 chars","caption":"max 220 chars","speaker_notes":"max 700 chars",
-"hotspot_label":"max 80 chars","suggested_action":"next"}]}`;
+"hotspot_label":"max 80 chars","suggested_action":"next"}],
+"fakeValueFlags":[{"text":"exact words from the description","trap":"process|category_generic|bolted_on_feature|shared_values|messaging_only","fix":"max 300 chars"}]}`;
   }
   const project = body.project || {};
   const brief = body.brief || {};
@@ -317,7 +324,7 @@ async function generateKit(
       prompt: buildUserPrompt(body, mode),
       images: mode === "storyboard" ? usableScreenshots(body) : [],
       temperature: 0.65,
-      maxTokens: mode === "full_kit" ? 5000 : 2400,
+      maxTokens: mode === "full_kit" ? 5000 : mode === "story" ? 3000 : 2400,
       timeoutMs: options.timeoutMs ?? 45_000,
       openaiModel: "gpt-4o",
     });
@@ -487,7 +494,13 @@ async function handleDraft(req: Request, body: DemoStudioGeneratorRequest): Prom
     }
     try {
       const generated = await generateKit({ ...body, description }, "story", { skipValidation: true });
-      const draft = { ...generated, kind: "demo_story", v: 1, description };
+      const draft = {
+        ...generated,
+        fakeValueFlags: normalizeFakeValueFlags(generated?.fakeValueFlags),
+        kind: "demo_story",
+        v: 1,
+        description,
+      };
       if (!isDemoStoryDraft(draft)) throw new Error("Invalid demo story output");
       return new Response(JSON.stringify({ success: true, draft }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },

@@ -7,6 +7,7 @@ import { NextStepCard } from '@/components/tool-shell/NextStepCard';
 import { getGTMNextStep } from '@/lib/gtmNextStep';
 import { evaluateGTMOutcome } from '@/lib/gtmOutcome';
 import { buildGTMTasks, getGTMPlanWeek, type GTMPlanV2, type GTMPlay, type GTMReviewProposal, type GTMWeeklyReview, type GTMWeeklyReviewInput } from '@/lib/gtmV2';
+import { FAKE_VALUE_TRAP_LABELS, readFakeValueFlags } from '@/lib/fakeValue';
 import { selectExecutableGTMPlays } from '@/lib/marketExperiment';
 import { cn } from '@/lib/utils';
 import GTMCompetitorsPanel from './GTMCompetitorsPanel';
@@ -250,6 +251,23 @@ export default function GTMWorkspace({
                   <div><p className="font-medium text-foreground">Opening line</p><p className="mt-1 text-muted-foreground">{plan.messaging.hookLine}</p></div>
                   <div><p className="font-medium text-foreground">Proof and ask</p><p className="mt-1 text-muted-foreground">{plan.messaging.proofPoint} {plan.messaging.ctaCopy}</p></div>
                 </div>
+                {plan.positioning.uniqueValueProposition ? (
+                  <div><p className="font-medium text-foreground">What is new for them</p><p className="mt-1 text-muted-foreground">{plan.positioning.uniqueValueProposition}</p></div>
+                ) : null}
+                {readFakeValueFlags(plan.positioning.fakeValueFlags).length > 0 ? (
+                  <div className="rounded-lg border border-warning/40 bg-warning-subtle p-3">
+                    <p className="font-medium text-foreground">Claims that will not win the buyer</p>
+                    <p className="mt-0.5 text-muted-foreground">These sound like reasons to choose you, but buyers will not decide on them.</p>
+                    <ul className="mt-2 space-y-2">
+                      {readFakeValueFlags(plan.positioning.fakeValueFlags).map((flag) => (
+                        <li key={`${flag.trap}-${flag.text}`}>
+                          <p className="text-foreground">“{flag.text}”</p>
+                          <p className="text-xs text-muted-foreground">{FAKE_VALUE_TRAP_LABELS[flag.trap]}. {flag.fix}</p>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
               </div>
             </DashboardDisclosure>
 

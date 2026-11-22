@@ -8,6 +8,7 @@ import { inferMotion, rankChannels, type GTMIntakeV2 } from '../_shared/gtm-chan
 import { emitBusinessEvent, resolveAnalyticsErrorCode } from '../_shared/analytics.ts';
 import { searchWeb } from '../_shared/web-research.ts';
 import { FAST_JSON_MODELS, generateJsonText } from '../_shared/json-generation.ts';
+import { FAKE_VALUE_TRAP_GUIDE, normalizeFakeValueFlags, parseLenientJson } from '../_shared/fake-value.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -284,11 +285,18 @@ ${JSON.stringify([
 
 Every factual market, buyer, channel, positioning, or competitor claim must reference only these source IDs. Claims without a valid source must be marked as assumptions.
 
+Positioning must rest on real value: something the buyer wants and cannot easily get from the alternatives.
+- "uniqueValueProposition" states what is NEW for this buyer: one sentence on what they get here that the competitive alternatives (including doing it themselves and doing nothing) do not give them. Not a slogan, not a process, not the word "unique".
+- Check the founder's intake (problem, solution, stated differentiators) and your own positioningStatement, uniqueValueProposition, keyDifferentiators, differentiatedCapabilities and messaging.headline for these traps. List each one you find in "fakeValueFlags" with the exact text and a concrete fix:
+${FAKE_VALUE_TRAP_GUIDE}
+- Write your own fields so they avoid these traps. Return "fakeValueFlags": [] when there is nothing to flag.
+
 Return only JSON with this shape:
 {
   "summaryInsight":"2-3 sentence thesis",
   "thesis":{"target":"","buyingTrigger":"","competitiveAlternative":"","value":"","rationale":"","risks":[""]},
   "positioning":{"competitiveAlternatives":[""],"differentiatedCapabilities":[""],"customerValue":[""],"bestFitSegment":"","marketCategory":"","positioningStatement":"","uniqueValueProposition":"","keyDifferentiators":[""]},
+  "fakeValueFlags":[{"text":"","trap":"process|category_generic|bolted_on_feature|shared_values|messaging_only","fix":""}],
   "messaging":{"headline":"","hookLine":"","proofPoint":"","ctaCopy":"","toneOfVoice":[""]},
   "channelNarratives":{"channel-id":{"rationale":"","evidence":[""],"audience":"","buyingTrigger":"","offer":"","message":"","hypothesis":"","killRule":"","actions":[""],"requiredAssets":[""]}},
   "funnel":[{"stage":"","exitCriteria":"","metric":""}],
@@ -308,13 +316,15 @@ Return only JSON with this shape:
     system: 'Return valid JSON only. Never invent citations or modify the provided channel selection.',
     prompt,
     temperature: 0.3,
-    maxTokens: 6000,
+    // Raised from 6000 with the fake-value check (2026-11-21): the ICP draft
+    // was cut off at that ceiling once it grew, and this plan is longer.
+    maxTokens: 8000,
     timeoutMs: 75_000,
     openaiModel: 'gpt-4o',
   });
   const content = generation.text;
   if (typeof content !== 'string') throw new Error('GTM strategy response was empty');
-  const strategic = JSON.parse(content) as Record<string, any>;
+  const strategic = parseLenientJson(content);
   const narratives = strategic.channelNarratives && typeof strategic.channelNarratives === 'object' ? strategic.channelNarratives : {};
   const confidence = research.status === 'complete' && intake.buyingTrigger?.trim()
     ? 'high'
@@ -457,6 +467,7 @@ Return only JSON with this shape:
       positioningStatement: safeText(positioning.positioningStatement, `${intake.productName} helps ${intake.targetSegment} ${intake.solution}`),
       uniqueValueProposition: safeText(positioning.uniqueValueProposition, intake.solution),
       keyDifferentiators: safeStringArray(positioning.keyDifferentiators),
+      fakeValueFlags: normalizeFakeValueFlags(strategic.fakeValueFlags),
     },
     messaging: {
       headline: safeText(messaging.headline, intake.productName, 120),

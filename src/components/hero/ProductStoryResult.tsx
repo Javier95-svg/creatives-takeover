@@ -7,6 +7,7 @@ import { trackFirstOutputGenerated, trackOutputGenerationFailed, trackSignupProm
 import { persistOutputSignupContext } from '@/lib/outputSignupContext';
 import { readStartingExperience, saveStartingExperience, STARTING_EXPERIENCE_VERSION } from '@/lib/startingExperience';
 import { markFirstArtifactCreated } from '@/lib/retentionSystem';
+import { FAKE_VALUE_TRAP_LABELS, readFakeValueFlags } from '@/lib/fakeValue';
 import { buildDemoStoryResumePath, claimDemoStoryArtifact, createDemoStoryArtifact, demoStoryText, generateDemoStory,
   loadDemoStoryArtifact, persistDemoStory, readDemoStory, type DemoStoryDraftV1, type DemoStoryRef } from '@/lib/demoStudio/story';
 
@@ -164,6 +165,17 @@ export default function ProductStoryResult({ description = '', runId, resumeToke
       <h3 id="demo-story-heading">{draft.productName}</h3>
       <p className="ct-story__pitch">{draft.pitch}</p>
       <p className="ct-story__assumption">The customer and problem below are starting assumptions based on your description. Confirm them with real customers.</p>
+      {readFakeValueFlags((draft as { fakeValueFlags?: unknown }).fakeValueFlags).length > 0 ? (
+        <div className="ct-story__flags">
+          <p className="ct-story__flags-title">Words in your description buyers will not decide on</p>
+          <ul>{readFakeValueFlags((draft as { fakeValueFlags?: unknown }).fakeValueFlags).map(flag => (
+            <li key={`${flag.trap}-${flag.text}`}>
+              <span className="ct-story__flags-quote">“{flag.text}”</span>
+              <span>{FAKE_VALUE_TRAP_LABELS[flag.trap]}. {flag.fix}</span>
+            </li>
+          ))}</ul>
+        </div>
+      ) : null}
       <dl className="ct-story__context"><div><dt>Likely customer</dt><dd>{draft.brief.audience}</dd></div>
         <div><dt>Problem to lead with</dt><dd>{draft.brief.problem}</dd></div></dl>
       <ol className="ct-story__steps">{draft.steps.map((step, index) => <li key={index}>

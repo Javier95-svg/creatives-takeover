@@ -1,3 +1,4 @@
+import type { FakeValueFlag } from './fakeValue.ts';
 import { buildBuyerInterviewScript } from './gtmInterview.ts';
 
 export const GTM_V2_SCHEMA_VERSION = 2 as const;
@@ -276,6 +277,8 @@ export interface GTMPlanV2 {
     positioningStatement: string;
     uniqueValueProposition: string;
     keyDifferentiators: string[];
+    /** Claims that sound like value but are not. Absent on plans made before 2026-11-21. */
+    fakeValueFlags?: FakeValueFlag[];
   };
   messaging: {
     headline: string;
