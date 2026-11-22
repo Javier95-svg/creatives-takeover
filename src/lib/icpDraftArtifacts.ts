@@ -687,19 +687,26 @@ export function buildDraftDashboardContext(artifact: StoredIcpArtifact) {
           confidence === "low"
             ? "Low-confidence drafts should produce better evidence, not more assumptions."
             : "A sharper ICP should immediately change what you build or test next.",
-        actionUrl: confidence === "low" ? "/pmf-lab" : artifact.draftDocument.nextActions[0]?.route || "/demo-studio",
+        // Conversations first at every confidence, as in the server copy
+        // (_shared/icp-draft.ts buildDashboardContext), since 2026-11-22.
+        actionUrl: "/pmf-lab?step=interviews",
         priority: 12,
         type: "action" as const,
       },
       {
-        title: confidence === "low" ? "Pressure-test the pain in PMF Lab" : "Capture demand with Demo Studio",
-        description:
-          confidence === "low"
-            ? "Run interviews and demand checks against the exact segment the draft recommends."
-            : "Use the ICP Draft language to create a clear waitlist message before you build more.",
-        reason: "The best next move should follow from the draft, not from generic startup advice.",
-        actionUrl: confidence === "low" ? "/pmf-lab" : "/demo-studio",
+        title: "Talk to 5 people this week",
+        description: "Your draft comes with five interview questions. Five logged conversations give you a first read in PMF Lab.",
+        reason: "Conversations are the evidence every later step depends on.",
+        actionUrl: "/pmf-lab?step=interviews",
         priority: 11,
+        type: "action" as const,
+      },
+      {
+        title: "Give them something to react to",
+        description: "Demo Studio turns the draft into something prospects can respond to.",
+        reason: "A concrete page or demo gets sharper reactions than a description.",
+        actionUrl: "/demo-studio",
+        priority: 9,
         type: "action" as const,
       },
       {

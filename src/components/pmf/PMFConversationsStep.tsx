@@ -34,6 +34,8 @@ interface PMFConversationsStepProps {
   onDeleteInterview: (id: string) => Promise<void>;
   onImportInterviews: (interviews: PMFInterviewLog[]) => Promise<void>;
   onFindPeople: () => void;
+  /** Opens the survey step, for founders whose product already has users to ask. */
+  onUseSurvey?: () => void;
 }
 
 const intentLabel = (value: PMFInterviewLog['buyingIntent']) =>
@@ -50,6 +52,7 @@ export function PMFConversationsStep({
   onDeleteInterview,
   onImportInterviews,
   onFindPeople,
+  onUseSurvey,
 }: PMFConversationsStepProps) {
   const [assumptions, setAssumptions] = useState<JourneyAssumption[]>([]);
   const [editing, setEditing] = useState<PMFInterviewLog | null>(null);
@@ -157,6 +160,28 @@ export function PMFConversationsStep({
         )}
       </div>
 
+      {/* The first milestone, made visible: five conversations give the first read. */}
+      {interviews.length < FIRST_READ_INTERVIEWS ? (
+        <div className="space-y-1.5">
+          <div
+            className="h-1.5 w-full overflow-hidden rounded-full bg-muted"
+            role="progressbar"
+            aria-label="Conversations toward your first read"
+            aria-valuemin={0}
+            aria-valuemax={FIRST_READ_INTERVIEWS}
+            aria-valuenow={interviews.length}
+          >
+            <div
+              className="h-full rounded-full bg-primary transition-all"
+              style={{ width: `${(interviews.length / FIRST_READ_INTERVIEWS) * 100}%` }}
+            />
+          </div>
+          <p className="text-xs text-muted-foreground">
+            {interviews.length} of {FIRST_READ_INTERVIEWS} conversations for your first read
+          </p>
+        </div>
+      ) : null}
+
       {interviews.length === 0 ? (
         <ToolEmptyState
           title="No conversations yet"
@@ -191,7 +216,13 @@ export function PMFConversationsStep({
       )}
 
       {icpInterviewPlan && icpInterviewPlan.length > 0 && (
-        <DashboardDisclosure title="Questions to ask" summary="Suggested by your ICP Builder draft.">
+        <DashboardDisclosure
+          title="Questions to ask"
+          summary="Suggested by your ICP Builder draft."
+          // Open until the first conversation is logged: the questions are the
+          // reason a founder arrives here from the draft.
+          defaultOpen={interviews.length === 0}
+        >
           <ol className="list-decimal space-y-2 pl-5 text-sm text-foreground">
             {icpInterviewPlan.map((item) => (
               <li key={item.step}>
@@ -202,6 +233,19 @@ export function PMFConversationsStep({
           </ol>
         </DashboardDisclosure>
       )}
+
+      {interviews.length > 0 || onUseSurvey ? (
+        <p className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
+          {interviews.length > 0 ? (
+            <Button type="button" variant="link" className="h-auto p-0" onClick={onFindPeople}>Find more people to talk to</Button>
+          ) : null}
+          {onUseSurvey ? (
+            <Button type="button" variant="link" className="h-auto p-0" onClick={onUseSurvey}>
+              Already have users? Send them a one-question survey
+            </Button>
+          ) : null}
+        </p>
+      ) : null}
 
       <DashboardDisclosure title="Paste notes instead" summary="Paste notes or a transcript and we turn them into conversations you can check.">
         <div className="space-y-3">

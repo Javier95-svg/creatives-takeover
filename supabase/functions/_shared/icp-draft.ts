@@ -753,7 +753,10 @@ Ground the pain quote, behaviors, "where to find them", and competitor claims in
 
 function buildDashboardContext(draftDocument: DraftDocument) {
   const level = draftDocument.confidence.level ?? "medium";
-  const defaultRoute = level === "low" ? "/pmf-lab" : "/demo-studio";
+  // Conversations first, whatever the confidence (2026-11-22): every later tool
+  // needs real buyer evidence, and nobody reached PMF Lab with any while Demo
+  // Studio was the default next step for medium and high confidence drafts.
+  const defaultRoute = "/pmf-lab";
 
   return {
     message: "We know who you’re building for — here’s what to do next.",
@@ -781,14 +784,19 @@ function buildDashboardContext(draftDocument: DraftDocument) {
         type: "action",
       },
       {
-        title: level === "low" ? "Pressure-test the pain in PMF Lab" : "Capture demand with Demo Studio",
-        description:
-          level === "low"
-            ? "Run interviews and demand checks against the exact segment the draft recommends."
-            : "Use the ICP Draft language to create a demo brief, VSL script, and proof page before you build more.",
-        reason: "The best next move should follow from the draft, not from generic startup advice.",
-        actionUrl: level === "low" ? "/pmf-lab" : "/demo-studio",
+        title: "Talk to 5 people this week",
+        description: "Your draft comes with five interview questions. Five logged conversations give you a first read in PMF Lab.",
+        reason: "Conversations are the evidence every later step depends on.",
+        actionUrl: "/pmf-lab?step=interviews",
         priority: 11,
+        type: "action",
+      },
+      {
+        title: "Give them something to react to",
+        description: "Demo Studio turns the draft into something prospects can respond to.",
+        reason: "A concrete page or demo gets sharper reactions than a description.",
+        actionUrl: "/demo-studio",
+        priority: 9,
         type: "action",
       },
       {

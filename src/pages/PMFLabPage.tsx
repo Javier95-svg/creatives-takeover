@@ -604,6 +604,7 @@ export default function PMFLabPage() {
               onDeleteInterview={interviewStore.deleteInterview}
               onImportInterviews={interviewStore.saveMany}
               onFindPeople={() => handleModeChange('discover')}
+              onUseSurvey={() => showStep('ask')}
             />
           )}
           {shownStep === 'ask' && (

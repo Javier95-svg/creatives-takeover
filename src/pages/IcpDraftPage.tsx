@@ -131,6 +131,39 @@ export default function IcpDraftPage() {
     navigate(`/demo-studio?icp=${draftId ?? ""}`);
   };
 
+  /**
+   * The primary next step since 2026-11-22: talk to five people. PMF Lab opens
+   * on its conversations step with this draft's five interview questions, and
+   * five logged conversations give the first read (FIRST_READ_INTERVIEWS).
+   * Nobody had reached PMF Lab with real evidence while Demo Studio led here.
+   */
+  const handleConversationsClick = (surface: string) => {
+    captureEvent("icp_unlocked_draft_dashboard_clicked", {
+      draft_id: draftId,
+      page_path: draftId ? `/icp/draft/${draftId}` : "/icp/draft",
+      source: "pmf_conversations_handoff",
+      surface,
+    });
+    trackActivationFunnelEvent("activation_step_completed", {
+      entry_id: "icp_draft_unlock",
+      tool: "icp_builder",
+      source: "icp-draft-unlock",
+      step: "second_meaningful_action",
+      is_authenticated: true,
+      artifact_type: "customer_decision_brief",
+      artifact_id: draftId,
+      action: "open_pmf_conversations",
+    });
+    trackJourneyEvent("journey_next_stage_started", {
+      tool: "icp_builder",
+      artifact_type: "customer_decision_brief",
+      artifact_id: draftId,
+      source: "icp-draft-unlock",
+      action: "open_pmf_conversations",
+    });
+    navigate(`/pmf-lab?icp=${draftId ?? ""}&step=interviews`);
+  };
+
   const dismissUnlockBanner = () => {
     const nextParams = new URLSearchParams(searchParams);
     nextParams.delete("source");
@@ -243,13 +276,13 @@ export default function IcpDraftPage() {
                 </div>
                 <div className="space-y-1">
                   <p className="text-label font-semibold uppercase tracking-[0.24em] text-success">
-                    Unlocked
+                    Saved
                   </p>
                   <h2 className="text-xl font-semibold text-foreground sm:text-2xl">
-                    Your full ICP Draft is unlocked
+                    Your draft is saved
                   </h2>
                   <p className="max-w-xl text-sm leading-6 text-muted-foreground">
-                    Your brief is saved. Demo Studio will carry this exact draft forward so prospects can react before you make a build decision.
+                    Next, talk to five people who match it. PMF Lab has the questions to ask, and five conversations give you a first read.
                   </p>
                 </div>
               </div>
@@ -258,9 +291,9 @@ export default function IcpDraftPage() {
                   type="button"
                   size="lg"
                   className="shrink-0 gap-2 bg-slate-950 text-white hover:bg-slate-800"
-                  onClick={handleDemoStudioClick}
+                  onClick={() => handleConversationsClick("saved_banner")}
                 >
-                  {isCompletionChainEnabled() ? 'Create your concept page' : 'Create my prospect demo'}
+                  Talk to 5 people
                   <ArrowRight className="h-4 w-4" />
                 </Button>
                 <Button
@@ -287,10 +320,10 @@ export default function IcpDraftPage() {
               <div className="space-y-1">
                 <p className="text-label font-semibold uppercase tracking-[0.24em] text-[#7dd3fc]">Next step</p>
                 <h2 className="text-xl font-semibold text-white sm:text-2xl">
-                  Give this customer something concrete to react to.
+                  Talk to 5 people this week.
                 </h2>
-                <p className="max-w-xl text-sm leading-6 text-muted-foreground">
-                  Demo Studio carries this exact ICP draft forward as an explicitly untested story. Publish it, collect reactions, then bring the scoped evidence into PMF Lab.
+                <p className="max-w-xl text-sm leading-6 text-white/70">
+                  This draft's five interview questions are waiting in PMF Lab. Log what each person tells you; after five conversations you get a first read on whether to build, narrow, pivot or stop.
                 </p>
               </div>
             </div>
@@ -298,20 +331,25 @@ export default function IcpDraftPage() {
               type="button"
               size="lg"
               className="shrink-0 gap-2 bg-white text-foreground hover:bg-white/90"
-              onClick={handleDemoStudioClick}
+              onClick={() => handleConversationsClick("next_step_card")}
             >
-              <span>{isCompletionChainEnabled() ? 'Create your concept page' : 'Create my prospect demo'}</span>
+              <span>Start your conversations</span>
               <ArrowRight className="h-4 w-4" />
             </Button>
           </div>
           <div className={`relative mt-5 grid gap-3 border-t border-white/10 pt-5 ${sprintEnabled ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}>
-            <Link
-              to={`/demo-studio?icp=${draftId ?? ""}`}
-              className="rounded-xl border border-white/10 bg-white/5 p-4 text-sm text-white transition hover:bg-white/10"
+            <button
+              type="button"
+              onClick={handleDemoStudioClick}
+              className="rounded-xl border border-white/10 bg-white/5 p-4 text-left text-sm text-white transition hover:bg-white/10"
             >
-              <span className="font-semibold">Demo Studio, recommended next</span>
-              <span className="mt-1 block text-white/60">Turn this exact draft into a shareable interactive demo.</span>
-            </Link>
+              <span className="font-semibold">{isCompletionChainEnabled() ? 'Publish a page to collect signups' : 'Make a demo to show them'}</span>
+              <span className="mt-1 block text-white/60">
+                {isCompletionChainEnabled()
+                  ? 'Demo Studio turns this draft into a page people can sign up on.'
+                  : 'Demo Studio turns this draft into something people can react to.'}
+              </span>
+            </button>
             <Link
               to={`/pmf-lab?icp=${draftId ?? ""}`}
               className="rounded-xl border border-white/10 bg-white/5 p-4 text-sm text-white transition hover:bg-white/10"
@@ -366,8 +404,8 @@ export default function IcpDraftPage() {
         scoreAction={
           scoreCard ? (
             <div className="flex flex-col flex-wrap gap-3 sm:flex-row sm:items-center">
-              <Button type="button" size="lg" className="gap-2" onClick={handleDemoStudioClick}>
-                {isCompletionChainEnabled() ? 'Create your concept page' : 'Create my demo'}
+              <Button type="button" size="lg" className="gap-2" onClick={() => handleConversationsClick("score")}>
+                Talk to 5 people
                 <ArrowRight className="h-4 w-4" />
               </Button>
               <IcpScoreShareModal
