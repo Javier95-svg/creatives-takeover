@@ -5,6 +5,7 @@ import {
   buildDraftPrompt,
   containsPriceFigure,
   normalizeDraftDocument,
+  parseDraftJson,
 } from "../supabase/functions/_shared/icp-draft.ts";
 
 /**
@@ -108,4 +109,11 @@ test('the prompt asks for the second half of value and a want-led rubric', () =>
   assert.match(prompt, /identity, pleasure, belonging, growth \(a want\): do NOT invent a problem/);
   assert.match(prompt, /what a competitor would have to give up/);
   assert.match(prompt, /Use only the RETRIEVED EVIDENCE block/);
+});
+
+test('a trailing comma no longer loses the whole draft, but a cut-off answer still fails', () => {
+  assert.deepEqual(parseDraftJson('{"draftDocument":{"alternatives":[{"option":"a"},],},}'), {
+    draftDocument: { alternatives: [{ option: 'a' }] },
+  });
+  assert.throws(() => parseDraftJson('{"draftDocument":{"build":{"whatTheyGet":"a",'), /Failed to parse ICP draft JSON/);
 });

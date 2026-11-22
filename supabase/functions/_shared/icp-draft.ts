@@ -1221,6 +1221,25 @@ export function normalizeDraftDocument(parsed: Record<string, any>, enrichment: 
   return document;
 }
 
+/**
+ * JSON.parse, forgiving the one slip models make most: a trailing comma
+ * before a closing brace or bracket. Anything else still fails loudly, because
+ * guessing at a truncated document would hand the founder half a draft.
+ */
+export function parseDraftJson(content: string): Record<string, any> {
+  try {
+    return JSON.parse(content);
+  } catch (parseError) {
+    try {
+      return JSON.parse(content.replace(/,(\s*[}\]])/g, "$1"));
+    } catch {
+      throw new Error(
+        `Failed to parse ICP draft JSON: ${parseError instanceof Error ? parseError.message : String(parseError)}`,
+      );
+    }
+  }
+}
+
 export async function generateIcpDraftArtifact({
   request,
   enrichment,
@@ -1248,21 +1267,15 @@ export async function generateIcpDraftArtifact({
     system: "Return valid JSON only.",
     prompt: buildDraftPrompt(request, resolvedEnrichment),
     temperature: 0.35,
-    // A full 4-section ICP draft overruns a low ceiling -> the JSON gets
-    // truncated and JSON.parse throws. Give it enough room to complete.
-    maxTokens: 6000,
+    // A full ICP draft overruns a low ceiling -> the JSON gets truncated and
+    // JSON.parse throws. 6000 stopped being enough once the draft also carried
+    // what the customer gets, the value form and the alternatives (2026-11-21:
+    // a longer B2B draft was cut off at ~15,600 characters).
+    maxTokens: 9000,
     timeoutMs: 45_000,
     openaiModel: "gpt-4o",
   });
-  const content = generation.text;
-  let parsed: ReturnType<typeof JSON.parse>;
-  try {
-    parsed = JSON.parse(content);
-  } catch (parseError) {
-    throw new Error(
-      `Failed to parse ICP draft JSON: ${parseError instanceof Error ? parseError.message : String(parseError)}`,
-    );
-  }
+  const parsed = parseDraftJson(generation.text);
   const draftDocument = normalizeDraftDocument(parsed?.draftDocument ?? {}, resolvedEnrichment);
 
   return {
