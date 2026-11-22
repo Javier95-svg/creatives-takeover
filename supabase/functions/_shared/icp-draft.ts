@@ -98,11 +98,24 @@ type DraftDocument = {
   };
   build: {
     valueProposition: string;
+    /**
+     * What changes for the customer, as distinct from what the product is.
+     * Features describe the product; this is what someone is actually paying for.
+     */
+    whatTheyGet: string;
     replaces: string[];
     coreFeatures: Array<{ title: string; description: string }>;
     outcome: string;
     evidence: SectionEvidence;
   };
+  /** The kind of value on offer. Absent when the model did not commit to one. */
+  valueForm?: { primary: ValueForm; secondary: ValueForm | null };
+  /**
+   * Every other way the customer could get the same thing, including doing it
+   * themselves and doing nothing. How easy each one is decides how scarce the
+   * value is, which is the half of viability founders most often overrate.
+   */
+  alternatives: DraftAlternative[];
   moat: {
     moatType: string;
     edge: string;
@@ -123,6 +136,8 @@ type DraftDocument = {
     whoBuysToday: string;
     demandSignal: string;
     whyNow: string;
+    /** Only kept when something was retrieved to support it. */
+    shifts?: { becomingPlentiful: string[]; becomingScarce: string[] };
     evidence: SectionEvidence;
   };
   pricing: {
@@ -197,6 +212,34 @@ export interface DraftRisk {
    * worry, not a risk, and belongs in neither the document nor the experiment.
    */
   disprovedBy: string;
+}
+
+/**
+ * Relief forms answer a need (a problem, a risk, a cost). Desire forms answer a
+ * want. Scoring a desire-led business on pain alone marks it weak by design, so
+ * the form decides which rubric the strength of demand is scored on.
+ */
+export type ValueForm = "fix" | "protect" | "save" | "identity" | "pleasure" | "belonging" | "growth";
+export const VALUE_FORMS: readonly ValueForm[] = [
+  "fix",
+  "protect",
+  "save",
+  "identity",
+  "pleasure",
+  "belonging",
+  "growth",
+] as const;
+
+export type AlternativeKind = "competitor" | "diy" | "do_nothing" | "other";
+export type AlternativeEase = "easy" | "some_effort" | "hard";
+const ALTERNATIVE_KINDS: readonly AlternativeKind[] = ["competitor", "diy", "do_nothing", "other"];
+const ALTERNATIVE_EASE: readonly AlternativeEase[] = ["easy", "some_effort", "hard"];
+
+export interface DraftAlternative {
+  option: string;
+  kind: AlternativeKind;
+  /** How easy that option is for this customer, not how good it is. */
+  ease: AlternativeEase;
 }
 
 export type FieldProvenance = "model" | "fallback";
@@ -402,7 +445,7 @@ function buildFounderEvidence(request: DraftRequestShape) {
   };
 }
 
-function buildDraftPrompt(request: DraftRequestShape, enrichment: DraftEnrichment) {
+export function buildDraftPrompt(request: DraftRequestShape, enrichment: DraftEnrichment) {
   const evidence = buildFounderEvidence(request);
   // Split by whether we can actually cite the thing. The previous prompt listed
   // model-recalled competitor names under a heading that called them "retrieved
@@ -495,6 +538,7 @@ Return this exact JSON shape:
     },
     "build":{
       "valueProposition":"string",
+      "whatTheyGet":"string",
       "replaces":["string"],
       "coreFeatures":[{"title":"string","description":"string"}],
       "outcome":"string",
@@ -520,8 +564,11 @@ Return this exact JSON shape:
       "whoBuysToday":"string",
       "demandSignal":"string",
       "whyNow":"string",
+      "shifts":{"becomingPlentiful":["string"],"becomingScarce":["string"]},
       "evidence":{"confidence":"high|medium|low","evidence":"string","missingSignalPrompt":"string|null","sourceIds":["string"]}
     },
+    "valueForm":{"primary":"fix|protect|save|identity|pleasure|belonging|growth","secondary":"fix|protect|save|identity|pleasure|belonging|growth|null"},
+    "alternatives":[{"option":"string","kind":"competitor|diy|do_nothing|other","ease":"easy|some_effort|hard"}],
     "pricing":{
       "model":"string",
       "hypothesis":"string",
@@ -557,16 +604,26 @@ How to score viabilityAssessment (0-100 each, and be willing to score low):
 - These are a judgement about THIS BUSINESS, not about how complete the document
   is. A low score is a useful, expected answer. Do not cluster everything in the
   60-80 range. If the idea is weak, say so with the numbers.
-- painSeverity: how expensive and how frequent the problem is for the customer.
-  A mild annoyance people live with scores under 30 no matter how relatable it
-  is. Reserve 80+ for pain that already costs money, time, or customers today.
+- painSeverity: how strongly this customer needs or wants what this delivers.
+  Score it on the rubric for valueForm.primary:
+  - fix, protect, save (a need): how expensive and how frequent the problem is.
+    A mild annoyance people live with scores under 30 no matter how relatable
+    it is. Reserve 80+ for pain that already costs money, time, or customers today.
+  - identity, pleasure, belonging, growth (a want): do NOT invent a problem.
+    Score how hard this customer already pursues it, shown by money, time or
+    effort they spend on it today (memberships, premium versions, communities,
+    showing it off). A passing interest scores under 30. Reserve 80+ for
+    something they already pay for again and again.
 - willingnessToPay: is there an existing budget line and a person who owns it?
   Consumers paying out of pocket for a nice-to-have score under 30. A business
   already paying for a worse tool scores high.
 - competitiveIntensity: INVERTED. Score LOW when the category is crowded and
   commoditised, HIGH when the niche is genuinely underserved. A generic idea in
   a saturated consumer category (habit trackers, meal planners, to-do apps,
-  budgeting apps) must score under 30.
+  budgeting apps) must score under 30. Score it from your "alternatives" list:
+  if doing it themselves or doing nothing is "easy", or a good-enough option is
+  easy to get, score under 40. Being better than the alternatives does not make
+  this hard to get elsewhere; only the alternatives being hard to use does.
 - reachability: can this exact segment be reached repeatedly and affordably
   through a channel that already exists? "Everyone" is not reachable and scores
   under 25. A segment that gathers in a known place scores high.
@@ -576,10 +633,37 @@ How to score viabilityAssessment (0-100 each, and be willing to score low):
 - basis must be "evidence" only when sourceIds is non-empty; otherwise
   "inference".
 
+What the customer gets:
+- "build.whatTheyGet" is what changes for the customer once this works: what
+  they can now do, feel, or say about themselves. It is not a feature list. The
+  product is one thing and what people get from it is another. It can be
+  practical, emotional, or both.
+- "valueForm.primary" is the main kind of value on offer. Pick exactly one:
+  fix (solves an acute problem), protect (removes a risk or worry before it
+  happens), save (gives back time, money or effort), identity (reflects who
+  they are or want to be), pleasure (delight, fun, beauty), belonging (a group
+  where they have a place), growth (they become more capable, or part of
+  something bigger). Set "secondary" only if a second form clearly matters,
+  otherwise null. Do not default to "fix" because the founder used the word
+  "problem"; pick what the customer is really paying for.
+
+Alternatives (where else they could get it):
+- "alternatives" lists 3 to 6 realistic ways this customer could get the same
+  outcome today, not the same product. It MUST include one "diy" row (doing it
+  themselves) and one "do_nothing" row (living without it).
+- "ease" is how easy that option is for this customer, not how good it is. Be
+  harsh: founders overrate how hard their alternatives are. If "almost anywhere"
+  is the honest answer, mark them "easy".
+
 Rules for output quality:
-- The pain section must commit to one primary pain only.
+- The pain section must commit to one primary pain only. For identity,
+  pleasure, belonging or growth, write it as the unmet want (what they lack
+  today), not as an invented problem.
 - The customer section must describe a real buyer/operator in a real moment, not a broad market.
 - The moat section must identify the source of the edge and why it is hard to copy.
+  "whyHardToCopy" must name what a competitor would have to give up, or get
+  worse at, to copy it. If a competitor could copy it without giving anything
+  up, say so plainly: that edge is easy to copy.
 - The competition section must be sharp, not encyclopedic.
 - coreFeatures must be exactly 3 items.
 - rankedPains must contain 3 pains in priority order and state the evidence for each rank.
@@ -596,6 +680,10 @@ Market:
   cannot cite from the RETRIEVED EVIDENCE block.
 - "whyNow" must name a change that made this newly possible or newly urgent. If
   nothing changed, omit it rather than inventing a trend.
+- "shifts" names what in this category is becoming plentiful (cheaper, easier,
+  commoditised, for example by AI) and what is becoming scarce or newly wanted.
+  Use only the RETRIEVED EVIDENCE block. If nothing retrieved supports a shift,
+  omit "shifts" entirely.
 
 Pricing (willingness to pay):
 - "hypothesis" MUST contain a specific number or range with a currency and a
@@ -723,8 +811,58 @@ function buildDashboardContext(draftDocument: DraftDocument) {
  * answer to every reader and every downstream check. Requiring a digit is a
  * crude test that happens to catch exactly this.
  */
-function containsPriceFigure(value: unknown): boolean {
-  return typeof value === "string" && /d/.test(value);
+export function containsPriceFigure(value: unknown): boolean {
+  // A digit. This read /d/ (the letter) until 2026-11-21, so any hypothesis
+  // containing a "d" passed, including the number-free sentences it exists to catch.
+  return typeof value === "string" && /\d/.test(value);
+}
+
+function normalizeValueForm(value: unknown): DraftDocument["valueForm"] {
+  const raw = value && typeof value === "object" ? value as Record<string, unknown> : {};
+  const isForm = (item: unknown): item is ValueForm =>
+    typeof item === "string" && (VALUE_FORMS as readonly string[]).includes(item);
+  if (!isForm(raw.primary)) return undefined;
+  return {
+    primary: raw.primary,
+    secondary: isForm(raw.secondary) && raw.secondary !== raw.primary ? raw.secondary : null,
+  };
+}
+
+/**
+ * Kept as the model wrote it, minus anything malformed or repeated. Not padded:
+ * an invented "do nothing" row would be worse than a visibly missing one.
+ */
+function normalizeAlternatives(value: unknown): DraftAlternative[] {
+  if (!Array.isArray(value)) return [];
+  const seen = new Set<string>();
+  const alternatives: DraftAlternative[] = [];
+  for (const item of value) {
+    if (!item || typeof item !== "object") continue;
+    const raw = item as Record<string, unknown>;
+    const option = typeof raw.option === "string" ? raw.option.trim() : "";
+    if (!option || seen.has(option.toLowerCase())) continue;
+    seen.add(option.toLowerCase());
+    alternatives.push({
+      option,
+      kind: (ALTERNATIVE_KINDS as readonly string[]).includes(raw.kind as string) ? raw.kind as AlternativeKind : "other",
+      ease: (ALTERNATIVE_EASE as readonly string[]).includes(raw.ease as string) ? raw.ease as AlternativeEase : "some_effort",
+    });
+    if (alternatives.length === 6) break;
+  }
+  return alternatives;
+}
+
+/**
+ * The prompt allows shifts only from retrieved evidence. With nothing retrieved
+ * there is nothing they could rest on, so they are dropped rather than trusted.
+ */
+function normalizeShifts(value: unknown, citableSourceIds: string[]): NonNullable<DraftDocument["market"]["shifts"]> | undefined {
+  if (citableSourceIds.length === 0) return undefined;
+  const raw = value && typeof value === "object" ? value as Record<string, unknown> : {};
+  const becomingPlentiful = normalizeList(raw.becomingPlentiful, 4);
+  const becomingScarce = normalizeList(raw.becomingScarce, 4);
+  if (becomingPlentiful.length === 0 && becomingScarce.length === 0) return undefined;
+  return { becomingPlentiful, becomingScarce };
 }
 
 /** An experiment longer than a fortnight does not get run. */
@@ -762,14 +900,17 @@ function normalizeRisks(value: unknown, track: (path: string, value: unknown, fa
   }];
 }
 
-function normalizeDraftDocument(parsed: Record<string, any>, enrichment: DraftEnrichment): DraftDocument {
+export function normalizeDraftDocument(parsed: Record<string, any>, enrichment: DraftEnrichment): DraftDocument {
   const overallConfidence = normalizeConfidence(parsed?.confidence?.level, "medium");
   const { provenance, track } = createFieldTracker();
+  const alternatives = normalizeAlternatives(parsed?.alternatives);
+  const valueForm = normalizeValueForm(parsed?.valueForm);
   const citableSourceIds = enrichment.sources.filter((source) => Boolean(source.url)).map((source) => source.sourceId ?? "");
   // With nothing retrieved, "high" cannot be earned. The prompt says so, but the
   // prompt is a request and this is the guarantee.
   const confidenceCeiling = (value: SectionConfidence): SectionConfidence =>
     value === "high" && citableSourceIds.length === 0 ? "medium" : value;
+  const shifts = normalizeShifts(parsed?.market?.shifts, citableSourceIds);
 
   const document: DraftDocument = {
     gatePreview: {
@@ -821,7 +962,8 @@ function normalizeDraftDocument(parsed: Record<string, any>, enrichment: DraftEn
       currentAlternative: track(
         "decisionBrief.currentAlternative",
         parsed?.decisionBrief?.currentAlternative
-          ?? (Array.isArray(parsed?.build?.replaces) && parsed.build.replaces[0] ? String(parsed.build.replaces[0]) : null),
+          ?? (Array.isArray(parsed?.build?.replaces) && parsed.build.replaces[0] ? String(parsed.build.replaces[0]) : null)
+          ?? alternatives.find((item) => item.kind !== "do_nothing")?.option,
         "The current manual or competing alternative still needs to be named in interviews.",
       ),
       reachableChannels: normalizeList(
@@ -878,6 +1020,11 @@ function normalizeDraftDocument(parsed: Record<string, any>, enrichment: DraftEn
     },
     build: {
       valueProposition: track("build.valueProposition", parsed?.build?.valueProposition, "The first product promise still needs to be made more concrete."),
+      whatTheyGet: track(
+        "build.whatTheyGet",
+        parsed?.build?.whatTheyGet,
+        "What the customer gets from this, beyond the features, still needs to be stated.",
+      ),
       replaces: normalizeList(parsed?.build?.replaces, 4),
       coreFeatures: Array.isArray(parsed?.build?.coreFeatures)
         ? parsed.build.coreFeatures
@@ -975,6 +1122,7 @@ function normalizeDraftDocument(parsed: Record<string, any>, enrichment: DraftEn
         "No observable demand signal has been found for this idea yet.",
       ),
       whyNow: track("market.whyNow", parsed?.market?.whyNow, "What makes this urgent now rather than three years ago is still unstated."),
+      ...(shifts ? { shifts } : {}),
       evidence: buildSectionEvidence(parsed?.market?.evidence, {
         confidence: citableSourceIds.length > 0 ? overallConfidence : "low",
         evidence:
@@ -1008,6 +1156,8 @@ function normalizeDraftDocument(parsed: Record<string, any>, enrichment: DraftEn
         provenance: "model_inference",
       }, citableSourceIds, confidenceCeiling),
     },
+    ...(valueForm ? { valueForm } : {}),
+    alternatives,
     risks: normalizeRisks(parsed?.risks, track),
     experiment: {
       title: track("experiment.title", parsed?.experiment?.title, "The next experiment still needs to be designed."),
