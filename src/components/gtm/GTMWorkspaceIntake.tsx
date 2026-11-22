@@ -468,6 +468,50 @@ export default function GTMWorkspaceIntake({
           </Button>
         </div>
       </div>
+      {isSubmitting ? <GTMBuildProgress /> : null}
+    </div>
+  );
+}
+
+/**
+ * What the generator is doing while the founder waits (19 to 59 seconds in
+ * November 2026), named in the order gtm-analyzer does it: live research,
+ * channel scoring, writing the plays, checking claims against the sources.
+ * Paced by elapsed time; the request itself reports no progress.
+ */
+export const GTM_BUILD_STEPS = [
+  { label: 'Researching your market and competitors', startsAt: 0 },
+  { label: 'Scoring channels against your time, budget and strengths', startsAt: 15 },
+  { label: 'Writing your plays and first outreach', startsAt: 25 },
+  { label: 'Checking every claim against the sources', startsAt: 45 },
+] as const;
+
+function GTMBuildProgress() {
+  const [elapsed, setElapsed] = useState(0);
+  useEffect(() => {
+    const started = Date.now();
+    const timer = window.setInterval(() => setElapsed(Math.floor((Date.now() - started) / 1000)), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
+  const current = GTM_BUILD_STEPS.reduce((index, step, i) => (elapsed >= step.startsAt ? i : index), 0);
+
+  return (
+    <div className="rounded-lg border border-border/60 bg-muted/30 p-4" role="status" aria-live="polite">
+      <p className="text-sm font-medium text-foreground">Building your plan. This usually takes under a minute.</p>
+      <ol className="mt-3 space-y-2">
+        {GTM_BUILD_STEPS.map((step, index) => (
+          <li key={step.label} className="flex items-center gap-2 text-sm">
+            {index < current ? (
+              <CheckCircle2 className="h-4 w-4 shrink-0 text-success" aria-hidden="true" />
+            ) : index === current ? (
+              <Loader2 className="h-4 w-4 shrink-0 animate-spin text-primary" aria-hidden="true" />
+            ) : (
+              <span className="h-4 w-4 shrink-0 rounded-full border border-border" aria-hidden="true" />
+            )}
+            <span className={index <= current ? 'text-foreground' : 'text-muted-foreground'}>{step.label}</span>
+          </li>
+        ))}
+      </ol>
     </div>
   );
 }

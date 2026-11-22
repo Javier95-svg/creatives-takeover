@@ -138,6 +138,17 @@ export function TractionRetentionCard({
         </p>
       </div>
 
+      {/* Above the fields since 2026-11-22: when the platform already measured
+          the week, using its numbers should come before typing them by hand. */}
+      {hasMeasuredActivity(measured) ? (
+        <MeasuredBlock
+          measured={measured!}
+          weekLabel={formatWeek(cohortWeekStart)}
+          inUse={measuredInUse}
+          onUse={onUseMeasured}
+        />
+      ) : null}
+
       <div className="grid gap-4 sm:grid-cols-3">
         <Field label="Week they started" htmlFor="traction-cohort-week" hint={`Week of ${formatWeek(cohortWeekStart)}`}>
           <Input
@@ -186,15 +197,6 @@ export function TractionRetentionCard({
             onChange={(event) => onChange({ revenue: event.target.value ? numberFromInput(event.target.value) : undefined })} />
         </Field>
       </div>
-
-      {hasMeasuredActivity(measured) ? (
-        <MeasuredBlock
-          measured={measured!}
-          weekLabel={formatWeek(cohortWeekStart)}
-          inUse={measuredInUse}
-          onUse={onUseMeasured}
-        />
-      ) : null}
     </section>
   );
 }
