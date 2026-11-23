@@ -1197,6 +1197,13 @@ const ICPBuilder: React.FC<ICPBuilderProps> = ({ backControl }) => {
     const mode = session.mode;
     if (!mode) return;
 
+    // Opened from PMF Lab's "narrow" / "pivot" decision: the server adds what
+    // the conversations showed to the revision (it reads the PMF result itself).
+    const revisionDecision = searchParams.get("decision");
+    const revisionContextId = searchParams.get("context");
+    const revision = (revisionDecision === "narrow" || revisionDecision === "pivot") && revisionContextId
+      ? { decision: revisionDecision, validationContextId: revisionContextId }
+      : undefined;
     const body =
       mode === "fast"
         ? {
@@ -1204,6 +1211,7 @@ const ICPBuilder: React.FC<ICPBuilderProps> = ({ backControl }) => {
             mode: persist ? "save" : "preview",
             entryMode: "fast",
             fastInput: validatedFast.success ? validatedFast.data : null,
+            ...(revision ? { revision } : {}),
           }
         : {
             operation: "build_draft",
@@ -1211,6 +1219,7 @@ const ICPBuilder: React.FC<ICPBuilderProps> = ({ backControl }) => {
             entryMode: "guided",
             guidedInput: validatedGuided.success ? validatedGuided.data : null,
             personaEditedSignificantly: session.personaEditedSignificantly,
+            ...(revision ? { revision } : {}),
           };
 
     if ((mode === "fast" && !validatedFast.success) || (mode === "guided" && !validatedGuided.success)) {
@@ -1405,7 +1414,7 @@ const ICPBuilder: React.FC<ICPBuilderProps> = ({ backControl }) => {
       setLoadingPhase(null);
       setLoadingStartedAt(null);
     }
-  }, [session.mode, session.personaEditedSignificantly, toast, unlockSavedDraft, user, validatedFast, validatedGuided]);
+  }, [searchParams, session.mode, session.personaEditedSignificantly, toast, unlockSavedDraft, user, validatedFast, validatedGuided]);
 
   const persistDraftAndContinue = useCallback(async () => {
     if (isPersisting) return;

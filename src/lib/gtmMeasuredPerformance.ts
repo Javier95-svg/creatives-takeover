@@ -33,12 +33,28 @@ export function findMeasuredPerformance(
   return null;
 }
 
-export async function fetchMeasuredChannelPerformance(userId: string): Promise<MeasuredPerformanceMap> {
+/**
+ * With projectId, only experiments from that project's sprints count, so one
+ * startup's channel results never show on another's plan (wired into the GTM
+ * plan's channel cards in phase 3 of the project memory plan, 2026-11-23).
+ */
+export async function fetchMeasuredChannelPerformance(userId: string, projectId: string | null = null): Promise<MeasuredPerformanceMap> {
   const map: MeasuredPerformanceMap = new Map();
-  const { data, error } = await supabase
+  let query = supabase
     .from('traction_engine_experiments' as never)
     .select('channel, pass, efficiency_score, decision, created_at')
-    .eq('user_id', userId)
+    .eq('user_id', userId);
+  if (projectId) {
+    const { data: sprints, error: sprintError } = await supabase
+      .from('traction_engine_sprints' as never)
+      .select('id')
+      .eq('user_id', userId)
+      .eq('project_id', projectId);
+    const sprintIds = ((sprints as Array<{ id: string }> | null) ?? []).map((row) => row.id);
+    if (sprintError || !sprintIds.length) return map;
+    query = query.in('sprint_id', sprintIds);
+  }
+  const { data, error } = await query
     .order('created_at', { ascending: true })
     .limit(400);
   if (error || !data) return map;

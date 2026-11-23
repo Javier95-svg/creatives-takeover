@@ -24,7 +24,6 @@ import { useMentorRecommendations } from '@/hooks/useMentorRecommendations';
 import { usePlanAccess } from '@/hooks/usePlanAccess';
 import { useRoutine } from '@/hooks/useRoutine';
 import { trackFirstCustomerSprint } from '@/lib/analytics';
-import { consumeGTMTractionHandoff } from '@/lib/gtmTractionHandoff';
 import {
   FIRST_CUSTOMER_TARGETS,
   buildFirstCustomerMentorBrief,
@@ -128,9 +127,10 @@ export function FirstCustomerProofWorkspace({ embedded = false, gtmPlanId }: { e
 
   useEffect(() => {
     if (sprint) return;
-    const legacy = consumeGTMTractionHandoff();
-    const channel = searchParams.get('channel') || legacy?.channel || '';
-    const hypothesis = searchParams.get('hypothesis') || legacy?.hypothesis || '';
+    // GTM hands over through the URL (and Traction reads the plan from the
+    // server); the old browser-only handoff was never written and is gone.
+    const channel = searchParams.get('channel') || '';
+    const hypothesis = searchParams.get('hypothesis') || '';
     if (!channel && !hypothesis) return;
     setIntake((current) => ({
       ...current,

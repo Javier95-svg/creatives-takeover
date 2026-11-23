@@ -16,6 +16,7 @@ import { getMvpNextStep } from '@/lib/mvp-builder/nextStep';
 import { icpArtifactToMvpStart } from '@/lib/mvp-builder/icpToMvpPrompt';
 import { useActiveProjectContext } from '@/hooks/useActiveProjectContext';
 import { ProjectSwitcher } from '@/components/workspace/ProjectSwitcher';
+import { OutcomeFreshnessBanner } from '@/components/workspace/OutcomeFreshnessBanner';
 
 type MobileTab = 'chat' | 'preview';
 
@@ -285,6 +286,8 @@ export const MVPBuilder: React.FC = () => {
         hasActiveProject={projectFiles.length > 0 || messages.length > 0}
         onBuyCredits={() => setTopUpsOpen(true)}
       />
+      {/* Built before a newer ICP or PMF result: say so, with "Keep as is". */}
+      <OutcomeFreshnessBanner tool="mvp" className="mx-3 mt-2 shrink-0" />
       <MVPBuilderTopUpDialog open={topUpsOpen} onOpenChange={setTopUpsOpen} />
       <MVPBuilderCreditExhaustedDialog
         open={isCreditExhaustedModalOpen}

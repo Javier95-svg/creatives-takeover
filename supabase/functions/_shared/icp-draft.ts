@@ -1251,11 +1251,14 @@ export function parseDraftJson(content: string): Record<string, any> {
 export async function generateIcpDraftArtifact({
   request,
   enrichment,
+  revisionContext,
 }: {
   /** Unused since 2026-11-11: the provider keys are read by json-generation.ts. */
   openaiApiKey?: string;
   request: DraftRequestShape;
   enrichment?: Partial<DraftEnrichment>;
+  /** PMF findings when the founder revises the draft from PMF Lab (see icp-revision.ts). */
+  revisionContext?: string | null;
 }) {
   const resolvedEnrichment: DraftEnrichment = {
     marketSignals: enrichment?.marketSignals ?? [],
@@ -1273,7 +1276,11 @@ export async function generateIcpDraftArtifact({
   const generation = await generateJsonText({
     label: "icp-draft",
     system: "Return valid JSON only.",
-    prompt: buildDraftPrompt(request, resolvedEnrichment),
+    prompt: revisionContext
+      ? `${buildDraftPrompt(request, resolvedEnrichment)}
+
+${revisionContext}`
+      : buildDraftPrompt(request, resolvedEnrichment),
     temperature: 0.35,
     // A full ICP draft overruns a low ceiling -> the JSON gets truncated and
     // JSON.parse throws. 6000 stopped being enough once the draft also carried

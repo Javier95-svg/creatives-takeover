@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Download, FileText, Loader2, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -853,6 +853,25 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
   const isFirstTime = !loading && recentLogs.length === 0 && activeSprints.length === 0;
   const triggeredSprint = activeSprints.find((sprint) => sprint.kill_rule_status === 'triggered') ?? null;
   const nextStep = getTractionNextStep({ isFirstTime, savedThisWeek, triggeredChannel: triggeredSprint?.channel ?? null });
+
+  // Nothing tracked yet and no GTM link followed: offer the project's GTM plan's
+  // main channel, read from the server (the old browser-only handoff was never written).
+  const [suggestedPlay, setSuggestedPlay] = useState<{ planId: string; playId: string; channel: string } | null>(null);
+  useEffect(() => {
+    if (!userId || gtmPlanId || !isFirstTime) { setSuggestedPlay(null); return; }
+    let active = true;
+    void (async () => {
+      const projectId = await loadActiveProjectId(userId);
+      if (!projectId) return;
+      const { data: planRow } = await (supabase as any).from('gtm_plans').select('id')
+        .eq('user_id', userId).eq('project_id', projectId).is('superseded_at', null).maybeSingle();
+      if (!planRow?.id) return;
+      const { data: play } = await (supabase as any).from('gtm_plays').select('id,channel_name')
+        .eq('plan_id', planRow.id).neq('status', 'completed').order('rank', { ascending: true }).limit(1).maybeSingle();
+      if (active && play?.id && play?.channel_name) setSuggestedPlay({ planId: planRow.id, playId: play.id, channel: play.channel_name });
+    })();
+    return () => { active = false; };
+  }, [userId, gtmPlanId, isFirstTime]);
   // A snapshot without stage runs (older payloads) means no repeat run yet.
   const repeatRun = (outcomeJourney.snapshot?.stageRuns ?? [])
     .filter((run) => run.stage === 'repeat')
@@ -879,6 +898,19 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
 
   return (
     <div className="space-y-6">
+      {suggestedPlay ? (
+        <div className="flex flex-col gap-3 rounded-xl border border-border/60 bg-card p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-sm font-semibold text-foreground">Your go-to-market plan starts with {suggestedPlay.channel}</p>
+            <p className="mt-0.5 text-sm text-muted-foreground">Track it here and its weekly results show up next to that channel in your plan.</p>
+          </div>
+          <Button asChild size="sm" className="shrink-0">
+            <Link to={`/traction-engine?planId=${encodeURIComponent(suggestedPlay.planId)}&playId=${encodeURIComponent(suggestedPlay.playId)}`}>
+              Start tracking it
+            </Link>
+          </Button>
+        </div>
+      ) : null}
       {nextStep && <NextStepCard title={nextStep.title} reason={nextStep.reason} cta={nextStep.cta} onAction={runNextStep} />}
 
       <div className="grid gap-3 sm:grid-cols-3">
@@ -1086,6 +1118,9 @@ export default function TractionEnginePage() {
           title="Traction Engine"
           purpose={PURPOSE}
           theme="traction"
+          outcomeTool="traction"
+          outcomeUpdateHref="/go-to-market"
+          outcomeUpdateLabel="Open your GTM plan"
           wallpaper={<TractionLogbookWallpaper />}
           headerArt={<TractionLogbookChart />}
         >

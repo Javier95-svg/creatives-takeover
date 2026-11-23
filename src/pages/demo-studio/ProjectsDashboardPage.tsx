@@ -223,6 +223,7 @@ export default function ProjectsDashboardPage() {
           purpose={PURPOSE}
           context={<ToolProjectContext context={projectContext} />}
           theme="demo"
+          outcomeTool="demo"
           wallpaper={<DemoStoryboardWallpaper />}
           headerArt={<DemoStoryboardChart />}
         >

@@ -1,6 +1,8 @@
 import type { ReactNode } from 'react';
 
 import { cn } from '@/lib/utils';
+import { OutcomeFreshnessBanner } from '@/components/workspace/OutcomeFreshnessBanner';
+import type { FreshnessTool } from '@/lib/outcomeFreshness';
 
 // Page frame for the core founder tools (PMF Lab, Traction Engine, GTM
 // Strategist). Founders said these pages looked machine-made: glowing
@@ -27,9 +29,13 @@ interface ToolPageShellProps {
   headerArt?: ReactNode;
   children: ReactNode;
   className?: string;
+  /** Shows "made before your latest ICP…" when this tool's current result is out of date. */
+  outcomeTool?: FreshnessTool;
+  outcomeUpdateHref?: string;
+  outcomeUpdateLabel?: string;
 }
 
-export function ToolPageShell({ title, purpose, context, actions, theme, wallpaper, headerArt, children, className }: ToolPageShellProps) {
+export function ToolPageShell({ title, purpose, context, actions, theme, wallpaper, headerArt, children, className, outcomeTool, outcomeUpdateHref, outcomeUpdateLabel }: ToolPageShellProps) {
   return (
     // pt-28 clears the public navigation bar; inside the signed-in workspace,
     // nav-offset-roomy replaces it with a small gap under the workspace header.
@@ -45,7 +51,10 @@ export function ToolPageShell({ title, purpose, context, actions, theme, wallpap
           </div>
           {headerArt ? <div className="hidden h-36 w-64 shrink-0 md:block lg:w-80">{headerArt}</div> : null}
         </header>
-        <div className="mt-8 space-y-6">{children}</div>
+        <div className="mt-8 space-y-6">
+          {outcomeTool ? <OutcomeFreshnessBanner tool={outcomeTool} updateHref={outcomeUpdateHref} updateLabel={outcomeUpdateLabel} /> : null}
+          {children}
+        </div>
       </div>
     </section>
   );

@@ -143,6 +143,7 @@ export default function GTMStrategistPage() {
           context={context}
           actions={planActions}
           theme="gtm"
+          outcomeTool="gtm"
           wallpaper={<GTMRouteWallpaper />}
           headerArt={<GTMRouteChart />}
         >

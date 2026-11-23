@@ -1,4 +1,5 @@
 import { useMemo, useRef } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Check, ExternalLink } from 'lucide-react';
 
@@ -17,6 +18,9 @@ import GTMPipelineBoard from './GTMPipelineBoard';
 import GTMPlayCard from './GTMPlayCard';
 import GTMReviewPanel from './GTMReviewPanel';
 import GTMThisWeek from './GTMThisWeek';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { fetchMeasuredChannelPerformance, findMeasuredPerformance } from '@/lib/gtmMeasuredPerformance';
 
 type GTMView = 'week' | 'plan' | 'review';
 
@@ -77,6 +81,19 @@ export default function GTMWorkspace({
   onApplyReview,
   onDismissReview,
 }: GTMWorkspaceProps) {
+  const { user } = useAuth();
+  // What Traction Engine measured for each channel of this plan's project, so
+  // the plan shows predicted fit next to real results.
+  const measured = useQuery({
+    queryKey: ['gtm-measured-performance', user?.id, planId],
+    enabled: Boolean(user?.id && planId),
+    staleTime: 60_000,
+    queryFn: async () => {
+      const { data } = await supabase.from('gtm_plans' as never).select('project_id').eq('id', planId).maybeSingle();
+      const projectId = (data as { project_id?: string | null } | null)?.project_id ?? null;
+      return projectId ? fetchMeasuredChannelPerformance(user!.id, projectId) : new Map();
+    },
+  });
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const tasksRef = useRef<HTMLDivElement>(null);
@@ -179,7 +196,8 @@ export default function GTMWorkspace({
               <p className="text-sm text-muted-foreground">Run one channel at a time. The backup is there if the numbers say to stop.</p>
             </div>
             {executablePlays.map((play) => (
-              <GTMPlayCard key={play.id} play={play} plan={plan} planId={planId} onSave={onUpdatePlay} onStartSprint={onStartSprint} />
+              <GTMPlayCard key={play.id} play={play} plan={plan} planId={planId} onSave={onUpdatePlay} onStartSprint={onStartSprint}
+                measured={measured.data ? findMeasuredPerformance(measured.data, play.channelName) : null} />
             ))}
           </section>
 

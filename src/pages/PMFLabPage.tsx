@@ -676,6 +676,7 @@ export default function PMFLabPage() {
           title="PMF Lab"
           purpose={PURPOSE}
           theme="pmf"
+          outcomeTool="pmf"
           wallpaper={<PMFLabWallpaper />}
           headerArt={<PMFLabChart />}
           context={user && hasAccess ? (projectContext.project ? <ToolProjectContext context={projectContext} /> : validationContextId ? contextLine : undefined) : undefined}

@@ -15,6 +15,7 @@ import {
 import { gatherIcpEvidence } from "../_shared/icp-evidence.ts";
 import { generateJsonText } from "../_shared/json-generation.ts";
 import { computeIcpViabilityScore } from "../_shared/icp-viability-score.ts";
+import { loadIcpRevisionContext, parseIcpRevision } from "../_shared/icp-revision.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -1024,9 +1025,15 @@ serve(async (req) => {
     }
 
     try {
+      // Revising from PMF Lab's "narrow" / "pivot": the findings go to the model.
+      // Signed-in founders only; the server reads their own PMF result.
+      const revisionPromise = user
+        ? loadIcpRevisionContext(serviceClient, user.id, parseIcpRevision((payload as { revision?: unknown }).revision))
+        : Promise.resolve(null);
       const enrichment = await fetchMarketSignals(payload);
       const generated = await generateIcpDraftArtifact({
         openaiApiKey,
+        revisionContext: await revisionPromise,
         request: payload,
         enrichment: {
           marketSignals: enrichment.marketSignals,

@@ -11,6 +11,8 @@ import { findLaunchDirectory } from '@/data/launchDirectories';
 import { captureEvent } from '@/lib/analytics';
 import type { GTMKillRule, GTMPlanV2, GTMPlay } from '@/lib/gtmV2';
 import { buildGTMActionPacket } from '@/lib/marketExperiment';
+import type { MeasuredChannelPerformance } from '@/lib/gtmMeasuredPerformance';
+import { measuredSummary } from '@/lib/gtmMeasuredSummary';
 
 const STATUS_TEXT: Record<GTMPlay['status'], string> = {
   active: 'Running',
@@ -45,10 +47,12 @@ interface GTMPlayCardProps {
   planId: string;
   onSave: (play: GTMPlay) => Promise<void>;
   onStartSprint: (play: GTMPlay) => Promise<void>;
+  /** What Traction Engine measured for this channel in this project, if anything. */
+  measured?: MeasuredChannelPerformance | null;
 }
 
 /** One channel play: who, what you offer, what you expect and when you stop. Details sit in a disclosure. */
-export default function GTMPlayCard({ play, plan, planId, onSave, onStartSprint }: GTMPlayCardProps) {
+export default function GTMPlayCard({ play, plan, planId, onSave, onStartSprint, measured = null }: GTMPlayCardProps) {
   const navigate = useNavigate();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(play);
@@ -128,6 +132,9 @@ export default function GTMPlayCard({ play, plan, planId, onSave, onStartSprint 
           </Field>
           <Field label="What you offer">{play.offer}</Field>
           <Field label="What you expect to happen">{play.hypothesis}</Field>
+          {measured && measured.weeksLogged > 0 ? (
+            <Field label="Measured so far">{measuredSummary(measured)}</Field>
+          ) : null}
           <Field label="When you stop">
             {play.killRule || 'Not set yet. Add a stop rule before you start.'}
             {rule ? (
