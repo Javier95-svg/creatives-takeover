@@ -21,13 +21,17 @@ export const MEMORY_EXTRACTION_PROMPT =
   'kind: "decision" (a choice made), "hypothesis" (a belief not yet proven), "commitment" (something they will do), "fact" (a stable fact about the business). ' +
   'text: one short sentence from the founder\'s point of view, max 200 characters, no quotes, e.g. "Target independent dental clinics first". ' +
   'dueOn: only for commitments with a stated deadline, as YYYY-MM-DD resolved against asOf; otherwise null. ' +
+  'topic: what a decision, hypothesis or fact is about, one of "target_customer", "problem", "positioning", "offer", "product_scope", "channel", "pricing", "goal", or null when none fits; always null for commitments. ' +
   'Separately, list at most 2 tasks: concrete next actions that Pulse proposed in its latest answer, or that the user said they will do, as short imperative sentences (max 120 characters) a founder could put on a task list, e.g. "Interview five dental clinic owners". ' +
   'A task needs a clear, doable action; never vague advice ("think about pricing"), questions, or anything already done. dueOn as YYYY-MM-DD when a deadline was stated, else null. ' +
-  'Return JSON only: {"memories":[{"kind":"decision","text":"...","dueOn":null}],"tasks":[{"title":"...","dueOn":null}]}. Return empty arrays when nothing qualifies, which is the usual case for memories.';
+  'Return JSON only: {"memories":[{"kind":"decision","text":"...","dueOn":null,"topic":"target_customer"}],"tasks":[{"title":"...","dueOn":null}]}. Return empty arrays when nothing qualifies, which is the usual case for memories.';
 
 export const MEMORY_RULE =
-  'Saved memory (memory.items) is the founder\'s own confirmed decisions, hypotheses, commitments and facts. Use it: refer to it naturally ("You decided to…"), keep advice consistent with it, ' +
-  'and if new evidence or their latest message contradicts a memory, say so plainly and suggest updating it. Hypotheses are unproven until evidence supports them. ' +
+  'Saved memory (memory.items) is the project\'s decision history: decisions, hypotheses, commitments and facts. Each item has a source: "pulse", "onboarding" or "founder" items are the founder\'s own words; ' +
+  'items from a tool (icp_builder, pmf_lab, demo_studio, mvp_builder, gtm_strategist, traction_engine) were recorded when the founder saved that result. evidence says how far it is proven: ' +
+  '"assumption" is untested, "founder_reported" is what the founder logged, "verified" was measured by the platform. Use it: refer to it naturally ("You decided to…", "Your ICP targets…"), keep advice consistent with it, ' +
+  'and if new evidence or their latest message contradicts an item, say so plainly and suggest updating it. Hypotheses and assumptions are unproven until evidence supports them. ' +
+  'memory.pendingReview lists entries where a tool result disagrees with the founder\'s own call; mention it when relevant and ask which one stands, never pick for them. ' +
   'memory.assumptions are tool-recorded assumptions, account-wide. Never claim to remember anything that is not in memory or this conversation.';
 
 /** The follow-up question for a commitment that came due. */

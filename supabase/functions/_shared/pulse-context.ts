@@ -39,33 +39,50 @@ export interface PulseContext {
   memory?: PulseMemoryContext | null;
 }
 
-export interface PulseMemoryItem { id: string; kind: string; text: string; scope: 'project' | 'account'; dueOn: string | null; savedOn: string | null }
+export interface PulseMemoryItem {
+  id: string; kind: string; text: string; scope: 'project' | 'account'; dueOn: string | null; savedOn: string | null;
+  /** What it is about (target_customer, positioning, ...), when known. */
+  topic?: string | null;
+  /** pulse, onboarding, founder, or the tool whose saved result recorded it. */
+  source?: string | null;
+  /** assumption, founder_reported or verified; null for a plain choice. */
+  evidence?: string | null;
+}
 export interface PulseMemoryContext {
   provenance: string;
   items: PulseMemoryItem[];
+  /** A tool result that disagrees with the founder's own call, waiting for them to choose. */
+  pendingReview?: PulseMemoryItem[];
   /** Commitments due today or earlier, not yet asked about today, most overdue first. */
   dueCommitments: PulseMemoryItem[];
   assumptions: { provenance: string; items: { statement: string; status: string; sourceTool: string | null; updatedAt: string | null }[] } | null;
 }
 
-const MEMORY_PROVENANCE = 'Saved by the founder from earlier Pulse conversations: their own decisions, hypotheses, commitments and facts. Confirmed by them, not verified evidence.';
+const MEMORY_PROVENANCE = 'The project\'s decision history: entries the founder saved in Pulse or onboarding, and entries recorded when they saved a result in a CT tool. Each item names its source; evidence says whether it is an untested assumption, reported by the founder, or measured by the platform. Only "verified" is measured evidence.';
 const ASSUMPTION_PROVENANCE = 'Assumptions recorded by CT tools for this account (untested or confirmed), not project-specific proof.';
 
-type MemoryRow = { id: string; kind: string; text: string; due_on: string | null; last_asked_on: string | null; created_at: string | null };
+type MemoryRow = {
+  id: string; kind: string; text: string; due_on: string | null; last_asked_on: string | null; created_at: string | null;
+  topic?: string | null; source_tool?: string | null; evidence?: string | null;
+};
 const toItem = (row: MemoryRow, scope: 'project' | 'account'): PulseMemoryItem => ({
   id: row.id, kind: row.kind, text: String(row.text ?? '').slice(0, 280), scope,
   dueOn: row.due_on ?? null, savedOn: typeof row.created_at === 'string' ? row.created_at.slice(0, 10) : null,
+  topic: row.topic ?? null, source: row.source_tool ?? 'pulse', evidence: row.evidence ?? null,
 });
 
 /** Loads memory for founders; failures are reported as unavailable, never as "no memory". */
 export async function loadPulseMemory(db: SupabaseClient, userId: string, projectId: string | null, today = new Date().toISOString().slice(0, 10)): Promise<PulseMemoryContext | null> {
-  const fields = 'id,kind,text,due_on,last_asked_on,created_at';
-  const [projectRows, accountRows, assumptions] = await Promise.all([
+  const fields = 'id,kind,text,due_on,last_asked_on,created_at,topic,source_tool,evidence';
+  const [projectRows, accountRows, assumptions, pending] = await Promise.all([
     projectId
       ? db.from('pulse_memories').select(fields).eq('user_id', userId).eq('project_id', projectId).eq('status', 'active').order('updated_at', { ascending: false }).limit(25)
       : Promise.resolve({ data: [], error: null }),
     db.from('pulse_memories').select(fields).eq('user_id', userId).is('project_id', null).eq('status', 'active').order('updated_at', { ascending: false }).limit(10),
     db.from('journey_assumptions').select('statement,status,latest_source_tool,updated_at').eq('user_id', userId).in('status', ['untested', 'confirmed']).order('updated_at', { ascending: false }).limit(8),
+    projectId
+      ? db.from('pulse_memories').select(fields).eq('user_id', userId).eq('project_id', projectId).eq('status', 'needs_review').order('updated_at', { ascending: false }).limit(5)
+      : Promise.resolve({ data: [], error: null }),
   ]);
   if (projectRows.error || accountRows.error) throw new Error('Memory unavailable');
   const rows = [
@@ -79,6 +96,8 @@ export async function loadPulseMemory(db: SupabaseClient, userId: string, projec
   return {
     provenance: MEMORY_PROVENANCE,
     items: rows.map(({ row, scope }) => toItem(row, scope)),
+    // Never acted on until the founder chooses; listed so Pulse can ask.
+    pendingReview: pending.error ? [] : ((pending.data ?? []) as MemoryRow[]).map(row => toItem(row, 'project')),
     dueCommitments,
     // Assumptions are an enhancement: if that table is unavailable, memory still loads.
     assumptions: assumptions.error ? null : {

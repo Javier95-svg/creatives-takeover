@@ -152,14 +152,20 @@ function buildProjectContext(context: PulseContext, purpose: ProjectContextPurpo
     lines.push('', `${LABEL[key]} (basis: ${source.basis ?? 'saved result'}):`, json(source.data, stageBudget));
   }
   if (notes.length) {
-    lines.push('', `Founder's saved notes (basis: ${memory!.provenance}):`);
+    lines.push('', `Decision history (basis: ${memory!.provenance}):`);
     let room = Math.floor(budget * 0.12);
     for (const note of notes) {
-      const line = `- ${note.kind}${note.scope === 'account' ? ' (account-wide)' : ''}: ${note.text}`;
+      const tags = [note.source ?? 'pulse', note.evidence, note.scope === 'account' ? 'account-wide' : null].filter(Boolean).join(', ');
+      const line = `- ${note.kind} [${tags}]: ${note.text}`;
       if (room - line.length < 0) break;
       room -= line.length;
       lines.push(line);
     }
+  }
+  const pending = memory?.pendingReview ?? [];
+  if (pending.length) {
+    lines.push('', 'Not settled: a tool result disagrees with the founder\'s own call on these. Do not treat either side as decided:');
+    for (const item of pending.slice(0, 3)) lines.push(`- [${item.source ?? 'pulse'}] ${item.text}`);
   }
   if (assumptions.length) {
     lines.push('', `Assumptions recorded by CT tools (basis: ${memory!.assumptions!.provenance}):`);

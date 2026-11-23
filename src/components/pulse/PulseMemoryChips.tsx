@@ -27,6 +27,9 @@ export function PulseMemoryChips({ suggestions, projectId, turnId, surface }: {
     const { error } = await (supabase as any).from('pulse_memories').insert({
       user_id: user.id, project_id: projectId, kind: suggestion.kind, text: text.slice(0, 280),
       due_on: suggestion.kind === 'commitment' ? suggestion.dueOn : null, source_turn_id: turnId,
+      // The topic lets the ledger replace an older entry on the same subject,
+      // or hold it for the founder when a tool's result disagrees.
+      topic: suggestion.topic ?? null, source_tool: 'pulse',
     });
     if (error) { patch(index, { status: 'error' }); return; }
     patch(index, { status: 'saved' });

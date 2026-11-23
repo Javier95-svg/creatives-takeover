@@ -64,7 +64,7 @@ test('the block holds this project\'s results, notes and assumptions, each with 
   assert.match(block.text, /Spoilage in transit/);
   assert.match(block.text, /Only small orchards felt it weekly/);
   assert.match(block.text, /Farm cooperatives/);
-  assert.match(block.text, /decision: Start with orchards under 50 acres/);
+  assert.ok(block.text.includes('- decision [pulse]: Start with orchards under 50 acres'));
   assert.match(block.text, /\[untested\] Farmers will pay per shipment/);
   assert.match(block.text, /basis: Saved customer hypothesis/);
   assert.match(block.text, /Never present a hypothesis, plan or founder statement as validated/);

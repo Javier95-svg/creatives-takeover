@@ -108,12 +108,12 @@ test('memory suggestions are validated: known kinds, no duplicates, dates only o
     { kind: 'commitment', text: 'Run 5 interviews', dueOn: '2026-10-03' },
     { kind: 'fact', text: 'Third one is dropped' },
   ] }, ['target dental clinics first']), [
-    { kind: 'commitment', text: 'Run 5 interviews', dueOn: '2026-10-03' },
-    { kind: 'fact', text: 'Third one is dropped', dueOn: null },
+    { kind: 'commitment', text: 'Run 5 interviews', dueOn: '2026-10-03', topic: null },
+    { kind: 'fact', text: 'Third one is dropped', dueOn: null, topic: null },
   ], 'the saved duplicate is skipped before the limit of two applies');
   assert.equal(parseMemorySuggestions({ memories: Array.from({ length: 5 }, (_, i) => ({ kind: 'fact', text: `Fact number ${i}` })) }).length, 2);
   assert.deepEqual(parseMemorySuggestions({ memories: [{ kind: 'decision', text: 'Price at $49', dueOn: '2026-10-03' }, { kind: 'wish', text: 'nope' }] }),
-    [{ kind: 'decision', text: 'Price at $49', dueOn: null }]);
+    [{ kind: 'decision', text: 'Price at $49', dueOn: null, topic: null }]);
   assert.ok(worthRemembering('We decided to focus on dentists'));
   assert.ok(worthRemembering('I will run five interviews by Friday'));
   assert.equal(worthRemembering('What should I build first?'), false);
@@ -138,9 +138,12 @@ test('saved memory reaches the prompt, other accounts never do, and statements g
     const { text, saved } = await run(db, { ...input, message: 'We decided to interview 5 dentists by next week' });
     const answer = calls.find(call => call.stream)!;
     assert.match(answer.system, /Target dental clinics first/);
-    assert.match(answer.system, /founder's own confirmed decisions/);
+    // Since the decision ledger (2026-11-23) memory also holds tool-recorded
+    // entries, so the rule names each source instead of calling all of it the founder's.
+    assert.match(answer.system, /the project's decision history/);
+    assert.match(answer.system, /"pulse", "onboarding" or "founder" items are the founder's own words/);
     assert.doesNotMatch(answer.system, /Secret pivot/);
-    assert.deepEqual(saved.metadata.memorySuggestions, [{ kind: 'commitment', text: 'Interview 5 dentists', dueOn: '2026-10-10' }], 'already-saved memory is not suggested again');
+    assert.deepEqual(saved.metadata.memorySuggestions, [{ kind: 'commitment', text: 'Interview 5 dentists', dueOn: '2026-10-10', topic: null }], 'already-saved memory is not suggested again');
     assert.match(text, /"type":"memory_suggestions"/);
   } finally { globalThis.fetch = originalFetch; delete (globalThis as any).Deno; }
 });

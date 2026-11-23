@@ -20,6 +20,7 @@ import { ANGEL_SECTOR_OPTIONS } from "@/data/angelSectors";
 import { captureEvent } from "@/lib/analytics";
 import { SUPPORT_PROVIDER_LIST, supportLinkProvider, type SupportAsk, type SupportFundingType } from "@/lib/supportLinks";
 import { isFounderIdAccount } from "@/lib/founderId";
+import { projectPatchFromProfileEdit } from "@/lib/projectProfileSync";
 
 interface EditProfileModalProps {
   open: boolean;
@@ -316,6 +317,22 @@ export const EditProfileModal = ({ open, onClose, profile, onSuccess }: EditProf
         .maybeSingle();
 
       if (error) throw error;
+
+      // Projects still holding the old startup name or description follow the
+      // edit, so tools and Pulse do not keep the outdated text. Best effort:
+      // the profile is already saved.
+      try {
+        const before = { name: profile.startup_name, description: profile.startup_description };
+        const after = { name: formData.startup_name, description: formData.startup_description };
+        const { data: projects } = await supabase.from('projects')
+          .select('id,title,idea_summary').eq('user_id', profile.id).is('archived_at', null);
+        for (const project of (projects ?? []) as Array<{ id: string; title: string | null; idea_summary: string | null }>) {
+          const patch = projectPatchFromProfileEdit(project, before, after);
+          if (Object.keys(patch).length) await supabase.from('projects').update(patch).eq('id', project.id);
+        }
+      } catch (syncError) {
+        console.warn('Project copy of the profile was not updated', syncError);
+      }
 
       if (formData.public_progress_visible !== accountabilityPreferences.public_progress_visible) {
         captureEvent('profile_progress_visibility_changed', { visible: formData.public_progress_visible });

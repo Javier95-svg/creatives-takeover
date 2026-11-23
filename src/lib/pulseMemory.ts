@@ -2,7 +2,37 @@
 // suggests; the founder saves to pulse_memories (RLS, own rows only).
 
 export type MemoryKind = 'decision' | 'hypothesis' | 'commitment' | 'fact';
-export interface MemorySuggestion { kind: MemoryKind; text: string; dueOn: string | null }
+/**
+ * What an entry is about, so a later entry on the same topic can replace it
+ * (history kept) or, when a tool's result disagrees with the founder's own
+ * call, be held for the founder to choose (pulse_memories reconcile trigger).
+ * Pulse may tag a suggestion with one of these; tools record the rest.
+ */
+export const PULSE_MEMORY_TOPICS = ['target_customer', 'problem', 'positioning', 'offer', 'product_scope', 'channel', 'pricing', 'goal'] as const;
+export type PulseMemoryTopic = typeof PULSE_MEMORY_TOPICS[number];
+export interface MemorySuggestion { kind: MemoryKind; text: string; dueOn: string | null; topic?: PulseMemoryTopic | null }
+
+/** Where an entry came from, as shown to the founder. */
+export const MEMORY_SOURCE_LABEL: Record<string, string> = {
+  pulse: 'Pulse', onboarding: 'Onboarding', founder: 'You',
+  icp_builder: 'ICP Builder', pmf_lab: 'PMF Lab', demo_studio: 'Demo Studio',
+  mvp_builder: 'MVP Builder', gtm_strategist: 'GTM Strategist', traction_engine: 'Traction Engine',
+};
+/** How far an entry is proven, as shown to the founder. */
+export const MEMORY_EVIDENCE_LABEL: Record<string, string> = {
+  assumption: 'Untested', founder_reported: 'Reported by you', verified: 'Measured',
+};
+export const MEMORY_TOPIC_LABEL: Record<string, string> = {
+  idea: 'Idea', goal: 'Goal', blocker: 'Blocker', target_customer: 'Target customer', problem: 'Problem',
+  positioning: 'Positioning', offer: 'Offer', product_scope: 'Product', channel: 'Channels', pricing: 'Pricing',
+  pmf_finding: 'PMF finding', channel_result: 'Channel result',
+};
+export function memoryTopicLabel(topic: string | null | undefined): string | null {
+  if (!topic) return null;
+  const [base, subject] = topic.split(':');
+  const label = MEMORY_TOPIC_LABEL[base] ?? null;
+  return label && subject ? `${label}: ${subject}` : label;
+}
 export interface CommitmentCheck { id: string; text: string; dueOn: string | null }
 
 export const MEMORY_KINDS: readonly MemoryKind[] = ['decision', 'hypothesis', 'commitment', 'fact'];
@@ -24,12 +54,16 @@ export function parseMemorySuggestions(raw: unknown, existingTexts: readonly str
   const result: MemorySuggestion[] = [];
   for (const item of list) {
     if (!item || typeof item !== 'object') continue;
-    const { kind, text, dueOn } = item as Record<string, unknown>;
+    const { kind, text, dueOn, topic } = item as Record<string, unknown>;
     if (!MEMORY_KINDS.includes(kind as MemoryKind) || typeof text !== 'string') continue;
     const clean = text.replace(/\s+/g, ' ').trim().replace(/^["']|["']$/g, '').slice(0, 280);
     if (clean.length < 3 || seen.has(normalise(clean))) continue;
     seen.add(normalise(clean));
-    result.push({ kind: kind as MemoryKind, text: clean, dueOn: kind === 'commitment' && isDate(dueOn) ? dueOn : null });
+    result.push({
+      kind: kind as MemoryKind, text: clean, dueOn: kind === 'commitment' && isDate(dueOn) ? dueOn : null,
+      // Commitments are things to do, not positions a tool could contradict.
+      topic: kind !== 'commitment' && PULSE_MEMORY_TOPICS.includes(topic as PulseMemoryTopic) ? topic as PulseMemoryTopic : null,
+    });
     if (result.length === 2) break;
   }
   return result;
