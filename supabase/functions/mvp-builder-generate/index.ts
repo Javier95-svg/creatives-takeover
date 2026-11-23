@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { getUserFromAuth } from "../_shared/credit-deduction.ts";
+import { loadProjectContext } from "../_shared/project-context.ts";
 import { CREDIT_COSTS, resolveMVPActionDefaultModelForPlan, resolveModelAdjustedCreditCost, type CreditFeature } from "../_shared/credit-constants.ts";
 import { isPlanAtLeast, normalizePlan, type Plan } from "../_shared/plan-enforcement.ts";
 import {
@@ -1306,6 +1307,8 @@ function buildPrompt(params: {
   palette: MVPBuilderPaletteId;
   setupInput: Record<string, unknown>;
   projectContext: Record<string, unknown> | null;
+  /** Loaded on the server from the founder's project; preferred over projectContext. */
+  serverContext?: string | null;
   currentProject: unknown;
 }) {
   const setup = params.setupInput || {};
@@ -1316,7 +1319,10 @@ function buildPrompt(params: {
   const painLanguage   = typeof setup.keyPainLanguage === "string" ? setup.keyPainLanguage : "";
   const tagline        = typeof setup.existingTagline === "string" ? setup.existingTagline : "";
   const customPrompt   = typeof setup.customPrompt === "string" ? setup.customPrompt : params.userMessage;
-  const founderContext = formatFounderContext(params.projectContext);
+  // The server's project context (ICP, PMF, GTM plan, demo page, saved notes,
+  // each labelled with how far it is proven) replaces what the browser sends;
+  // the browser's version remains the fallback when there is no project.
+  const founderContext = params.serverContext || formatFounderContext(params.projectContext);
 
   if (params.actionType === "chat") {
     const hasProject = params.currentProject && typeof params.currentProject === "object"
@@ -1715,6 +1721,12 @@ serve(async (req: Request) => {
     ? `${BASE_SYSTEM_PROMPT}\n\n---\n${actionAddition}`
     : BASE_SYSTEM_PROMPT;
 
+  const adminForContext = getAdminClient();
+  const serverContext = adminForContext
+    ? await loadProjectContext(adminForContext, userId, "mvp_build", {
+      mvpProjectId: typeof body.projectId === "string" ? body.projectId : null,
+    })
+    : null;
   const prompt = buildPrompt({
     actionType: classifiedAction,
     userMessage,
@@ -1724,6 +1736,7 @@ serve(async (req: Request) => {
     projectContext: body.projectContext && typeof body.projectContext === "object"
       ? body.projectContext as Record<string, unknown>
       : null,
+    serverContext: serverContext?.text ?? null,
     currentProject,
   });
 

@@ -1,6 +1,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.55.0';
 import { generateJsonText } from '../_shared/json-generation.ts';
+import { loadProjectContext } from '../_shared/project-context.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -46,7 +47,7 @@ serve(async (request) => {
     const { action, sprintId } = await request.json();
     if (action !== 'generate_messages' || typeof sprintId !== 'string') return json({ error: 'Invalid request' }, 400);
     const { data: sprint, error } = await supabase.from('first_customer_sprints')
-      .select('id,offer,target_segment,problem_hypothesis,message_generation_count')
+      .select('id,founder_id,offer,target_segment,problem_hypothesis,message_generation_count,icp_analysis_id,gtm_plan_id')
       .eq('id', sprintId).in('status', ['draft', 'active', 'paused']).maybeSingle();
     if (error || !sprint) return json({ error: 'Sprint not found' }, 404);
     if (sprint.message_generation_count >= 2) return json({ error: 'The one permitted regeneration has already been used' }, 409);
@@ -64,6 +65,12 @@ serve(async (request) => {
     let usedFallback = true;
     // Gemini first, OpenAI as fallback (_shared/json-generation.ts); templates if both fail.
     if (Deno.env.get('GEMINI_API_KEY') || Deno.env.get('OPENAI_API_KEY')) {
+      // The founder's saved customer, pain and plan for this project, read
+      // under their own access rules. Used for wording only (see the system prompt).
+      const projectContext = await loadProjectContext(supabase, String(sprint.founder_id), 'first_customer', {
+        icpAnalysisId: sprint.icp_analysis_id ?? null,
+        gtmPlanId: sprint.gtm_plan_id ?? null,
+      });
       try {
         const generation = await generateJsonText({
           label: 'first-customer-messages',
@@ -71,8 +78,11 @@ serve(async (request) => {
           temperature: 0.45,
           maxTokens: 1200,
           timeoutMs: 30_000,
-          system: 'Write concise, respectful B2B founder outreach. Return JSON {"variants":[{"key":"discovery|problem|offer","label":"...","body":"..."}]}. Exactly three items in that order. Use only the supplied facts. Keep {{first_name}} as the only personalization token. Never claim research, results, or familiarity not supplied. Each message under 120 words.',
-          prompt: JSON.stringify({ offer: sprint.offer, targetSegment: sprint.target_segment, problemHypothesis: sprint.problem_hypothesis }),
+          system: 'Write concise, respectful B2B founder outreach. Return JSON {"variants":[{"key":"discovery|problem|offer","label":"...","body":"..."}]}. Exactly three items in that order. Use only the supplied facts. Keep {{first_name}} as the only personalization token. Never claim research, results, or familiarity not supplied. Each message under 120 words. projectBackground, when present, is what the founder saved about this customer and problem: use it to choose words and pains this buyer recognises, never as a claim of research, results, customers or proof.',
+          prompt: JSON.stringify({
+            offer: sprint.offer, targetSegment: sprint.target_segment, problemHypothesis: sprint.problem_hypothesis,
+            ...(projectContext ? { projectBackground: projectContext.text } : {}),
+          }),
         });
         const parsed = JSON.parse(generation.text || '{}');
         if (validVariants(parsed.variants)) {

@@ -7,6 +7,7 @@ import { resolveCreditIdempotencyKey } from '../_shared/request-idempotency.ts';
 import { assessPmfEvidence, PMF_SIGNAL_THRESHOLDS } from '../_shared/pmf-evidence.ts';
 import { emitBusinessEvent, resolveAnalyticsErrorCode } from '../_shared/analytics.ts';
 import { generateJsonText } from '../_shared/json-generation.ts';
+import { loadProjectContext } from '../_shared/project-context.ts';
 import { applyScarcityGate, assessAlternativeScarcity, describeScarcityGate } from '../_shared/pmf-scarcity.ts';
 
 const MIN_INTERVIEWS_FOR_READY = 25;
@@ -291,6 +292,11 @@ serve(async (req) => {
 
     // Interviews are hydrated from the owner-scoped store. Client totals and
     // client-supplied "verified" rows are never accepted as decision evidence.
+    // What the founder already saved for this project (their ICP, notes and
+    // assumptions), loaded alongside the evidence. Background only, never evidence.
+    const projectContextPromise = loadProjectContext(supabase, user.id, 'pmf_scoring', {
+      icpAnalysisId: validationContext.icp_analysis_id ?? body.icpAnalysisId ?? null,
+    });
     const rawInterviews = await fetchStoredInterviews(supabase, user.id, validationContext.id);
     const icpValueForm = await fetchIcpValueForm(supabase, user.id, validationContext.icp_analysis_id ?? body.icpAnalysisId ?? null);
     const preliminaryEvidence = assessPmfEvidence({ interviews: rawInterviews, surveyResponses: 0, verifiedDemoBehaviors: 0, researchSources: 0 });
@@ -677,7 +683,15 @@ OUTPUT: Return ONLY valid JSON matching this exact schema:
   "marketEvidenceSummary": "string — 1–2 sentences on whether the live external web signal corroborates or contradicts the founder's reported evidence; cite source numbers like [1], [2]. Empty string if no external evidence was provided."
 }`;
 
-    const userPrompt = `EVIDENCE SUBMITTED BY FOUNDER:
+    const projectContext = await projectContextPromise;
+    const projectContextBlock = projectContext
+      ? `${projectContext.text}
+
+Use the project context only to judge whether the evidence below actually tests the founder's stated customer and problem (if it does not, say so in gaps). It is never evidence of demand: score only the evidence below.
+
+`
+      : '';
+    const userPrompt = `${projectContextBlock}EVIDENCE SUBMITTED BY FOUNDER:
 
 Validation methods used: ${body.testTypes.join(', ')}
 People reached/contacted: ${body.peopleReached}

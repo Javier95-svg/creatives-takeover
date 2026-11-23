@@ -8,6 +8,7 @@ import { inferMotion, rankChannels, type GTMIntakeV2 } from '../_shared/gtm-chan
 import { emitBusinessEvent, resolveAnalyticsErrorCode } from '../_shared/analytics.ts';
 import { searchWeb } from '../_shared/web-research.ts';
 import { FAST_JSON_MODELS, generateJsonText } from '../_shared/json-generation.ts';
+import { loadProjectContext } from '../_shared/project-context.ts';
 import { FAKE_VALUE_TRAP_GUIDE, normalizeBeyondCategory, normalizeFakeValueFlags, parseLenientJson } from '../_shared/fake-value.ts';
 
 const corsHeaders = {
@@ -251,6 +252,10 @@ async function generateV2Plan(args: { intake: GTMIntakeV2; userId: string; exist
     if (pipelineLookupError) throw pipelineLookupError;
     previousPipelineRows = pipelineRows ?? [];
   }
+  // What this project already has from the other tools (ICP, PMF, MVP scope,
+  // demo page, traction results, customer research, saved notes), loaded while
+  // the live research runs. Background, not a citable source.
+  const projectContextPromise = loadProjectContext(admin, userId, 'gtm_plan', { gtmPlanId: existingPlanId ?? null });
   const suppliedEvidence = normalizeFirstPartyEvidence(intake);
   const productWebsite = await fetchProductWebsiteEvidence(intake);
   intake.firstPartyEvidence = [
@@ -265,11 +270,16 @@ async function generateV2Plan(args: { intake: GTMIntakeV2; userId: string; exist
   const selected = ranked.filter((item) => item.eligible).slice(0, 3);
   if (selected.length < 2) throw new Error('The current time and budget constraints leave fewer than two viable channels. Increase one constraint and try again.');
   const motion = inferMotion(intake);
+  const projectContext = await projectContextPromise;
   const prompt = `You are a rigorous early-stage GTM strategist. Build strategic content for the fixed, server-selected channels below. Do not add or replace channels. Separate sourced facts from assumptions. Make every play executable by a founder in the next six weeks.
 
 FOUNDER INTAKE:
 ${JSON.stringify(intake, null, 2)}
+${projectContext ? `
+${projectContext.text}
 
+The FOUNDER INTAKE wins any conflict with the project context. Use the context to fit the plan to what this project has already learned and built: build on PMF findings and objections, use the MVP's actual scope, and do not repeat channels or offers that traction results show failing (say why when you change course). The project context is not a citable source: a claim that rests only on it must be marked as an assumption.
+` : ''}
 DETERMINISTIC CHANNEL SELECTION:
 ${selected.map((item, index) => `${index + 1}. ${item.rule.id} — ${item.rule.name} (${item.score}/100)`).join('\n')}
 
