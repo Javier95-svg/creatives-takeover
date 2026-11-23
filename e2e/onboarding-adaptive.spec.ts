@@ -138,3 +138,78 @@ test('server draft resumes on the persisted adaptive step', async ({ page }) => 
   await expect(page.getByRole('heading', { name: 'What is the strongest customer evidence you have?' })).toBeVisible();
   await expect(page.getByText('3 of 7', { exact: true })).toBeVisible();
 });
+
+// Feedback 2026-11-21: an account that opened the service provider form "to
+// have a look" met it on every visit, with no way to close it.
+test('an unfinished application can be closed and stops coming back', async ({ page }) => {
+  await mockAdaptiveOnboarding(page);
+  const userId = '22222222-2222-4222-8222-222222222222';
+  let preferences: Record<string, unknown> = { requires_guided_onboarding: true };
+  const profileWrites: Record<string, unknown>[] = [];
+  // Registered after the shared mocks, so these take priority.
+  await page.route('**/rest/v1/profiles**', async (route) => {
+    if (route.request().method() === 'PATCH') {
+      const body = route.request().postDataJSON() as { user_preferences?: Record<string, unknown> };
+      profileWrites.push(body);
+      if (body.user_preferences) preferences = body.user_preferences;
+      return fulfillJson(route, []);
+    }
+    const profile = {
+      id: userId,
+      created_at: '2026-07-30T12:00:00.000Z',
+      onboarding_completed: false,
+      quiz_completed: false,
+      subscription_tier: 'rookie',
+      user_type: 'founder',
+      dashboard_bootstrap_source: null,
+      onboarding_steps_completed: null,
+      user_preferences: preferences,
+    };
+    const wantsObject = route.request().headers().accept?.includes('application/vnd.pgrst.object+json');
+    return fulfillJson(route, wantsObject ? profile : [profile]);
+  });
+  const providerSession = {
+    id: '33333333-3333-4333-8333-333333333333',
+    user_id: userId,
+    schema_version: 1,
+    flow_version: 'adaptive_v1',
+    rollout_variant: 'adaptive_v1',
+    source: 'dashboard_prompt',
+    plan_snapshot: 'rookie',
+    device_snapshot: 'desktop',
+    status: 'in_progress',
+    current_step: 0,
+    answers: { situation: 'deliver_services', founderSegment: 'marketplace', entryStage: 'details', roleProfile: {} },
+    derived_context: null,
+    started_at: '2026-07-30T12:00:00.000Z',
+    completed_at: null,
+    updated_at: '2026-07-30T12:00:00.000Z',
+  };
+  await page.route('**/rest/v1/rpc/begin_onboarding_v1', (route) => fulfillJson(route, providerSession));
+  await page.route('**/rest/v1/rpc/account_context**', (route) => fulfillJson(route, {
+    userType: 'founder', approvalStatus: 'approved', hasCategoryAccess: true, roleProfile: {},
+    requiresProject: false, hasProject: false, startupName: null, investorMatchVisible: false, investmentStage: null,
+  }));
+  await page.route('**/rest/v1/rpc/save_onboarding_progress_v1', (route) => fulfillJson(route, providerSession));
+
+  // Before: opening the site signed in leads back to the application.
+  await page.goto('/');
+  await expect(page).toHaveURL(/\/onboarding/);
+  await expect(page.getByRole('heading', { name: 'Apply as a service provider' })).toBeVisible();
+  await page.screenshot({ path: 'test-results/onboarding-close-before.png' });
+
+  await page.getByRole('button', { name: 'Close setup and finish it later' }).click();
+  await expect(page).not.toHaveURL(/\/onboarding/, { timeout: 15_000 });
+  expect(profileWrites).toHaveLength(1);
+  expect(profileWrites[0].user_preferences).toMatchObject({
+    requires_guided_onboarding: true,
+    onboarding_dismissed_at: expect.any(String),
+  });
+
+  await page.screenshot({ path: 'test-results/onboarding-close-after.png' });
+  // After: coming back does not reopen it.
+  await page.goto('/');
+  await page.waitForTimeout(3_000);
+  await expect(page).not.toHaveURL(/\/onboarding/);
+  await expect(page.getByRole('heading', { name: 'Apply as a service provider' })).toHaveCount(0);
+});

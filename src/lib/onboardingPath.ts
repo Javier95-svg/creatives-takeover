@@ -2,7 +2,7 @@ import { supabase } from '@/integrations/supabase/client';
 import type { Json } from '@/integrations/supabase/types';
 import { captureEvent } from '@/lib/analytics';
 import { getActivationPreferenceState } from '@/lib/activationState';
-import { getUserPreferencesRecord } from '@/lib/guidedOnboarding';
+import { getUserPreferencesRecord, isOnboardingDismissed } from '@/lib/guidedOnboarding';
 import { logWarn } from '@/lib/logger';
 import { createRoutineConfig, serializeRoutineConfig } from '@/lib/routineTemplates';
 
@@ -80,6 +80,8 @@ export function shouldShowOnboardingPathGate(
   if (!FORCED_ONBOARDING_ENABLED || !profile) return false;
   if (getActivationPreferenceState(profile.user_preferences).firstArtifactType) return false;
   if (profile.onboarding_completed === true) return false;
+  // Closing the setup quiz is not a cue for a second full-screen gate.
+  if (isOnboardingDismissed(profile.user_preferences)) return false;
   return getOnboardingPathState(profile.user_preferences).completed !== true;
 }
 

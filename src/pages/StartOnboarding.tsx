@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Navigate, useSearchParams } from 'react-router-dom';
+import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { Loader2 } from 'lucide-react';
 
@@ -28,6 +28,7 @@ type Gate = { title: string; description: string; returnPath: string };
 export default function StartOnboarding() {
   const { isAuthenticated, loading } = useAuth();
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   // A homepage submission newer than the stored guest quiz starts a fresh one;
   // a plain refresh keeps the draft.
   const [session] = useState(() => getGuestSession({ startedAfter: readToolHandoff()?.savedAt }));
@@ -114,6 +115,7 @@ export default function StartOnboarding() {
             // Arriving from the homepage box, screen 1 shows the Idea/Product
             // choice pre-selected for them to confirm.
             guest={{ onPlanReady: handlePlanReady, onReviewedChoice: handleReviewedChoice }}
+            onClose={() => navigate('/')}
           />
         </div>
       </div>

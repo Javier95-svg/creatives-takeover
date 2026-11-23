@@ -128,3 +128,19 @@ test('activation gate still applies to guided-onboarding users without a first a
     false,
   );
 });
+
+test('a closed setup quiz stops the redirect and is offered from the workspace instead', async () => {
+  const { isOnboardingDismissed, shouldOfferOnboardingTopUp, withOnboardingDismissed } = await import('../src/lib/guidedOnboarding.ts');
+  // An unfinished founder account that had opened the service provider form.
+  const stuck = { onboarding_completed: false, user_type: 'founder', user_preferences: withGuidedOnboardingPreference(null, true) };
+  assert.equal(shouldRedirectToGuidedOnboarding(stuck), true);
+  assert.equal(shouldOfferOnboardingTopUp(stuck), false);
+
+  const closed = { ...stuck, user_preferences: withOnboardingDismissed(stuck.user_preferences, new Date('2026-11-22T12:00:00Z')) };
+  assert.equal(isOnboardingDismissed(closed.user_preferences), true);
+  assert.equal(requiresGuidedOnboarding(closed.user_preferences), true, 'other preferences are kept');
+  assert.equal(shouldRedirectToGuidedOnboarding(closed), false);
+  assert.equal(shouldOfferOnboardingTopUp(closed), true);
+  // Finishing later still clears the offer.
+  assert.equal(shouldOfferOnboardingTopUp({ ...closed, onboarding_completed: true }), false);
+});

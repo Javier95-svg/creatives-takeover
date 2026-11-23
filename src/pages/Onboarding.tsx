@@ -181,6 +181,14 @@ const Onboarding = () => {
     navigate(destination);
   };
 
+  // Closing is saved by the form; this only picks where they land: the page
+  // that sent them here, or their workspace.
+  const handleClose = () => {
+    const requested = searchParams.get('return') ?? getOnboardingReturn('/app-entry');
+    const target = sanitizeReturnPath(requested, '/app-entry');
+    navigate(target.startsWith('/onboarding') || target.startsWith('/setup-quiz') ? '/app-entry' : target, { replace: true });
+  };
+
   return (
     <>
       <Helmet>
@@ -213,7 +221,7 @@ const Onboarding = () => {
               {/* Every active account must answer the classification question,
                   including people resuming an older experiment session. */}
               {onboardingSession ? (
-                <AdaptiveOnboardingForm session={onboardingSession} onComplete={handleComplete} autoFinish={autoFinish} />
+                <AdaptiveOnboardingForm session={onboardingSession} onComplete={handleComplete} autoFinish={autoFinish} onClose={handleClose} />
               ) : null}
             </div>
           </div>

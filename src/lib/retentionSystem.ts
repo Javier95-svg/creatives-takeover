@@ -1,7 +1,7 @@
 import type { User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { captureEvent, sanitizeAnalyticsProperties } from '@/lib/analytics';
-import { requiresGuidedOnboarding } from '@/lib/guidedOnboarding';
+import { isOnboardingDismissed, requiresGuidedOnboarding } from '@/lib/guidedOnboarding';
 import { triggerEmailSequenceEvent } from '@/lib/emailSequences';
 import { mapFounderStageToBizMapStage, STAGES, type FounderStageId } from '@/lib/stageDiagnostic';
 import { parseActivationJourney, type ActivationJourneyV2 } from '@/lib/activationJourneyV2';
@@ -303,7 +303,9 @@ export async function getActivationGateState(userId: string) {
   return {
     activationGateVariant,
     activationIntent,
-    requiresGuidedOnboarding: requiresGuidedOnboarding(profileState?.user_preferences),
+    // A closed setup quiz is offered, not forced (see isOnboardingDismissed).
+    requiresGuidedOnboarding: requiresGuidedOnboarding(profileState?.user_preferences)
+      && !isOnboardingDismissed(profileState?.user_preferences),
     onboardingCompleted: profileState?.onboarding_completed === true,
     firstArtifactType,
     firstArtifactCreatedAt: typeof preferences.firstArtifactCreatedAt === 'string'

@@ -6,7 +6,7 @@ import { ArrowRight, Sparkles, X } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { trackFinishSetupPrompt, type FinishSetupSurface } from '@/lib/analytics';
-import { shouldOfferOnboardingTopUp } from '@/lib/guidedOnboarding';
+import { getUserPreferencesRecord, isOnboardingDismissed, shouldOfferOnboardingTopUp } from '@/lib/guidedOnboarding';
 import { cn } from '@/lib/utils';
 
 const DISMISS_KEY = 'ct_finish_setup_dismissed';
@@ -54,8 +54,12 @@ export function FinishSetupPrompt({ surface, className }: { surface: FinishSetup
 
   if (!visible) return null;
 
+  // Someone who closed the quiz without a saved tool result has told us little yet.
+  const closedQuiz = isOnboardingDismissed(profile.data?.user_preferences)
+    && !getUserPreferencesRecord(profile.data?.user_preferences).firstArtifactType
+    && profile.data?.dashboard_bootstrap_source !== 'icp_unlock';
   const returnPath = `${location.pathname}${location.search}`;
-  const href = `/onboarding?source=tool_claim&return=${encodeURIComponent(returnPath)}`;
+  const href = `/onboarding?source=${closedQuiz ? 'dashboard_prompt' : 'tool_claim'}&return=${encodeURIComponent(returnPath)}`;
 
   return (
     <div
@@ -73,7 +77,9 @@ export function FinishSetupPrompt({ surface, className }: { surface: FinishSetup
         <div>
           <p className="text-sm font-semibold text-foreground">Finish setting up your workspace</p>
           <p className="mt-0.5 text-sm text-muted-foreground">
-            About 2 minutes. We have already filled in what you told us, so your missions and advice fit your project.
+            {closedQuiz
+              ? 'About 2 minutes, so your missions and advice fit your project.'
+              : 'About 2 minutes. We have already filled in what you told us, so your missions and advice fit your project.'}
           </p>
         </div>
       </div>

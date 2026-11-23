@@ -41,6 +41,24 @@ export function withGuidedOnboardingPreference(
   return remainingPreferences;
 }
 
+/**
+ * Set when someone closes the setup quiz. Until then every entry into the app
+ * (sign-in, /app-entry, the dashboard) sent an unfinished account back to the
+ * quiz, at the screen they left: an account that had opened the mentor or
+ * service provider application "to have a look" met it on every visit, with no
+ * way out but sending it (feedback 2026-11-21). A closed quiz is offered from
+ * the workspace instead (shouldOfferOnboardingTopUp) and stays one click away.
+ */
+export const ONBOARDING_DISMISSED_KEY = 'onboarding_dismissed_at';
+
+export function isOnboardingDismissed(userPreferences: unknown): boolean {
+  return typeof getUserPreferencesRecord(userPreferences)[ONBOARDING_DISMISSED_KEY] === 'string';
+}
+
+export function withOnboardingDismissed(userPreferences: unknown, at = new Date()): Record<string, unknown> {
+  return { ...getUserPreferencesRecord(userPreferences), [ONBOARDING_DISMISSED_KEY]: at.toISOString() };
+}
+
 export function isLegacyOnboardingExempt(profile: GuidedOnboardingProfile | null | undefined): boolean {
   return !requiresGuidedOnboarding(profile?.user_preferences);
 }
@@ -71,6 +89,10 @@ export function shouldRedirectToGuidedOnboarding(
     return false;
   }
 
+  if (isOnboardingDismissed(profile.user_preferences)) {
+    return false;
+  }
+
   return profile.onboarding_completed !== true;
 }
 
@@ -78,7 +100,8 @@ export function shouldRedirectToGuidedOnboarding(
  * Accounts that started from a free tool are not redirected into onboarding
  * (see shouldRedirectToGuidedOnboarding): their saved ICP or demo counts as
  * the first result. They are offered it instead, so they still end up with a
- * brief, a stage and a chosen account type. This is exactly that group.
+ * brief, a stage and a chosen account type. This is exactly that group, plus
+ * anyone who closed the quiz.
  */
 export function shouldOfferOnboardingTopUp(
   profile: GuidedOnboardingProfile | null | undefined,
@@ -88,7 +111,8 @@ export function shouldOfferOnboardingTopUp(
   if (isReviewedUserType(profile.user_type ?? '')) return false;
   const preferences = getUserPreferencesRecord(profile.user_preferences);
   return typeof preferences.firstArtifactType === 'string'
-    || profile.dashboard_bootstrap_source === 'icp_unlock';
+    || profile.dashboard_bootstrap_source === 'icp_unlock'
+    || isOnboardingDismissed(preferences);
 }
 
 export function shouldRedirectToSetupQuiz(_profile: GuidedOnboardingProfile | null | undefined): boolean {

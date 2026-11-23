@@ -15,7 +15,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useWorkspaceFrame } from '@/contexts/WorkspaceFrameContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useFeatureGating } from '@/hooks/useFeatureGating';
-import { shouldRedirectToGuidedOnboarding } from '@/lib/guidedOnboarding';
+import { isOnboardingDismissed, shouldRedirectToGuidedOnboarding } from '@/lib/guidedOnboarding';
 import {
   getOnboardingPathState,
   isDay1WelcomeComplete,
@@ -249,6 +249,7 @@ export function DashboardShell() {
     && !hasCreatedArtifact
     && day1Profile.onboarding_completed !== true
     && !getOnboardingPathState(day1Profile.user_preferences).completed
+    && !isOnboardingDismissed(day1Profile.user_preferences)
     && !isDay1WelcomeComplete(day1Profile.onboarding_steps_completed)
   ) {
     return <Day1Welcome profile={day1Profile} onProfilePatch={handleDay1ProfilePatch} />;

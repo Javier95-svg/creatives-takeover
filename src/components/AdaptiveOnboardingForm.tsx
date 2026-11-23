@@ -1,6 +1,6 @@
 import { ONBOARDING_SITUATIONS, classifyOnboardingSituation, situationForUserType } from '@/lib/onboardingClassification';
 import { useEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from 'react';
-import { ArrowLeft, ArrowRight, Check, ChevronDown, Info, Loader2, Sparkles } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, ChevronDown, Info, Loader2, Sparkles, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -67,6 +67,8 @@ import { onboardingSupportNeeds } from '@/lib/onboardingSupportNeeds';
 import { clearIntendedAccountType, readIntendedAccountType } from '@/lib/intendedAccountType';
 import { clearToolHandoff, readToolHandoff } from '@/lib/toolHandoff';
 import { clearGuestOnboarding } from '@/lib/guestOnboarding';
+import { withOnboardingDismissed } from '@/lib/guidedOnboarding';
+import type { Json } from '@/integrations/supabase/types';
 import { BUILDER_ANSWER_OPTIONS, isOfferedAnswer, MAX_SECTORS } from '@/lib/onboardingAnswerRules';
 import { cn } from '@/lib/utils';
 import { trackOnboardingAccountTypeChanged, trackOnboardingPrefilled, trackOnboardingStepCompleted, trackOnboardingStepViewed } from '@/lib/analytics';
@@ -300,6 +302,12 @@ interface AdaptiveOnboardingFormProps {
   };
   /** Finish automatically when the session arrives complete (answers carried over from the guest quiz). */
   autoFinish?: boolean;
+  /**
+   * Shows a close button. For an account, closing is saved first so the app
+   * stops sending them back here (see isOnboardingDismissed); then the page
+   * decides where to go.
+   */
+  onClose?: () => void;
 }
 
 function readAdaptiveDraft(session: OnboardingSessionV1): {
@@ -376,7 +384,7 @@ function ChoiceGrid<T extends string | number>({
   );
 }
 
-export function AdaptiveOnboardingForm({ session, onComplete, guest, autoFinish = false }: AdaptiveOnboardingFormProps) {
+export function AdaptiveOnboardingForm({ session, onComplete, guest, autoFinish = false, onClose }: AdaptiveOnboardingFormProps) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const submittingRef = useRef(false);
@@ -540,12 +548,16 @@ export function AdaptiveOnboardingForm({ session, onComplete, guest, autoFinish 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visibleStep, viewedStepName]);
 
+  // Set when they leave through the close button rather than by navigating away.
+  const closedRef = useRef(false);
   useEffect(() => {
     const startedAt = startedAtRef.current;
     return () => {
       const { currentStep: lastStep, userId } = abandonRef.current;
       if (completedRef.current || !userId) return;
+      const reason = closedRef.current ? 'closed' : 'page_exit';
       void trackRetentionEvent('onboarding_abandoned', {
+        reason,
         user_id: userId,
         onboarding_session_id: session.id,
         flow_version: session.flow_version,
@@ -561,10 +573,41 @@ export function AdaptiveOnboardingForm({ session, onComplete, guest, autoFinish 
       void abandonOnboardingSession({
         sessionId: session.id,
         currentStep: lastStep,
-        reason: 'page_exit',
+        reason,
       });
     };
   }, [session.flow_version, session.id, session.rollout_variant]);
+
+  const [closing, setClosing] = useState(false);
+  const handleClose = async () => {
+    if (!onClose || closing) return;
+    setClosing(true);
+    if (user && !guest) {
+      try {
+        // Read fresh so a preference saved elsewhere since the page loaded is kept.
+        const { data, error: readError } = await supabase.from('profiles').select('user_preferences').eq('id', user.id).maybeSingle();
+        if (readError) throw readError;
+        const { error: writeError } = await supabase.from('profiles')
+          .update({ user_preferences: withOnboardingDismissed(data?.user_preferences) as Json })
+          .eq('id', user.id);
+        if (writeError) throw writeError;
+        // The entry gate remembers the profile for a minute; without this it
+        // would send them straight back here.
+        queryClient.removeQueries({ queryKey: ['workspace-entry', user.id] });
+        queryClient.removeQueries({ queryKey: ['finish-setup-prompt', user.id] });
+      } catch (closeError) {
+        console.error('Could not close onboarding', closeError);
+        toast.error('Could not close setup right now. Please try again.');
+        setClosing(false);
+        return;
+      }
+    }
+    // Reopening starts from the saved answers, not a half-filled application
+    // they were only looking at.
+    try { localStorage.removeItem(`adaptive_onboarding_${session.id}`); } catch { /* storage unavailable */ }
+    closedRef.current = true;
+    onClose();
+  };
 
   const availableIntents = useMemo(() => {
     const planIntents = new Set(getStageAvailableIntents(currentPlan));
@@ -1478,7 +1521,21 @@ export function AdaptiveOnboardingForm({ session, onComplete, guest, autoFinish 
                   </p>
                 </div>
               </div>
-              <span className="text-sm font-medium text-muted-foreground tabular-nums">{Math.round((displayStep / totalSteps) * 100)}%</span>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-muted-foreground tabular-nums">{Math.round((displayStep / totalSteps) * 100)}%</span>
+                {onClose && !submittedReview ? (
+                  <button
+                    type="button"
+                    onClick={() => void handleClose()}
+                    disabled={closing || isSaving || autoFinishing}
+                    aria-label={guest ? 'Close' : 'Close setup and finish it later'}
+                    title={guest ? 'Close' : 'Close and finish later'}
+                    className="-mr-2 rounded-md p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+                  >
+                    {closing ? <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" /> : <X className="h-5 w-5" aria-hidden="true" />}
+                  </button>
+                ) : null}
+              </div>
             </div>
             <div className="mt-4 h-2 overflow-hidden rounded-full bg-muted">
               <div className="h-full rounded-full bg-accent-teal transition-[width] duration-500 motion-reduce:transition-none" style={{ width: `${(displayStep / totalSteps) * 100}%` }} />
