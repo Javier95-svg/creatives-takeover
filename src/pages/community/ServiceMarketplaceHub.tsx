@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/pagination";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useAuth } from "@/contexts/AuthContext";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { useServices } from "@/hooks/useServices";
 import type { MarketplaceService, ServiceCategory } from "@/types/serviceMarketplace";
@@ -69,7 +70,16 @@ const hasMessaging = (service: MarketplaceService) => Boolean(resolveServiceMess
 
 const pluralPartners = (count: number) => `${count} partner${count === 1 ? "" : "s"}`;
 
+// Visitors browse freely but sign up before contacting the team or applying,
+// like the Message and Email buttons on each partner (2026-11-23).
+const signupFor = (source: string, returnPath: string) =>
+  `/signup?source=${source}&return=${encodeURIComponent(returnPath)}`;
+
 function HelpCards({ className }: { className?: string }) {
+  const { isAuthenticated, loading: authLoading } = useAuth();
+  const signedOut = !isAuthenticated && !authLoading;
+  const linkClass = "inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline";
+
   return (
     <div className={cn("flex flex-col gap-4", className)}>
       <div className="flex flex-col gap-2.5 rounded-2xl border border-border bg-muted/40 p-5">
@@ -77,13 +87,16 @@ function HelpCards({ className }: { className?: string }) {
         <p className="text-sm leading-relaxed text-muted-foreground">
           Tell us what you're stuck on and we'll point you to the right partner.
         </p>
-        {/* Opens the visitor's email app, addressed to the team (2026-11-23). */}
-        <a
-          href={CONTACT_TEAM_MAILTO}
-          className="inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline"
-        >
-          Contact our team <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
-        </a>
+        {/* Members get an email addressed to the team; visitors sign up first. */}
+        {signedOut ? (
+          <Link to={signupFor("marketplace-contact", "/marketplace")} className={linkClass}>
+            Contact our team <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+          </Link>
+        ) : (
+          <a href={CONTACT_TEAM_MAILTO} className={linkClass}>
+            Contact our team <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+          </a>
+        )}
       </div>
       <div className="flex flex-col gap-2.5 rounded-2xl border border-border bg-card p-5">
         <p className="text-base font-bold">Run a service company?</p>
@@ -91,8 +104,8 @@ function HelpCards({ className }: { className?: string }) {
           Apply to be listed. Every application is reviewed by our team.
         </p>
         <Link
-          to={PARTNER_APPLY_PATH}
-          className="inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline"
+          to={signedOut ? signupFor("marketplace-apply", PARTNER_APPLY_PATH) : PARTNER_APPLY_PATH}
+          className={linkClass}
         >
           Apply to join <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
         </Link>

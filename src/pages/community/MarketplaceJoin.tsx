@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import { ArrowLeft, ArrowRight, Check, Loader2 } from "lucide-react";
 import SEO from "@/components/SEO";
 import Navigation from "@/components/Navigation";
@@ -7,6 +7,7 @@ import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import {
@@ -30,6 +31,7 @@ import {
 type Phase = "intro" | "questions" | "done";
 
 const LETTERS = "ABCDEFGH";
+const JOIN_PATH = "/marketplace/join";
 
 /** A Typeform-style answer tile: a letter key, the label and an optional hint. */
 function ChoiceTile({
@@ -136,6 +138,7 @@ const MarketplaceJoin = () => {
   const [isSending, setIsSending] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
+  const { isAuthenticated, loading: authLoading } = useAuth();
 
   const step: StepId = STEP_IDS[stepIndex];
   const first = firstName(answers.name);
@@ -421,6 +424,19 @@ const MarketplaceJoin = () => {
   };
 
   const isLast = stepIndex === STEP_IDS.length - 1;
+
+  // Applying needs an account, like contacting a partner: visitors sign up
+  // first and come straight back here (2026-11-23).
+  if (authLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background" aria-busy="true">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" aria-label="Loading" />
+      </div>
+    );
+  }
+  if (!isAuthenticated) {
+    return <Navigate to={`/signup?source=marketplace-apply&return=${encodeURIComponent(JOIN_PATH)}`} replace />;
+  }
 
   return (
     <>

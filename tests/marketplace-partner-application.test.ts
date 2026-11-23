@@ -111,3 +111,13 @@ test('/marketplace links the questionnaire and emails the team for feedback', ()
   const vercel = read('vercel.json');
   assert.ok(vercel.indexOf('"/marketplace/join"') > -1 && vercel.indexOf('"/marketplace/join"') < vercel.indexOf('"/marketplace/:slug"'));
 });
+
+test('visitors sign up before contacting the team or applying, then come back', () => {
+  const hub = read('src/pages/community/ServiceMarketplaceHub.tsx');
+  assert.match(hub, /signupFor\("marketplace-contact", "\/marketplace"\)/);
+  assert.match(hub, /signedOut \? signupFor\("marketplace-apply", PARTNER_APPLY_PATH\) : PARTNER_APPLY_PATH/);
+  // Members still get the email link.
+  assert.match(hub, /<a href=\{CONTACT_TEAM_MAILTO\}/);
+  const page = read('src/pages/community/MarketplaceJoin.tsx');
+  assert.match(page, /if \(!isAuthenticated\) \{\s*return <Navigate to=\{`\/signup\?source=marketplace-apply&return=\$\{encodeURIComponent\(JOIN_PATH\)\}`\} replace \/>;/);
+});
