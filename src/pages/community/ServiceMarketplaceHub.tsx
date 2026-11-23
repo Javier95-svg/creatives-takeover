@@ -9,6 +9,15 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAdminRole } from "@/hooks/useAdminRole";
@@ -22,6 +31,22 @@ const ALL_CATEGORIES = "all";
 type CategoryFilter = ServiceCategory | typeof ALL_CATEGORIES;
 
 const PARTNER_APPLY_PATH = "/apply?as=marketplace";
+
+// Five partners per page, with page numbers under the list (2026-11-23).
+const PARTNERS_PER_PAGE = 5;
+
+/** Every page up to 7; beyond that the first, the last and the ones around the current page. */
+function getPageNumbers(totalPages: number, currentPage: number): (number | "ellipsis")[] {
+  if (totalPages <= 7) return Array.from({ length: totalPages }, (_, index) => index + 1);
+  const pages: (number | "ellipsis")[] = [1];
+  const start = Math.max(2, currentPage - 1);
+  const end = Math.min(totalPages - 1, currentPage + 1);
+  if (start > 2) pages.push("ellipsis");
+  for (let page = start; page <= end; page += 1) pages.push(page);
+  if (end < totalPages - 1) pages.push("ellipsis");
+  pages.push(totalPages);
+  return pages;
+}
 
 function sortServices(services: MarketplaceService[], sortBy: string) {
   const result = [...services];
@@ -87,6 +112,10 @@ const ServiceMarketplaceHub = () => {
       : ALL_CATEGORIES,
   );
   const [sortBy, setSortBy] = useState(searchParams.get("sort") || "featured");
+  const [page, setPage] = useState(() => {
+    const fromUrl = Number.parseInt(searchParams.get("page") || "1", 10);
+    return Number.isFinite(fromUrl) && fromUrl > 0 ? fromUrl : 1;
+  });
 
   useEffect(() => {
     let cancelled = false;
@@ -111,9 +140,38 @@ const ServiceMarketplaceHub = () => {
     };
   }, [fetchServices]);
 
+  const pageHref = (page: number) => {
+    const params = new URLSearchParams(searchParams);
+    if (page <= 1) params.delete("page");
+    else params.set("page", String(page));
+    const query = params.toString();
+    return query ? `/marketplace?${query}` : "/marketplace";
+  };
+
+  const goToPage = (page: number) => {
+    setPage(page);
+    const params = new URLSearchParams(searchParams);
+    if (page <= 1) params.delete("page");
+    else params.set("page", String(page));
+    setSearchParams(params);
+    resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  // Any change to what is listed starts again from page 1.
+  const resetPage = () => {
+    setPage(1);
+    if (searchParams.has("page")) {
+      const params = new URLSearchParams(searchParams);
+      params.delete("page");
+      setSearchParams(params, { replace: true });
+    }
+  };
+
   const handleCategoryChange = (nextCategory: CategoryFilter) => {
     setCategory(nextCategory);
+    setPage(1);
     const params = new URLSearchParams(searchParams);
+    params.delete("page");
     if (nextCategory === ALL_CATEGORIES) {
       params.delete("category");
     } else {
@@ -124,7 +182,9 @@ const ServiceMarketplaceHub = () => {
 
   const handleSortChange = (nextSort: string) => {
     setSortBy(nextSort);
+    setPage(1);
     const params = new URLSearchParams(searchParams);
+    params.delete("page");
     params.set("sort", nextSort);
     setSearchParams(params);
   };
@@ -167,6 +227,15 @@ const ServiceMarketplaceHub = () => {
 
     return sortServices(filtered, sortBy);
   }, [category, onlyWithDeck, onlyWithMessaging, searchQuery, services, sortBy]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredServices.length / PARTNERS_PER_PAGE));
+  const currentPage = Math.min(Math.max(1, page), totalPages);
+  const pageStart = (currentPage - 1) * PARTNERS_PER_PAGE;
+  const pagedServices = filteredServices.slice(pageStart, pageStart + PARTNERS_PER_PAGE);
+  const resultsLabel =
+    totalPages > 1
+      ? `${pageStart + 1}–${pageStart + pagedServices.length} of ${pluralPartners(filteredServices.length)}`
+      : pluralPartners(filteredServices.length);
 
   const hasActiveFilters = category !== ALL_CATEGORIES || onlyWithDeck || onlyWithMessaging || searchQuery.trim() !== "";
 
@@ -242,7 +311,10 @@ const ServiceMarketplaceHub = () => {
                   <Input
                     type="search"
                     value={searchQuery}
-                    onChange={(event) => setSearchQuery(event.target.value)}
+                    onChange={(event) => {
+                      setSearchQuery(event.target.value);
+                      resetPage();
+                    }}
                     placeholder="Search by company, service or skill"
                     aria-label="Search partners"
                     className="h-12 rounded-xl bg-background pl-11 text-base"
@@ -317,7 +389,10 @@ const ServiceMarketplaceHub = () => {
                   Includes
                 </legend>
                 <label className="flex min-h-8 cursor-pointer items-center gap-2.5 text-base">
-                  <Checkbox className="no-touch-target !min-h-0 !min-w-0 h-5 w-5" checked={onlyWithDeck} onCheckedChange={(checked) => setOnlyWithDeck(checked === true)} />
+                  <Checkbox className="no-touch-target !min-h-0 !min-w-0 h-5 w-5" checked={onlyWithDeck} onCheckedChange={(checked) => {
+                      setOnlyWithDeck(checked === true);
+                      resetPage();
+                    }} />
                   Pitch deck
                   <span className="text-sm text-muted-foreground">({isLoading ? "–" : deckCount})</span>
                 </label>
@@ -325,7 +400,10 @@ const ServiceMarketplaceHub = () => {
                   <Checkbox
                     className="no-touch-target !min-h-0 !min-w-0 h-5 w-5"
                     checked={onlyWithMessaging}
-                    onCheckedChange={(checked) => setOnlyWithMessaging(checked === true)}
+                    onCheckedChange={(checked) => {
+                      setOnlyWithMessaging(checked === true);
+                      resetPage();
+                    }}
                   />
                   In-app messaging
                   <span className="text-sm text-muted-foreground">({isLoading ? "–" : messagingCount})</span>
@@ -344,7 +422,7 @@ const ServiceMarketplaceHub = () => {
                   </p>
                 ) : (
                   <p className="text-base font-bold text-foreground" aria-live="polite">
-                    {pluralPartners(filteredServices.length)}
+                    {resultsLabel}
                   </p>
                 )}
                 <div className="flex items-center gap-2.5 text-sm text-muted-foreground">
@@ -385,11 +463,74 @@ const ServiceMarketplaceHub = () => {
                   ))}
                 </div>
               ) : filteredServices.length > 0 ? (
-                <div className="flex flex-col gap-3.5">
-                  {filteredServices.map((service, index) => (
-                    <ServiceDirectoryRow key={service.id} service={service} priority={index < 2} />
-                  ))}
-                </div>
+                <>
+                  <div className="flex flex-col gap-3.5">
+                    {pagedServices.map((service, index) => (
+                      <ServiceDirectoryRow
+                        key={service.id}
+                        service={service}
+                        priority={currentPage === 1 && index < 2}
+                      />
+                    ))}
+                  </div>
+
+                  <Pagination aria-label="Partner pages" className="mt-10">
+                    <PaginationContent className="gap-1.5">
+                      {totalPages > 1 && (
+                        <PaginationItem>
+                          <PaginationPrevious
+                            href={pageHref(currentPage - 1)}
+                            aria-disabled={currentPage === 1}
+                            className={cn(currentPage === 1 && "pointer-events-none opacity-40")}
+                            onClick={(event) => {
+                              event.preventDefault();
+                              if (currentPage > 1) goToPage(currentPage - 1);
+                            }}
+                          />
+                        </PaginationItem>
+                      )}
+                      {getPageNumbers(totalPages, currentPage).map((entry, index) =>
+                        entry === "ellipsis" ? (
+                          <PaginationItem key={`ellipsis-${index}`}>
+                            <PaginationEllipsis />
+                          </PaginationItem>
+                        ) : (
+                          <PaginationItem key={entry}>
+                            <PaginationLink
+                              href={pageHref(entry)}
+                              isActive={entry === currentPage}
+                              aria-label={`Page ${entry}`}
+                              className={cn(
+                                "h-11 w-11 rounded-xl text-base font-semibold",
+                                entry === currentPage &&
+                                  "border-primary bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground",
+                              )}
+                              onClick={(event) => {
+                                event.preventDefault();
+                                if (entry !== currentPage) goToPage(entry);
+                              }}
+                            >
+                              {entry}
+                            </PaginationLink>
+                          </PaginationItem>
+                        ),
+                      )}
+                      {totalPages > 1 && (
+                        <PaginationItem>
+                          <PaginationNext
+                            href={pageHref(currentPage + 1)}
+                            aria-disabled={currentPage === totalPages}
+                            className={cn(currentPage === totalPages && "pointer-events-none opacity-40")}
+                            onClick={(event) => {
+                              event.preventDefault();
+                              if (currentPage < totalPages) goToPage(currentPage + 1);
+                            }}
+                          />
+                        </PaginationItem>
+                      )}
+                    </PaginationContent>
+                  </Pagination>
+                </>
               ) : services.length === 0 ? (
                 <Card>
                   <CardContent className="p-12 text-center">
