@@ -4,6 +4,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   ArrowRight,
   BookMarked,
+  BriefcaseBusiness,
   Building2,
   CalendarDays,
   ChevronDown,
@@ -56,8 +57,11 @@ const founderLinks: VisitorLink[] = [
   { label: "Founder ID", href: "/founder-id", icon: IdCard, tone: "blue", description: "Your project, links and updates in one link" },
 ];
 
-// The Explore menu's contents.
+// The Explore menu's contents. Marketplace added on top 2026-11-23 so visitors
+// can browse the service partners (contacting or opening a profile asks them
+// to sign up).
 const exploreLinks: VisitorLink[] = [
+  { label: "Marketplace", href: "/marketplace", icon: BriefcaseBusiness, tone: "teal", description: "Service partners for product, sales and operations" },
   { label: "Newspaper", href: "/newspaper", icon: Newspaper, tone: "coral", description: "Founder stories and startup lessons" },
   { label: "Podcast", href: "/podcast", icon: Mic, tone: "violet", description: "Founders Unleashed: conversations with founders" },
   // Startup Pedia, the knowledge hub that replaced /answers (2026-10-25).

@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { FileText, Loader2, Mail, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
 import { useServiceMarketplaceContact } from "@/hooks/useServiceMarketplaceContact";
 import { cn } from "@/lib/utils";
 import type { MarketplaceService } from "@/types/serviceMarketplace";
@@ -35,6 +36,14 @@ export function ServiceDirectoryRow({
   className,
 }: ServiceDirectoryRowProps) {
   const profilePath = getServiceProfilePath(service);
+  const { isAuthenticated, loading: authLoading } = useAuth();
+  // Visitors can browse the directory, but opening a full profile asks them to
+  // sign up first and brings them back to it (2026-11-23). The prerendered
+  // shell still links profiles for crawlers.
+  const profileHref =
+    isAuthenticated || authLoading
+      ? profilePath
+      : `/signup?source=marketplace-profile&return=${encodeURIComponent(profilePath)}`;
   const {
     chargingAction,
     emailCredits,
@@ -53,7 +62,7 @@ export function ServiceDirectoryRow({
       )}
     >
       <Link
-        to={profilePath}
+        to={profileHref}
         className="block aspect-[4/1] w-full overflow-hidden border-b border-border bg-muted"
         aria-label={`${service.name} profile`}
         tabIndex={-1}
@@ -87,7 +96,7 @@ export function ServiceDirectoryRow({
           <div className="flex flex-wrap items-center gap-2.5">
             <h2 className="text-xl font-bold leading-tight tracking-tight">
               <Link
-                to={profilePath}
+                to={profileHref}
                 className="text-foreground transition-colors hover:text-primary"
               >
                 {service.name}
@@ -181,7 +190,7 @@ export function ServiceDirectoryRow({
             variant="ghost"
             className="h-11 flex-1 text-primary hover:text-primary md:flex-none"
           >
-            <Link to={profilePath}>View profile</Link>
+            <Link to={profileHref}>View profile</Link>
           </Button>
         </div>
       </div>

@@ -61,11 +61,12 @@ test('For founders holds Build, Collab and Founder ID', () => {
   assert.doesNotMatch(table, /Guidance|Compass|Connect/);
 });
 
-test('Explore holds Newspaper, Podcast and Startup Pedia', () => {
+test('Explore holds Marketplace, Newspaper, Podcast and Startup Pedia', () => {
   // Startup Pedia added 2026-10-25 under Newspaper and Podcast, as requested,
-  // instead of a seventh bar entry.
+  // instead of a seventh bar entry. Marketplace added above Newspaper 2026-11-23.
   const { table, labels } = linkTable('exploreLinks');
-  assert.deepEqual(labels, ['Newspaper', 'Podcast', 'Startup Pedia']);
+  assert.deepEqual(labels, ['Marketplace', 'Newspaper', 'Podcast', 'Startup Pedia']);
+  assert.match(table, /label: "Marketplace", href: "\/marketplace", icon: BriefcaseBusiness/);
   assert.match(table, /label: "Startup Pedia", href: "\/startup-pedia", icon: BookMarked/);
 });
 
