@@ -307,7 +307,7 @@ const ServiceMarketplaceHub = () => {
               <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                 <div className="max-w-2xl">
                   <h1 className="font-space-grotesk text-4xl font-bold tracking-tight sm:text-5xl">
-                    Service partners
+                    Partnerships
                   </h1>
                   <p className="mt-2.5 text-base leading-relaxed text-muted-foreground sm:text-lg">
                     Service companies, reviewed by our team, that build products, find customers and run operations for
