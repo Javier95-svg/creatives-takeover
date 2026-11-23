@@ -17,6 +17,83 @@ interface EvidenceState {
 
 interface IcpEvidenceCheckProps {
   userId: string;
+  /** The draft on screen: evidence is read for it and its project only. */
+  icpAnalysisId: string;
+}
+
+const PMF_SELECT = 'pmf_score, analysis_data';
+
+/**
+ * Evidence for this draft, never another startup's: the PMF result scored
+ * against this draft (else its project's current one), and signups on this
+ * project's demo pages. Traction logs and MVP visitors are not stored per
+ * project yet, so they are shown only when the account has one project.
+ */
+async function loadScopedEvidence(userId: string, icpAnalysisId: string) {
+  const { data: draft } = await supabase
+    .from('icp_analysis_results' as never)
+    .select('project_id')
+    .eq('id', icpAnalysisId)
+    .maybeSingle();
+  const projectId = (draft as { project_id?: string | null } | null)?.project_id ?? null;
+
+  const [byDraft, projectsRes] = await Promise.all([
+    supabase
+      .from('pmf_analysis_results' as never)
+      .select(PMF_SELECT)
+      .eq('user_id', userId)
+      .eq('icp_analysis_id', icpAnalysisId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    supabase.from('projects' as never).select('id').eq('user_id', userId).is('archived_at', null),
+  ]);
+  const singleProject = (projectsRes.data as unknown[] | null)?.length === 1 || !projectId;
+
+  let pmfRes = byDraft;
+  if (!byDraft.data && projectId) {
+    pmfRes = await supabase
+      .from('pmf_analysis_results' as never)
+      .select(PMF_SELECT)
+      .eq('user_id', userId)
+      .eq('project_id', projectId)
+      .is('superseded_at', null)
+      .maybeSingle();
+  }
+
+  let signupCount = 0;
+  if (projectId) {
+    const { data: demoProjects } = await supabase
+      .from('demo_studio_projects' as never)
+      .select('id')
+      .eq('project_id', projectId);
+    const demoIds = ((demoProjects as Array<{ id: string }> | null) ?? []).map((row) => row.id);
+    if (demoIds.length) {
+      const { count } = await supabase
+        .from('demo_studio_signups' as never)
+        .select('id', { count: 'exact', head: true })
+        .in('project_id', demoIds);
+      signupCount = count ?? 0;
+    }
+  } else {
+    const { count } = await supabase.from('demo_studio_signups' as never).select('id', { count: 'exact', head: true });
+    signupCount = count ?? 0;
+  }
+
+  const [demoRes, tractionRes] = singleProject
+    ? await Promise.all([
+        supabase.rpc('get_mvp_retention_snapshot' as never),
+        supabase
+          .from('traction_engine_weekly_logs' as never)
+          .select('primary_acquisition_channel,channel_quality_signal,prioritized_recommendation')
+          .eq('user_id', userId)
+          .order('week_start_date', { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+      ])
+    : [{ data: null }, { data: null }];
+
+  return { pmfRes, demoRes, waitlistRes: { count: signupCount }, tractionRes };
 }
 
 type Tone = 'confirm' | 'contradict' | 'pending';
@@ -27,33 +104,14 @@ function toneIcon(tone: Tone) {
   return <CircleDashed className="h-4 w-4 shrink-0 text-muted-foreground" />;
 }
 
-export default function IcpEvidenceCheck({ userId }: IcpEvidenceCheckProps) {
+export default function IcpEvidenceCheck({ userId, icpAnalysisId }: IcpEvidenceCheckProps) {
   const [evidence, setEvidence] = useState<EvidenceState | null>(null);
 
   useEffect(() => {
     let active = true;
     const load = async () => {
       try {
-        const [pmfRes, demoRes, waitlistRes, tractionRes] = await Promise.all([
-          supabase
-            .from('pmf_analysis_results' as never)
-            .select('pmf_score, analysis_data')
-            .eq('user_id', userId)
-            .order('created_at', { ascending: false })
-            .limit(1)
-            .maybeSingle(),
-          supabase.rpc('get_mvp_retention_snapshot' as never),
-          supabase
-            .from('demo_studio_signups' as never)
-            .select('id', { count: 'exact', head: true }),
-          supabase
-            .from('traction_engine_weekly_logs' as never)
-            .select('primary_acquisition_channel,channel_quality_signal,prioritized_recommendation')
-            .eq('user_id', userId)
-            .order('week_start_date', { ascending: false })
-            .limit(1)
-            .maybeSingle(),
-        ]);
+        const { pmfRes, demoRes, waitlistRes, tractionRes } = await loadScopedEvidence(userId, icpAnalysisId);
         if (!active) return;
 
         const pmfRow = pmfRes.data as { pmf_score: number | null; analysis_data: Record<string, unknown> } | null;
@@ -104,7 +162,7 @@ export default function IcpEvidenceCheck({ userId }: IcpEvidenceCheckProps) {
     return () => {
       active = false;
     };
-  }, [userId]);
+  }, [userId, icpAnalysisId]);
 
   if (!evidence) return null;
 

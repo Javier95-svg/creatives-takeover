@@ -1252,7 +1252,8 @@ function formatFounderContext(context: Record<string, unknown> | null): string {
   }
 
   // Dashboard / business model
-  if (dashboard?.targetMarket) lines.push(`Target market (validated): ${dashboard.targetMarket}`);
+  // Same rule as the header: "validated" only with a ready PMF verdict.
+  if (dashboard?.targetMarket) lines.push(pmfDecided ? `Target market (validated by PMF Lab): ${dashboard.targetMarket}` : `Target market (hypothesis): ${dashboard.targetMarket}`);
   if (dashboard?.revenueModel) lines.push(`Revenue model: ${dashboard.revenueModel}`);
 
   const manual = dashboard?.manualProfile as Record<string, unknown> | null | undefined;
@@ -1260,7 +1261,7 @@ function formatFounderContext(context: Record<string, unknown> | null): string {
   if (manual?.positioning_statement) lines.push(`Positioning statement: ${manual.positioning_statement}`);
 
   // Waitlist kit
-  if (waitlist?.positioningStatement) lines.push(`Validated positioning: ${waitlist.positioningStatement}`);
+  if (waitlist?.positioningStatement) lines.push(pmfDecided ? `Positioning (validated by PMF Lab): ${waitlist.positioningStatement}` : `Positioning (hypothesis): ${waitlist.positioningStatement}`);
 
   // ICP fallback
   if (icp?.target_audience) lines.push(`ICP target audience: ${icp.target_audience}`);

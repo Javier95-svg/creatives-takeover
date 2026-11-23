@@ -77,6 +77,28 @@ export async function fetchJourneyEvidenceBrief(userId: string, scope: JourneyEv
   if (scope.pmfAnalysisId) pmfQuery = pmfQuery.eq('id', scope.pmfAnalysisId);
   if (scope.validationContextId) pmfQuery = pmfQuery.eq('validation_context_id', scope.validationContextId);
 
+  // GTM plans are not tied to an evidence case: use the current plan of the
+  // project this evidence case's ICP belongs to.
+  let projectId: string | null = null;
+  if (scopedIcpId) {
+    const { data: icpProject } = await supabase
+      .from('icp_analysis_results' as never)
+      .select('project_id')
+      .eq('id', scopedIcpId)
+      .eq('user_id', userId)
+      .maybeSingle();
+    projectId = asText((icpProject as AnyRecord | null)?.project_id);
+  }
+  const gtmQuery = projectId
+    ? supabase
+      .from('gtm_plans' as never)
+      .select('id, plan_title, plan_content, status, current_version, created_at, updated_at')
+      .eq('user_id', userId)
+      .eq('project_id', projectId)
+      .is('superseded_at', null)
+      .maybeSingle()
+    : Promise.resolve({ data: null, error: null });
+
   let outcomesQuery = supabase
     .from('journey_outcomes' as never)
     .select('tool,status,artifact_id,validation_context_id')
@@ -88,7 +110,7 @@ export async function fetchJourneyEvidenceBrief(userId: string, scope: JourneyEv
     icpQuery.maybeSingle(),
     demoQuery.order('updated_at', { ascending: false }).limit(1).maybeSingle(),
     pmfQuery.order('created_at', { ascending: false }).limit(1).maybeSingle(),
-    Promise.resolve({ data: null, error: null }),
+    gtmQuery,
     outcomesQuery,
   ]);
 
@@ -217,7 +239,7 @@ export async function fetchJourneyEvidenceBrief(userId: string, scope: JourneyEv
   const headline = asText(messaging.headline);
   const hookLine = asText(messaging.hookLine);
   const ctaCopy = asText(messaging.ctaCopy);
-  if (readyTools.has('gtm_strategist') && (positioningStatement || headline)) {
+  if (positioningStatement || headline) {
     sources.gtm = true;
     const lines = [
       positioningStatement ? `- Positioning: ${positioningStatement}` : null,
@@ -229,7 +251,7 @@ export async function fetchJourneyEvidenceBrief(userId: string, scope: JourneyEv
     manifestSources.push({
       sourceId: asText(gtm.id) || 'latest_gtm',
       sourceType: 'gtm_acquisition_play',
-      version: String(gtm.version ?? '1'),
+      version: String(gtm.current_version ?? '1'),
       capturedAt: asText(gtm.updated_at) || asText(gtm.created_at) || new Date().toISOString(),
       confidence: null,
       provenance: 'gtm_plans',
@@ -241,7 +263,7 @@ export async function fetchJourneyEvidenceBrief(userId: string, scope: JourneyEv
 
   const manifest = createJourneyEvidenceManifest(manifestSources);
   const coreCustomer = asText(decisionBrief.primarySegment) || roleLine || 'Primary customer from the evidence manifest';
-  const coreJob = painQuote || asText(pmfData.nextExperiment) || 'Complete the workflow that resolves the validated pain';
+  const coreJob = painQuote || asText(pmfData.nextExperiment) || 'Complete the workflow that resolves the customer pain';
   const successEvent = buyingSignals[0] || 'Customer completes the primary workflow';
   const essentialFeatures = missingFeatures.slice(0, 3);
   const brief = [

@@ -39,6 +39,9 @@ export type MVPBuilderOutputProjectType = 'html_single' | 'react_vite';
 export interface MVPBuilderSetupInput {
   productName: string;
   oneLineDescription: string;
+  // Stored key names only: saved projects, Pulse and GTM read them. The values
+  // come from the ICP draft or profile and are NOT validated; never label them
+  // so to the founder or the model unless PMF Lab's verdict is "ready".
   validatedProblemStatement: string;
   validatedTargetSegment: string;
   keyPainLanguage: string;

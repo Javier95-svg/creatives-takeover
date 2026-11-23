@@ -21,6 +21,7 @@ import { trackActivationFunnelEvent } from "@/lib/activationEntry";
 import { trackJourneyEvent } from "@/lib/journeyOutcomes";
 import { buildIcpScoreCard } from "@/lib/icpScoreCard";
 import { isCompletionChainEnabled } from '@/lib/completionChain';
+import { PmfDecisionBanner, readIcpRevisionDecision } from '@/components/icp/PmfDecisionBanner';
 
 function slugifyFileName(value: string) {
   return value.trim().replace(/[^a-z0-9]+/gi, "-").replace(/^-+|-+$/g, "").toLowerCase() || "icp-draft";
@@ -31,6 +32,9 @@ export default function IcpDraftPage() {
   const { draftId } = useParams<{ draftId: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
+  // PMF Lab's "narrow" / "pivot" link lands here with its evidence case.
+  const pmfDecision = readIcpRevisionDecision(searchParams.get("decision"));
+  const pmfContextId = searchParams.get("context");
   const documentRef = useRef<HTMLDivElement>(null);
   const hasTrackedUnlockOpenRef = useRef(false);
   const sprintEnabled = true;
@@ -267,6 +271,16 @@ export default function IcpDraftPage() {
 
       <div className="mx-auto max-w-6xl px-4 pt-6 sm:px-6 lg:px-8">
         <FinishSetupPrompt surface="icp_result" className="mb-5" />
+        {user && draftId && pmfDecision ? (
+          <PmfDecisionBanner
+            userId={user.id}
+            decision={pmfDecision}
+            validationContextId={pmfContextId}
+            icpAnalysisId={draftId}
+            reviseHref={`/icp-builder?edit=${encodeURIComponent(draftId)}&decision=${pmfDecision}${pmfContextId ? `&context=${encodeURIComponent(pmfContextId)}` : ''}`}
+            className="mb-5"
+          />
+        ) : null}
         {isUnlockSource ? (
           <div className="mb-5 overflow-hidden rounded-4xl border border-success bg-gradient-to-br from-success via-white to-info p-6 shadow-[0_24px_60px_-44px_rgba(15,23,42,0.35)] sm:p-7">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -418,9 +432,9 @@ export default function IcpDraftPage() {
         }
       />
 
-      {user ? (
+      {user && draftId ? (
         <div className="mx-auto max-w-6xl px-4 pb-4 sm:px-6 lg:px-8">
-          <IcpEvidenceCheck userId={user.id} />
+          <IcpEvidenceCheck userId={user.id} icpAnalysisId={draftId} />
         </div>
       ) : null}
 

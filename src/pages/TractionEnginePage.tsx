@@ -41,6 +41,7 @@ import {
   type WeeklySignals,
 } from '@/lib/tractionSignals';
 import { getTractionNextStep } from '@/lib/tractionNextStep';
+import { loadActiveProjectId } from '@/lib/activeProject';
 import { exportTractionReportPdf } from '@/lib/tractionReport';
 import { markFirstArtifactCreated } from '@/lib/retentionSystem';
 import {
@@ -175,6 +176,8 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
     ...(readDraft()?.retention ?? {}),
   }));
   const [activeSprints, setActiveSprints] = useState<SprintRow[]>([]);
+  // The active project at the last load; new sprints are created in it.
+  const projectIdRef = useRef<string | null>(null);
   const [recentLogs, setRecentLogs] = useState<WeeklyLogRow[]>([]);
   const [decisionWeekCount, setDecisionWeekCount] = useState(0);
   const [consecutiveWeekCount, setConsecutiveWeekCount] = useState(0);
@@ -239,13 +242,18 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
   const loadTractionData = async () => {
     if (!userId) return;
     setLoading(true);
+    // Channels belong to the project the founder is working in, so two
+    // startups never share (or replace) each other's sprints.
+    const projectId = await loadActiveProjectId(userId);
+    projectIdRef.current = projectId;
+    let sprintsQuery = supabase
+      .from(SPRINTS_TABLE)
+      .select('id, channel, cycle_start_date, status, source_gtm_plan_id, source_gtm_play_id, activation_payload, kill_rule_status')
+      .eq('user_id', userId)
+      .eq('status', 'active');
+    if (projectId) sprintsQuery = sprintsQuery.eq('project_id', projectId);
     const [sprintsRes, logsRes, decisionsRes, claimsRes] = await Promise.all([
-      supabase
-        .from(SPRINTS_TABLE)
-        .select('id, channel, cycle_start_date, status, source_gtm_plan_id, source_gtm_play_id, activation_payload, kill_rule_status')
-        .eq('user_id', userId)
-        .eq('status', 'active')
-        .order('cycle_start_date', { ascending: false }),
+      sprintsQuery.order('cycle_start_date', { ascending: false }),
       supabase
         .from(LOGS_TABLE)
         .select('id, week_start_date, combined_score, phase_seven_ready, prioritized_recommendation, score_breakdown')
@@ -485,6 +493,7 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
         .from(SPRINTS_TABLE)
         .insert({
           user_id: userId,
+          ...(projectIdRef.current ? { project_id: projectIdRef.current } : {}),
           channel,
           cycle_start_date: currentWeekStart,
           status: 'active',

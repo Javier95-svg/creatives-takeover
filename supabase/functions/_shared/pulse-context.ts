@@ -244,8 +244,11 @@ export async function resolvePulseContext(db: SupabaseClient, userId: string, pr
         const metadata = facts.metadata as Data | null;
         const setup = metadata?.setupInput as Data | null;
         const keys = ['productName', 'oneLineDescription', 'validatedProblemStatement', 'validatedTargetSegment', 'keyPainLanguage', 'coreCustomer', 'coreJob', 'successEvent', 'essentialFeatures', 'buildEvidenceMode'];
+        // The stored names say "validated" but the values are the ICP's hypotheses;
+        // the model sees neutral names so it does not present them as proven.
+        const neutral: Record<string, string> = { validatedProblemStatement: 'problemStatement', validatedTargetSegment: 'targetSegment' };
         facts.metadata = { framework: metadata?.framework,
-          intendedSetup: Object.fromEntries(keys.filter(key => setup?.[key] !== undefined).map(key => [key, setup![key]])) };
+          intendedSetup: Object.fromEntries(keys.filter(key => setup?.[key] !== undefined).map(key => [neutral[key] ?? key, setup![key]])) };
       }
       const evidence = stageEvidence(source.key, facts);
       const fields = Object.entries(evidence.fields).filter(([, value]) => value !== undefined);

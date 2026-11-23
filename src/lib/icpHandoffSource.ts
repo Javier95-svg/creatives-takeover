@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { normalizeStoredArtifact } from '@/lib/icpDraftArtifacts';
+import { scopeToCurrentProjectRow } from '@/lib/activeProject';
 import { readIcpBuilderSession } from '@/lib/icpBuilderSession';
 import type { StoredIcpArtifact } from '@/lib/icpBuilderSession';
 
@@ -35,11 +36,17 @@ export async function loadIcpArtifactById(userId: string, draftId: string): Prom
   return { artifact: normalized.artifact, draftId, origin: 'param' };
 }
 
+/**
+ * The active project's current ICP. Only an account without projects falls
+ * back to its latest draft, so a founder with two startups never gets the
+ * other one's customer.
+ */
 export async function loadLatestIcpArtifact(userId: string): Promise<ResolvedIcpSource | null> {
-  const { data, error } = await supabase
-    .from('icp_analysis_results')
-    .select(ICP_SELECT)
-    .eq('user_id', userId)
+  const { query } = await scopeToCurrentProjectRow(
+    supabase.from('icp_analysis_results').select(ICP_SELECT).eq('user_id', userId),
+    userId,
+  );
+  const { data, error } = await query
     .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle();
@@ -73,8 +80,8 @@ export function readIcpArtifactFromSession(): ResolvedIcpSource | null {
 }
 
 /**
- * Resolve in the order that respects intent: the explicit param first, then the signed-in
- * founder's latest draft, then an unsaved preview from this browser session.
+ * Resolve in the order that respects intent: the explicit param first, then the active
+ * project's current draft, then an unsaved preview from this browser session.
  */
 export async function resolveIcpSource(input: {
   userId: string | null | undefined;

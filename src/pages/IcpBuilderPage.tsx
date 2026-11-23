@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useRef } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -16,6 +16,7 @@ import {
 import { ICP_SEED_STORAGE_KEY } from "@/lib/icpSeed";
 import { trackActivationFunnelEvent } from "@/lib/activationEntry";
 import { useAuth } from "@/contexts/AuthContext";
+import { PmfDecisionBanner, readIcpRevisionDecision } from "@/components/icp/PmfDecisionBanner";
 
 const ICPBuilder = lazy(() => import("@/components/icp/ICPBuilder"));
 
@@ -50,7 +51,10 @@ function getIcpBuilderOpenedSource(
 
 export default function ICPBuilderPage() {
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
+  // Arriving from PMF Lab's "narrow" / "pivot" decision: keep its finding in view while revising.
+  const [pmfParams] = useState(() => new URLSearchParams(window.location.search));
+  const pmfDecision = readIcpRevisionDecision(pmfParams.get("decision"));
   const hasTracked = useRef(false);
 
   useEffect(() => {
@@ -183,6 +187,16 @@ export default function ICPBuilderPage() {
       </div>
 
       <main className="relative z-10">
+        {user && pmfDecision ? (
+          <div className="mx-auto max-w-3xl px-4 pt-52 sm:px-6 md:pt-32">
+            <PmfDecisionBanner
+              userId={user.id}
+              decision={pmfDecision}
+              validationContextId={pmfParams.get("context")}
+              icpAnalysisId={pmfParams.get("edit")}
+            />
+          </div>
+        ) : null}
         <Suspense
           fallback={
             <div className="flex min-h-screen items-center justify-center bg-transparent px-4 pt-28 md:pt-32">

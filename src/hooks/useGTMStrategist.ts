@@ -10,6 +10,7 @@ import { showDashboardReturnToast } from '@/components/dashboard/dashboardReturn
 import { ensureMentorDemandNotification } from '@/lib/mentorDemandNotifications';
 import { trackActivity } from '@/lib/activity';
 import { markFirstArtifactCreated, trackCurrentActivationJourneyEvent } from '@/lib/retentionSystem';
+import { scopeToCurrentProjectRow } from '@/lib/activeProject';
 import {
   trackGTMIntakeCompleted,
   trackGTMPlanGenerated,
@@ -441,17 +442,25 @@ export function useGTMStrategist(projectId: string | null = null) {
       let icpPositioningStatement: string | undefined;
       let icpNicheProfile: string | undefined;
       try {
-        const { data: icpData } = await supabase
-          .from('icp_analysis_results' as any)
-          .select('analysis_data')
-          .eq('user_id', user.id)
+        // The active project's current ICP, not the account's latest draft.
+        const { query } = await scopeToCurrentProjectRow(
+          supabase.from('icp_analysis_results' as any).select('analysis_data').eq('user_id', user.id),
+          user.id,
+        );
+        const { data: icpData } = await query
           .order('created_at', { ascending: false })
           .limit(1)
           .maybeSingle();
         if (icpData) {
           const d = (icpData as any).analysis_data;
+          // Older drafts carry positioning and niche blocks; current drafts
+          // describe the customer in draftDocument instead.
+          const doc = d?.draftDocument;
           icpPositioningStatement = d?.positioningStrategy?.positioningStatement;
-          icpNicheProfile = d?.nicheProfile?.nicheDescription;
+          icpNicheProfile = d?.nicheProfile?.nicheDescription
+            || doc?.decisionBrief?.primarySegment
+            || doc?.customer?.roleLine
+            || undefined;
         }
       } catch {
         // Non-critical — continue without ICP enrichment

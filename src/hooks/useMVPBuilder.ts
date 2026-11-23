@@ -79,6 +79,7 @@ import { MVP_PUBLISH_BASE_DOMAIN, buildPublicAppUrl } from '@/lib/mvp-builder/pu
 import { evaluateMvpQuality, hasMvpSuccessEventInstrumentation } from '@/lib/mvp-builder/qualityChecks';
 import { runMvpBrowserSmokeTest } from '@/lib/mvp-builder/smokeTest';
 import { createJourneyHandoff, trackJourneyEvent, upsertJourneyOutcome } from '@/lib/journeyOutcomes';
+import { loadActiveProjectId } from '@/lib/activeProject';
 
 export interface MVPMessage {
   id: string;
@@ -915,16 +916,24 @@ function buildMVPStartupContext(params: {
   };
 }
 
+/**
+ * The user's latest row of a table, or, with projectId, that project's current
+ * row (one of the six tool tables: project_id + superseded_at null), so a
+ * founder with two startups never gets the other one's ICP, PMF or plan.
+ */
 async function fetchLatestContextRow(
   table: string,
   userId: string,
   select: string,
-  orderColumn = 'updated_at'
+  orderColumn = 'updated_at',
+  projectId: string | null = null,
 ): Promise<Record<string, unknown> | null> {
-  const { data, error } = await supabase
+  let query = supabase
     .from(table as never)
     .select(select)
-    .eq('user_id', userId)
+    .eq('user_id', userId);
+  if (projectId) query = query.eq('project_id', projectId).is('superseded_at', null);
+  const { data, error } = await query
     .order(orderColumn, { ascending: false })
     .limit(1)
     .maybeSingle();
@@ -1642,6 +1651,7 @@ export function useMVPBuilder() {
       }
 
       try {
+        const projectId = await loadActiveProjectId(user.id);
         const [
           profileResult,
           waitlistRow,
@@ -1687,13 +1697,15 @@ export function useMVPBuilder() {
             'icp_analysis_results',
             user.id,
             'id, analysis_data, target_audience, business_description, verdict, industry, niche_score, created_at, updated_at',
-            'updated_at'
+            'updated_at',
+            projectId,
           ),
           fetchLatestContextRow(
             'pmf_analysis_results',
             user.id,
             'id, analysis_data, pmf_score, verdict, target_market, industry, created_at, updated_at, saved_at',
-            'created_at'
+            'created_at',
+            projectId,
           ).catch(() => null),
           fetchLatestContextRow(
             'tech_stack_reports',
@@ -1711,7 +1723,8 @@ export function useMVPBuilder() {
             'gtm_plans',
             user.id,
             'id, plan_title, plan_content, status, saved_at, exported_at, created_at, updated_at',
-            'updated_at'
+            'updated_at',
+            projectId,
           ),
         ]);
 
@@ -1720,7 +1733,9 @@ export function useMVPBuilder() {
 
         const profile = profileResult.data as ProfilePrefillRow | null;
         const waitlist = waitlistRow as WaitlistPrefillRow | null;
-        const primaryIcpId = asText(profile?.primary_icp_analysis_id);
+        // The profile's primary ICP is account-wide: only an account without
+        // projects uses it; otherwise the project's current ICP is the one.
+        const primaryIcpId = projectId ? '' : asText(profile?.primary_icp_analysis_id);
         const primaryIcp = primaryIcpId
           ? await fetchContextRowById(
               'icp_analysis_results',

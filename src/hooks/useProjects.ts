@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useSubscription } from '@/hooks/useSubscription';
 import { supabase } from '@/integrations/supabase/client';
 import { isProjectLimitError, projectLimitForPlan, projectLimitMessage } from '@/lib/projectLimits';
+import { pickActiveProjectId, readStoredActiveProject, storeActiveProject } from '@/lib/activeProject';
 
 export type Project = {
   id: string;
@@ -28,30 +29,8 @@ export type ProjectOutcomes = {
   demoProjectId: string | null;
 };
 
-const ACTIVE_PROJECT_KEY = 'ct_active_project_';
-
-/**
- * Which project the founder is working in. Per browser, because it is a view
- * preference rather than account state, and it falls back to the most recently
- * touched project so a new device still lands somewhere sensible.
- */
-function readStoredActiveProject(userId: string): string | null {
-  if (typeof window === 'undefined') return null;
-  try {
-    return window.localStorage.getItem(`${ACTIVE_PROJECT_KEY}${userId}`);
-  } catch {
-    return null;
-  }
-}
-
-function storeActiveProject(userId: string, projectId: string): void {
-  if (typeof window === 'undefined') return;
-  try {
-    window.localStorage.setItem(`${ACTIVE_PROJECT_KEY}${userId}`, projectId);
-  } catch {
-    // Private mode. The most recently touched project is still a good default.
-  }
-}
+// Which project the founder is working in: per browser, falling back to the
+// newest active project (src/lib/activeProject.ts, shared with non-hook code).
 
 /**
  * Marks a project as the one the founder is working in, server side. Owners can
@@ -105,9 +84,7 @@ export function useProjects() {
 
   const activeProjectId = useMemo(() => {
     if (!userId) return null;
-    const stored = readStoredActiveProject(userId);
-    if (stored && activeProjects.some((p) => p.id === stored)) return stored;
-    return activeProjects[0]?.id ?? null;
+    return pickActiveProjectId(readStoredActiveProject(userId), activeProjects.map((p) => p.id));
   }, [userId, activeProjects]);
 
   const activeProject = useMemo(
