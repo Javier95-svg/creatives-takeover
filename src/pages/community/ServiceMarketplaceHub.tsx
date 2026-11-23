@@ -30,7 +30,9 @@ import { cn } from "@/lib/utils";
 const ALL_CATEGORIES = "all";
 type CategoryFilter = ServiceCategory | typeof ALL_CATEGORIES;
 
-const PARTNER_APPLY_PATH = "/apply?as=marketplace";
+// The partner questionnaire; answers are emailed to admin@ and javier@ (2026-11-23).
+const PARTNER_APPLY_PATH = "/marketplace/join";
+const CONTACT_TEAM_MAILTO = `mailto:admin@creatives-takeover.com?subject=${encodeURIComponent("Marketplace feedback")}`;
 
 // Five partners per page, with page numbers under the list (2026-11-23).
 const PARTNERS_PER_PAGE = 5;
@@ -75,9 +77,13 @@ function HelpCards({ className }: { className?: string }) {
         <p className="text-sm leading-relaxed text-muted-foreground">
           Tell us what you're stuck on and we'll point you to the right partner.
         </p>
-        <Link to="/contact" className="inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline">
+        {/* Opens the visitor's email app, addressed to the team (2026-11-23). */}
+        <a
+          href={CONTACT_TEAM_MAILTO}
+          className="inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline"
+        >
           Contact our team <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
-        </Link>
+        </a>
       </div>
       <div className="flex flex-col gap-2.5 rounded-2xl border border-border bg-card p-5">
         <p className="text-base font-bold">Run a service company?</p>
@@ -88,7 +94,7 @@ function HelpCards({ className }: { className?: string }) {
           to={PARTNER_APPLY_PATH}
           className="inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline"
         >
-          Apply as a partner <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+          Apply to join <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
         </Link>
       </div>
     </div>

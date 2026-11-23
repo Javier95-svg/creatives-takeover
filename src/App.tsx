@@ -139,6 +139,7 @@ const RAGTest = lazy(() => import("./pages/RAGTest"));
 const TestPhase1 = lazy(() => import("./pages/TestPhase1"));
 const MentorProfilePage = lazy(() => import("./pages/community/MentorProfilePage"));
 const ServiceMarketplaceHub = lazy(() => import("./pages/community/ServiceMarketplaceHub"));
+const MarketplaceJoin = lazy(() => import("./pages/community/MarketplaceJoin"));
 const ServiceProfilePage = lazy(() => import("./pages/community/ServiceProfilePage"));
 const CofounderMarketplaceRoute = lazy(() => import("./pages/community/CofounderMarketplaceRoute"));
 const CofounderListingEditorRoute = lazy(() => import("./pages/community/CofounderListingEditorRoute"));
@@ -443,6 +444,7 @@ function App() {
                         <Route path="/admin/cohorts" element={<AdminRoute><AdminCohortsPage /></AdminRoute>} />
                         <Route path="/admin/cohorts/:cohortId" element={<AdminRoute><AdminCohortDetailPage /></AdminRoute>} />
                         <Route path="/marketplace" element={<ToolRouteWithCreditGate><ServiceMarketplaceHub /></ToolRouteWithCreditGate>} />
+                        <Route path="/marketplace/join" element={<MarketplaceJoin />} />
                         <Route path="/marketplace/admin/new" element={<AdminRoute><AdminServiceEditor /></AdminRoute>} />
                         <Route path="/marketplace/admin/edit/:id" element={<AdminRoute><AdminServiceEditor /></AdminRoute>} />
                         <Route path="/marketplace/:slug" element={<ToolRouteWithCreditGate><ServiceProfilePage /></ToolRouteWithCreditGate>} />
