@@ -310,8 +310,8 @@ const ServiceMarketplaceHub = () => {
                     Service partners
                   </h1>
                   <p className="mt-2.5 text-base leading-relaxed text-muted-foreground sm:text-lg">
-                    Service companies, reviewed by our team, that help founders build the product, win customers and run
-                    operations. Read their pitch decks, compare them side by side and message the right partner for free.
+                    Service companies, reviewed by our team, that build products, find customers and run operations for
+                    founders. Read their decks and message them for free.
                   </p>
                 </div>
                 {isAdmin && (
