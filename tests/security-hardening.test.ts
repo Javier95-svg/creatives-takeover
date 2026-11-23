@@ -162,7 +162,7 @@ test('a *_mine call falls back to the old function only while it does not exist 
 test('edge functions that act for someone check who is calling', () => {
   // Each of these was callable with only the public anon key (audit 2026-11-01).
   const guarded = [
-    'memory-manager', 'document-parser', 'chatbot-ai-engine', 'generate-recommendations',
+    'document-parser', 'chatbot-ai-engine', 'generate-recommendations',
     'send-push', 'send-article-notification-email', 'ai-model-router', 'embed-text', 'rag-chat',
     'speech-to-text', 'web-search', 'location-search', 'community-ai-moderator', 'bizmap-research',
     'rag-ingest', 'contact-form-submission', 'request-icp-draft-email', 'trigger-icp-sprint',

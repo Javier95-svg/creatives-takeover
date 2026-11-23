@@ -299,22 +299,8 @@ async function loadUserBusinessContext(supabase: any, userId: string): Promise<B
     context.goals = latestSession.answers.goals ? [latestSession.answers.goals] : [];
   }
 
-  // Get recent conversation memories
-  const { data: memories } = await supabase
-    .from('conversation_memory')
-    .select('memory_type, title, content')
-    .eq('user_id', userId)
-    .order('importance_score', { ascending: false })
-    .limit(5);
-
-  if (memories?.length) {
-    context.challenges = memories
-      .filter((m: any) => m.memory_type === 'challenge')
-      .map((m: any) => m.title);
-    context.recentDecisions = memories
-      .filter((m: any) => m.memory_type === 'decision')
-      .map((m: any) => m.title);
-  }
+  // conversation_memory was retired in project memory phase 5 (2026-11-23);
+  // decisions now live in pulse_memories, read through _shared/pulse-context.ts.
 
   // Get last 3 daily check-ins
   const { data: checkIns } = await supabase

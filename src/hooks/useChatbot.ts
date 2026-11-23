@@ -5,8 +5,6 @@ import { FAQItem, FAQUtils } from '@/types/faq';
 import { supabase } from '@/integrations/supabase/client';
 import { useNLU, NLUResult, BusinessIntent, BusinessEntity } from './useNLU';
 import { streamChat } from './useStreamingChat';
-import { useConversationMemory } from './useConversationMemory';
-import { MEMORY_PATTERNS, detectMood, detectTone, extractTitle } from './useChatbot-memory-helpers';
 import { useSocraticEngine } from './useSocraticEngine';
 import { SocraticContext, ReasoningAnalysis, SocraticQuestion } from '@/types/socratic';
 import { captureEvent } from '@/lib/analytics';
@@ -411,7 +409,6 @@ export const useChatbot = (config: EnhancedChatbotConfig & {
     maxIntents: 3
   });
 
-  const { createMemory } = useConversationMemory();
 
   // Socratic Logic Engine
   const socraticEngine = useSocraticEngine({
@@ -694,63 +691,6 @@ export const useChatbot = (config: EnhancedChatbotConfig & {
   useEffect(() => {
     triggerFeedbackCheckIn();
   }, [conversationState.messageCount, triggerFeedbackCheckIn]);
-
-  // Extract and store memory from conversations (background processing)
-  const extractAndStoreMemory = useCallback(async (userMessage: string, aiResponse: string) => {
-    // Move memory extraction to background to avoid blocking responses
-    setTimeout(async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
-
-        // Get user's memory preference
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('memory_preference')
-          .eq('id', user.id)
-          .single();
-
-        const memoryPreference = profile?.memory_preference || 'important';
-        
-        // Memory extraction with importance scores
-        const minImportance = memoryPreference === 'everything' ? 0.0 : 
-                             memoryPreference === 'important' ? 0.5 : 0.8;
-
-        // Find matching pattern
-        for (const pattern of MEMORY_PATTERNS) {
-          if (pattern.regex.test(userMessage) && pattern.importance >= minImportance) {
-            // Extract title from first sentence
-            const title = extractTitle(userMessage, pattern.titlePrefix);
-
-            // Extract tags from business context
-            const tags: string[] = [];
-            if (conversationState.businessContext.industry) {
-              tags.push(conversationState.businessContext.industry);
-            }
-            if (conversationState.businessContext.stage) {
-              tags.push(conversationState.businessContext.stage);
-            }
-
-            await createMemory({
-              memory_type: pattern.type,
-              title,
-              content: userMessage,
-              importance_score: pattern.importance,
-              tags: tags.length > 0 ? tags : undefined,
-              business_stage: conversationState.businessContext.stage as any,
-              user_mood: detectMood(userMessage) as any,
-              ai_response_tone: detectTone(aiResponse) as any
-            });
-
-            break; // Only create one memory per message
-          }
-        }
-      } catch (error) {
-        console.error('Error storing memory:', error);
-        // Don't block the conversation if memory storage fails
-      }
-    }, 0);
-  }, [conversationState.businessContext, createMemory]);
 
   const generateId = (): string => {
     return `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
