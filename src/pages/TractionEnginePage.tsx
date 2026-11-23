@@ -141,9 +141,6 @@ const readDraft = () => {
   }
 };
 
-const isMissingFunction = (error: { code?: string; message?: string } | null) =>
-  Boolean(error && (error.code === 'PGRST202' || error.code === '42883' || /could not find the function/i.test(error.message ?? '')));
-
 const formatWeek = (weekStart: string) => {
   const date = new Date(`${weekStart}T00:00:00Z`);
   return Number.isNaN(date.getTime())
@@ -252,14 +249,19 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
       .eq('user_id', userId)
       .eq('status', 'active');
     if (projectId) sprintsQuery = sprintsQuery.eq('project_id', projectId);
-    const [sprintsRes, logsRes, decisionsRes, claimsRes] = await Promise.all([
+    // Weeks are logged per project too (20261123180000).
+    let logsQuery = supabase
+      .from(LOGS_TABLE)
+      .select('id, week_start_date, combined_score, phase_seven_ready, prioritized_recommendation, score_breakdown')
+      .eq('user_id', userId);
+    let projectWeeksQuery = supabase.from(LOGS_TABLE).select('id').eq('user_id', userId);
+    if (projectId) {
+      logsQuery = logsQuery.eq('project_id', projectId);
+      projectWeeksQuery = projectWeeksQuery.eq('project_id', projectId);
+    }
+    const [sprintsRes, logsRes, decisionsRes, claimsRes, projectWeeksRes] = await Promise.all([
       sprintsQuery.order('cycle_start_date', { ascending: false }),
-      supabase
-        .from(LOGS_TABLE)
-        .select('id, week_start_date, combined_score, phase_seven_ready, prioritized_recommendation, score_breakdown')
-        .eq('user_id', userId)
-        .order('week_start_date', { ascending: false })
-        .limit(8),
+      logsQuery.order('week_start_date', { ascending: false }).limit(8),
       supabase
         .from(EXPERIMENTS_TABLE)
         .select('weekly_log_id')
@@ -269,6 +271,7 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
         .select('id,experiment_id,source_tool,claim_type,claim,evidence_level,result,status,policy_version,missing_evidence,next_action,unlocked_benefit,evaluation,decided_at,verified_at,updated_at')
         .eq('user_id', userId)
         .order('updated_at', { ascending: false }),
+      projectWeeksQuery,
     ]);
 
     if (sprintsRes.error) toast.error('Could not load your active channels.');
@@ -281,7 +284,12 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
       setRecentLogs(rows);
       setConsecutiveWeekCount(calculateConsecutiveLoggedWeeks(rows.map((row) => row.week_start_date)));
     }
-    if (!decisionsRes.error) setDecisionWeekCount(new Set((decisionsRes.data ?? []).map((row) => row.weekly_log_id)).size);
+    if (!decisionsRes.error && !projectWeeksRes.error) {
+      const projectWeeks = new Set(((projectWeeksRes.data ?? []) as Array<{ id: string }>).map((row) => row.id));
+      setDecisionWeekCount(new Set((decisionsRes.data ?? [])
+        .map((row) => row.weekly_log_id)
+        .filter((id): id is string => Boolean(id) && projectWeeks.has(id as string))).size);
+    }
     if (!claimsRes.error) setVerificationClaims((claimsRes.data ?? []).map((row: Record<string, unknown>) => mapVerificationClaim(row)));
     setLoading(false);
   };
@@ -294,7 +302,9 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
   useEffect(() => {
     if (!userId) return;
     let active = true;
-    void listJourneyAssumptions()
+    // The assumptions this startup is testing, not every project's.
+    void loadActiveProjectId(userId)
+      .then((projectId) => listJourneyAssumptions(undefined, projectId))
       .then((items) => { if (active) setJourneyAssumptions(Array.isArray(items) ? items : []); })
       .catch(() => { if (active) setJourneyAssumptions([]); });
     return () => { active = false; };
@@ -547,35 +557,15 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
   };
 
   // The week and its experiments are written in one transaction by
-  // save_traction_week. Until that migration is applied, the previous
-  // three-step write is used, and a failed experiment insert is reported.
+  // save_traction_week, in the project named in the log (one week per
+  // project since 20261123180000).
   const persistWeek = async (logPayload: Record<string, unknown>, experimentRows: Array<Record<string, unknown>>) => {
     const { data, error } = await supabase.rpc('save_traction_week' as never, {
       p_log: logPayload,
       p_experiments: experimentRows,
     } as never);
-    if (!error && data) return data as unknown as string;
-    if (!isMissingFunction(error)) throw error ?? new Error('Could not save this week.');
-
-    const { data: log, error: logError } = await supabase
-      .from(LOGS_TABLE)
-      .upsert({ ...logPayload, user_id: userId } as never, { onConflict: 'user_id,week_start_date' })
-      .select('id')
-      .single();
-    if (logError) throw logError;
-    const logId = (log as { id: string }).id;
-    const { error: deleteError } = await supabase.from(EXPERIMENTS_TABLE).delete().eq('weekly_log_id', logId);
-    if (deleteError) throw deleteError;
-    const { error: insertError } = await supabase
-      .from(EXPERIMENTS_TABLE)
-      .insert(experimentRows.map((row) => {
-        // A database without save_traction_week may also lack value_form; only
-        // send it when there is something to store.
-        const { value_form: valueForm, ...rest } = row as typeof row & { value_form?: string | null };
-        return { ...rest, ...(valueForm ? { value_form: valueForm } : {}), user_id: userId, weekly_log_id: logId };
-      }) as never);
-    if (insertError) throw insertError;
-    return logId;
+    if (error || !data) throw error ?? new Error('Could not save this week.');
+    return data as unknown as string;
   };
 
   const saveWeeklyLog = async () => {
@@ -600,6 +590,7 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
       // numbers; the database re-checks this against what it measured.
       const measuredWeek = isPlatformMeasured({ ...retention, cohortWeekStart }, appliedSignals);
       const logPayload = {
+        project_id: projectIdRef.current,
         week_start_date: currentWeekStart,
         new_users: retention.newUsers,
         seven_day_active_users: retention.sevenDayActiveUsers,
@@ -710,6 +701,7 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
             // The acquisition result above is founder entered. A separately
             // platform-verified retention snapshot cannot upgrade this signal.
             verificationMode: 'founder_reported',
+            projectId: projectIdRef.current,
           })));
         } catch (assumptionError) {
           console.warn('Traction was saved, but its ICP assumption feedback will retry later:', assumptionError);
@@ -729,10 +721,12 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
         source: 'traction_engine',
       });
 
-      const { data: ledgerLogs, error: ledgerError } = await supabase
+      let ledgerQuery = supabase
         .from(LOGS_TABLE)
         .select('id,week_start_date,new_users,combined_score,seven_day_active_users,thirty_day_active_users,revenue,score_breakdown')
-        .eq('user_id', userId)
+        .eq('user_id', userId);
+      if (projectIdRef.current) ledgerQuery = ledgerQuery.eq('project_id', projectIdRef.current);
+      const { data: ledgerLogs, error: ledgerError } = await ledgerQuery
         .order('week_start_date', { ascending: false })
         .limit(6);
       if (ledgerError) throw ledgerError;

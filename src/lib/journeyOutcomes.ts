@@ -291,9 +291,10 @@ export async function registerJourneyAssumptions(sourceArtifactId: string, state
   return data.assumptions as JourneyAssumption[];
 }
 
-export async function listJourneyAssumptions(sourceArtifactId?: string) {
+/** One ICP's assumptions, or (without an ICP) the project's. */
+export async function listJourneyAssumptions(sourceArtifactId?: string, projectId?: string | null) {
   const { data, error } = await supabase.functions.invoke("journey-outcome-service", {
-    body: { action: "list_assumptions", sourceArtifactId },
+    body: { action: "list_assumptions", sourceArtifactId, projectId: projectId ?? undefined },
   });
   if (error) throw error;
   if (!data?.ok) throw new Error(data?.error || "Could not load ICP assumptions.");
@@ -308,6 +309,8 @@ export async function recordJourneyAssumptionSignal(input: {
   status: "confirmed" | "rejected";
   rationale?: string;
   verificationMode?: Exclude<VerificationMode, "unverified">;
+  /** The startup the signal belongs to; each one tests its own assumptions. */
+  projectId?: string | null;
 }) {
   const { data, error } = await supabase.functions.invoke("journey-outcome-service", {
     body: { action: "record_assumption_signal", ...input },

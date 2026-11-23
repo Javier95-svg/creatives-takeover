@@ -20,6 +20,7 @@
  */
 
 import { supabase } from "@/integrations/supabase/client";
+import { loadActiveProjectId } from "@/lib/activeProject";
 import type { JourneyHandoff, JourneyTool } from "@/lib/journeyOutcomes";
 
 /** Flat, defensively narrowed view of a handoff payload. */
@@ -75,17 +76,24 @@ export function readHandoffPrefill(handoff: JourneyHandoff | null | undefined): 
 
 /**
  * Pending handoffs waiting for this tool, newest first. RLS scopes rows to the
- * caller, so no user_id filter is applied here.
+ * caller, so no user_id filter is applied here. Handoffs carry their project
+ * (20261123180000): only the open startup's are offered, so one startup's
+ * ICP never prefills another startup's tool.
  */
 export async function listInboundHandoffs(
   destinationTool: JourneyTool,
   limit = 5,
 ): Promise<JourneyHandoff[]> {
-  const { data, error } = await (supabase as any)
+  const { data: session } = await supabase.auth.getSession();
+  const userId = session.session?.user.id;
+  const projectId = userId ? await loadActiveProjectId(userId) : null;
+  let query = (supabase as any)
     .from("journey_handoffs")
     .select("id,source_outcome_id,source_version_id,destination_tool,payload,status,consumed_artifact_id,created_at")
     .eq("destination_tool", destinationTool)
-    .eq("status", "pending")
+    .eq("status", "pending");
+  if (projectId) query = query.eq("project_id", projectId);
+  const { data, error } = await query
     .order("created_at", { ascending: false })
     .limit(limit);
   if (error) throw error;

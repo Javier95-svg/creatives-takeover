@@ -117,7 +117,7 @@ export default function PMFLabPage() {
   const startNewCase = (label?: string | null) => {
     if (!user || creatingCaseRef.current) return;
     creatingCaseRef.current = true;
-    void ensurePrebuildContext({ userId: user.id, explicitlyUnscoped: true, label: label ?? null, sourceTool: 'pmf_lab' })
+    void ensurePrebuildContext({ userId: user.id, explicitlyUnscoped: true, label: label ?? null, sourceTool: 'pmf_lab', projectId: projectContext.projectId })
       .then((context) => {
         setContexts((items) => [context, ...(items ?? [])]);
         selectContext(context);
@@ -129,10 +129,18 @@ export default function PMFLabPage() {
   const [newIdeaOpen, setNewIdeaOpen] = useState(false);
   const [newIdeaName, setNewIdeaName] = useState('');
 
+  // Only this startup's evidence cases (project_id since 20261123180000). The
+  // list is cleared first on a switch so the previous startup's first case is
+  // never picked automatically.
   useEffect(() => {
-    if (!user) return;
-    void listPrebuildContexts(user.id).then(setContexts).catch(() => setContexts([]));
-  }, [user]);
+    if (!user || projectContext.isLoading) return;
+    let active = true;
+    setContexts(null);
+    void listPrebuildContexts(user.id, projectContext.projectId)
+      .then((items) => { if (active) setContexts(items); })
+      .catch(() => { if (active) setContexts([]); });
+    return () => { active = false; };
+  }, [user, projectContext.projectId, projectContext.isLoading]);
 
   useEffect(() => {
     if (!user || validationContextId || !icpParam) return;

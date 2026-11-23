@@ -53,6 +53,12 @@ const authenticUrl = (value: unknown) => {
     return false;
   }
 };
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+/** A project id from the request. Queries also filter by user, so another account's id finds nothing. */
+const projectIdValue = (value: unknown) => {
+  const id = textValue(value, 100);
+  return UUID_PATTERN.test(id) ? id : null;
+};
 const normalizeAssumption = (value: unknown) => textValue(value, 500).toLowerCase().replace(/\s+/g, ' ');
 const fingerprintAssumption = async (value: unknown) => {
   const normalized = normalizeAssumption(value);
@@ -348,8 +354,15 @@ serve(async (req) => {
       if (!sourceArtifactId || statements.length === 0) {
         return json({ error: 'Source artifact and at least one assumption are required' }, 400);
       }
+      // Assumptions belong to the ICP's project: the same statement can be
+      // tested separately in two startups (unique per project since 20261123180000).
+      const { data: sourceIcp } = UUID_PATTERN.test(sourceArtifactId)
+        ? await supabase.from('icp_analysis_results').select('project_id').eq('id', sourceArtifactId).eq('user_id', user.id).maybeSingle()
+        : { data: null };
+      const projectId = projectIdValue(sourceIcp?.project_id);
       const rows = await Promise.all(statements.slice(0, 25).map(async (statement) => ({
         user_id: user.id,
+        ...(projectId ? { project_id: projectId } : {}),
         source_artifact_id: sourceArtifactId,
         fingerprint: await fingerprintAssumption(statement),
         statement,
@@ -359,13 +372,15 @@ serve(async (req) => {
         latest_rationale: 'Registered from the original ICP decision.',
       })));
       const { error: insertError } = await supabase.from('journey_assumptions').upsert(rows, {
-        onConflict: 'user_id,fingerprint', ignoreDuplicates: true,
+        onConflict: 'user_id,project_id,fingerprint', ignoreDuplicates: true,
       });
       if (insertError) throw insertError;
-      const { data, error } = await supabase.from('journey_assumptions')
+      let registered = supabase.from('journey_assumptions')
         .select('id,fingerprint,statement,status,current_version,source_artifact_id')
         .eq('user_id', user.id)
         .in('fingerprint', rows.map((row) => row.fingerprint));
+      if (projectId) registered = registered.eq('project_id', projectId);
+      const { data, error } = await registered;
       if (error) throw error;
       return json({ ok: true, assumptions: data ?? [] });
     }
@@ -377,7 +392,9 @@ serve(async (req) => {
         .eq('user_id', user.id)
         .order('updated_at', { ascending: false })
         .limit(50);
+      const projectId = projectIdValue(body.projectId);
       if (sourceArtifactId) query = query.eq('source_artifact_id', sourceArtifactId);
+      else if (projectId) query = query.eq('project_id', projectId);
       const { data, error } = await query;
       if (error) throw error;
       return json({ ok: true, assumptions: data ?? [] });
@@ -394,8 +411,14 @@ serve(async (req) => {
         || !sourceArtifactId || !participantFingerprint || !['confirmed', 'rejected'].includes(status)) {
         return json({ error: 'A mapped assumption, independent signal, source, and confirmed or rejected status are required' }, 400);
       }
-      const { data: assumption, error: assumptionError } = await supabase.from('journey_assumptions')
-        .select('id,source_artifact_id').eq('user_id', user.id).eq('fingerprint', assumptionFingerprint).single();
+      // The same statement can exist once per startup: take the one in the
+      // project the signal came from, else the most recently used.
+      const projectId = projectIdValue(body.projectId);
+      let assumptionQuery = supabase.from('journey_assumptions')
+        .select('id,source_artifact_id').eq('user_id', user.id).eq('fingerprint', assumptionFingerprint);
+      if (projectId) assumptionQuery = assumptionQuery.eq('project_id', projectId);
+      const { data: assumption, error: assumptionError } = await assumptionQuery
+        .order('updated_at', { ascending: false }).limit(1).maybeSingle();
       if (assumptionError || !assumption) return json({ error: 'The selected ICP assumption was not found' }, 404);
       const { error: signalError } = await supabase.from('journey_assumption_signals').upsert({
         user_id: user.id,

@@ -26,8 +26,9 @@ const PMF_SELECT = 'pmf_score, analysis_data';
 /**
  * Evidence for this draft, never another startup's: the PMF result scored
  * against this draft (else its project's current one), and signups on this
- * project's demo pages. Traction logs and MVP visitors are not stored per
- * project yet, so they are shown only when the account has one project.
+ * project's demo pages, and this project's latest traction week. MVP
+ * visitors are not stored per project yet, so they are shown only when the
+ * account has one project.
  */
 async function loadScopedEvidence(userId: string, icpAnalysisId: string) {
   const { data: draft } = await supabase
@@ -80,18 +81,17 @@ async function loadScopedEvidence(userId: string, icpAnalysisId: string) {
     signupCount = count ?? 0;
   }
 
-  const [demoRes, tractionRes] = singleProject
-    ? await Promise.all([
-        supabase.rpc('get_mvp_retention_snapshot' as never),
-        supabase
-          .from('traction_engine_weekly_logs' as never)
-          .select('primary_acquisition_channel,channel_quality_signal,prioritized_recommendation')
-          .eq('user_id', userId)
-          .order('week_start_date', { ascending: false })
-          .limit(1)
-          .maybeSingle(),
-      ])
-    : [{ data: null }, { data: null }];
+  // Weekly logs carry their project (20261123180000), so traction is read
+  // from this ICP's startup. The MVP retention snapshot is still account-wide.
+  let tractionQuery = supabase
+    .from('traction_engine_weekly_logs' as never)
+    .select('primary_acquisition_channel,channel_quality_signal,prioritized_recommendation')
+    .eq('user_id', userId);
+  if (projectId) tractionQuery = tractionQuery.eq('project_id', projectId);
+  const [demoRes, tractionRes] = await Promise.all([
+    singleProject ? supabase.rpc('get_mvp_retention_snapshot' as never) : Promise.resolve({ data: null }),
+    tractionQuery.order('week_start_date', { ascending: false }).limit(1).maybeSingle(),
+  ]);
 
   return { pmfRes, demoRes, waitlistRes: { count: signupCount }, tractionRes };
 }

@@ -1,9 +1,11 @@
 import { supabase } from '@/integrations/supabase/client';
+import { loadActiveProjectId } from '@/lib/activeProject';
 import { captureEvent } from '@/lib/analytics';
 
 export interface PrebuildValidationContext {
   id: string;
   user_id: string;
+  project_id?: string | null;
   icp_analysis_id: string | null;
   label: string | null;
   is_explicitly_unscoped: boolean;
@@ -19,6 +21,8 @@ export async function ensurePrebuildContext(input: {
   label?: string | null;
   explicitlyUnscoped?: boolean;
   sourceTool?: 'icp_builder' | 'demo_studio' | 'pmf_lab';
+  /** For a case without an ICP; defaults to the project the founder has open. */
+  projectId?: string | null;
 }): Promise<PrebuildValidationContext> {
   const icpAnalysisId = input.explicitlyUnscoped ? null : input.icpAnalysisId ?? null;
 
@@ -33,10 +37,14 @@ export async function ensurePrebuildContext(input: {
     if (existing) return existing as unknown as PrebuildValidationContext;
   }
 
+  // A case built on an ICP takes the ICP's project in the database; one
+  // without an ICP is filed under the project the founder has open.
+  const projectId = icpAnalysisId ? null : input.projectId ?? await loadActiveProjectId(input.userId);
   const { data, error } = await supabase
     .from(CONTEXT_TABLE)
     .insert({
       user_id: input.userId,
+      ...(projectId ? { project_id: projectId } : {}),
       icp_analysis_id: icpAnalysisId,
       // Unnamed cases are shown by their start date (see evidenceCaseLabels).
       label: input.label?.trim() || null,
@@ -65,13 +73,15 @@ export async function ensurePrebuildContext(input: {
   return data as unknown as PrebuildValidationContext;
 }
 
-export async function listPrebuildContexts(userId: string): Promise<PrebuildValidationContext[]> {
-  const { data, error } = await supabase
+/** The evidence cases of one startup (all of them for an account without projects). */
+export async function listPrebuildContexts(userId: string, projectId?: string | null): Promise<PrebuildValidationContext[]> {
+  let query = supabase
     .from(CONTEXT_TABLE)
     .select('*')
     .eq('user_id', userId)
-    .eq('status', 'active')
-    .order('created_at', { ascending: false });
+    .eq('status', 'active');
+  if (projectId) query = query.eq('project_id', projectId);
+  const { data, error } = await query.order('created_at', { ascending: false });
   if (error) throw error;
   return (data ?? []) as unknown as PrebuildValidationContext[];
 }

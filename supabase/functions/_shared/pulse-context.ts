@@ -59,7 +59,8 @@ export interface PulseMemoryContext {
 }
 
 const MEMORY_PROVENANCE = 'The project\'s decision history: entries the founder saved in Pulse or onboarding, and entries recorded when they saved a result in a CT tool. Each item names its source; evidence says whether it is an untested assumption, reported by the founder, or measured by the platform. Only "verified" is measured evidence.';
-const ASSUMPTION_PROVENANCE = 'Assumptions recorded by CT tools for this account (untested or confirmed), not project-specific proof.';
+const ASSUMPTION_PROVENANCE = 'Assumptions recorded by CT tools for this project (untested or confirmed). Confirmed means founder-logged signals agreed, not proof.';
+const ACCOUNT_ASSUMPTION_PROVENANCE = 'Assumptions recorded by CT tools for this account (untested or confirmed), not project-specific proof.';
 
 type MemoryRow = {
   id: string; kind: string; text: string; due_on: string | null; last_asked_on: string | null; created_at: string | null;
@@ -79,7 +80,11 @@ export async function loadPulseMemory(db: SupabaseClient, userId: string, projec
       ? db.from('pulse_memories').select(fields).eq('user_id', userId).eq('project_id', projectId).eq('status', 'active').order('updated_at', { ascending: false }).limit(25)
       : Promise.resolve({ data: [], error: null }),
     db.from('pulse_memories').select(fields).eq('user_id', userId).is('project_id', null).eq('status', 'active').order('updated_at', { ascending: false }).limit(10),
-    db.from('journey_assumptions').select('statement,status,latest_source_tool,updated_at').eq('user_id', userId).in('status', ['untested', 'confirmed']).order('updated_at', { ascending: false }).limit(8),
+    // Each startup tests its own assumptions (project_id since 20261123180000).
+    (projectId
+      ? db.from('journey_assumptions').select('statement,status,latest_source_tool,updated_at').eq('user_id', userId).eq('project_id', projectId)
+      : db.from('journey_assumptions').select('statement,status,latest_source_tool,updated_at').eq('user_id', userId))
+      .in('status', ['untested', 'confirmed']).order('updated_at', { ascending: false }).limit(8),
     projectId
       ? db.from('pulse_memories').select(fields).eq('user_id', userId).eq('project_id', projectId).eq('status', 'needs_review').order('updated_at', { ascending: false }).limit(5)
       : Promise.resolve({ data: [], error: null }),
@@ -101,7 +106,7 @@ export async function loadPulseMemory(db: SupabaseClient, userId: string, projec
     dueCommitments,
     // Assumptions are an enhancement: if that table is unavailable, memory still loads.
     assumptions: assumptions.error ? null : {
-      provenance: ASSUMPTION_PROVENANCE,
+      provenance: projectId ? ASSUMPTION_PROVENANCE : ACCOUNT_ASSUMPTION_PROVENANCE,
       items: ((assumptions.data ?? []) as Data[]).map(row => ({ statement: String(row.statement ?? '').slice(0, 240), status: String(row.status),
         sourceTool: typeof row.latest_source_tool === 'string' ? row.latest_source_tool : null, updatedAt: typeof row.updated_at === 'string' ? row.updated_at : null })),
     },

@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import type { PMFInterviewLog } from '@/hooks/usePMFLab';
 import { supabase } from '@/integrations/supabase/client';
+import { loadActiveProjectId } from '@/lib/activeProject';
 import { captureEvent, trackPMFEvidenceLogged } from '@/lib/analytics';
 import { listJourneyAssumptions, type JourneyAssumption } from '@/lib/journeyOutcomes';
 import type { PMFInterviewLeadSeed } from '@/components/pmf/PMFDiscoveryPipeline';
@@ -65,7 +66,12 @@ export function PMFConversationsStep({
 
   useEffect(() => {
     let cancelled = false;
-    void listJourneyAssumptions(icpDraftId ?? undefined)
+    // The draft's assumptions; without a draft, the open startup's (never every project's).
+    const projectIdPromise = icpDraftId
+      ? Promise.resolve(null)
+      : supabase.auth.getSession().then(({ data }) => (data.session?.user.id ? loadActiveProjectId(data.session.user.id) : null));
+    void projectIdPromise
+      .then((projectId) => listJourneyAssumptions(icpDraftId ?? undefined, projectId))
       // Anything but a list (no rows, an RPC error shape) means no assumptions to test.
       .then((items) => { if (!cancelled) setAssumptions(Array.isArray(items) ? items : []); })
       .catch(() => { if (!cancelled) setAssumptions([]); });

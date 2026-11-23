@@ -47,7 +47,7 @@ export async function fetchJourneyEvidenceBrief(userId: string, scope: JourneyEv
   const contextRes = scope.validationContextId
     ? await supabase
       .from('prebuild_validation_contexts' as never)
-      .select('id,icp_analysis_id')
+      .select('id,icp_analysis_id,project_id')
       .eq('id', scope.validationContextId)
       .eq('user_id', userId)
       .maybeSingle()
@@ -78,9 +78,10 @@ export async function fetchJourneyEvidenceBrief(userId: string, scope: JourneyEv
   if (scope.validationContextId) pmfQuery = pmfQuery.eq('validation_context_id', scope.validationContextId);
 
   // GTM plans are not tied to an evidence case: use the current plan of the
-  // project this evidence case's ICP belongs to.
-  let projectId: string | null = null;
-  if (scopedIcpId) {
+  // evidence case's project (stored on the case since 20261123180000), else
+  // the project its ICP belongs to.
+  let projectId: string | null = asText(context.project_id);
+  if (!projectId && scopedIcpId) {
     const { data: icpProject } = await supabase
       .from('icp_analysis_results' as never)
       .select('project_id')

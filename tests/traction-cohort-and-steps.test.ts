@@ -76,13 +76,14 @@ test('the next step names the stop rule first, then first-time, then a logged we
   assert.equal(getTractionNextStep({ isFirstTime: false, savedThisWeek: false, triggeredChannel: null }), null);
 });
 
-test('a week is saved in one transaction, with the old path only as a fallback', () => {
+test('a week is saved in one transaction, in its project', () => {
   const page = readFileSync(new URL('../src/pages/TractionEnginePage.tsx', import.meta.url), 'utf8');
-  const sql = readFileSync(new URL('../supabase/migrations/20261004120000_traction_save_week.sql', import.meta.url), 'utf8');
+  // The live definition since project memory phase 4 (one week per project).
+  const sql = readFileSync(new URL('../supabase/migrations/20261123180000_project_scoped_evidence.sql', import.meta.url), 'utf8');
   assert.match(page, /supabase\.rpc\('save_traction_week'/);
-  assert.match(page, /if \(!isMissingFunction\(error\)\) throw error/);
-  assert.match(page, /if \(deleteError\) throw deleteError;/);
-  assert.match(sql, /SECURITY INVOKER/);
-  assert.match(sql, /ON CONFLICT \(user_id, week_start_date\) DO UPDATE/);
+  // The three-step fallback upserted on the old per-account key; it is gone.
+  assert.doesNotMatch(page, /isMissingFunction/);
+  assert.match(page, /project_id: projectIdRef\.current,\s+week_start_date: currentWeekStart/);
+  assert.match(sql, /ON CONFLICT \(user_id, project_id, week_start_date\) DO UPDATE/);
   assert.match(sql, /sprint\.user_id = v_user_id/);
 });

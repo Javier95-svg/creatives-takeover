@@ -16,6 +16,7 @@ import {
 } from '@/lib/pmfResultsTable';
 import { ensureMentorDemandNotification } from '@/lib/mentorDemandNotifications';
 import { trackActivity } from '@/lib/activity';
+import { loadActiveProjectId } from '@/lib/activeProject';
 import { captureEvent, trackToolOutputCreated } from '@/lib/analytics';
 import { markDiscoveryLeadsInterviewed } from '@/lib/pmfDiscoveryLeads';
 import {
@@ -528,7 +529,8 @@ export function usePMFLab(scope?: PMFArtifactScope | null) {
           Boolean(interview.assumptionFingerprint && interview.assumptionStatus)
         ));
         if (mappedInterviewSignals.length > 0) {
-          void Promise.all(mappedInterviewSignals.map((interview) => recordJourneyAssumptionSignal({
+          // Each startup tests its own copy of an assumption.
+          void loadActiveProjectId(user.id).then((projectId) => Promise.all(mappedInterviewSignals.map((interview) => recordJourneyAssumptionSignal({
             assumptionFingerprint: interview.assumptionFingerprint!,
             sourceTool: 'pmf_lab',
             sourceArtifactId: data.analysisId,
@@ -536,7 +538,8 @@ export function usePMFLab(scope?: PMFArtifactScope | null) {
             status: interview.assumptionStatus!,
             rationale: interview.mainFeedback,
             verificationMode: 'founder_reported',
-          }))).catch((assumptionError) => console.warn('Could not update ICP assumption evidence:', assumptionError));
+            projectId,
+          })))).catch((assumptionError) => console.warn('Could not update ICP assumption evidence:', assumptionError));
         }
         void upsertJourneyOutcome({
           userId: user.id,

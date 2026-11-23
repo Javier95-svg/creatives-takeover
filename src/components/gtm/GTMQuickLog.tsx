@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { DECISION_LABELS } from '@/components/traction/TractionExperimentCard';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { loadActiveProjectId } from '@/lib/activeProject';
 import { captureEvent } from '@/lib/analytics';
 import { buildQuickLogPayload, readinessForQuickLog } from '@/lib/gtmQuickLog';
 import type { GTMPlanV2, GTMPlay } from '@/lib/gtmV2';
@@ -55,10 +56,14 @@ export default function GTMQuickLog({ plan, planId, play, onUpdatePlay, onLogged
     setSaving(true);
     try {
       const weekStart = getCurrentWeekStart();
-      const { data: existing } = await (supabase as any)
-        .from('traction_engine_weekly_logs')
-        .select('id')
-        .eq('user_id', user.id)
+      // The week belongs to the plan's startup (one week per project since 20261123180000).
+      const { data: planRow } = await (supabase as any).from('gtm_plans').select('project_id').eq('id', planId).maybeSingle();
+      const projectId: string | null = (planRow as { project_id?: string | null } | null)?.project_id ?? await loadActiveProjectId(user.id);
+      const weeksOf = (columns: string) => {
+        const query = (supabase as any).from('traction_engine_weekly_logs').select(columns).eq('user_id', user.id);
+        return projectId ? query.eq('project_id', projectId) : query;
+      };
+      const { data: existing } = await weeksOf('id')
         .eq('week_start_date', weekStart)
         .maybeSingle();
       if (existing) {
@@ -66,7 +71,7 @@ export default function GTMQuickLog({ plan, planId, play, onUpdatePlay, onLogged
         return;
       }
       const [{ data: previous }, { data: sprint }] = await Promise.all([
-        (supabase as any).from('traction_engine_weekly_logs').select('week_start_date, combined_score').eq('user_id', user.id)
+        weeksOf('week_start_date, combined_score')
           .order('week_start_date', { ascending: false }).limit(12),
         (supabase as any).from('traction_engine_sprints').select('activation_payload').eq('id', play.tractionSprintId).maybeSingle(),
       ]);
@@ -85,7 +90,7 @@ export default function GTMQuickLog({ plan, planId, play, onUpdatePlay, onLogged
         previousLogs: (previous ?? []) as Array<{ week_start_date: string; combined_score: number | null }>,
       });
       const { data: logId, error } = await supabase.rpc('save_traction_week' as never, {
-        p_log: payload.logPayload,
+        p_log: { ...payload.logPayload, project_id: projectId },
         p_experiments: payload.experimentRows,
       } as never);
       if (error || !logId) throw error ?? new Error('Could not save this week.');

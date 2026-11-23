@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { loadActiveProjectId } from '@/lib/activeProject';
 import { isCompletionChainEnabled } from '@/lib/completionChain';
 import { FOUNDER_TOOLS_BY_KEY, type FounderToolKey } from '@/config/founderToolCatalog';
 
@@ -11,9 +12,13 @@ export default function CompletionChainResume() {
   const { data, isError, refetch } = useQuery({
     queryKey: ['completion-chain-resume', user?.id], enabled: enabled && Boolean(user), staleTime: 10_000,
     queryFn: async () => {
-      const result = await (supabase as any).from('journey_handoffs')
+      // Only the open startup's next steps (handoffs carry project_id since 20261123180000).
+      const projectId = await loadActiveProjectId(user!.id);
+      let query = (supabase as any).from('journey_handoffs')
         .select('id,destination_tool,payload,status').eq('user_id', user!.id)
-        .in('status', ['pending', 'failed']).order('created_at', { ascending: false }).limit(20);
+        .in('status', ['pending', 'failed']);
+      if (projectId) query = query.eq('project_id', projectId);
+      const result = await query.order('created_at', { ascending: false }).limit(20);
       if (result.error) throw result.error;
       return result.data as Array<{ id: string; destination_tool: FounderToolKey; payload: { destinationRoute?: string } }>;
     },

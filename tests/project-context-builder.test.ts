@@ -39,7 +39,11 @@ function fixture() {
   db.tables.pmf_analysis_results = [{ id: 'pmf-a', user_id: 'owner', project_id: a, superseded_at: null, pmf_score: 58, verdict: 'narrow', analysis_data: { decision: 'narrow', summaryInsight: 'Only small orchards felt it weekly' } }];
   db.tables.gtm_plans = [{ id: 'gtm-a', project_id: a, user_id: 'owner', superseded_at: null, plan_content: { primary_channel: 'Farm cooperatives' } }];
   db.tables.pulse_memories = [{ id: 'm1', user_id: 'owner', project_id: a, kind: 'decision', text: 'Start with orchards under 50 acres', status: 'active', created_at: '2026-11-01' }];
-  db.tables.journey_assumptions = [{ user_id: 'owner', statement: 'Farmers will pay per shipment', status: 'untested', latest_source_tool: 'icp_builder' }];
+  // Assumptions belong to a project since phase 4; the other startup's never appears.
+  db.tables.journey_assumptions = [
+    { user_id: 'owner', project_id: a, statement: 'Farmers will pay per shipment', status: 'untested', latest_source_tool: 'icp_builder' },
+    { user_id: 'owner', project_id: b, statement: 'WRONG PROJECT assumption', status: 'untested', latest_source_tool: 'icp_builder' },
+  ];
   return db;
 }
 
