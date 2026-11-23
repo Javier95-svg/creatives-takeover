@@ -367,17 +367,19 @@ const ServiceMarketplaceHub = () => {
                   {Array.from({ length: 4 }, (_, index) => (
                     <div
                       key={index}
-                      className="grid gap-5 rounded-2xl border border-border bg-card p-5 md:grid-cols-[240px_minmax(0,1fr)] xl:grid-cols-[280px_minmax(0,1fr)_210px]"
+                      className="flex flex-col overflow-hidden rounded-2xl border border-border bg-card"
                     >
-                      <Skeleton className="aspect-[4/1] w-full rounded-xl" />
+                      <Skeleton className="aspect-[4/1] w-full rounded-none" />
+                      <div className="grid gap-5 p-5 md:grid-cols-[minmax(0,1fr)_210px]">
                       <div className="space-y-3">
                         <Skeleton className="h-6 w-1/2" />
                         <Skeleton className="h-4 w-1/3" />
                         <Skeleton className="h-14 w-full" />
                       </div>
-                      <div className="space-y-2 md:col-span-2 xl:col-span-1">
+                      <div className="space-y-2">
                         <Skeleton className="h-11 w-full" />
                         <Skeleton className="h-11 w-full" />
+                      </div>
                       </div>
                     </div>
                   ))}
