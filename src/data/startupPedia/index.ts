@@ -1,11 +1,14 @@
+import { acceleratorGuideEntries } from "./entries/acceleratorGuides.ts";
 import { businessModelEntries } from "./entries/businessModels.ts";
 import { cofounderEntries } from "./entries/cofounders.ts";
 import { customerEntries } from "./entries/customers.ts";
+import { firstCustomerEntries } from "./entries/firstCustomers.ts";
 import { fundraisingEntries } from "./entries/fundraising.ts";
 import { growthEntries } from "./entries/growth.ts";
 import { metricEntries } from "./entries/metrics.ts";
 import { productEntries } from "./entries/product.ts";
 import { programEntries } from "./entries/programs.ts";
+import { raisingEntries } from "./entries/raising.ts";
 import { validationEntries } from "./entries/validation.ts";
 import { PEDIA_TOPICS } from "./topics.ts";
 import type { PediaEntry, PediaTopicKey } from "./types.ts";
@@ -35,7 +38,10 @@ export const PEDIA_ENTRIES: PediaEntry[] = [
   ...businessModelEntries,
   ...cofounderEntries,
   ...fundraisingEntries,
+  ...raisingEntries,
   ...programEntries,
+  ...acceleratorGuideEntries,
+  ...firstCustomerEntries,
 ];
 
 /** A topic page is listed and indexable only once it has this many entries. */

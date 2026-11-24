@@ -136,6 +136,16 @@ export const growthEntries: PediaEntry[] = [
         body: "For software, the same approach applies, with two additions. Offer a personal setup call for every early account, because activation is where most SaaS users drop off. And watch for the moment users first get value, then shorten the path to it. Your first 10 paying customers will teach you more than your first 1,000 free signups.",
       },
       {
+        id: "niche-no-budget",
+        heading: "In a niche market with no advertising budget",
+        body: "A niche is an advantage at this stage: the people you need are few, but they are easy to name and they gather in a small number of places. Instead of asking \"how do I get noticed?\", list the 50 to 100 specific people or businesses who fit your [ideal customer profile](/startup-pedia/ideal-customer-profile) and contact them one by one. Trade associations, niche newsletters, local meetups, supplier directories and the forums where they ask for help are usually free to join. Offer something useful for free, such as a template, a benchmark or a short audit, so your first message gives value instead of asking for it. If you cannot find 50 named prospects, the niche may be too small, or you have not yet worked out where it gathers. [How to find customers to talk to](/startup-pedia/how-to-find-customers-to-talk-to) covers the search.",
+      },
+      {
+        id: "b2b-first-customers",
+        heading: "For B2B: your first ten customers",
+        body: "In business-to-business products, your first customers are usually won by a founder, not by a channel. Paul Graham describes how Stripe's founders would not wait for a prospect to sign up later: they would ask to install the product on the spot, a technique Y Combinator calls the \"Collison installation\". The same essay notes that at least one founder, usually the CEO, will have to spend a lot of time on sales. Work a short list of accounts, offer a paid pilot with a clear outcome and set the product up yourself. [Sales for technical founders](/startup-pedia/sales-for-technical-founders) explains the process if selling is new to you, and [built it and nobody came](/startup-pedia/built-it-nobody-came) helps if signups are not turning into customers.",
+      },
+      {
         id: "example",
         heading: "Example",
         body: "A founder building a client portal for wedding photographers spends three weeks answering questions in two photographer communities and a popular forum. She shares a free contract checklist, messages 60 photographers whose posts mention client admin, and sets up every new account on a 15-minute call. Week by week she reaches 14, then 37, then 61 and then 102 users. Most come from the forum and from referrals, so she drops the other channels and doubles down there.",
@@ -161,18 +171,22 @@ export const growthEntries: PediaEntry[] = [
         question: "Should I launch on Product Hunt to get first users?",
         answer: "Only if your audience is there and you have prepared. Many startups get more from niche communities first. See the Product Hunt launch guide.",
       },
+      {
+        question: "How do you get your first customers in a niche market with no advertising budget?",
+        answer: "List the 50 to 100 specific people or businesses who fit your customer profile, find the associations, newsletters and forums they use, and contact them one by one with something useful.",
+      },
     ],
     sources: [
       { title: "Do Things That Don't Scale", publisher: "Paul Graham", url: "https://paulgraham.com/ds.html" },
     ],
-    relatedSlugs: ["go-to-market-strategy", "cold-email-for-startups", "product-hunt-launch-guide", "startup-launch-checklist"],
+    relatedSlugs: ["how-to-find-customers-to-talk-to", "sales-for-technical-founders", "built-it-nobody-came", "cold-email-for-startups"],
     cta: {
       label: "Plan your channels",
       href: "/go-to-market",
       description: "GTM Strategist recommends channels and messaging for reaching your first customers.",
     },
     publishedAt: "2026-06-06",
-    modifiedAt: "2026-10-25",
+    modifiedAt: "2026-11-23",
     legacySlugs: ["how-to-get-first-100-users", "first-users-for-saas"],
   },
   {

@@ -323,9 +323,14 @@ export const programEntries: PediaEntry[] = [
         body: "- **Structure:** follow a step-by-step method for [validation](/startup-pedia/how-to-validate-a-startup-idea), building an [MVP](/startup-pedia/minimum-viable-product) and going to market, with your own weekly deadlines.\n- **Mentorship:** find two or three mentors with experience in your market and meet them regularly with specific questions.\n- **Peer accountability:** join or form a small group of founders at a similar stage who share goals and results every week.\n- **Funding:** approach angels and pre-seed funds directly. See [how to find investors](/startup-pedia/how-to-find-investors). Grants and revenue are also options.\n- **Credibility:** traction is the strongest credential. Customer results, a growing user base and public progress speak louder than a program logo.\n- **Investor access:** build relationships over time with updates on your progress, before you need the money.",
       },
       {
+        id: "no-equity-options",
+        heading: "Free and no-equity alternatives to Y Combinator and Founder Institute",
+        body: "If the equity or the fee is what puts you off, some programs take neither. Terms below were checked on each program's own site in November 2026:\n\n- [Startup School](https://www.startupschool.org/) is Y Combinator's free online course. It takes about seven weeks at one to two hours a week and includes weekly progress check-ins and co-founder matching.\n- [Creative Destruction Lab](/insighta/accelerator/creative-destruction-lab) takes no equity and charges no fees, though it offers no guaranteed investment.\n- [FoundersBoost](/insighta/accelerator/foundersboost) runs a six-week pre-accelerator with no equity and no fees.\n- [Google for Startups Accelerator](/insighta/accelerator/google-for-startups-accelerator) is equity-free and gives product credits rather than cash.\n- [Start-Up Chile](/insighta/accelerator/start-up-chile) provides equity-free funding.\n- University programs such as [MIT delta v](/insighta/accelerator/mit-delta-v) ($75,000 equity-free) and [StartX](/insighta/accelerator/startx) (no equity, no fees) serve their own students and alumni.\n\nFor comparison, [Founder Institute](/insighta/accelerator/founder-institute) charges an entrance fee and takes a warrant for 2.5% of future equity, and [Y Combinator](/insighta/accelerator/y-combinator) invests $500,000 for 7% plus an uncapped SAFE. [Equity vs no-equity accelerators](/startup-pedia/equity-vs-no-equity-accelerator) explains the trade-off.",
+      },
+      {
         id: "after-rejection",
         heading: "If an accelerator rejected you",
-        body: "Rejection usually reflects timing, evidence or fit rather than a final verdict. Ask for feedback if the program offers it, then spend the next few months producing the evidence that was missing: sharper [ICP](/startup-pedia/ideal-customer-profile), real customer interviews, a working product and early traction. Many founders apply again with a much stronger application, and some find they no longer need to.",
+        body: "Rejection usually reflects timing, evidence or fit rather than a final verdict. Many programs give no feedback: Y Combinator, for example, only gives feedback to companies it invited to interview. It also says that in a typical batch about half the companies applied more than once before being accepted. Spend the next few months producing the evidence that was missing: a sharper [ICP](/startup-pedia/ideal-customer-profile), real customer interviews, a working product and early traction. Then reapply with a much stronger application, or find you no longer need to. [Rejected from an accelerator: what next](/startup-pedia/rejected-from-an-accelerator-what-next) has a step-by-step plan.",
       },
       {
         id: "when-to-join",
@@ -359,15 +364,18 @@ export const programEntries: PediaEntry[] = [
     ],
     sources: [
       { title: "YC's Essential Startup Advice", publisher: "Y Combinator", url: "https://www.ycombinator.com/blog/ycs-essential-startup-advice" },
+      { title: "Frequently Asked Questions", publisher: "Y Combinator", url: "https://www.ycombinator.com/faq" },
+      { title: "Startup School", publisher: "Y Combinator", url: "https://www.startupschool.org/" },
+      { title: "Founder Institute equity", publisher: "Founder Institute", url: "https://fi.co/equity" },
     ],
-    relatedSlugs: ["how-to-validate-a-startup-idea", "how-to-find-investors", "ideal-customer-profile", "startup-funding-stages"],
+    relatedSlugs: ["equity-vs-no-equity-accelerator", "rejected-from-an-accelerator-what-next", "accelerator-terms-explained", "how-to-find-investors"],
     cta: {
       label: "Follow the startup development cycle",
       href: "/bizmap-ai",
       description: "BizMap AI connects validation, ideal customer definition, MVP scoping and go-to-market planning in one guided cycle.",
     },
     publishedAt: "2026-05-17",
-    modifiedAt: "2026-10-25",
+    modifiedAt: "2026-11-23",
     legacySlugs: ["accelerator-alternatives"],
   },
   {

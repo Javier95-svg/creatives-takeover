@@ -17,6 +17,7 @@ import {
   legacyRedirects,
 } from "../src/data/startupPedia/index.ts";
 import { markdownToHtml } from "../src/lib/markdownToHtml.ts";
+import { getAcceleratorTerms } from "../src/data/acceleratorTerms.ts";
 
 const read = (path: string) => readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
 
@@ -118,7 +119,11 @@ test("a topic page is indexable only once it has enough entries", () => {
 
 test("internal links in entry bodies and CTAs point at real routes", () => {
   const app = read("src/App.tsx");
-  const routeExists = (path: string) => app.includes(`path="${path}"`);
+  // Literal routes, plus parameterised ones such as /insighta/accelerator/:slug.
+  const appRoutes = [...app.matchAll(/path="([^"*]+)"/g)].map(
+    ([, route]) => new RegExp(`^${route.replace(/[.+?^${}()|[\]\\]/g, "\\$&").replace(/:[^/]+/g, "[^/]+")}$`),
+  );
+  const routeExists = (path: string) => appRoutes.some((route) => route.test(path));
   for (const entry of PEDIA_ENTRIES) {
     const bodies = [...entry.sections.map((section) => section.body), ...(entry.steps || []).map((step) => step.body)];
     for (const body of bodies) {
@@ -127,6 +132,10 @@ test("internal links in entry bodies and CTAs point at real routes", () => {
           assert.ok(getEntry(href.split("/")[2]), `${entry.slug}: broken link ${href}`);
         } else {
           assert.ok(routeExists(href), `${entry.slug}: ${href} is not an app route`);
+          // Accelerator profiles are linked only when they have a public summary.
+          if (href.startsWith("/insighta/accelerator/")) {
+            assert.ok(getAcceleratorTerms(href.split("/")[3]), `${entry.slug}: ${href} has no public terms`);
+          }
         }
       }
     }

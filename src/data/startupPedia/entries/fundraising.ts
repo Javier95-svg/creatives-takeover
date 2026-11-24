@@ -560,6 +560,16 @@ export const fundraisingEntries: PediaEntry[] = [
         heading: "Prepare before you contact anyone",
         body: "Have your deck reviewed (see [pitch deck feedback](/startup-pedia/how-to-get-pitch-deck-feedback)), your key metrics ready and a short data room with incorporation documents, cap table and financials. Investors move faster when answers are ready.",
       },
+      {
+        id: "angels-or-vcs",
+        heading: "Angels or VCs first?",
+        body: "At pre-seed, most founders start with angels: individuals who can decide quickly and invest smaller amounts. [How to raise from angel investors](/startup-pedia/how-to-raise-from-angels) covers where to find them and how a round with several angels works. Venture funds come in when your evidence matches what they need to see; [what VCs look for](/startup-pedia/what-vcs-look-for) lists it. Filter both by stage and check size before you contact anyone: [VC Search](/vc-search) lets you do that for funds and angels.",
+      },
+      {
+        id: "no-and-silence",
+        heading: "When investors say no or go quiet",
+        body: "Expect many more noes than yeses, and expect silence. Paul Graham writes that some investors \"never actually do say no; they just stop replying to your emails\", and advises founders to treat every investor as a no until they make a definite offer with no contingencies. Follow up once with new progress, then move on. [Why investors say no](/startup-pedia/why-investors-say-no) explains the common reasons and what to change.",
+      },
     ],
     roleNotes: {
       mentor: "An introduction from a mentor is often a founder's best route to an investor. Make it when you can honestly vouch for the team.",
@@ -582,15 +592,16 @@ export const fundraisingEntries: PediaEntry[] = [
     sources: [
       { title: "A Guide to Seed Fundraising", publisher: "Y Combinator", url: "https://www.ycombinator.com/blog/how-to-raise-a-seed-round" },
       { title: "Tips on Formation and Fundraising", publisher: "Y Combinator", url: "https://www.ycombinator.com/blog/startup-formation-and-fundraising/" },
+      { title: "How to Raise Money", publisher: "Paul Graham", url: "https://paulgraham.com/fr.html" },
     ],
-    relatedSlugs: ["venture-capital-vs-private-equity", "pitch-deck-outline", "pre-seed-vs-seed-funding", "cold-email-for-startups"],
+    relatedSlugs: ["how-to-raise-from-angels", "why-investors-say-no", "what-vcs-look-for", "pitch-deck-outline"],
     cta: {
       label: "Build your investor shortlist",
       href: "/vc-search",
       description: "VC Search filters a venture capital database by stage, geography, sector and check size.",
     },
     publishedAt: "2026-06-06",
-    modifiedAt: "2026-10-25",
+    modifiedAt: "2026-11-23",
     legacySlugs: ["how-to-find-investors-for-startup", "vc-search-for-startups"],
   },
 ];

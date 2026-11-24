@@ -20,6 +20,15 @@ import {
 } from "../src/data/startupPedia/index.ts";
 import { markdownToHtml } from "../src/lib/markdownToHtml.ts";
 import { FOUNDER_ID_FAQS } from "../src/data/founderIdPage.ts";
+import {
+  ACCELERATOR_TERMS,
+  ACCELERATOR_TERMS_CHECKED_AT,
+  acceleratorProfilePath,
+  acceleratorTermRows,
+  acceleratorTermsTitle,
+  formatCheckedAt,
+  possessiveName,
+} from "../src/data/acceleratorTerms.ts";
 
 export const BASE_URL = "https://creatives-takeover.com";
 export const SITE_NAME = "Creatives Takeover";
@@ -208,6 +217,51 @@ const PEDIA_ENTRY_ROUTES = PEDIA_ENTRIES.map((entry) => {
 
 export const STARTUP_PEDIA_ROUTES = [PEDIA_HUB_ROUTE, ...PEDIA_TOPIC_ROUTES, ...PEDIA_ENTRY_ROUTES];
 
+// Accelerator profiles with terms checked on each program's own site
+// (src/data/acceleratorTerms.ts). The React page shows the same summary to
+// signed-out visitors; the full profile stays behind sign-in.
+const acceleratorBodyHtml = (terms) =>
+  [
+    `<h2>${escapeHtml(terms.name)} terms</h2>`,
+    `<dl>${acceleratorTermRows(terms).map(([label, value]) => `<dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value)}</dd>`).join("")}</dl>`,
+    terms.note ? `<p>${escapeHtml(terms.note)}</p>` : "",
+    `<p>Checked against ${escapeHtml(possessiveName(terms.name))} own website on ${formatCheckedAt()}. Terms change between cohorts, so confirm them on the official site before you apply.</p>`,
+    `<p>Before signing, read <a href="/startup-pedia/accelerator-terms-explained">how to read accelerator terms</a> and <a href="/startup-pedia/equity-vs-no-equity-accelerator">equity vs no-equity accelerators</a>.</p>`,
+  ].filter(Boolean).join("\n");
+
+export const ACCELERATOR_ROUTES = ACCELERATOR_TERMS.map((terms) => ({
+  path: acceleratorProfilePath(terms.slug),
+  title: acceleratorTermsTitle(terms),
+  description: truncateDescription(terms.summary),
+  changefreq: "monthly",
+  priority: 0.6,
+  lastmod: ACCELERATOR_TERMS_CHECKED_AT,
+  heroHeading: `${terms.name}: investment, equity and fees`,
+  heroCopy: terms.summary,
+  bodyHtml: acceleratorBodyHtml(terms),
+  sources: terms.sources.map((url) => ({ title: `${terms.name} official site`, publisher: terms.name, url })),
+  extraSchema: [
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      name: terms.name,
+      url: terms.sources[0],
+      description: terms.summary,
+    },
+  ],
+  breadcrumb: [
+    { name: "Home", url: "/" },
+    { name: "Accelerator Hunt", url: "/accelerator-hunt" },
+    { name: terms.name, url: acceleratorProfilePath(terms.slug) },
+  ],
+  relatedLinks: [
+    { href: "/accelerator-hunt", label: "Compare accelerators" },
+    { href: "/startup-pedia/accelerator-terms-explained", label: "How to read accelerator terms" },
+    { href: "/startup-pedia/equity-vs-no-equity-accelerator", label: "Equity vs no-equity accelerators" },
+    { href: "/startup-pedia/startup-accelerator-alternatives", label: "Accelerator alternatives" },
+  ],
+}));
+
 export const INDEXABLE_ROUTES = [
   {
     path: "/",
@@ -354,6 +408,7 @@ export const INDEXABLE_ROUTES = [
       "Browse practical tutorials, downloads, and startup learning resources designed to help founders move faster with less guesswork.",
   },
   ...STARTUP_PEDIA_ROUTES,
+  ...ACCELERATOR_ROUTES,
   {
     path: "/startup-guide",
     title: "How to Build a Startup: First-Time Founder Guide",
@@ -929,6 +984,9 @@ export const INDEXABLE_ROUTES = [
     heroHeading: "Startup Accelerator Search",
     heroCopy:
       "Search accelerator programs by location, focus area, funding, and fit to build a stronger application list.",
+    // Each public profile carries terms checked on the program's own site.
+    childLinksHeading: "Accelerator terms: investment, equity and fees",
+    childLinks: ACCELERATOR_TERMS.map((terms) => ({ href: acceleratorProfilePath(terms.slug), label: terms.summary })),
   },
   {
     path: "/pitch-deck-analyzer",

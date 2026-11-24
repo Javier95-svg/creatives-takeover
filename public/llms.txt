@@ -69,7 +69,7 @@ Founder plans are self-serve with no equity taken and no application required. I
 Plain-English reference entries on startup terms, metrics and frameworks, plus practical guides. Each entry is a standalone page.
 
 - [Startup Guide](https://creatives-takeover.com/startup-guide): End-to-end guide from idea to launch.
-- [Startup Pedia index](https://creatives-takeover.com/startup-pedia): All 55 entries, searchable by term, topic and role.
+- [Startup Pedia index](https://creatives-takeover.com/startup-pedia): All 67 entries, searchable by term, topic and role.
 
 ### Validation & customer discovery
 
@@ -80,6 +80,10 @@ Plain-English reference entries on startup terms, metrics and frameworks, plus p
 - [Waitlist or MVP: Which Should You Build First?](https://creatives-takeover.com/startup-pedia/waitlist-before-mvp)
 - [Signs Your Startup Idea Is Good (and When to Drop It)](https://creatives-takeover.com/startup-pedia/signs-your-startup-idea-is-good)
 - [Product-Market Fit Survey Questions for Early Startups](https://creatives-takeover.com/startup-pedia/product-market-fit-survey-questions)
+- [How to Find Customers to Talk To (Before You Build)](https://creatives-takeover.com/startup-pedia/how-to-find-customers-to-talk-to)
+- [How to Validate a B2B Startup Idea (Without It Being Awkward)](https://creatives-takeover.com/startup-pedia/how-to-validate-a-b2b-idea)
+- [Pre-Sales and Letters of Intent: Validation That Pays](https://creatives-takeover.com/startup-pedia/pre-sales-and-letters-of-intent)
+- [How to Find a Good Startup Idea](https://creatives-takeover.com/startup-pedia/how-to-find-a-startup-idea)
 
 ### Customers & positioning
 
@@ -106,6 +110,8 @@ Plain-English reference entries on startup terms, metrics and frameworks, plus p
 - [Cold Email for Startups: How to Write One That Gets Replies](https://creatives-takeover.com/startup-pedia/cold-email-for-startups)
 - [Product Hunt Launch Guide for Founders](https://creatives-takeover.com/startup-pedia/product-hunt-launch-guide)
 - [Startup Launch Checklist for First-Time Founders](https://creatives-takeover.com/startup-pedia/startup-launch-checklist)
+- [Sales for Technical Founders: How to Sell When You'd Rather Build](https://creatives-takeover.com/startup-pedia/sales-for-technical-founders)
+- [Built It and Nobody Came: How to Diagnose Why](https://creatives-takeover.com/startup-pedia/built-it-nobody-came)
 
 ### Metrics & progress tracking
 
@@ -141,6 +147,9 @@ Plain-English reference entries on startup terms, metrics and frameworks, plus p
 - [Pitch Deck Outline: What to Put on Each Slide](https://creatives-takeover.com/startup-pedia/pitch-deck-outline)
 - [How to Get Useful Pitch Deck Feedback](https://creatives-takeover.com/startup-pedia/how-to-get-pitch-deck-feedback)
 - [How to Find Investors for Your Startup](https://creatives-takeover.com/startup-pedia/how-to-find-investors)
+- [Why Investors Say No (or Just Stop Replying)](https://creatives-takeover.com/startup-pedia/why-investors-say-no)
+- [How to Raise Money From Angel Investors](https://creatives-takeover.com/startup-pedia/how-to-raise-from-angels)
+- [What Do VCs Look For in a Startup?](https://creatives-takeover.com/startup-pedia/what-vcs-look-for)
 
 ### Accelerators, incubators & mentors
 
@@ -152,6 +161,48 @@ Plain-English reference entries on startup terms, metrics and frameworks, plus p
 - [How to Measure Customer Discovery Progress](https://creatives-takeover.com/startup-pedia/measuring-customer-discovery-progress)
 - [How Mentors Track Founder Actions Between Sessions](https://creatives-takeover.com/startup-pedia/how-mentors-track-founder-progress)
 - [Accelerator vs Incubator: What Is the Difference?](https://creatives-takeover.com/startup-pedia/accelerator-vs-incubator)
+- [Equity vs No-Equity Accelerators: What's the Difference?](https://creatives-takeover.com/startup-pedia/equity-vs-no-equity-accelerator)
+- [How to Read Accelerator Terms: Equity, SAFEs and Fees](https://creatives-takeover.com/startup-pedia/accelerator-terms-explained)
+- [Rejected From an Accelerator? What to Do Next](https://creatives-takeover.com/startup-pedia/rejected-from-an-accelerator-what-next)
+
+### Accelerator terms: investment, equity and fees (checked 2026-11-23)
+
+- [Y Combinator](https://creatives-takeover.com/insighta/accelerator/y-combinator): Y Combinator invests $500,000: $125,000 on a post-money SAFE for 7% plus $375,000 on an uncapped SAFE with MFN. It charges no fees.
+- [Techstars](https://creatives-takeover.com/insighta/accelerator/techstars): Techstars invests $220,000 ($200,000 uncapped MFN SAFE plus $20,000 for common stock) for at least 5% equity, with no program fee.
+- [500 Global (500 Fellowship)](https://creatives-takeover.com/insighta/accelerator/500-global-flagship-accelerator): The 500 Fellowship, 500 Global's flagship program, offers up to $50,000 at entry with potential for up to $1M more, in person in San Francisco.
+- [Antler](https://creatives-takeover.com/insighta/accelerator/antler): Antler's US residency has no fee to join and an initial commitment of typically $500K–$1M. Terms and residency length vary by location.
+- [Berkeley SkyDeck](https://creatives-takeover.com/insighta/accelerator/berkeley-skydeck): Berkeley SkyDeck's Cohort Program invests $210,000 for 7.25%, usually on a post-money SAFE, and charges a $7,500 program fee per startup.
+- [ERA](https://creatives-takeover.com/insighta/accelerator/era): ERA invests $150,000 on a post-money SAFE for 6% of each company, in a four-month program in New York City.
+- [Startmate](https://creatives-takeover.com/insighta/accelerator/startmate): Startmate invests A$120,000 at a A$1.5M post-money valuation (8%) and charges no program fees. The program runs 14 weeks.
+- [TinySeed](https://creatives-takeover.com/insighta/accelerator/tinyseed): TinySeed invests $120,000–$220,000 for 10–12% equity in SaaS companies under $1M ARR. A $7,450 per-founder fee comes out of the investment.
+- [MuckerLab](https://creatives-takeover.com/insighta/accelerator/muckerlab): MuckerLab typically invests $100,000–$175,000 for a 10–15% equity stake. Relocation is not required.
+- [HAX](https://creatives-takeover.com/insighta/accelerator/hax): HAX's first investment is $250,000 ($150,000 cash plus $100,000 in kind) on a post-money SAFE with no valuation cap, with a six-month residency.
+- [Hexa](https://creatives-takeover.com/insighta/accelerator/hexa): Hexa's Start track invests €700,000 for 33.33% at incorporation; its Sprint track offers €500,000 through two convertible instruments.
+- [Carbon13](https://creatives-takeover.com/insighta/accelerator/carbon13): Carbon13 founders can pitch for €150,000–€250,000 on a SAFE targeting 4–7% equity; Phase 1 startups grant Carbon13 1% in options.
+- [Founder Institute](https://creatives-takeover.com/insighta/accelerator/founder-institute): Founder Institute charges an entrance fee that varies by chapter and takes a warrant for 2.5% of future equity, which activates only at a qualifying financing.
+- [Entrepreneur First](https://creatives-takeover.com/insighta/accelerator/entrepreneur-first): Entrepreneur First invests up to $250,000 once you form a company. You can join without an idea or a co-founder; local terms vary.
+- [Creative Destruction Lab](https://creatives-takeover.com/insighta/accelerator/creative-destruction-lab): Creative Destruction Lab takes no equity and charges no fees. There is no guaranteed investment.
+- [StartX](https://creatives-takeover.com/insighta/accelerator/startx): StartX takes no equity and charges no fees. It is open to Stanford founders.
+- [FoundersBoost](https://creatives-takeover.com/insighta/accelerator/foundersboost): FoundersBoost runs a six-week pre-accelerator for pre-seed tech startups with no equity and no fees.
+- [MIT delta v](https://creatives-takeover.com/insighta/accelerator/mit-delta-v): MIT delta v gives teams $75,000 in equity-free funding over a summer program in Cambridge, Massachusetts.
+- [Start-Up Chile](https://creatives-takeover.com/insighta/accelerator/start-up-chile): Start-Up Chile provides equity-free funding to tech-based startups at any stage. Amounts are set in each call's terms.
+- [Google for Startups Accelerator](https://creatives-takeover.com/insighta/accelerator/google-for-startups-accelerator): Google for Startups Accelerator is equity-free. Startups receive product credits and support, ideally between seed and Series A.
+- [Google for Startups Black Founders Fund](https://creatives-takeover.com/insighta/accelerator/google-for-startups-black-founders-fund): The Google for Startups Black Founders Fund provides cash awards without taking equity.
+- [Plug and Play](https://creatives-takeover.com/insighta/accelerator/plug-and-play): Plug and Play's accelerator programs do not require equity. They are customised three-month programs built around corporate partners.
+- [Parallel18](https://creatives-takeover.com/insighta/accelerator/parallel18): Parallel18 invests $100,000 via a SAFE in early-stage startups, with a 16-week program in Puerto Rico.
+- [gener8tor](https://creatives-takeover.com/insighta/accelerator/gener8tor): gener8tor's investment accelerators invest $100,000 for equity over 12 weeks; its gBETA accelerators are free 7-week programs.
+- [LAUNCH Accelerator](https://creatives-takeover.com/insighta/accelerator/launch-accelerator): LAUNCH Accelerator offers $125,000 in funding and 14 weeks of building.
+- [AngelPad](https://creatives-takeover.com/insighta/accelerator/angelpad): AngelPad invests $120,000 in each company over a three-month program in New York and San Francisco. Applications are closed.
+- [Fledge](https://creatives-takeover.com/insighta/accelerator/fledge): Fledge invests $15,000–$20,000 (€15,000 in Europe) using revenue-based equity that the company later buys back, over two months.
+- [FounderFuel](https://creatives-takeover.com/insighta/accelerator/founderfuel): FounderFuel's published terms are CA$120,000: a CA$100,000 SAFE plus CA$20,000 for 5% in founder shares, over 16 weeks in Montreal.
+- [Alchemist Accelerator](https://creatives-takeover.com/insighta/accelerator/alchemist-accelerator): Alchemist invests $60,000 to $1 million in pre-seed and seed startups with deeply technical founders.
+- [Catalyst Fund](https://creatives-takeover.com/insighta/accelerator/catalyst-fund): Catalyst Fund invests $200,000 in pre-seed climate adaptation and resilience startups in Africa, with follow-on at seed and Series A.
+- [Dreamit Ventures](https://creatives-takeover.com/insighta/accelerator/dreamit-ventures): Dreamit initially invests $500,000–$1.5M in pre-Series A US companies for a small amount of equity, and reserves similar amounts for follow-ons.
+- [Zinc](https://creatives-takeover.com/insighta/accelerator/zinc): Zinc makes an initial investment of up to £250,000 in early-stage UK science-for-impact ventures.
+- [1871](https://creatives-takeover.com/insighta/accelerator/1871-accelerator): 1871 is a Chicago membership incubator: $200 a month for individuals or $500 a month for teams, with 14-week program tracks.
+- [Seedcamp](https://creatives-takeover.com/insighta/accelerator/seedcamp): Seedcamp is a seed fund, not a cohort accelerator. Its first cheque is usually $350K–$1.25M, through a convertible or an equity round.
+- [Wayra](https://creatives-takeover.com/insighta/accelerator/wayra): Wayra invests €150K to €5M in qualified rounds alongside VCs, taking minority stakes as a strategic investor.
+- [TheVentureCity](https://creatives-takeover.com/insighta/accelerator/the-venture-city): TheVentureCity invests $2.5–4M in Series A companies with evidence of product-market fit. It is a fund, not an early-stage accelerator.
 
 ## Editorial
 

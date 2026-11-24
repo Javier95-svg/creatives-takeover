@@ -16,6 +16,13 @@ import { PLAN_SUMMARIES, type Plan } from "@/config/planPermissions";
 import { normalizePlanId, trackUpgradeClicked } from "@/lib/analytics";
 import { toast } from "sonner";
 import {
+  acceleratorTermRows,
+  acceleratorTermsTitle,
+  formatCheckedAt,
+  getAcceleratorTerms,
+  possessiveName,
+} from "@/data/acceleratorTerms";
+import {
   ArrowLeft,
   ExternalLink,
   MapPin,
@@ -187,6 +194,9 @@ const AcceleratorProfilePage = () => {
     ? "Unlock unlimited accelerator views this billing cycle."
     : `Unlock ${upgradePlan.acceleratorViewLimit} accelerator profile views this billing cycle.`;
   const isProfileLocked = requiresAuth || Boolean(upgradePrompt);
+  // Terms checked on the program's own site (src/data/acceleratorTerms.ts):
+  // shown to everyone, and the reason the page can be indexed while locked.
+  const publicTerms = getAcceleratorTerms(accelerator.slug || slug);
 
   const profileContent = (
     <Card className="mb-6 overflow-hidden">
@@ -455,23 +465,51 @@ const AcceleratorProfilePage = () => {
         <CardTitle className="text-3xl">{accelerator.title}</CardTitle>
         <p className="text-sm leading-6 text-muted-foreground">
           {requiresAuth
-            ? `Sign in to unlock the full ${accelerator.title} profile, application details, and outbound links.`
-            : `Upgrade to ${upgradeTierLabel} to unlock the full ${accelerator.title} profile, application details, and outbound links.`}
+            ? `Sign in to unlock the full ${accelerator.title} profile${publicTerms ? ' and application details' : ', application details, and outbound links'}.`
+            : `Upgrade to ${upgradeTierLabel} to unlock the full ${accelerator.title} profile${publicTerms ? ' and application details' : ', application details, and outbound links'}.`}
         </p>
       </CardHeader>
       <CardContent className="space-y-6">
-        <div className="grid gap-3 sm:grid-cols-2">
-          <div className="rounded-xl border border-border/60 bg-muted/20 p-4">
-            <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Funding</p>
-            <p className="mt-2 font-medium">{accelerator.funding_amount || 'Not disclosed'}</p>
-          </div>
-          <div className="rounded-xl border border-border/60 bg-muted/20 p-4">
-            <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Location</p>
-            <p className="mt-2 font-medium">
-              {accelerator.location && accelerator.location.length > 0 ? accelerator.location.join(', ') : 'Not disclosed'}
+        {publicTerms ? (
+          <div className="space-y-4">
+            <p className="text-base leading-7">{publicTerms.summary}</p>
+            <dl className="grid gap-3 sm:grid-cols-2">
+              {acceleratorTermRows(publicTerms).map(([label, value]) => (
+                <div key={label} className="rounded-xl border border-border/60 bg-muted/20 p-4">
+                  <dt className="text-xs uppercase tracking-[0.18em] text-muted-foreground">{label}</dt>
+                  <dd className="mt-2 font-medium leading-6">{value}</dd>
+                </div>
+              ))}
+            </dl>
+            {publicTerms.note && <p className="text-sm text-muted-foreground">{publicTerms.note}</p>}
+            <p className="text-xs leading-5 text-muted-foreground">
+              Checked against {possessiveName(publicTerms.name)} own website on {formatCheckedAt()}:{' '}
+              {publicTerms.sources.map((url, index) => (
+                <span key={url}>
+                  {index > 0 && ', '}
+                  <a href={url} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">
+                    {new URL(url).hostname.replace(/^www\./, '')}
+                  </a>
+                </span>
+              ))}
+              . Terms change between cohorts, so confirm them before you apply. Before signing, read{' '}
+              <Link to="/startup-pedia/accelerator-terms-explained" className="underline underline-offset-2">how to read accelerator terms</Link>.
             </p>
           </div>
-        </div>
+        ) : (
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="rounded-xl border border-border/60 bg-muted/20 p-4">
+              <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Funding</p>
+              <p className="mt-2 font-medium">{accelerator.funding_amount || 'Not disclosed'}</p>
+            </div>
+            <div className="rounded-xl border border-border/60 bg-muted/20 p-4">
+              <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Location</p>
+              <p className="mt-2 font-medium">
+                {accelerator.location && accelerator.location.length > 0 ? accelerator.location.join(', ') : 'Not disclosed'}
+              </p>
+            </div>
+          </div>
+        )}
         <div className="flex flex-col gap-3 sm:flex-row">
           {/* FIX(dead-click): /insighta/accelerator/[slug] — auth and view-limit gating now use a static summary card instead of a blurred actionable profile beneath the lock state. */}
           {requiresAuth ? (
@@ -512,14 +550,15 @@ const AcceleratorProfilePage = () => {
           homepage <title> and canonical="https://creatives-takeover.com/", so
           every accelerator URL declared itself a homepage duplicate. */}
       <SEO
-        title={`${accelerator.title} — Accelerator Profile | Creatives Takeover`}
+        title={publicTerms ? acceleratorTermsTitle(publicTerms) : `${accelerator.title} — Accelerator Profile | Creatives Takeover`}
         description={
-          accelerator.description?.slice(0, 160)
+          publicTerms?.summary
+          || accelerator.description?.slice(0, 160)
           || `${accelerator.title}: programme focus, funding, location, and how to apply.`
         }
         url={`/insighta/accelerator/${slug}`}
         canonical={`https://creatives-takeover.com/insighta/accelerator/${slug}`}
-        noindex={isProfileLocked}
+        noindex={isProfileLocked && !publicTerms}
       />
       <Navigation />
 

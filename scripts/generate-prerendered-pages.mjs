@@ -429,6 +429,12 @@ function buildStructuredData(routeConfig) {
     });
   }
 
+  // Route-specific schema written out in the route config (accelerator
+  // profiles describe the program as an Organization).
+  if (routeConfig.extraSchema && routeConfig.extraSchema.length) {
+    data.push(...routeConfig.extraSchema);
+  }
+
   if (routeConfig.faqs && routeConfig.faqs.length) {
     data.push({
       "@context": "https://schema.org",

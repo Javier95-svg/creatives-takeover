@@ -3,6 +3,7 @@ import { fileURLToPath } from "node:url";
 import path from "node:path";
 
 import { PEDIA_ENTRIES, PEDIA_TOPICS, getEntriesByTopic } from "../src/data/startupPedia/index.ts";
+import { ACCELERATOR_TERMS, ACCELERATOR_TERMS_CHECKED_AT, acceleratorProfilePath } from "../src/data/acceleratorTerms.ts";
 import { PLAN_MONTHLY_CREDITS, PLAN_PRICING } from "../src/config/pricing.ts";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -77,6 +78,13 @@ const pediaSection = [
       ...entries.map((entry) => `- [${entry.title}](https://creatives-takeover.com/startup-pedia/${entry.slug})`),
     ];
   }),
+  "",
+  // Accelerator terms checked on each program's own site (src/data/acceleratorTerms.ts).
+  `### Accelerator terms: investment, equity and fees (checked ${ACCELERATOR_TERMS_CHECKED_AT})`,
+  "",
+  ...ACCELERATOR_TERMS.map(
+    (terms) => `- [${terms.name}](https://creatives-takeover.com${acceleratorProfilePath(terms.slug)}): ${terms.summary}`,
+  ),
   "",
 ].join("\n");
 content = content.replace(/## (?:Founder guides and answers|Startup Pedia)\r?\n[\s\S]*?(?=\r?\n## Editorial)/, pediaSection);
