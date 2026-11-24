@@ -32,11 +32,11 @@ export const FEATURED_PEDIA_ENTRIES: FeaturedPediaEntry[] = [
   },
   {
     slug: "minimum-viable-product",
-    title: "Minimum Viable Product (MVP): Meaning and Examples",
+    title: "What Is an MVP? Minimum Viable Product Meaning and Examples",
     topicLabel: "MVP & product",
     topic: "product",
     kind: "term",
-    answer: "A minimum viable product (MVP) is the simplest version of a product that delivers its core value to real users, so you can learn whether they want it with the least time and money. It is a learning tool, not a smaller copy of the final product.",
+    answer: "MVP stands for minimum viable product: the simplest version of a product that delivers its core value to real users, so you can learn whether they want it with the least time and money. It is a learning tool, not a smaller copy of the final product.",
   },
   {
     slug: "go-to-market-strategy",

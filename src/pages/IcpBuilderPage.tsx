@@ -135,8 +135,8 @@ export default function ICPBuilderPage() {
   return (
     <div className="relative min-h-screen overflow-x-hidden bg-background">
       <SEO
-        title="ICP Builder: Define Your Ideal Customer | Creatives Takeover"
-        description="Build a founder-specific ICP Draft in one guided flow and turn it into a usable customer document."
+        title="ICP Builder: Free Ideal Customer Profile Generator"
+        description="Build your ideal customer profile (ICP) in one guided flow: segment, pain points, positioning and a niche score, with cited competitor research. Free draft."
         url="/icp-builder"
         structuredData={structuredData}
       />

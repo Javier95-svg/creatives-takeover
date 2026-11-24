@@ -87,15 +87,20 @@ export const customerEntries: PediaEntry[] = [
     kind: "term",
     topic: "customers",
     audiences: ["founder", "builder", "service-provider"],
-    title: "Unique Selling Proposition (USP): Meaning and Examples",
-    metaTitle: "What Is a Unique Selling Proposition (USP)? With Examples",
+    title: "What Is a USP? Unique Selling Proposition Meaning and Examples",
+    metaTitle: "What Is a USP? Meaning, Examples and How to Write One",
     metaDescription:
-      "A unique selling proposition (USP) is the specific reason a customer should choose you over the alternatives. How to write one, with examples.",
+      "USP stands for unique selling proposition: the specific reason a customer should choose you over the alternatives. Meaning, real examples and how to write one.",
     acronyms: ["USP"],
-    aliases: ["unique selling point", "usp meaning", "value proposition", "differentiation"],
+    aliases: ["what is a usp", "usp meaning", "usp stands for", "usp full form", "unique selling point", "usp examples", "value proposition", "differentiation"],
     answer:
-      "A unique selling proposition (USP) is the one clear reason your target customer should choose you over every alternative, including doing nothing. It names a benefit that matters to that customer and that competitors do not offer in the same way.",
+      "USP stands for unique selling proposition (also called a unique selling point). It is the one clear reason your target customer should choose you over every alternative, including doing nothing: a benefit that matters to that customer and that competitors do not offer in the same way.",
     sections: [
+      {
+        id: "meaning",
+        heading: "USP meaning in business and marketing",
+        body: "In business, a USP is what makes your offer different in a way customers care about. In marketing, it is the message that carries that difference: the line on your homepage, ad or pitch that tells the right customer why to pick you.\n\nA USP is not a slogan, a list of features or a claim like \"best quality\". It is one specific promise, such as \"delivered in 30 minutes\" or \"reconciles supplier invoices automatically\", aimed at one type of customer. The sections below cover where the term comes from, how it differs from a value proposition, what makes a good one and real examples.",
+      },
       {
         id: "origin",
         heading: "Where the term comes from",
@@ -131,6 +136,10 @@ export const customerEntries: PediaEntry[] = [
         answer: "USP stands for unique selling proposition, sometimes called a unique selling point: the distinctive reason a customer should choose you.",
       },
       {
+        question: "What is a USP in marketing?",
+        answer: "The message that tells your target customer what makes you different and why it matters to them, used on your website, in ads and in sales conversations.",
+      },
+      {
         question: "What is the difference between a USP and a value proposition?",
         answer: "A value proposition describes the value you deliver. A USP is the part of that value that is different from the alternatives and gives a customer a reason to switch.",
       },
@@ -159,7 +168,7 @@ export const customerEntries: PediaEntry[] = [
       description: "A sharp USP depends on a sharp customer. ICP Builder helps you define who the difference matters to.",
     },
     publishedAt: "2026-10-25",
-    modifiedAt: "2026-11-19",
+    modifiedAt: "2026-11-24",
   },
   {
     slug: "tam-sam-som",

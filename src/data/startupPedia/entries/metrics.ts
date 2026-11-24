@@ -118,8 +118,8 @@ export const metricEntries: PediaEntry[] = [
       },
       {
         id: "ltv-cac",
-        heading: "The LTV:CAC ratio",
-        body: "The ratio compares what a customer is worth with what it cost to win them. A widely quoted guide for subscription businesses is about 3:1 or higher. Below 1:1, every new customer loses money. Very high ratios, such as 8:1, can mean you are under-investing in growth.\n\nTreat these as rules of thumb, and check payback time too. A 5:1 ratio that takes four years to recover is risky for a startup with limited cash.",
+        heading: "LTV:CAC ratio: how to calculate it and what is a good ratio",
+        body: "LTV:CAC ratio = customer lifetime value ÷ [customer acquisition cost](/startup-pedia/customer-acquisition-cost). In the worked example above, $1,000 ÷ $200 gives 5:1.\n\nThe ratio compares what a customer is worth with what it cost to win them. A widely quoted guide for subscription businesses is about 3:1 or higher. Below 1:1, every new customer loses money. Very high ratios, such as 8:1, can mean you are under-investing in growth.\n\nTreat these as rules of thumb, and check payback time too. A 5:1 ratio that takes four years to recover is risky for a startup with limited cash.",
       },
       {
         id: "revenue-vs-margin",
@@ -146,6 +146,10 @@ export const metricEntries: PediaEntry[] = [
         answer: "A common guide for subscription businesses is around 3:1 or higher, together with a payback period of less than a year.",
       },
       {
+        question: "How do you calculate the LTV to CAC ratio?",
+        answer: "Divide customer lifetime value by customer acquisition cost. A customer worth $1,000 in gross profit who cost $200 to acquire gives an LTV:CAC ratio of 5:1.",
+      },
+      {
         question: "How do you calculate LTV for a subscription business?",
         answer: "Multiply average monthly revenue per customer by gross margin, then divide by the monthly churn rate.",
       },
@@ -161,7 +165,7 @@ export const metricEntries: PediaEntry[] = [
       description: "Traction Engine tracks retention alongside your weekly distribution experiments.",
     },
     publishedAt: "2026-10-25",
-    modifiedAt: "2026-11-19",
+    modifiedAt: "2026-11-24",
   },
   {
     slug: "average-order-value",

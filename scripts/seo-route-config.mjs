@@ -769,15 +769,29 @@ export const INDEXABLE_ROUTES = [
   },
   {
     path: "/icp-builder",
-    title: "ICP Builder: Define Your Ideal Customer | Creatives Takeover",
+    title: "ICP Builder: Free Ideal Customer Profile Generator",
     description:
-      "Define your ideal customer, sharpen positioning and pick the segment to target first, citing existing products in your space found on the web.",
+      "Build your ideal customer profile (ICP) in one guided flow: segment, pain points, positioning and a niche score, with cited competitor research. Free draft.",
     changefreq: "weekly",
     priority: 0.8,
-    heroHeading: "Ideal Customer Profile Builder",
+    heroHeading: "ICP Builder: ideal customer profile generator",
     heroCopy:
       "Define the customer segment you should target first, the pain worth solving, and the positioning that makes your startup easier to explain.",
-    updatedLabel: "March 2026",
+    updatedLabel: "November 2026",
+    faqs: [
+      {
+        question: "What is an ICP builder?",
+        answer: "A tool that turns your startup idea into an ideal customer profile: who to target first, their main pain points and how to position your product for them.",
+      },
+      {
+        question: "Is the ICP Builder free?",
+        answer: "Yes. You can generate a draft without an account. A free account, with no credit card, saves it and shows you how to test it.",
+      },
+      {
+        question: "What does the ICP include?",
+        answer: "The target segment, pain points, positioning and a niche score, plus existing products in your space found on the web and cited. If none are found, the draft says so.",
+      },
+    ],
     sections: [
       {
         heading: "What ICP Builder does",
@@ -990,27 +1004,49 @@ export const INDEXABLE_ROUTES = [
   },
   {
     path: "/pitch-deck-analyzer",
-    title: "Pitch Deck Analyzer & Score Tool | Creatives Takeover",
+    title: "Pitch Deck Analyzer: Free Pitch Deck Score and Review",
     description:
-      "Upload a pitch deck, get a score, and review actionable feedback on narrative, clarity, traction, business model, and fundraising readiness.",
+      "Upload your pitch deck as a PDF and get a score across six areas, slide-by-slide findings and a prioritized fix list. Your first analysis is free, no signup.",
     changefreq: "weekly",
     priority: 0.75,
-    heroHeading: "Analyze your pitch deck",
+    heroHeading: "Pitch Deck Analyzer",
     heroCopy:
-      "Get structured feedback on presentation quality, narrative strength, investor clarity, and fundraising readiness.",
-    updatedLabel: "March 2026",
+      "Upload your deck and get an investor-style score in minutes: six scored areas, findings for each slide and a prioritized plan of what to fix first.",
+    updatedLabel: "November 2026",
     sections: [
       {
-        heading: "What Pitch Deck Analyzer does",
-        copy: "Pitch Deck Analyzer reviews a startup deck and scores narrative clarity, traction framing, business model communication, and overall fundraising readiness.",
+        heading: "What the pitch deck analyzer scores",
+        copy: "It scores your deck across six areas investors look at: the story, the market, traction, the business model, the team and overall fundraising readiness.",
       },
       {
-        heading: "Who should use it",
-        copy: "It is useful for founders preparing for angel, pre-seed, or seed conversations who want to know what is weak before sending the deck to investors.",
+        heading: "How it reads your deck",
+        copy: "It reads the slides themselves, including charts and layout, not only the text, and ties each finding to the slide it comes from.",
       },
       {
-        heading: "What the analysis returns",
-        copy: "The tool returns a score and concrete recommendations so you know what to improve in the story, market explanation, traction proof, and investor clarity.",
+        heading: "What you get back",
+        copy: "A score for each area, findings for each slide with the evidence behind them, and a prioritized action plan, so you know what to fix before investors see the deck.",
+      },
+      {
+        heading: "Who it is for",
+        copy: "Founders preparing for angel, pre-seed or seed conversations who want an outside read on what is weak before sending the deck.",
+      },
+    ],
+    faqs: [
+      {
+        question: "What is a pitch deck analyzer?",
+        answer: "A tool that reviews a startup's pitch deck and scores it against what investors look for, then lists what to improve slide by slide.",
+      },
+      {
+        question: "Is the pitch deck analyzer free?",
+        answer: "Your first analysis is free and needs no signup. After that, analyses use credits from your Creatives Takeover plan, including the free plan's monthly credits.",
+      },
+      {
+        question: "What file format can I upload?",
+        answer: "Upload your pitch deck as a PDF.",
+      },
+      {
+        question: "How is a pitch deck scored?",
+        answer: "Across six areas: story, market, traction, business model, team and fundraising readiness. Each finding points to the slide it comes from and the change that would improve it.",
       },
     ],
   },

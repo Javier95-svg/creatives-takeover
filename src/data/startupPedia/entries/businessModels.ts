@@ -6,12 +6,12 @@ export const businessModelEntries: PediaEntry[] = [
     kind: "term",
     topic: "business-models",
     audiences: ["founder", "builder", "investor", "service-provider"],
-    title: "B2B vs B2C vs D2C: Business Models Explained",
-    metaTitle: "B2B vs B2C vs D2C: Meaning, Examples and Differences",
+    title: "B2B vs B2C vs D2C: The Differences Explained",
+    metaTitle: "B2B vs B2C vs D2C: Differences, Meaning and Examples",
     metaDescription:
-      "B2B sells to businesses, B2C sells to consumers and D2C sells to consumers without middlemen. How each works, with examples and what changes for a startup.",
+      "B2B sells to businesses, B2C to consumers and D2C to consumers directly, without retailers. B2C vs D2C and B2B vs D2C compared, with examples for each.",
     acronyms: ["B2B", "B2C", "D2C", "DTC", "B2B2C"],
-    aliases: ["business to business", "business to consumer", "direct to consumer", "b2b vs b2c"],
+    aliases: ["business to business", "business to consumer", "direct to consumer", "b2b vs b2c", "b2c vs d2c", "d2c vs b2c", "b2b vs d2c", "b2b vs b2c vs d2c"],
     answer:
       "B2B (business-to-business) companies sell to other businesses. B2C (business-to-consumer) companies sell to individual people. D2C, or DTC (direct-to-consumer), is a type of B2C where the brand sells straight to consumers through its own channels instead of through retailers or other intermediaries.",
     sections: [
@@ -29,6 +29,16 @@ export const businessModelEntries: PediaEntry[] = [
         id: "d2c",
         heading: "D2C: direct-to-consumer",
         body: "D2C brands make or source their own products and sell them through their own website, app or stores, rather than through retailers or marketplaces. This keeps more margin and gives the brand direct customer data and relationships. In exchange, the brand pays for all its own customer acquisition, fulfilment and service, which is why rising advertising costs hit D2C companies hard.",
+      },
+      {
+        id: "b2c-vs-d2c",
+        heading: "B2C vs D2C: what is the difference?",
+        body: "Every D2C company is B2C, but not every B2C company is D2C. The difference is who sits between the brand and the buyer:\n\n- **B2C** covers any sale to consumers, including through retailers, supermarkets and marketplaces. A snack brand sold in supermarkets is B2C.\n- **D2C** means the brand sells to consumers itself, through its own website, app or shops. The same snack brand selling subscription boxes from its own site is D2C.\n\nD2C keeps the retailer's margin and the customer data, but the brand pays for all its own marketing, delivery and service. Many brands do both: D2C online and B2C through retail.",
+      },
+      {
+        id: "b2b-vs-d2c",
+        heading: "B2B vs D2C: what is the difference?",
+        body: "- **Customer:** B2B sells to organisations; D2C sells to individual consumers.\n- **Deal size and volume:** B2B has fewer, larger deals; D2C has many small orders.\n- **Who decides:** B2B purchases often need several people to agree; a D2C purchase is one person's decision.\n- **How you win customers:** B2B relies on sales conversations, demos and relationships; D2C relies on ads, content, social media and word of mouth.\n- **Metrics:** B2B tracks pipeline, contract value and account expansion; D2C tracks acquisition cost, repeat purchase rate and average order value.\n\nSome companies run both, for example a coffee roaster that supplies offices (B2B) and sells bags on its own website (D2C).",
       },
       {
         id: "hybrids",
@@ -55,6 +65,10 @@ export const businessModelEntries: PediaEntry[] = [
         answer: "B2C covers any sale to consumers, including through retailers. D2C means the brand sells directly to consumers through its own channels.",
       },
       {
+        question: "What is the difference between B2B and D2C?",
+        answer: "B2B sells to organisations, usually through sales conversations with several decision-makers. D2C sells straight to individual consumers through the brand's own website, app or shops.",
+      },
+      {
         question: "Is B2B or B2C better for a startup?",
         answer: "Neither is better in general. B2B can reach revenue with fewer customers. B2C can grow faster once a cheap channel works. Choose the model that fits your customer and problem.",
       },
@@ -62,7 +76,7 @@ export const businessModelEntries: PediaEntry[] = [
     sources: [],
     relatedSlugs: ["saas", "go-to-market-strategy", "customer-acquisition-cost", "average-order-value"],
     publishedAt: "2026-10-25",
-    modifiedAt: "2026-10-25",
+    modifiedAt: "2026-11-24",
   },
   {
     slug: "saas",

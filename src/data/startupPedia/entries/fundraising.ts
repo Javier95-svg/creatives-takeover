@@ -6,15 +6,20 @@ export const fundraisingEntries: PediaEntry[] = [
     kind: "term",
     topic: "fundraising",
     audiences: ["founder", "investor", "mentor", "program"],
-    title: "Startup Funding Stages: From Pre-Seed to IPO",
-    metaTitle: "Startup Funding Stages Explained: Pre-Seed to IPO",
+    title: "Startup Funding Stages: Pre-Seed, Seed, Series A to IPO",
+    metaTitle: "Startup Funding Stages: Pre-Seed, Seed, Series A to IPO",
     metaDescription:
-      "The startup funding stages from bootstrapping and pre-seed to seed, Series A, B, C and an IPO: what each round funds and what investors expect.",
+      "The stages of startup funding, from pre-seed and seed to Series A, B, C and an IPO: what each round funds, who invests and how many rounds come before an IPO.",
     acronyms: ["IPO"],
-    aliases: ["funding rounds", "series a", "series b", "initial public offering", "venture rounds", "bootstrapping"],
+    aliases: ["funding rounds", "stages of startup funding", "startup investment stages", "how many rounds before ipo", "series a", "series b", "early stage funding", "growth stage funding", "initial public offering", "venture rounds", "bootstrapping"],
     answer:
-      "Startups typically raise money in stages: pre-seed and seed to find product-market fit, Series A to build a repeatable growth engine, Series B and later to scale, and sometimes an initial public offering (IPO) when shares are first sold on a stock exchange. Each stage is defined by the evidence you have, not by the amount raised.",
+      "The stages of startup funding are usually pre-seed and seed to find product-market fit, Series A to build a repeatable growth engine, Series B, C and later to scale, and sometimes an initial public offering (IPO) when shares are first sold on a stock exchange. Each stage is defined by the evidence you have, not by the amount raised.",
     sections: [
+      {
+        id: "at-a-glance",
+        heading: "The stages of startup funding at a glance",
+        body: "1. **Bootstrapping, friends and family:** the founders' own money or small amounts from people they know, to get started.\n2. **Pre-seed:** funds the team and the idea, often before revenue, to build an MVP and find first evidence. Investors: angels, accelerators, pre-seed funds.\n3. **Seed:** funds early traction and the search for a repeatable channel. Investors: angels, seed funds.\n4. **Series A:** the first large priced round, usually led by a venture capital firm, once there is evidence of product-market fit.\n5. **Series B, C and later:** fund scaling: more customers, markets, products and people. Investors: venture and growth funds.\n6. **Exit:** an acquisition or, for a small number of companies, an IPO.\n\nEarly-stage funding usually means pre-seed to Series A; growth-stage funding means Series B and later.",
+      },
       {
         id: "bootstrapping",
         heading: "Bootstrapping and friends and family",
@@ -41,6 +46,11 @@ export const fundraisingEntries: PediaEntry[] = [
         body: "An initial public offering is when a private company first sells shares to the public on a stock exchange. It raises capital and lets early investors and employees sell shares, but it brings heavy regulatory, reporting and governance requirements. Most startups never go public. Being acquired is a far more common outcome for those that succeed.",
       },
       {
+        id: "rounds-before-ipo",
+        heading: "How many funding rounds before an IPO?",
+        body: "There is no fixed number. A venture-backed company that goes public has often raised a seed round and several lettered rounds (Series A, B, C and sometimes D or later), but some raise fewer and some many more, depending on how much capital the business needs and on market conditions. Each letter simply names the next priced round; it is not a step every company must take.\n\nMany successful companies never reach an IPO at all: they are acquired, or keep growing privately. For a founder, the useful question is not how many rounds are left but what the next round must prove.",
+      },
+      {
         id: "dilution",
         heading: "Dilution",
         body: "Each round usually means issuing new shares, which reduces existing owners' percentage. That is expected. The aim is for each round to increase the company's value enough that a smaller share is worth more. Raising more than you need, or at the wrong stage, leads to unnecessary dilution.",
@@ -63,6 +73,10 @@ export const fundraisingEntries: PediaEntry[] = [
         question: "Do all startups raise venture capital?",
         answer: "No. Many are bootstrapped or funded by revenue, grants or angels. Venture capital suits companies aiming for very fast, large growth.",
       },
+      {
+        question: "How many rounds of funding does a startup raise before an IPO?",
+        answer: "There is no fixed number. Venture-backed companies that go public have often raised seed plus several lettered rounds (Series A, B, C and sometimes later), but it varies widely, and most startups never go public.",
+      },
     ],
     sources: [
       { title: "A Guide to Seed Fundraising", publisher: "Y Combinator", url: "https://www.ycombinator.com/blog/how-to-raise-a-seed-round" },
@@ -75,7 +89,7 @@ export const fundraisingEntries: PediaEntry[] = [
       description: "The Fundraising Readiness Assessment shows the gaps to fix before you approach investors.",
     },
     publishedAt: "2026-10-25",
-    modifiedAt: "2026-10-25",
+    modifiedAt: "2026-11-24",
   },
   {
     slug: "venture-capital-vs-private-equity",

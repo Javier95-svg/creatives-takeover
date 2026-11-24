@@ -6,15 +6,25 @@ export const productEntries: PediaEntry[] = [
     kind: "term",
     topic: "product",
     audiences: ["founder", "builder", "mentor", "investor", "program"],
-    title: "Minimum Viable Product (MVP): Meaning and Examples",
-    metaTitle: "What Is a Minimum Viable Product (MVP)? Meaning & Examples",
+    title: "What Is an MVP? Minimum Viable Product Meaning and Examples",
+    metaTitle: "MVP Meaning: What Is a Minimum Viable Product? Examples",
     metaDescription:
-      "A minimum viable product (MVP) is the simplest version of a product that lets you learn whether customers want it. Types of MVP, examples and mistakes.",
+      "MVP stands for minimum viable product: the simplest version of a product that shows whether customers want it. Meaning, MVP testing, types and real examples.",
     acronyms: ["MVP"],
-    aliases: ["mvp meaning", "what is an mvp", "minimum viable product examples", "prototype"],
+    aliases: ["mvp meaning", "what is an mvp", "mvp full form", "mvp definition", "mvp testing", "minimum viable product examples", "prototype"],
     answer:
-      "A minimum viable product (MVP) is the simplest version of a product that delivers its core value to real users, so you can learn whether they want it with the least time and money. It is a learning tool, not a smaller copy of the final product.",
+      "MVP stands for minimum viable product: the simplest version of a product that delivers its core value to real users, so you can learn whether they want it with the least time and money. It is a learning tool, not a smaller copy of the final product.",
     sections: [
+      {
+        id: "meaning",
+        heading: "MVP meaning: minimum, viable, product",
+        body: "Each word in the name does a job:\n\n- **Minimum:** only what is needed to test your most important assumption. Everything else waits.\n- **Viable:** it must still deliver real value, so people's behaviour tells you something. A broken or empty product only teaches you that it is broken.\n- **Product:** real users use it, or try to buy it, in their own context, not in a demo meeting.\n\nIn short, an MVP is the cheapest real test of whether a specific customer wants what you plan to build.",
+      },
+      {
+        id: "mvp-testing",
+        heading: "What is MVP testing?",
+        body: "MVP testing means putting your MVP in front of real target users to test one hypothesis and measuring what they do. Before launch, write the hypothesis and a success threshold, for example \"at least 30% of the 50 bakeries we contact will book a pilot\" or \"40% of signups will use it again in week two\". Then compare the result with the threshold and decide to continue, change or stop.\n\nGood MVP tests measure behaviour (signups, repeat use, payments) rather than opinions. [Waitlist before MVP](/startup-pedia/waitlist-before-mvp) and [pre-sales and letters of intent](/startup-pedia/pre-sales-and-letters-of-intent) cover cheap tests you can run first.",
+      },
       {
         id: "origin",
         heading: "Where the term comes from",
@@ -63,6 +73,10 @@ export const productEntries: PediaEntry[] = [
         question: "Is an MVP the same as a prototype?",
         answer: "No. A prototype shows how something might work. An MVP is used by real customers so you can measure whether they want it.",
       },
+      {
+        question: "What does MVP testing mean?",
+        answer: "Putting a minimum viable product in front of real target users to test one hypothesis, and comparing what they do (signups, repeat use, payment) with a success threshold set in advance.",
+      },
     ],
     sources: [
       { title: "Principles", publisher: "The Lean Startup", url: "https://theleanstartup.com/principles" },
@@ -79,7 +93,7 @@ export const productEntries: PediaEntry[] = [
       description: "MVP Scope helps you cut a feature list down to the version that answers your riskiest question.",
     },
     publishedAt: "2026-10-25",
-    modifiedAt: "2026-11-19",
+    modifiedAt: "2026-11-24",
   },
   {
     slug: "product-market-fit",
