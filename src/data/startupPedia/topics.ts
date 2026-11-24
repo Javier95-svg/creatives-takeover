@@ -84,6 +84,19 @@ export const PEDIA_TOPICS: PediaTopic[] = [
     tools: [],
   },
   {
+    key: "cofounders",
+    label: "Cofounders & equity",
+    heading: "Finding a co-founder, splitting equity and vesting",
+    metaTitle: "Co-Founders, Equity Splits & Vesting | Startup Pedia",
+    metaDescription:
+      "How to find and evaluate a co-founder, split equity fairly, set up founder vesting and write a co-founder agreement before the hard questions arrive.",
+    intro:
+      "Choosing a co-founder is one of the earliest decisions in a startup and one of the hardest to undo. Founders ask the same questions again and again: where to find someone, how a non-technical founder can judge a technical partner, how much equity to give someone who joins after the first version is built, and what happens if a co-founder stops contributing. This topic answers them in plain English, with the practices experienced founders and startup lawyers recommend: test the fit on real work before committing, start from an equal split, put every founder's shares on a vesting schedule and write the agreement down while everyone still gets along. Legal points vary by country, so the guides say where to get local advice.",
+    tools: [
+      { href: "/co-founder", label: "Find a co-founder", description: "Share what you are building and connect with founders who have complementary skills." },
+    ],
+  },
+  {
     key: "fundraising",
     label: "Fundraising, equity & legal",
     heading: "Fundraising, equity and startup legal basics",

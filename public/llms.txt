@@ -1,6 +1,6 @@
 # Creatives Takeover
 
-> Last updated: 2026-11-19
+> Last updated: 2026-11-24
 
 > Creatives Takeover is the startup ecosystem workspace. Founders define who they are building for, test demand, plan how to reach their first customers and log what happens, using AI tools that draft the working documents (an ideal customer profile with cited competitor research, a go-to-market plan, a pitch deck review) and pages that record real responses (surveys, waitlists, demo pages and simple published apps). It also has a marketplace of reviewed human startup mentors who can be booked directly. Incubators, accelerators and universities use it to see how every team in a cohort is progressing, and VCs and family offices use it to meet founders who are executing. Founders can start free without applying and keep 100% equity.
 
@@ -69,7 +69,7 @@ Founder plans are self-serve with no equity taken and no application required. I
 Plain-English reference entries on startup terms, metrics and frameworks, plus practical guides. Each entry is a standalone page.
 
 - [Startup Guide](https://creatives-takeover.com/startup-guide): End-to-end guide from idea to launch.
-- [Startup Pedia index](https://creatives-takeover.com/startup-pedia): All 50 entries, searchable by term, topic and role.
+- [Startup Pedia index](https://creatives-takeover.com/startup-pedia): All 55 entries, searchable by term, topic and role.
 
 ### Validation & customer discovery
 
@@ -122,6 +122,14 @@ Plain-English reference entries on startup terms, metrics and frameworks, plus p
 - [B2B vs B2C vs D2C: Business Models Explained](https://creatives-takeover.com/startup-pedia/b2b-b2c-d2c)
 - [SaaS (Software as a Service): Meaning and How It Works](https://creatives-takeover.com/startup-pedia/saas)
 - [MRR and ARR: Monthly and Annual Recurring Revenue](https://creatives-takeover.com/startup-pedia/mrr-and-arr)
+
+### Cofounders & equity
+
+- [How to Find a Co-Founder (and Know It Will Work)](https://creatives-takeover.com/startup-pedia/how-to-find-a-cofounder)
+- [How to Split Equity Between Co-Founders](https://creatives-takeover.com/startup-pedia/cofounder-equity-split)
+- [Founder Vesting: Schedules, Cliffs and Re-Vesting](https://creatives-takeover.com/startup-pedia/founder-vesting)
+- [How to Evaluate a Technical Co-Founder](https://creatives-takeover.com/startup-pedia/how-to-evaluate-a-technical-cofounder)
+- [Co-Founder Agreement: What to Put in Writing](https://creatives-takeover.com/startup-pedia/cofounder-agreement)
 
 ### Fundraising, equity & legal
 

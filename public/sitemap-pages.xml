@@ -130,6 +130,11 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://creatives-takeover.com/startup-pedia/topics/cofounders</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://creatives-takeover.com/startup-pedia/topics/fundraising</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
@@ -374,6 +379,36 @@
   <url>
     <loc>https://creatives-takeover.com/startup-pedia/mrr-and-arr</loc>
     <lastmod>2026-10-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://creatives-takeover.com/startup-pedia/how-to-find-a-cofounder</loc>
+    <lastmod>2026-11-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://creatives-takeover.com/startup-pedia/cofounder-equity-split</loc>
+    <lastmod>2026-11-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://creatives-takeover.com/startup-pedia/founder-vesting</loc>
+    <lastmod>2026-11-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://creatives-takeover.com/startup-pedia/how-to-evaluate-a-technical-cofounder</loc>
+    <lastmod>2026-11-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://creatives-takeover.com/startup-pedia/cofounder-agreement</loc>
+    <lastmod>2026-11-23</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>

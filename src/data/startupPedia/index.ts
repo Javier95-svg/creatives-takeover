@@ -1,4 +1,5 @@
 import { businessModelEntries } from "./entries/businessModels.ts";
+import { cofounderEntries } from "./entries/cofounders.ts";
 import { customerEntries } from "./entries/customers.ts";
 import { fundraisingEntries } from "./entries/fundraising.ts";
 import { growthEntries } from "./entries/growth.ts";
@@ -32,6 +33,7 @@ export const PEDIA_ENTRIES: PediaEntry[] = [
   ...growthEntries,
   ...metricEntries,
   ...businessModelEntries,
+  ...cofounderEntries,
   ...fundraisingEntries,
   ...programEntries,
 ];

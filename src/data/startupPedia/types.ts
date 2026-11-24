@@ -9,6 +9,7 @@ export type PediaTopicKey =
   | "growth"
   | "metrics"
   | "business-models"
+  | "cofounders"
   | "fundraising"
   | "programs";
 

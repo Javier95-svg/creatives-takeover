@@ -54,4 +54,9 @@ export const PEDIA_SLUGS: ReadonlySet<string> = new Set([
   "measuring-customer-discovery-progress",
   "how-mentors-track-founder-progress",
   "accelerator-vs-incubator",
+  "how-to-find-a-cofounder",
+  "cofounder-equity-split",
+  "founder-vesting",
+  "how-to-evaluate-a-technical-cofounder",
+  "cofounder-agreement",
 ]);

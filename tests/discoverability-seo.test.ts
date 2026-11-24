@@ -8,7 +8,7 @@ test("Startup Pedia covers the priority topics and the 30 startup shortcuts", ()
   const topics = read("src/data/startupPedia/topics.ts");
   const shortcuts = read("src/data/startupPedia/shortcuts.ts");
 
-  ["validation", "customers", "product", "growth", "metrics", "business-models", "fundraising", "programs"].forEach((key) => {
+  ["validation", "customers", "product", "growth", "metrics", "business-models", "cofounders", "fundraising", "programs"].forEach((key) => {
     assert.match(topics, new RegExp(`key: "${key}"`));
   });
   assert.equal((shortcuts.match(/acronym: "/g) || []).length, 30);
