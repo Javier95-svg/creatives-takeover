@@ -20,9 +20,8 @@ const exact = ['/pricing', '/files', '/tasks', '/routine', '/weekly-mission', '/
   '/bizmap-ai/icp-builder', '/bizmap-ai/pmf-lab', '/bizmap-ai/tech-stack',
   '/insighta/vc-search', '/insighta/accelerator-hunt', '/insighta/email-templates',
   '/insighta/traction-engine', '/insighta/pitch-deck-analyzer', '/insighta/test'];
-// Admin pages keep the legacy layout, except the adoption report, which reads
-// like the workspace tools it measures and is used alongside them.
-const WORKSPACE_ADMIN_PAGES = ['/admin/adoption'];
+// These admin pages use the same persistent sidebar and top bar as the workspace.
+const WORKSPACE_ADMIN_PAGES = ['/admin/adoption', '/admin/account-requests'];
 // The mentor, investor and Newspaper story editors open inside the workspace
 // frame like the sections they publish to (2026-10-18); /stories is the old
 // address of the story editor. Admin list pages keep the legacy layout.
@@ -60,3 +59,4 @@ export function platformUpdates(rows: Array<{ id: string; notification_type: str
     return [{ id: row.id, section, title, detail: typeof data.message === 'string' ? data.message : '', route, createdAt: row.created_at }];
   }).sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt)).filter((row, i, all) => all.findIndex(other => other.id === row.id) === i).slice(0, 3);
 }
+
