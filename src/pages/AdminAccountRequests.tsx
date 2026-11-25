@@ -5,6 +5,7 @@ import { Loader2, Search } from 'lucide-react';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import SEO from '@/components/SEO';
+import { useWorkspaceFrame } from '@/contexts/WorkspaceFrameContext';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -32,6 +33,7 @@ const TABS: { value: ApprovalStatus; label: string }[] = [
  * permission.
  */
 export default function AdminAccountRequests() {
+  const inWorkspace = useWorkspaceFrame();
   const [tab, setTab] = useState<ApprovalStatus>('pending');
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [search, setSearch] = useState('');
@@ -73,7 +75,7 @@ export default function AdminAccountRequests() {
   return <>
     <SEO title="Account requests" description="Review mentor and marketplace requests." url="/admin/account-requests" noindex />
     <div className="min-h-screen bg-background">
-      <Navigation />
+      {!inWorkspace && <Navigation />}
       <main className="container mx-auto px-4 pt-header-offset nav-offset-roomy pb-16">
         <header className="mb-8">
           <h1 className="text-headline-lg font-semibold">Account requests</h1>
@@ -182,7 +184,7 @@ export default function AdminAccountRequests() {
           </tbody></table>
         </section>
       </main>
-      <Footer />
+      {!inWorkspace && <Footer />}
     </div>
   </>;
 }
