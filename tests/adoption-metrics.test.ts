@@ -174,10 +174,11 @@ test('section visits are private and the report is admin only, excluding the tea
   assert.match(app, /path="\/admin\/adoption" element=\{<AdminRoute><AdminAdoption \/><\/AdminRoute>\}/);
 });
 
-test('the adoption report opens inside the workspace frame; other admin pages keep their layout', async () => {
+test('adoption and account requests open inside the workspace frame; other admin pages keep their layout', async () => {
   const { isWorkspaceRoute } = await import('../src/lib/workspacePolicy.ts');
   assert.equal(isWorkspaceRoute('/admin/adoption'), true);
-  for (const path of ['/admin/analytics', '/admin/account-requests', '/newspaper/admin', '/admin/adoption/extra']) {
+  assert.equal(isWorkspaceRoute('/admin/account-requests'), true);
+  for (const path of ['/admin/analytics', '/newspaper/admin', '/admin/adoption/extra']) {
     assert.equal(isWorkspaceRoute(path), false, path);
   }
   const page = read('../src/pages/AdminAdoption.tsx');
@@ -205,3 +206,4 @@ test('the Customer Discovery funnel is admin only, excludes the team and reads s
   assert.equal(rows[4].fromPrevious, '0 of 1 (0%)');
   assert.match(read('../src/pages/AdminAdoption.tsx'), /supabase\.rpc\('admin_discovery_funnel' as never, \{ p_days: 30 \} as never\)/);
 });
+
