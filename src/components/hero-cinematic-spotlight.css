@@ -1621,19 +1621,3 @@
   .ct-story { padding: 20px; }
   .ct-story__actions .ct-hero__cta { width: 100%; justify-content: center; }
 }
-
-/* One line under the idea box saying what the free draft gives (2026-11-25). */
-.ct-hero__idea-promise {
-  width: min(680px, 100%);
-  margin: 14px auto 0;
-  color: var(--ct-muted);
-  font-size: 14px;
-  line-height: 1.5;
-  text-align: center;
-  text-wrap: balance;
-}
-
-.ct-hero__idea-promise strong {
-  color: var(--ct-fg);
-  font-weight: 600;
-}
