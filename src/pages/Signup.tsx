@@ -696,10 +696,11 @@ const Signup = () => {
                   <p className="text-sm text-muted-foreground text-center">Rookie plan available for free</p>
                 </CardHeader>
                 <CardContent>
-                  {/* On phones the providers lead, ahead of the email field, the
-                      way Lovable/Replit/Rocket do it. On desktop they stay in
-                      their original position at the foot of the form. */}
-                  {isMobile && mobileStep === 1 && (
+                  {/* The providers lead, ahead of the email field, on every
+                      screen size (on phones only at step 1). At the foot of the
+                      desktop form they sat below the fold at 1366x768, while
+                      4 of 7 real signups in Nov 2026 used Google. */}
+                  {(!isMobile || mobileStep === 1) && (
                     <div className="mb-5 space-y-5">
                       <AuthSocialButtons
                         variant="signupPremium"
@@ -930,31 +931,6 @@ const Signup = () => {
                     </>
                   )}
                 </Button>
-
-                {/* Divider + providers, desktop and tablet only. On mobile these
-                    render above the form at step 1 instead. */}
-                {!isMobile && (
-                  <>
-                    <div className="relative my-6">
-                      <div className="absolute inset-0 flex items-center">
-                        <span className="w-full border-t border-border" />
-                      </div>
-                      <div className="relative flex justify-center text-xs uppercase">
-                        <span className="bg-card px-2 text-muted-foreground">
-                          OR
-                        </span>
-                      </div>
-                    </div>
-
-                    <AuthSocialButtons
-                      variant="signupPremium"
-                      disabled={isLoading}
-                      onGoogleContinue={handleGoogleSignup}
-                      onLinkedInContinue={handleLinkedInSignup}
-                      onXContinue={handleXSignup}
-                    />
-                  </>
-                )}
 
                 {/* What comes free with the account: a Founder ID and its number. */}
                 <SignupUrgency />

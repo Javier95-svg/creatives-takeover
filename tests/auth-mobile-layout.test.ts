@@ -71,11 +71,24 @@ test('both auth pages use a two-step form on phones only', () => {
     const submit = source.slice(source.indexOf('handleSubmit = async'), source.indexOf('handleSubmit = async') + 400);
     assert.match(submit, /isMobile && mobileStep === 1/, `${name} must guard submit on step 1`);
 
-    // Providers render above the form on mobile and inside it on desktop, so
-    // exactly one of the two instances is ever mounted.
-    assert.equal((source.match(/<AuthSocialButtons/g) ?? []).length, 2, `${name} provider blocks`);
-    assert.match(source, /\{!isMobile && \(/, `${name} must keep the desktop provider block`);
+    if (name === 'login') {
+      // Providers render above the form on mobile and inside it on desktop, so
+      // exactly one of the two instances is ever mounted.
+      assert.equal((source.match(/<AuthSocialButtons/g) ?? []).length, 2, `${name} provider blocks`);
+      assert.match(source, /\{!isMobile && \(/, `${name} must keep the desktop provider block`);
+    }
   }
+});
+
+test('signup leads with the providers on every screen size', () => {
+  const source = read('../src/pages/Signup.tsx');
+  // At the foot of the desktop form Google sat below the fold at 1366x768,
+  // while most real signups use it. One block, above the form, hidden only
+  // on the phone's second step.
+  assert.equal((source.match(/<AuthSocialButtons/g) ?? []).length, 1);
+  assert.match(source, /\{\(!isMobile \|\| mobileStep === 1\) && \(/);
+  assert.ok(source.indexOf('<AuthSocialButtons') < source.indexOf('<form onSubmit={handleSubmit}'),
+    'providers must come before the form');
 });
 
 test('the password field stays mounted while hidden on step one', () => {
