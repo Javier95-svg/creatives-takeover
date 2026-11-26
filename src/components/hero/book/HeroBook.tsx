@@ -5,6 +5,8 @@ import type { ReactNode } from "react";
 import heroCompass from "@/assets/hero-compass.svg";
 import { useCTAAttribution } from "@/hooks/useCTAAttribution";
 import { ChatPanel, CompassPanel, MoodboardPanel, ReelPanel } from "./BookPanels";
+import { ReelA, ReelB, ReelC } from "./ReelVersions";
+import "./reel-versions.css";
 import { trackBook, type BookVersion } from "./bookVersion";
 import "./hero-book.css";
 
@@ -78,6 +80,9 @@ export default function HeroBook({ version, titleLine1, titleLine2, lede, onWhoI
         {version === 2 ? <ReelPanel /> : null}
         {version === 3 ? <CompassPanel /> : null}
         {version === 4 ? <MoodboardPanel /> : null}
+        {version === "a" ? <ReelA /> : null}
+        {version === "b" ? <ReelB /> : null}
+        {version === "c" ? <ReelC /> : null}
       </div>
     </div>
   );
