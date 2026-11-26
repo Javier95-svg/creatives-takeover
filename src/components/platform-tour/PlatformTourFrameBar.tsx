@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { appendReturnParam } from '@/lib/authRedirect';
+import { captureEvent } from '@/lib/analytics';
 import { TOUR_PANELS, type TourPanel } from '@/lib/platformTour/tourPanels';
 import { clearTour } from '@/lib/platformTour/tourSession';
 
@@ -60,7 +61,12 @@ export function PlatformTourFrameBar({ panel, onSelect, onBack }: {
           <ArrowLeft className="h-4 w-4" />
         </Button>}
         <Button asChild size="sm">
-          <Link to={appendReturnParam('/signup', '/demo')}>Create your free account</Link>
+          <Link
+            to={appendReturnParam('/signup', '/demo')}
+            onClick={() => captureEvent('platform_tour_signup_clicked', { placement: 'frame_bar' })}
+          >
+            Create your free account
+          </Link>
         </Button>
         <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
           <Link to="/" onClick={clearTour}>Exit tour</Link>

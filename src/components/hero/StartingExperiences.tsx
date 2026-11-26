@@ -100,6 +100,14 @@ export default function StartingExperiences() {
     <div id="get-started" className="ct-start ct-start--chat" aria-label="Start with your idea or product">
       <HeroIdeaInput ref={inputRef} value={value} onChange={setValue} mode={mode} onModeChange={setMode}
         onSubmit={() => submit(mode)} onFirstFocus={trackHeroInputFocused} busy={busy} />
+      {/* What the button leads to, for visitors deciding whether to type.
+          Accurate while guests read every draft section (ICP_GUEST_LOCKED_SECTIONS
+          is empty, src/lib/icpUnlockFlow.ts). Javier picked this line, 2026-11-25. */}
+      {!isAuthenticated && mode === 'idea' && !run ? (
+        <p className="ct-hero__idea-promise">
+          Free draft, no account needed: <strong>who it&apos;s for, the pain you solve, what to build first and your edge.</strong>
+        </p>
+      ) : null}
       {run ? <div id="starting-result" className="ct-start__result" key={run.runId} aria-label={run.mode === 'idea' ? 'Your idea brief' : 'Your demo story'}>
         <RouteErrorBoundary routeName="Starting experience">
           <Suspense fallback={<p role="status" className="ct-start__intro">Preparing your result…</p>}>
