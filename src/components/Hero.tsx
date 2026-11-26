@@ -11,6 +11,12 @@ import StartingExperiences from "@/components/hero/StartingExperiences";
 import HeroRoleCards from "@/components/home/HeroRoleCards";
 import "./hero-cinematic-spotlight.css";
 import { trackActivationEntry } from "@/lib/activationEntry";
+// PREVIEW ONLY (branch hero-models): ?hero=a|b|c swaps the signed-out hero.
+import { readHeroModel } from "@/components/hero/models/heroModel";
+import HeroModelA from "@/components/hero/models/HeroModelA";
+import HeroModelB from "@/components/hero/models/HeroModelB";
+import HeroModelC from "@/components/hero/models/HeroModelC";
+import "@/components/hero/models/hero-models.css";
 
 // Also lazy: it renders nothing until opened, but statically it dragged the
 // Radix dialog and ~20 lucide icons into the homepage's critical path. Homepage
@@ -116,6 +122,7 @@ const Hero = ({
   const [userUsername, setUserUsername] = useState<string | null>(null);
   const [isAudienceDialogOpen, setIsAudienceDialogOpen] = useState(false);
   const [hasOpenedAudienceDialog, setHasOpenedAudienceDialog] = useState(false);
+  const heroModel = isAuthenticated ? null : readHeroModel(location.search);
 
   useEffect(() => {
     if (!user) {
@@ -150,6 +157,7 @@ const Hero = ({
               entry_page: location.pathname,
               placement: "hero_primary",
               is_authenticated: isAuthenticated,
+              ...(heroModel ? { hero_model: heroModel } : {}),
             });
             if (!isAuthenticated) {
               void trackTriggerView("hero-who-is-this-for", {
@@ -178,7 +186,7 @@ const Hero = ({
         observer.unobserve(heroElement);
       }
     };
-  }, [trackTriggerView, isAuthenticated, location.pathname]);
+  }, [trackTriggerView, isAuthenticated, location.pathname, heroModel]);
 
   const handleProfileCtaClick = () => {
     void trackEngagement("hero-profile-cta", 80);
@@ -210,6 +218,11 @@ const Hero = ({
       className={`ct-hero${isAuthenticated ? " ct-hero--signed-in" : ""}`}
       aria-label="Creatives Takeover hero"
     >
+      {heroModel ? (
+        <div className="ct-hero__container">
+          {heroModel === "a" ? <HeroModelA /> : heroModel === "b" ? <HeroModelB /> : <HeroModelC onWhoIsThisFor={handleWhoIsThisForClick} />}
+        </div>
+      ) : (
       <div className="ct-hero__container">
         {isAuthenticated ? (
           <Link
@@ -340,6 +353,7 @@ const Hero = ({
           </div>
         </div>}
       </div>
+      )}
       {/* Mounted only once the visitor has actually asked for it, so the chunk
           is never fetched on a page view that ignores the link. */}
       {!isAuthenticated && hasOpenedAudienceDialog ? (
