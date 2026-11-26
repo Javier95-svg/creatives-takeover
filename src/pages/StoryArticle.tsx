@@ -20,6 +20,7 @@ import { linkPediaTerms } from "@/lib/pediaTermLinks";
 import RelatedStories from "@/components/stories/RelatedStories";
 import { LinkedInPostEmbed } from "@/components/stories/LinkedInPostEmbed";
 import { ArticleBody } from "@/components/stories/ArticleBody";
+import { NewspaperSignupCard } from "@/components/stories/NewspaperSignupCard";
 
 const StoryArticle = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -69,7 +70,7 @@ const StoryArticle = () => {
   const requireAuthToShare = (): boolean => {
     if (user) return true;
     toast.info("Create a free account to share this article.");
-    navigate(`/login?redirect=${encodeURIComponent(`/newspaper/${slug ?? ""}`)}`);
+    navigate(`/signup?source=newspaper_share&return=${encodeURIComponent(`/newspaper/${slug ?? ""}`)}`);
     return false;
   };
 
@@ -441,6 +442,8 @@ const StoryArticle = () => {
                 <p>No content available for this article.</p>
               </div>
             )}
+
+            <NewspaperSignupCard placement="newspaper_article_end" />
 
             {/* Related Stories Section */}
             <RelatedStories currentStory={article} limit={4} />

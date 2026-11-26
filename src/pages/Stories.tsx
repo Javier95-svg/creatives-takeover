@@ -18,6 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatDistanceToNow } from "date-fns";
 import { slugifyTag, normalizeHashtag } from "@/utils/hashtagUtils";
+import { NewspaperSignupCard } from "@/components/stories/NewspaperSignupCard";
 import {
   Pagination,
   PaginationContent,
@@ -659,6 +660,7 @@ const Stories = () => {
                 </>
               )
             )}
+            <NewspaperSignupCard placement="newspaper_list_end" />
             </div>
           </section>
         </main>
